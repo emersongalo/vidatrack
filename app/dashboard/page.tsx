@@ -39,22 +39,29 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-5xl mx-auto">
-      <header className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="rounded-lg" />
-          <div>
-            <p className="text-ink-400 text-sm">Olá,</p>
-            <h1 className="text-2xl font-display font-semibold">{nome}</h1>
+      <header className="flex items-center justify-between mb-8 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="rounded-lg shrink-0" />
+          <div className="min-w-0">
+            <p className="text-ink-400 text-xs">Olá,</p>
+            <h1 className="text-lg md:text-2xl font-display font-semibold truncate">{nome}</h1>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="/notificacoes" className="text-sm text-ink-400 hover:text-ink-100 transition">
-            Notificações
+        <div className="flex items-center gap-1 shrink-0">
+          <Link
+            href="/notificacoes"
+            aria-label="Notificações"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
+          >
+            🔔
           </Link>
           <AlternadorTema />
           <form action={sair}>
-            <button className="text-sm text-ink-400 hover:text-ink-100 transition">
-              Sair
+            <button
+              aria-label="Sair"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
+            >
+              ⏻
             </button>
           </form>
         </div>
@@ -73,26 +80,23 @@ export default async function DashboardPage() {
       {/* Resumo de hoje */}
       <Link
         href="/habitos"
-        className="block bg-base-800 border border-base-600 border-l-4 border-l-habito rounded-xl2 p-4 mb-4 hover:border-habito transition"
+        className="flex items-center gap-4 bg-base-800 border border-base-600 border-l-4 border-l-habito rounded-xl2 p-4 mb-3 hover:border-habito transition"
       >
-        <div className="flex items-center justify-between mb-2">
-          <p className="font-display font-semibold">Hoje</p>
-          <span className="text-xs text-ink-400">Ver agenda →</span>
-        </div>
-        <div className="flex gap-6">
-          <div>
-            <p className="text-2xl font-mono font-semibold">
-              {habitosFeitos}
-              <span className="text-ink-400 text-base">/{habitos.length}</span>
-            </p>
-            <p className="text-xs text-ink-400">hábitos feitos</p>
+        <span className="w-11 h-11 rounded-xl bg-habito/15 flex items-center justify-center text-xl shrink-0">
+          🔁
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <p className="font-display font-semibold">Hoje</p>
+            <span className="text-xs text-ink-400 shrink-0">Ver agenda →</span>
           </div>
-          <div>
-            <p className="text-2xl font-mono font-semibold">
-              {tarefasFeitas}
-              <span className="text-ink-400 text-base">/{tarefas.length}</span>
+          <div className="flex gap-5 mt-1">
+            <p className="text-sm text-ink-400">
+              <span className="font-mono text-ink-100 font-semibold">{habitosFeitos}/{habitos.length}</span> hábitos
             </p>
-            <p className="text-xs text-ink-400">tarefas feitas</p>
+            <p className="text-sm text-ink-400">
+              <span className="font-mono text-ink-100 font-semibold">{tarefasFeitas}/{tarefas.length}</span> tarefas
+            </p>
           </div>
         </div>
       </Link>
@@ -100,50 +104,39 @@ export default async function DashboardPage() {
       {/* Resumo financeiro */}
       <Link
         href="/financas"
-        className="block bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-8 hover:border-financa transition"
+        className="flex items-start gap-4 bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-8 hover:border-financa transition"
       >
-        <div className="flex items-center justify-between mb-3">
-          <p className="font-display font-semibold">Finanças</p>
-          <span className="text-xs text-ink-400">Ver tudo →</span>
-        </div>
-        <p className="text-2xl font-mono font-semibold mb-3">{formatarMoeda(saldoTotal)}</p>
-        {contasAPagar.length > 0 && (
-          <div>
-            <p className="text-xs text-ink-400 mb-1.5">A pagar em breve</p>
-            <ul className="space-y-1">
+        <span className="w-11 h-11 rounded-xl bg-financa/15 flex items-center justify-center text-xl shrink-0">
+          💰
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <p className="font-display font-semibold">Finanças</p>
+            <span className="text-xs text-ink-400 shrink-0">Ver tudo →</span>
+          </div>
+          <p className="text-xl font-mono font-semibold mt-1">{formatarMoeda(saldoTotal)}</p>
+          {contasAPagar.length > 0 && (
+            <ul className="space-y-1 mt-2">
               {contasAPagar.map((c) => (
-                <li key={c.id} className="flex items-center justify-between text-sm">
-                  <span className="truncate">{c.descricao}</span>
+                <li key={c.id} className="flex items-center justify-between text-xs">
+                  <span className="truncate text-ink-400">{c.descricao}</span>
                   <span className="font-mono text-ink-400 shrink-0 ml-3">
                     dia {c.diaMes} · {formatarMoeda(c.valor)}
                   </span>
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          )}
+        </div>
       </Link>
 
-      {/* Acesso rápido aos módulos */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        <ModuloCard
-          href="/habitos"
-          cor="habito"
-          titulo="Hábitos"
-          descricao="Acompanhe sua constância dia a dia."
-        />
-        <ModuloCard
-          href="/notas"
-          cor="nota"
-          titulo="Notas"
-          descricao="Organize ideias em páginas e blocos."
-        />
-        <ModuloCard
-          href="/financas"
-          cor="financa"
-          titulo="Finanças"
-          descricao="Controle contas, gastos e orçamento."
-        />
+      {/* Acesso rápido — tiles compactos e uniformes de propósito, pra
+          não competir visualmente com os cards de resumo acima */}
+      <p className="text-xs text-ink-400 mb-2 uppercase tracking-wide">Acesso rápido</p>
+      <div className="grid grid-cols-3 gap-3">
+        <AcessoRapido href="/habitos/lista" cor="habito" icone="🔁" titulo="Hábitos" />
+        <AcessoRapido href="/notas" cor="nota" icone="📝" titulo="Notas" />
+        <AcessoRapido href="/financas" cor="financa" icone="💰" titulo="Finanças" />
       </div>
 
       <p className="text-center mt-10 flex items-center justify-center gap-4">
@@ -158,35 +151,36 @@ export default async function DashboardPage() {
   );
 }
 
-function ModuloCard({
+function AcessoRapido({
   href,
   cor,
+  icone,
   titulo,
-  descricao,
 }: {
   href: string;
   cor: "habito" | "nota" | "financa";
+  icone: string;
   titulo: string;
-  descricao: string;
 }) {
   const bordas = {
     habito: "hover:border-habito",
     nota: "hover:border-nota",
     financa: "hover:border-financa",
   };
-  const pontos = {
-    habito: "bg-habito",
-    nota: "bg-nota",
-    financa: "bg-financa",
+  const fundos = {
+    habito: "bg-habito/15",
+    nota: "bg-nota/15",
+    financa: "bg-financa/15",
   };
   return (
     <Link
       href={href}
-      className={`block bg-base-800 border border-base-600 rounded-xl2 p-5 transition ${bordas[cor]}`}
+      className={`flex flex-col items-center justify-center gap-2 aspect-square bg-base-800 border border-base-600 rounded-xl2 transition ${bordas[cor]}`}
     >
-      <span className={`inline-block w-2.5 h-2.5 rounded-full ${pontos[cor]} mb-4`} />
-      <p className="font-display font-semibold text-lg">{titulo}</p>
-      <p className="text-ink-400 text-sm mt-1">{descricao}</p>
+      <span className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl ${fundos[cor]}`}>
+        {icone}
+      </span>
+      <p className="font-display font-medium text-sm">{titulo}</p>
     </Link>
   );
 }

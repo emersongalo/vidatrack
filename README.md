@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 21: Ícone/Logo Novo + Mobile Melhorado
+# VidaTrack — Etapa 22: Painel Principal Redesenhado (mobile)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,22 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (22) — correção do painel principal no mobile:**
+
+Dois problemas reais do print que você mandou:
+
+- **Cabeçalho "vazando" pra fora da tela** — "Notificações" e "Sair"
+  em texto não cabiam ao lado do nome no celular. Virou 3 botões
+  redondos só de ícone (🔔 notificações, ☀︎/☾ tema, ⏻ sair) — cabe
+  fácil em qualquer largura de tela
+- **Cards com tamanhos brigando entre si** — "Hábitos" e "Finanças"
+  apareciam duas vezes (como resumo com número grande, e de novo como
+  card de módulo simples), com dois estilos visuais diferentes um do
+  lado do outro. Removi a duplicação: agora só tem os 2 cards de
+  resumo (Hoje + Finanças, com ícone e informação de verdade) e um
+  "Acesso rápido" compacto embaixo com 3 blocos quadrados do mesmo
+  tamanho, mesmo estilo
 
 **Novo nesta etapa (21):**
 
@@ -469,7 +485,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 19. Deploy no Vercel + Instalar como app
 20. Privacidade e auditoria de acesso
 21. Finanças com ícones, cores e saldo animado
-22. Ícone/logo novo + mobile melhorado — **você está aqui**
+22. Ícone/logo novo + mobile melhorado
+23. Painel principal redesenhado (mobile) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

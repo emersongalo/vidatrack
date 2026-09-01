@@ -21,9 +21,9 @@ export function AlternadorTema() {
     <button
       onClick={alternar}
       aria-label="Alternar tema claro/escuro"
-      className="text-sm text-ink-400 hover:text-ink-100 transition"
+      className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition shrink-0"
     >
-      {tema === "dark" ? "☀︎ Claro" : "☾ Escuro"}
+      <span className="text-base leading-none">{tema === "dark" ? "☀︎" : "☾"}</span>
     </button>
   );
 }
