@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 22: Painel Principal Redesenhado (mobile)
+# VidaTrack — Etapa 23: Trava de Zoom + Ícone Corrigido
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,25 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (23):**
+
+- **Zoom acidental travado** — o "pinça pra dar zoom" estava
+  desalinhando o layout quando encostava sem querer na tela (era o que
+  causava aquele efeito de conteúdo cortado/gigante no seu print). Uma
+  configuração de `viewport` trava isso agora.
+
+  **Nota de acessibilidade honesta:** travar o zoom é ótimo pra sensação
+  de "app de verdade", mas tira a opção de quem precisa dar zoom por
+  dificuldade de visão. Pra a maioria das pessoas não faz diferença —
+  se algum dia isso incomodar algum usuário, dá pra reverter fácil (é
+  só tirar `maximumScale` e `userScalable` do `app/layout.tsx`).
+
+- **Ícone do "Sair" corrigido** — o símbolo `⏻` que usei não existe na
+  fonte de emoji de vários Androids, aparecendo como aquele quadrado
+  vazio ("tofu box"). Troquei por um SVG desenhado na hora, que
+  funciona igual em qualquer aparelho, sem depender de fonte do
+  sistema.
 
 **Novo nesta etapa (22) — correção do painel principal no mobile:**
 
@@ -486,7 +505,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 20. Privacidade e auditoria de acesso
 21. Finanças com ícones, cores e saldo animado
 22. Ícone/logo novo + mobile melhorado
-23. Painel principal redesenhado (mobile) — **você está aqui**
+23. Painel principal redesenhado (mobile)
+24. Trava de zoom + ícone corrigido — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

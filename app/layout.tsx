@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { RegistradorPWA } from "@/components/RegistradorPWA";
@@ -28,7 +28,6 @@ export const metadata: Metadata = {
   description:
     "Um único lugar para acompanhar seus hábitos, organizar suas notas e controlar suas finanças.",
   manifest: "/manifest.json",
-  themeColor: "#0F1013",
   icons: {
     icon: [
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
@@ -41,6 +40,16 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "VidaTrack",
   },
+};
+
+// Trava o "pinça pra dar zoom" acidental, que estava desalinhando o
+// layout no celular quando encostava sem querer na tela.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#0F1013",
 };
 
 export default function RootLayout({
