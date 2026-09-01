@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { criarTarefa } from "../actions";
+import { criarTarefa } from "@/app/habitos/tarefas/actions";
 import { ICONES_DISPONIVEIS } from "@/lib/agenda/estilo";
 
 type Categoria = { id: string; nome: string };

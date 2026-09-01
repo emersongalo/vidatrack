@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { criarTransacao } from "../actions";
+import { criarTransacao } from "@/app/financas/actions";
 
 type Conta = { id: string; nome: string };
 type Categoria = { id: string; nome: string; tipo: "receita" | "despesa" };
