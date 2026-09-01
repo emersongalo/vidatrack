@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 20: Finanças com Ícones, Cores e Saldo Animado
+# VidaTrack — Etapa 21: Ícone/Logo Novo + Mobile Melhorado
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,29 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (21):**
+
+- **Ícone/logo novo do VidaTrack** — um "V" em gradiente com as 3 cores
+  da marca (sálvia → lavanda → âmbar), substituindo as bolinhas
+  provisórias da Etapa 1.5. Gerado em todos os tamanhos necessários:
+  ícone do PWA (192px, 512px), ícone "maskable" pro Android, ícone da
+  Apple (180px) e favicon
+- **"Instalar como app" sempre visível** — antes só aparecia como um
+  banner condicional; agora tem um botão fixo na tela de login (mobile)
+  que tenta o prompt nativo do navegador, e mostra o passo a passo
+  manual se o navegador ainda não liberou o prompt automático
+- **Layout mobile do login corrigido** — antes tinha bastante espaço
+  vazio antes do conteúdo aparecer (o formulário ficava centralizado no
+  meio da tela); agora o conteúdo começa mais perto do topo, com um
+  cabeçalho compacto (ícone + nome) que só aparece no celular
+
+**Sobre "instalar automaticamente ao abrir o link":** isso não é
+tecnicamente possível — os navegadores bloqueiam de propósito qualquer
+instalação sem uma ação explícita da pessoa, senão qualquer site
+poderia instalar coisas no celular de alguém sem permissão. O que deu
+pra fazer foi deixar o convite de instalar o mais visível e imediato
+possível, em vez de escondido atrás de critérios do navegador.
 
 **Novo nesta etapa (20) — Finanças mais visuais:**
 
@@ -445,7 +468,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 18. Validação com Zod + Editar lançamento financeiro
 19. Deploy no Vercel + Instalar como app
 20. Privacidade e auditoria de acesso
-21. Finanças com ícones, cores e saldo animado — **você está aqui**
+21. Finanças com ícones, cores e saldo animado
+22. Ícone/logo novo + mobile melhorado — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

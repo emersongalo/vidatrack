@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { sair } from "../login/actions";
 import { AlternadorTema } from "@/components/AlternadorTema";
@@ -39,9 +40,12 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-5xl mx-auto">
       <header className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-ink-400 text-sm">Olá,</p>
-          <h1 className="text-2xl font-display font-semibold">{nome}</h1>
+        <div className="flex items-center gap-3">
+          <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="rounded-lg" />
+          <div>
+            <p className="text-ink-400 text-sm">Olá,</p>
+            <h1 className="text-2xl font-display font-semibold">{nome}</h1>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <Link href="/notificacoes" className="text-sm text-ink-400 hover:text-ink-100 transition">

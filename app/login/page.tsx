@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { entrar, cadastrar, entrarComGoogle } from "./actions";
+import { BotaoInstalarSempre } from "@/components/BotaoInstalarSempre";
 
 export default function LoginPage({
   searchParams,
@@ -11,9 +13,12 @@ export default function LoginPage({
       {/* Lado esquerdo: o trilho — assinatura visual que une os 3 módulos */}
       <div className="hidden md:flex relative flex-col justify-between p-12 bg-base-800 overflow-hidden">
         <div>
-          <p className="font-display text-2xl font-semibold tracking-tight">
-            VidaTrack
-          </p>
+          <div className="flex items-center gap-2.5">
+            <Image src="/icons/icon-192.png" alt="" width={32} height={32} className="rounded-lg" />
+            <p className="font-display text-2xl font-semibold tracking-tight">
+              VidaTrack
+            </p>
+          </div>
           <p className="text-ink-400 mt-1 text-sm">
             hábitos · notas · finanças, num único trilho
           </p>
@@ -51,9 +56,18 @@ export default function LoginPage({
       </div>
 
       {/* Lado direito: formulário */}
-      <div className="flex items-center justify-center p-6 md:p-12">
+      <div className="flex items-start md:items-center justify-center p-6 pt-10 md:p-12">
         <div className="w-full max-w-sm">
-          <h1 className="text-2xl font-semibold mb-1 md:hidden">VidaTrack</h1>
+          <div className="flex items-center gap-3 mb-6 md:hidden">
+            <Image src="/icons/icon-192.png" alt="" width={40} height={40} className="rounded-xl" />
+            <div>
+              <h1 className="text-xl font-display font-semibold leading-none">VidaTrack</h1>
+              <p className="text-ink-400 text-xs mt-1">hábitos · notas · finanças</p>
+            </div>
+          </div>
+
+          <BotaoInstalarSempre />
+
           <h2 className="text-xl font-display font-semibold mb-6">
             Entrar na sua conta
           </h2>
