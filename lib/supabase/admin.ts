@@ -31,13 +31,15 @@ export function criarClienteAdmin(motivo: string, detalhe?: string) {
   );
 
   // "Fire and forget" — não atrasa nem quebra a operação principal se
-  // o log falhar por algum motivo.
+  // o log falhar por algum motivo. Usa a forma de dois argumentos do
+  // .then() (sucesso, falha) porque o retorno do Supabase é tipado
+  // como PromiseLike, que não tem método .catch().
   cliente
     .from("acessos_administrativos")
     .insert({ motivo, detalhe })
     .then(
-      () => { },
-      () => { }
+      () => {},
+      () => {}
     );
 
   return cliente;
