@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --c-base-900: 15 16 19;
+  --c-base-800: 22 23 28;
+  --c-base-700: 31 33 39;
+  --c-base-600: 42 45 53;
+  --c-ink-100: 242 240 234;
+  --c-ink-400: 155 156 166;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --c-base-900: 252 251 249;
+  --c-base-800: 246 245 241;
+  --c-base-700: 255 255 255;
+  --c-base-600: 227 225 218;
+  --c-ink-100: 26 27 31;
+  --c-ink-400: 107 108 118;
+}
+
+@layer base {
+  body {
+    @apply bg-base-900 text-ink-100 font-body antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display;
+  }
+  :focus-visible {
+    outline: 2px solid #F2F0EA;
+    outline-offset: 2px;
+  }
+}
+
+/* Trilho: elemento de assinatura visual — a linha que conecta os 3 módulos */
+.trilho-linha {
+  background: linear-gradient(
+    180deg,
+    #7FB894 0%,
+    #9C8FD9 50%,
+    #D9A24C 100%
+  );
+}
+
+/* Esconde a barra de rolagem da tira de dias/categorias, mantendo o scroll */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
