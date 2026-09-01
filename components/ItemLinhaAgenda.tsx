@@ -18,6 +18,10 @@ export type ItemAgenda = {
   progressoSubtarefas?: { feitas: number; total: number } | null;
   meta?: { atual: number; alvo: number; unidade: string | null } | null;
   ordem: number;
+  /** Só vem preenchido quando o hábito é compartilhado com alguém —
+   *  mostra o status do dia de cada pessoa lado a lado, pra motivarem
+   *  juntos (ex: "ler a Bíblia juntos"). */
+  participantes?: { nome: string; feito: boolean }[];
 };
 
 export function ItemLinhaAgenda({
@@ -95,6 +99,21 @@ export function ItemLinhaAgenda({
             <span className="text-[11px] text-ink-400">🔔 {item.horarioLembrete.slice(0, 5)}</span>
           )}
         </div>
+
+        {item.participantes && item.participantes.length > 1 && (
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            {item.participantes.map((p, i) => (
+              <span
+                key={i}
+                className={`inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-full ${
+                  p.feito ? "bg-habito-soft text-habito" : "bg-base-600 text-ink-400"
+                }`}
+              >
+                {p.feito ? "✓" : "○"} {p.nome}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

@@ -12,6 +12,10 @@ export default async function FinancasPage() {
   const supabase = createClient();
   await garantirLancamentosRecorrentes();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data: contas } = await supabase
     .from("financa_contas")
     .select("id, nome, saldo_inicial")
@@ -22,7 +26,7 @@ export default async function FinancasPage() {
   const { data: todasTransacoes } = idsContas.length
     ? await supabase
         .from("financa_transacoes")
-        .select("id, conta_id, categoria_id, tipo, valor, descricao, data, financa_categorias(icone, cor)")
+        .select("id, conta_id, categoria_id, tipo, valor, descricao, data, dono_id, financa_categorias(icone, cor)")
         .in("conta_id", idsContas)
         .order("data", { ascending: false })
     : { data: [] as any[] };
@@ -72,6 +76,17 @@ export default async function FinancasPage() {
 
   const mapaContas = new Map((contas ?? []).map((c) => [c.id, c.nome]));
   const ultimasTransacoes = transacoes.slice(0, 10);
+
+  // Nomes de quem lançou — só busca se houver mais de uma pessoa
+  // diferente lançando (ou seja, conta compartilhada de verdade).
+  // Pra hábitos particulares/contas sem compartilhamento, isso não
+  // aparece na tela (evita poluir visual à toa).
+  const idsDonosUnicos = Array.from(new Set(transacoes.map((t: any) => t.dono_id)));
+  let mapaNomes = new Map<string, string>();
+  if (idsDonosUnicos.length > 1) {
+    const { data: perfis } = await supabase.from("perfis").select("id, nome").in("id", idsDonosUnicos);
+    mapaNomes = new Map((perfis ?? []).map((p) => [p.id, p.nome ?? "Alguém"]));
+  }
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-2xl mx-auto">
@@ -195,9 +210,20 @@ export default async function FinancasPage() {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{t.descricao || mapaContas.get(t.conta_id)}</p>
-                    <p className="text-xs text-ink-400">
-                      {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
-                      {mapaContas.get(t.conta_id)}
+                    <p className="text-xs text-ink-400 flex items-center gap-1.5 flex-wrap">
+                      <span>
+                        {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
+                        {mapaContas.get(t.conta_id)}
+                      </span>
+                      {mapaNomes.has(t.dono_id) && (
+                        <span
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] ${
+                            t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
+                          }`}
+                        >
+                          👤 {t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
+                        </span>
+                      )}
                     </p>
                   </div>
                   <span

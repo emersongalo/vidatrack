@@ -4,9 +4,9 @@ const ABREVIACOES_DIA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export function WidgetClima({ previsao, localNome }: { previsao: DiaPrevisao[]; localNome: string }) {
   return (
-    <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
+    <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 w-full min-w-0 overflow-hidden">
       <p className="text-xs text-ink-400 mb-3">📍 {localNome}</p>
-      <div className="flex gap-1 overflow-x-auto scrollbar-none">
+      <div className="flex gap-1 overflow-x-auto scrollbar-none w-full min-w-0">
         {previsao.map((dia, i) => {
           const { emoji } = traduzirCodigoTempo(dia.codigo);
           const diaSemana = new Date(dia.data + "T12:00:00").getDay();

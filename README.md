@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 23: Trava de Zoom + Ícone Corrigido
+# VidaTrack — Etapa 26: Compartilhamento entre Casal/Família
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,70 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (26) — pensado pra casal/família:**
+
+- **Hábitos em conjunto** — quando um hábito é compartilhado (ex: "ler
+  a Bíblia juntos"), a agenda "Hoje" agora mostra o status de **cada
+  pessoa** lado a lado (✓ Você · ○ Fulano), não só o seu. Cada um
+  continua marcando seu próprio check-in — o streak de cada pessoa
+  continua individual, só o *visual* virou conjunto, pra vocês se
+  motivarem vendo o progresso um do outro. Hábitos particulares (sem
+  ninguém convidado) continuam exatamente como sempre foram, sem esse
+  visual extra
+- **"Quem lançou" nas finanças** — quando uma conta é compartilhada,
+  cada lançamento agora mostra uma etiqueta discreta com o nome de quem
+  adicionou ("Você" ou o nome da outra pessoa)
+- **Correção de RLS necessária pra isso funcionar de verdade:** a
+  política de perfis só deixava cada um ver o próprio nome — sem
+  ajustar isso, os dois recursos acima sempre mostrariam "Alguém" em
+  vez do nome real. Adicionei uma política que permite ver o nome de
+  quem compartilha algo com você (só isso, não expõe nome de gente
+  aleatória)
+
+**Nota sobre nomes com login Google:** se a pessoa entrou com Google
+(em vez de e-mail/senha), o nome pode aparecer como "Alguém" em vez do
+nome de verdade — isso acontece porque hoje só capturamos o campo
+"nome" no cadastro por e-mail. Funciona (mostra o fallback), mas não é
+o ideal; se isso incomodar, dá pra corrigir numa próxima etapa.
+
+## Rodar o schema desta etapa
+
+No SQL Editor do Supabase, rode também o `supabase/schema_casal.sql`
+(depois de todos os schemas anteriores).
+
+**Novo nesta etapa (25) — localização simplificada:**
+
+Tirei a opção de digitar o nome da cidade — agora é só um botão
+"📍 Permitir localização" que usa o GPS/localização do navegador
+direto. Mais simples, menos campo pra preencher, e ainda com um
+detalhe de conveniência: se a pessoa já tinha aceitado a permissão
+antes, o clima carrega sozinho na próxima vez, sem precisar clicar de
+novo.
+
+Removi também a função `buscarCidadesPorNome` do
+`lib/clima/consulta.ts`, que não tinha mais nenhum lugar chamando ela
+depois dessa simplificação — código morto igual ao caso do Firebase lá
+na Etapa 19, agora prevenido de propósito.
+
+**Novo nesta etapa (24) — a página parava de "dançar" pros lados:**
+
+Isso não era o zoom (já corrigido na Etapa 23) — era um **vazamento de
+largura de verdade**: a tira de dias do widget de clima tentava caber 7
+dias numa faixa mais estreita que isso, e em telas pequenas empurrava a
+página inteira pro lado em vez de só rolar por dentro dela mesma.
+Reproduzi o bug de propósito numa página de teste isolada antes de
+corrigir, pra confirmar a causa exata em vez de adivinhar.
+
+Duas correções, uma em cima da outra:
+1. **Causa raiz corrigida** no `WidgetClima` — a tira de dias agora
+   respeita a largura do cartão e rola só por dentro dele
+2. **Rede de segurança global** — adicionei uma regra no CSS que
+   impede QUALQUER elemento, em qualquer tela do app, de fazer a
+   página inteira ficar rolável pros lados. Mesmo que outro componente
+   tenha o mesmo tipo de bug no futuro, a página em si nunca mais vai
+   "dançar" — só aquele componente específico ficaria com comportamento
+   errado, sem afetar o resto da tela.
 
 **Novo nesta etapa (23):**
 
@@ -506,7 +570,10 @@ versão Android via Capacitor está descrita na seção específica acima.
 21. Finanças com ícones, cores e saldo animado
 22. Ícone/logo novo + mobile melhorado
 23. Painel principal redesenhado (mobile)
-24. Trava de zoom + ícone corrigido — **você está aqui**
+24. Trava de zoom + ícone corrigido
+25. Correção de overflow horizontal
+26. Localização simplificada (só permissão)
+27. Compartilhamento entre casal/família — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

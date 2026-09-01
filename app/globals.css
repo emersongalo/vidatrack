@@ -24,6 +24,15 @@
 }
 
 @layer base {
+  html, body {
+    /* Rede de segurança: nenhum elemento, em nenhuma tela, consegue
+       fazer a página inteira "dançar" pros lados — mesmo que algum
+       componente interno vaze de largura por engano. Barras de
+       rolagem horizontal internas (tipo a tira do clima) continuam
+       funcionando normalmente, isso só afeta o body/página como um
+       todo. */
+    overflow-x: hidden;
+  }
   body {
     @apply bg-base-900 text-ink-100 font-body antialiased;
   }

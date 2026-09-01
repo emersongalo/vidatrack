@@ -60,24 +60,3 @@ export async function buscarPrevisaoTempo(
     return null;
   }
 }
-
-export async function buscarCidadesPorNome(nome: string) {
-  try {
-    const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
-    url.searchParams.set("name", nome);
-    url.searchParams.set("count", "5");
-    url.searchParams.set("language", "pt");
-
-    const resposta = await fetch(url.toString());
-    if (!resposta.ok) return [];
-
-    const dados = await resposta.json();
-    return (dados.results ?? []).map((r: any) => ({
-      nome: [r.name, r.admin1, r.country].filter(Boolean).join(", "),
-      latitude: r.latitude,
-      longitude: r.longitude,
-    }));
-  } catch {
-    return [];
-  }
-}
