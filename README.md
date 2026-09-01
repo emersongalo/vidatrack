@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 19: Privacidade e Auditoria
+# VidaTrack — Etapa 20: Finanças com Ícones, Cores e Saldo Animado
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,29 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (20) — Finanças mais visuais:**
+
+- **Ícone e cor por categoria** — escolhe entre 12 ícones de despesa
+  (🍔🏠🚗💊🎬📚📱🛍️✈️🐾🎁💡) ou 6 de receita (💼💰📈🏦🎯✨), mais uma
+  das 4 cores do app
+- **Editar e excluir categoria** — antes só dava pra criar. Excluir uma
+  categoria não apaga os lançamentos que a usavam, eles só ficam "sem
+  categoria" (já era assim desde a Etapa 4, agora só ficou acessível
+  pela interface)
+- **Ícones aparecem** na lista de lançamentos e no seletor de categoria
+  do formulário de novo lançamento
+- **Indicador de saldo animado** — em vez de só um número, agora tem
+  um emoji que reage: 🎉 pulsando suave com partículas subindo quando
+  positivo, 📉 "tremendo" discretamente quando negativo. Tudo em CSS
+  puro (sem depender de GIF de terceiro — mais rápido de carregar,
+  sem risco de direito autoral, e funciona igual em qualquer conexão)
+
+## Rodar o schema desta etapa
+
+No SQL Editor do Supabase, rode também o
+`supabase/schema_categorias_visuais.sql` (depois de todos os schemas
+anteriores).
 
 **Novo nesta etapa (19) — privacidade e auditoria:**
 
@@ -421,7 +444,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 17. Análise financeira avançada (treemap, radar, dicas)
 18. Validação com Zod + Editar lançamento financeiro
 19. Deploy no Vercel + Instalar como app
-20. Privacidade e auditoria de acesso — **você está aqui**
+20. Privacidade e auditoria de acesso
+21. Finanças com ícones, cores e saldo animado — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

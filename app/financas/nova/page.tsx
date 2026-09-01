@@ -17,7 +17,7 @@ export default async function NovaTransacaoPage({
 
   const { data: categorias } = await supabase
     .from("financa_categorias")
-    .select("id, nome, tipo")
+    .select("id, nome, tipo, icone")
     .order("nome", { ascending: true });
 
   if (!contas || contas.length === 0) {

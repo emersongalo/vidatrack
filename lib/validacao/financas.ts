@@ -50,6 +50,8 @@ export const esquemaCategoria = z.object({
   nome: z.string().trim().min(1, "Dê um nome para a categoria").max(40, "Nome muito longo"),
   tipo: z.enum(["receita", "despesa"]),
   metaMensal: valorMonetarioOpcional,
+  icone: z.string().trim().min(1).max(8).optional().transform((v) => v || "💰"),
+  cor: z.enum(["financa", "habito", "nota", "neutro"]).optional().transform((v) => v || "financa"),
 });
 
 export const esquemaRecorrencia = z.object({

@@ -80,6 +80,8 @@ export async function criarCategoria(formData: FormData) {
     nome: formData.get("nome"),
     tipo: formData.get("tipo"),
     metaMensal: formData.get("metaMensal"),
+    icone: formData.get("icone"),
+    cor: formData.get("cor"),
   });
 
   if (!resultado.success) {
@@ -91,6 +93,8 @@ export async function criarCategoria(formData: FormData) {
     nome: resultado.data.nome,
     tipo: resultado.data.tipo,
     meta_mensal: resultado.data.metaMensal,
+    icone: resultado.data.icone,
+    cor: resultado.data.cor,
   });
 
   if (error) {
@@ -99,6 +103,50 @@ export async function criarCategoria(formData: FormData) {
 
   revalidatePath("/financas/categorias");
   redirect("/financas/categorias");
+}
+
+export async function atualizarCategoria(categoriaId: string, formData: FormData) {
+  const supabase = createClient();
+
+  const resultado = esquemaCategoria.safeParse({
+    nome: formData.get("nome"),
+    tipo: formData.get("tipo"),
+    metaMensal: formData.get("metaMensal"),
+    icone: formData.get("icone"),
+    cor: formData.get("cor"),
+  });
+
+  if (!resultado.success) {
+    redirect(`/financas/categorias/${categoriaId}/editar?erro=${encodeURIComponent(primeiroErro(resultado))}`);
+  }
+
+  const { error } = await supabase
+    .from("financa_categorias")
+    .update({
+      nome: resultado.data.nome,
+      tipo: resultado.data.tipo,
+      meta_mensal: resultado.data.metaMensal,
+      icone: resultado.data.icone,
+      cor: resultado.data.cor,
+    })
+    .eq("id", categoriaId);
+
+  if (error) {
+    redirect(`/financas/categorias/${categoriaId}/editar?erro=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/financas/categorias");
+  redirect("/financas/categorias");
+}
+
+export async function removerCategoria(categoriaId: string) {
+  "use server";
+  const supabase = createClient();
+  // Lançamentos que usavam essa categoria ficam sem categoria (a coluna
+  // já é "on delete set null" desde a Etapa 4) — não perde o lançamento.
+  await supabase.from("financa_categorias").delete().eq("id", categoriaId);
+  revalidatePath("/financas/categorias");
+  revalidatePath("/financas");
 }
 
 function dadosTransacaoDoFormulario(formData: FormData) {

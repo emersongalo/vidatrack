@@ -10,6 +10,11 @@ export function primeiroDiaDoMes(dataReferenciaISO?: string): string {
   return new Date(d.getFullYear(), d.getMonth(), 1).toLocaleDateString("sv-SE");
 }
 
+export const ICONES_CATEGORIA_DESPESA = [
+  "🍔", "🏠", "🚗", "💊", "🎬", "📚", "📱", "🛍️", "✈️", "🐾", "🎁", "💡",
+];
+export const ICONES_CATEGORIA_RECEITA = ["💼", "💰", "📈", "🏦", "🎯", "✨"];
+
 export function nomeDoMesAtual(): string {
   return new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 }

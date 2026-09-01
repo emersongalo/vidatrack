@@ -55,6 +55,39 @@
   display: none;
 }
 
+/* Indicador de saldo — animações leves em CSS puro (sem depender de
+   GIF externo: mais rápido, sem problema de direito autoral, e
+   funciona igual em qualquer tema) */
+@keyframes flutuar-particula {
+  0% { transform: translateY(0) scale(1); opacity: 0.9; }
+  100% { transform: translateY(-46px) scale(0.4); opacity: 0; }
+}
+@keyframes pulsar-positivo {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@keyframes tremer-negativo {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+.emoji-saldo-positivo {
+  display: inline-block;
+  animation: pulsar-positivo 1.8s ease-in-out infinite;
+}
+.emoji-saldo-negativo {
+  display: inline-block;
+  animation: tremer-negativo 2.4s ease-in-out infinite;
+}
+.particula-saldo {
+  position: absolute;
+  bottom: 4px;
+  animation: flutuar-particula 2.2s ease-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

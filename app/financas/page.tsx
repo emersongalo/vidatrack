@@ -4,6 +4,8 @@ import { formatarMoeda, primeiroDiaDoMes, nomeDoMesAtual } from "@/lib/financas/
 import { BarraOrcamento } from "@/components/BarraOrcamento";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoria";
+import { IndicadorSaldo } from "@/components/IndicadorSaldo";
+import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
 
 export default async function FinancasPage() {
@@ -20,7 +22,7 @@ export default async function FinancasPage() {
   const { data: todasTransacoes } = idsContas.length
     ? await supabase
         .from("financa_transacoes")
-        .select("id, conta_id, categoria_id, tipo, valor, descricao, data")
+        .select("id, conta_id, categoria_id, tipo, valor, descricao, data, financa_categorias(icone, cor)")
         .in("conta_id", idsContas)
         .order("data", { ascending: false })
     : { data: [] as any[] };
@@ -103,12 +105,9 @@ export default async function FinancasPage() {
         </div>
       ) : (
         <>
-          {/* Saldo total */}
-          <div className="bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-5 mb-4">
-            <p className="text-ink-400 text-sm mb-1">Saldo total</p>
-            <p className="text-3xl font-display font-semibold font-mono">
-              {formatarMoeda(saldoTotal)}
-            </p>
+          {/* Saldo total, com indicador animado positivo/negativo */}
+          <div className="mb-4">
+            <IndicadorSaldo saldo={saldoTotal} />
           </div>
 
           {/* Resumo do mês */}
@@ -182,11 +181,18 @@ export default async function FinancasPage() {
             <p className="text-ink-400 text-sm">Nenhum lançamento ainda.</p>
           ) : (
             <ul className="space-y-2">
-              {ultimasTransacoes.map((t) => (
+              {ultimasTransacoes.map((t: any) => (
                 <li
                   key={t.id}
                   className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3"
                 >
+                  <span
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
+                      t.financa_categorias?.cor ?? "financa"
+                    )}`}
+                  >
+                    {t.financa_categorias?.icone ?? (t.tipo === "receita" ? "💰" : "💸")}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{t.descricao || mapaContas.get(t.conta_id)}</p>
                     <p className="text-xs text-ink-400">

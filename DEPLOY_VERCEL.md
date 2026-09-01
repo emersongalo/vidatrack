@@ -26,6 +26,7 @@ No SQL Editor do Supabase, em **New query**, um de cada vez:
 13. `schema_dashboard.sql`
 14. `schema_editar_transacao.sql`
 15. `schema_auditoria.sql`
+16. `schema_categorias_visuais.sql`
 
 Dica: seleciona todos os arquivos de uma vez no seu editor de código,
 copia o conteúdo de cada um e cola em queries separadas — é mais rápido

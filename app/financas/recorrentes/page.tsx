@@ -17,7 +17,7 @@ export default async function RecorrentesPage({
       .select("id, tipo, valor, descricao, dia_mes, ativo, financa_contas(nome)")
       .order("dia_mes"),
     supabase.from("financa_contas").select("id, nome").eq("arquivado", false),
-    supabase.from("financa_categorias").select("id, nome, tipo"),
+    supabase.from("financa_categorias").select("id, nome, tipo, icone"),
   ]);
 
   return (

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { criarTransacao } from "@/app/financas/actions";
 
 type Conta = { id: string; nome: string };
-type Categoria = { id: string; nome: string; tipo: "receita" | "despesa" };
+type Categoria = { id: string; nome: string; tipo: "receita" | "despesa"; icone?: string };
 
 export function FormularioTransacao({
   contas,
@@ -130,6 +130,7 @@ export function FormularioTransacao({
             <option value="">Sem categoria</option>
             {categoriasFiltradas.map((cat) => (
               <option key={cat.id} value={cat.id}>
+                {cat.icone ? `${cat.icone} ` : ""}
                 {cat.nome}
               </option>
             ))}

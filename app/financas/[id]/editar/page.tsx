@@ -19,7 +19,7 @@ export default async function EditarTransacaoPage({
       .eq("id", params.id)
       .single(),
     supabase.from("financa_contas").select("id, nome").eq("arquivado", false).order("criado_em"),
-    supabase.from("financa_categorias").select("id, nome, tipo").order("nome"),
+    supabase.from("financa_categorias").select("id, nome, tipo, icone").order("nome"),
   ]);
 
   if (!transacao) notFound();
