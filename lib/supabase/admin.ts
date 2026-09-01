@@ -35,8 +35,10 @@ export function criarClienteAdmin(motivo: string, detalhe?: string) {
   cliente
     .from("acessos_administrativos")
     .insert({ motivo, detalhe })
-    .then(() => {})
-    .catch(() => {});
+    .then(
+      () => { },
+      () => { }
+    );
 
   return cliente;
 }
