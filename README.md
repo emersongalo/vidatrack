@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 27: Popup de Excluir + Recorrência no Formulário + Assistente de IA
+# VidaTrack — Etapa 29: Ícones nas Categorias Padrão + Fim de Recorrência
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,30 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (29):**
+
+- **Categorias padrão com ícone certo** — as 8 categorias que vêm
+  prontas pra quem se cadastra (Salário, Alimentação, Moradia etc.)
+  estavam nascendo todas com o mesmo ícone genérico 💰. Agora cada
+  uma tem o ícone certo (🍔 Alimentação, 🏠 Moradia, 🚗 Transporte...).
+  **E o mais importante: isso corrige retroativamente quem já tinha
+  essas categorias criadas antes** — o SQL atualiza o ícone de quem
+  ainda está com o valor genérico, sem mexer em nada que você já
+  personalizou à mão
+- **Recorrência "até uma data"** — igual a maioria dos apps de
+  finanças (Mobills, Organizze etc.), agora dá pra escolher entre
+  "Para sempre" ou "Até uma data" ao marcar "Repetir todo mês". Antes
+  só existia "pra sempre", sem controle
+- Mesmas melhorias aplicadas nos dois lugares: dentro do formulário de
+  novo lançamento **e** na tela separada `/financas/recorrentes`
+
+## Rodar o schema desta etapa
+
+No SQL Editor do Supabase, rode também o
+`supabase/schema_categorias_padrao_v2.sql` (depois de todos os schemas
+anteriores) — ele já inclui a correção retroativa dos ícones, não
+precisa fazer nada manual.
 
 **Novo nesta etapa (27):**
 
@@ -603,7 +627,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 26. Localização simplificada (só permissão)
 27. Compartilhamento entre casal/família
 28. Popup de excluir + recorrência no formulário + Assistente de IA
-29. Assistente de IA removido — **você está aqui**
+29. Assistente de IA removido
+30. Ícones nas categorias padrão + fim de recorrência — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

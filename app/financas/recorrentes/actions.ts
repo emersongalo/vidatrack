@@ -19,6 +19,7 @@ export async function criarRecorrencia(formData: FormData) {
     categoriaId: formData.get("categoriaId"),
     descricao: formData.get("descricao"),
     diaMes: formData.get("diaMes"),
+    dataFim: formData.get("dataFim"),
   });
 
   if (!resultado.success) {
@@ -33,6 +34,7 @@ export async function criarRecorrencia(formData: FormData) {
     valor: resultado.data.valor,
     descricao: resultado.data.descricao,
     dia_mes: resultado.data.diaMes,
+    data_fim: resultado.data.dataFim,
   });
 
   if (error) {
@@ -87,7 +89,7 @@ export async function garantirLancamentosRecorrentes() {
 
   const { data: recorrencias } = await supabase
     .from("financa_recorrencias")
-    .select("id, conta_id, categoria_id, tipo, valor, descricao, dia_mes")
+    .select("id, conta_id, categoria_id, tipo, valor, descricao, dia_mes, data_fim")
     .eq("ativo", true)
     .eq("dono_id", user.id)
     .lte("dia_mes", diaAtual);
@@ -109,6 +111,10 @@ export async function garantirLancamentosRecorrentes() {
     if (idsJaGerados.has(r.id)) continue;
 
     const data = new Date(hoje.getFullYear(), hoje.getMonth(), r.dia_mes).toLocaleDateString("sv-SE");
+
+    // Se tem data final e esse mês já passou dela, não gera mais —
+    // a recorrência "expirou" sozinha, sem precisar excluir na mão.
+    if (r.data_fim && data > r.data_fim) continue;
 
     await supabase.from("financa_transacoes").insert({
       dono_id: user.id,

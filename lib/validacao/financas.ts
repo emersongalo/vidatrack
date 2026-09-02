@@ -40,6 +40,11 @@ export const esquemaTransacao = z.object({
     .optional()
     .transform((v) => (v ? Number(v) : null))
     .pipe(z.number().int().min(1).max(28).nullable()),
+  dataFimRecorrencia: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v || null),
 });
 
 export const esquemaConta = z.object({
@@ -71,6 +76,11 @@ export const esquemaRecorrencia = z.object({
     .string()
     .transform((v) => Number(v))
     .pipe(z.number().int().min(1, "Dia entre 1 e 28").max(28, "Dia entre 1 e 28")),
+  dataFim: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v || null),
 });
 
 /**

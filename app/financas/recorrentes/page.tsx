@@ -14,7 +14,7 @@ export default async function RecorrentesPage({
   const [{ data: recorrencias }, { data: contas }, { data: categorias }] = await Promise.all([
     supabase
       .from("financa_recorrencias")
-      .select("id, tipo, valor, descricao, dia_mes, ativo, financa_contas(nome)")
+      .select("id, tipo, valor, descricao, dia_mes, data_fim, ativo, financa_contas(nome)")
       .order("dia_mes"),
     supabase.from("financa_contas").select("id, nome").eq("arquivado", false),
     supabase.from("financa_categorias").select("id, nome, tipo, icone"),
@@ -51,6 +51,9 @@ export default async function RecorrentesPage({
                 </p>
                 <p className="text-xs text-ink-400">
                   Todo dia {r.dia_mes} · {r.financa_contas?.nome}
+                  {r.data_fim && (
+                    <> · até {new Date(r.data_fim + "T00:00:00").toLocaleDateString("pt-BR")}</>
+                  )}
                 </p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
@@ -109,8 +112,9 @@ export default async function RecorrentesPage({
               className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
               <option value="">Sem categoria</option>
-              {(categorias ?? []).map((c) => (
+              {(categorias ?? []).map((c: any) => (
                 <option key={c.id} value={c.id}>
+                  {c.icone ? `${c.icone} ` : ""}
                   {c.nome}
                 </option>
               ))}
@@ -127,6 +131,17 @@ export default async function RecorrentesPage({
                 max={28}
                 defaultValue={5}
                 className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
+              />
+            </div>
+            <div>
+              <label htmlFor="dataFim" className="block text-sm text-ink-400 mb-1">
+                Até quando? (opcional — deixe em branco pra "sempre")
+              </label>
+              <input
+                id="dataFim"
+                name="dataFim"
+                type="date"
+                className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
               />
             </div>
             <input

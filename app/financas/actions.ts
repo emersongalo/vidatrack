@@ -159,6 +159,7 @@ function dadosTransacaoDoFormulario(formData: FormData) {
     data: formData.get("data") || new Date().toLocaleDateString("sv-SE"),
     recorrente: formData.get("recorrente"),
     diaMes: formData.get("diaMes"),
+    dataFimRecorrencia: formData.get("dataFimRecorrencia"),
   };
 }
 
@@ -201,6 +202,7 @@ export async function criarTransacao(formData: FormData) {
       valor: resultado.data.valor,
       descricao: resultado.data.descricao,
       dia_mes: resultado.data.diaMes,
+      data_fim: resultado.data.dataFimRecorrencia,
     });
   }
 

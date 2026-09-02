@@ -35,6 +35,7 @@ export function FormularioTransacao({
 }) {
   const [tipo, setTipo] = useState<"despesa" | "receita">(valoresIniciais?.tipo ?? "despesa");
   const [recorrente, setRecorrente] = useState(false);
+  const [duracaoRecorrencia, setDuracaoRecorrencia] = useState<"sempre" | "ate_data">("sempre");
   const ehEdicao = !!valoresIniciais;
 
   const categoriasFiltradas = useMemo(
@@ -180,23 +181,67 @@ export function FormularioTransacao({
               <span className="text-sm">🔁 Repetir todo mês</span>
             </label>
             {recorrente && (
-              <div className="mt-3">
-                <label htmlFor="diaMes" className="block text-xs text-ink-400 mb-1">
-                  Todo dia (1 a 28)
-                </label>
-                <input
-                  id="diaMes"
-                  name="diaMes"
-                  type="number"
-                  min={1}
-                  max={28}
-                  defaultValue={new Date().getDate() > 28 ? 28 : new Date().getDate()}
-                  className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition font-mono"
-                />
-                <p className="text-[11px] text-ink-400 mt-1.5">
-                  Esse lançamento de hoje é criado normalmente, e os próximos
-                  meses passam a aparecer sozinhos — dá pra gerenciar depois
-                  em Finanças → Recorrentes.
+              <div className="mt-3 space-y-3">
+                <div>
+                  <label htmlFor="diaMes" className="block text-xs text-ink-400 mb-1">
+                    Repete todo dia (do mês)
+                  </label>
+                  <input
+                    id="diaMes"
+                    name="diaMes"
+                    type="number"
+                    min={1}
+                    max={28}
+                    defaultValue={new Date().getDate() > 28 ? 28 : new Date().getDate()}
+                    className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition font-mono"
+                  />
+                  <p className="text-[11px] text-ink-400 mt-1">
+                    Ex: 5 = todo dia 5 de cada mês. Máximo 28, pra funcionar em
+                    fevereiro também.
+                  </p>
+                </div>
+
+                <div>
+                  <span className="block text-xs text-ink-400 mb-1.5">Até quando repete?</span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDuracaoRecorrencia("sempre")}
+                      className={`flex-1 rounded-lg py-1.5 text-xs border transition ${
+                        duracaoRecorrencia === "sempre"
+                          ? "bg-ink-100 text-base-900 border-ink-100"
+                          : "border-base-600 text-ink-400 hover:text-ink-100"
+                      }`}
+                    >
+                      Para sempre
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDuracaoRecorrencia("ate_data")}
+                      className={`flex-1 rounded-lg py-1.5 text-xs border transition ${
+                        duracaoRecorrencia === "ate_data"
+                          ? "bg-ink-100 text-base-900 border-ink-100"
+                          : "border-base-600 text-ink-400 hover:text-ink-100"
+                      }`}
+                    >
+                      Até uma data
+                    </button>
+                  </div>
+                  {duracaoRecorrencia === "ate_data" && (
+                    <input
+                      name="dataFimRecorrencia"
+                      type="date"
+                      required
+                      min={hoje}
+                      className="w-full mt-2 bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
+                    />
+                  )}
+                </div>
+
+                <p className="text-[11px] text-ink-400">
+                  O lançamento de hoje é criado normalmente, e os próximos
+                  meses passam a aparecer sozinhos — dá pra gerenciar (pausar
+                  ou excluir) depois em Finanças → Recorrentes.
                 </p>
               </div>
             )}
