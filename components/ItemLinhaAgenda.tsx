@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
-import { classeCor, classeFundoSuave } from "@/lib/agenda/estilo";
+import { classeCor, classeFundoSuave, classeTextoCor } from "@/lib/agenda/estilo";
 import { alternarCheckin, ajustarQuantidadeHabito } from "@/app/habitos/actions";
 import { alternarConclusaoTarefa } from "@/app/habitos/tarefas/actions";
 
@@ -65,7 +65,7 @@ export function ItemLinhaAgenda({
   const conteudo = (
     <>
       <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${classeFundoSuave(
+        className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0 ${classeFundoSuave(
           item.cor
         )}`}
       >
@@ -78,9 +78,9 @@ export function ItemLinhaAgenda({
         </p>
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           <span
-            className={`text-[11px] px-1.5 py-0.5 rounded ${
-              item.tipo === "habito" ? "bg-habito-soft text-habito" : "bg-nota-soft text-nota"
-            }`}
+            className={`text-[11px] px-1.5 py-0.5 rounded font-medium ${classeFundoSuave(
+              item.cor
+            )} ${classeTextoCor(item.cor)}`}
           >
             {item.tipo === "habito" ? "Hábito" : "Tarefa"}
           </span>

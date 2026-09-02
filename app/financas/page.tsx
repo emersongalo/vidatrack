@@ -224,22 +224,21 @@ export default async function FinancasPage() {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{t.descricao || mapaContas.get(t.conta_id)}</p>
-                    <p className="text-xs text-ink-400 flex items-center gap-1.5 flex-wrap">
-                      <span>
-                        {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
-                        {mapaContas.get(t.conta_id)}
-                      </span>
-                      {mapaNomes.has(t.dono_id) && (
-                        <span
-                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] ${
-                            t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
-                          }`}
-                        >
-                          👤 {t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
-                        </span>
-                      )}
+                    <p className="text-xs text-ink-400">
+                      {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
+                      {mapaContas.get(t.conta_id)}
                     </p>
                   </div>
+                  {mapaNomes.has(t.dono_id) && (
+                    <span
+                      title={t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium shrink-0 ${
+                        t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
+                      }`}
+                    >
+                      {(t.dono_id === user?.id ? "V" : (mapaNomes.get(t.dono_id) ?? "?")).charAt(0).toUpperCase()}
+                    </span>
+                  )}
                   <span
                     className={`font-mono text-sm shrink-0 ${
                       t.tipo === "receita" ? "text-habito" : "text-red-400"

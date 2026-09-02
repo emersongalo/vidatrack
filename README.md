@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 31: Nome/Foto do Google + Ícones de Banco
+# VidaTrack — Etapa 32: Hábitos estilo HabitNow + Correção Visual em Finanças
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,37 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (32):**
+
+- **Badge de "quem lançou" corrigido** — virou um círculo pequeno com
+  a inicial (com o nome completo aparecendo ao passar o mouse/segurar),
+  em vez de quebrar linha embaixo do lançamento como no seu print.
+  Corrigido tanto na tela principal de Finanças quanto no Extrato
+- **Paleta de cores expandida** — de 4 pra 8 cores. Antes cada hábito
+  só podia usar a cor "genérica" do módulo (sempre a mesma para
+  todos); agora tem rosa, azul, roxo, verde, laranja e ciano também,
+  então cada hábito pode ter sua própria identidade visual — é o que
+  dá aquele efeito "vivo" do HabitNow, em vez de tudo com a cara igual
+- **Mais ícones pra escolher** — de 16 pra 32 (incluindo ❤️ 🎓 🚴 📚
+  entre outros, pra cobrir mais tipos de hábito)
+- **Etiqueta "Hábito"/"Tarefa"** na agenda "Hoje" agora usa a cor
+  própria de cada item, em vez de uma cor fixa igual pra todos
+- Ícones maiores e mais arredondados na lista da agenda (mais parecido
+  com o visual do HabitNow)
+
+**Importante ser honesto sobre o escopo:** isso é um passo real na
+direção do visual do HabitNow (cores individuais por hábito, ícones
+maiores, etiquetas coloridas), mas não é uma cópia pixel a pixel — a
+tira de dias e a estrutura geral da tela já eram parecidas antes desta
+etapa. Se quiser ir mais fundo (o cabeçalho com busca/calendário, as
+"listas" customizáveis tipo o HabitNow tem), me avisa que fazemos numa
+próxima leva dedicada a isso.
+
+**Não precisa rodar nenhum SQL nesta etapa** — as cores novas são só
+código, os hábitos que você já tem continuam funcionando (as cores
+antigas — sálvia/lavanda/âmbar — continuam existindo, só ganharam
+companhia).
 
 **Novo nesta etapa (31):**
 
@@ -674,7 +705,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 29. Assistente de IA removido
 30. Ícones nas categorias padrão + fim de recorrência
 31. Extrato com filtros de período
-32. Nome/foto do Google + ícones de banco — **você está aqui**
+32. Nome/foto do Google + ícones de banco
+33. Hábitos estilo HabitNow + correção visual em Finanças — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

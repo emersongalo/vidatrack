@@ -22,6 +22,9 @@ export default async function ExtratoPage({
   searchParams: { tipo?: string; inicio?: string; fim?: string; preset?: string; contaId?: string };
 }) {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const presetAtivo = (searchParams.preset as PresetPeriodo) ?? (searchParams.inicio ? "" : "este_mes");
   const periodoPreset = presetAtivo ? calcularPeriodo(presetAtivo as PresetPeriodo) : null;
@@ -38,7 +41,7 @@ export default async function ExtratoPage({
 
   let consulta = supabase
     .from("financa_transacoes")
-    .select("id, conta_id, categoria_id, tipo, valor, descricao, data, financa_categorias(icone, cor)")
+    .select("id, conta_id, categoria_id, tipo, valor, descricao, data, dono_id, financa_categorias(icone, cor)")
     .in("conta_id", idsContas.length ? idsContas : ["00000000-0000-0000-0000-000000000000"])
     .gte("data", inicio)
     .lte("data", fim)
@@ -49,6 +52,13 @@ export default async function ExtratoPage({
 
   const { data: transacoes } = await consulta;
   const lista = transacoes ?? [];
+
+  const idsDonosUnicos = Array.from(new Set(lista.map((t: any) => t.dono_id)));
+  let mapaNomes = new Map<string, string>();
+  if (idsDonosUnicos.length > 1) {
+    const { data: perfis } = await supabase.from("perfis").select("id, nome").in("id", idsDonosUnicos);
+    mapaNomes = new Map((perfis ?? []).map((p) => [p.id, p.nome ?? "Alguém"]));
+  }
 
   const totalReceitas = lista.filter((t) => t.tipo === "receita").reduce((a, t) => a + t.valor, 0);
   const totalDespesas = lista.filter((t) => t.tipo === "despesa").reduce((a, t) => a + t.valor, 0);
@@ -179,6 +189,16 @@ export default async function ExtratoPage({
                   {mapaContas.get(t.conta_id)}
                 </p>
               </div>
+              {mapaNomes.has(t.dono_id) && (
+                <span
+                  title={t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
+                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium shrink-0 ${
+                    t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
+                  }`}
+                >
+                  {(t.dono_id === user?.id ? "V" : (mapaNomes.get(t.dono_id) ?? "?")).charAt(0).toUpperCase()}
+                </span>
+              )}
               <span
                 className={`font-mono text-sm shrink-0 ${
                   t.tipo === "receita" ? "text-habito" : "text-red-400"
