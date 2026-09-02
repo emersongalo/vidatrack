@@ -40,35 +40,6 @@ export function calcularPeriodo(preset: PresetPeriodo): { inicio: string; fim: s
   }
 }
 
-export function ultimoDiaDoMes(dataReferenciaISO?: string): string {
-  const d = dataReferenciaISO ? new Date(dataReferenciaISO + "T00:00:00") : new Date();
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString("sv-SE");
-}
-
-export type PeriodoExtrato = "mes_atual" | "mes_passado" | "personalizado" | "tudo";
-
-export function calcularIntervaloPeriodo(
-  periodo: PeriodoExtrato,
-  inicioPersonalizado?: string,
-  fimPersonalizado?: string
-): { inicio: string | null; fim: string | null } {
-  const hoje = new Date().toLocaleDateString("sv-SE");
-
-  if (periodo === "mes_atual") {
-    return { inicio: primeiroDiaDoMes(), fim: ultimoDiaDoMes() };
-  }
-  if (periodo === "mes_passado") {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    const iso = d.toLocaleDateString("sv-SE");
-    return { inicio: primeiroDiaDoMes(iso), fim: ultimoDiaDoMes(iso) };
-  }
-  if (periodo === "personalizado") {
-    return { inicio: inicioPersonalizado || null, fim: fimPersonalizado || hoje };
-  }
-  return { inicio: null, fim: null }; // "tudo"
-}
-
 export const ICONES_CATEGORIA_DESPESA = [
   "🍔", "🏠", "🚗", "💊", "🎬", "📚", "📱", "🛍️", "✈️", "🐾", "🎁", "💡",
 ];
