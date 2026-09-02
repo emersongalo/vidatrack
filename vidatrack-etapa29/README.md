@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 30: Extrato com Filtros de Período
+# VidaTrack — Etapa 29: Ícones nas Categorias Padrão + Fim de Recorrência
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,21 +6,6 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
-
-**Novo nesta etapa (30) — tela de Extrato:**
-
-- **Cards de Receitas/Despesas agora são clicáveis** na tela principal
-  de Finanças — levam direto pro extrato já filtrado (receita ou
-  despesa, mês atual)
-- **Nova tela `/financas/extrato`** com filtros de verdade:
-  - Tipo: Todos / Receitas / Despesas
-  - Atalhos de período: Este mês, Mês passado, Últimos 30 dias, Este
-    ano, Tudo
-  - Período customizado (escolher data de início e fim manualmente)
-  - Mostra o total de receitas e despesas do período filtrado, além
-    da lista completa de lançamentos (a lista da tela principal
-    sempre mostrou só os 10 últimos)
-- Link "Extrato" adicionado nos atalhos rápidos da tela de Finanças
 
 **Novo nesta etapa (29):**
 
@@ -643,8 +628,7 @@ versão Android via Capacitor está descrita na seção específica acima.
 27. Compartilhamento entre casal/família
 28. Popup de excluir + recorrência no formulário + Assistente de IA
 29. Assistente de IA removido
-30. Ícones nas categorias padrão + fim de recorrência
-31. Extrato com filtros de período — **você está aqui**
+30. Ícones nas categorias padrão + fim de recorrência — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

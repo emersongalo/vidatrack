@@ -127,20 +127,14 @@ export default async function FinancasPage() {
 
           {/* Resumo do mês */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <Link
-              href="/financas/extrato?tipo=receita&preset=este_mes"
-              className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-habito transition"
-            >
+            <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
               <p className="text-ink-400 text-xs mb-1 capitalize">Receitas · {nomeDoMesAtual()}</p>
               <p className="font-mono font-medium text-habito">{formatarMoeda(receitasDoMes)}</p>
-            </Link>
-            <Link
-              href="/financas/extrato?tipo=despesa&preset=este_mes"
-              className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-red-400 transition"
-            >
+            </div>
+            <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
               <p className="text-ink-400 text-xs mb-1 capitalize">Despesas · {nomeDoMesAtual()}</p>
               <p className="font-mono font-medium text-red-400">{formatarMoeda(despesasDoMes)}</p>
-            </Link>
+            </div>
           </div>
 
           {/* Orçamento por categoria */}
@@ -182,9 +176,6 @@ export default async function FinancasPage() {
 
           {/* Links rápidos */}
           <div className="flex flex-wrap gap-x-3 gap-y-1.5 mb-6 text-sm">
-            <Link href="/financas/extrato" className="text-ink-400 hover:text-ink-100 transition underline">
-              Extrato
-            </Link>
             <Link href="/financas/contas" className="text-ink-400 hover:text-ink-100 transition underline">
               Contas
             </Link>
@@ -200,12 +191,7 @@ export default async function FinancasPage() {
           </div>
 
           {/* Últimos lançamentos */}
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-ink-400">Últimos lançamentos</p>
-            <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
-              Ver extrato completo →
-            </Link>
-          </div>
+          <p className="text-sm text-ink-400 mb-3">Últimos lançamentos</p>
           {ultimasTransacoes.length === 0 ? (
             <p className="text-ink-400 text-sm">Nenhum lançamento ainda.</p>
           ) : (
