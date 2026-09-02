@@ -1,4 +1,4 @@
-import { formatarMoeda } from "@/lib/financas/formatacao";
+import { ValorMonetario } from "@/components/ValorMonetario";
 
 export function BarraOrcamento({
   nome,
@@ -17,7 +17,7 @@ export function BarraOrcamento({
       <div className="flex items-baseline justify-between mb-1">
         <span className="text-sm">{nome}</span>
         <span className={`text-xs font-mono ${estourou ? "text-red-400" : "text-ink-400"}`}>
-          {formatarMoeda(gasto)} / {formatarMoeda(meta)}
+          <ValorMonetario valor={gasto} /> / <ValorMonetario valor={meta} />
         </span>
       </div>
       <div className="h-1.5 bg-base-600 rounded-full overflow-hidden">

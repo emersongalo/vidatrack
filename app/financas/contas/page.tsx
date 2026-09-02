@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { criarConta, arquivarConta } from "../actions";
-import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { SeloBanco } from "@/components/SeloBanco";
+import { ValorMonetario } from "@/components/ValorMonetario";
 import { BANCOS } from "@/lib/financas/bancos";
 
 const RÓTULOS_TIPO: Record<string, string> = {
@@ -55,7 +55,8 @@ export default async function ContasPage({
                 <div>
                   <p className="text-sm font-medium">{conta.nome}</p>
                   <p className="text-xs text-ink-400">
-                    {RÓTULOS_TIPO[conta.tipo]} · saldo inicial {formatarMoeda(Number(conta.saldo_inicial))}
+                    {RÓTULOS_TIPO[conta.tipo]} · saldo inicial{" "}
+                    <ValorMonetario valor={Number(conta.saldo_inicial)} />
                   </p>
                 </div>
               </div>

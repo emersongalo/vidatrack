@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 37: Reordenar Blocos Corrigido pra Celular
+# VidaTrack — Etapa 38: Ocultar Valores
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,26 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (38) — botão de ocultar valores:**
+
+- **Botão de olho** 👁️ no topo de Finanças e do Extrato — clica e todo
+  valor em R$ na tela vira `R$ ••••••` na hora, sem recarregar a página
+- Fica salvo no navegador (não precisa ficar clicando de novo toda
+  vez que abrir o app) e sincroniza entre as telas — oculta numa
+  tela, já abre oculto na outra
+- **Cobertura:** saldo total, receitas/despesas do mês, orçamento por
+  categoria, lista de lançamentos (principal e extrato), e saldo
+  inicial de cada conta
+
+**O que ainda não cobre, por enquanto:** a página de Análise (gráficos
+avançados) e o gráfico de pizza da tela principal continuam mostrando
+valor — são gráficos (SVG) mais trabalhosos de mascarar, e são telas
+menos "de relance" que alguém veria passando do seu lado. Se isso for
+importante pra você, me avisa que estendo.
+
+Não precisa rodar SQL — é ajuste de componente só (a preferência fica
+salva no navegador da pessoa, não no banco de dados).
 
 **Novo nesta etapa (37) — bug corrigido:**
 
@@ -827,7 +847,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 35. Menu trilho animado + calendário de gastos
 36. Correção de layout no extrato + botão de voltar
 37. Calendário em destaque + ordem personalizável
-38. Reordenar blocos corrigido pra celular — **você está aqui**
+38. Reordenar blocos corrigido pra celular
+39. Ocultar valores — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

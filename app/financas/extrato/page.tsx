@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
-  formatarMoeda,
   calcularPeriodo,
   type PresetPeriodo,
 } from "@/lib/financas/formatacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
+import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
+import { ValorMonetario } from "@/components/ValorMonetario";
 
 const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "este_mes", rotulo: "Este mês" },
@@ -84,7 +85,10 @@ export default async function ExtratoPage({
       <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Finanças
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-5">Extrato</h1>
+      <div className="flex items-center justify-between mt-4 mb-5">
+        <h1 className="text-2xl font-display font-semibold">Extrato</h1>
+        <BotaoOcultarValores />
+      </div>
 
       {/* Filtro de tipo */}
       <div className="flex gap-2 mb-3">
@@ -157,11 +161,11 @@ export default async function ExtratoPage({
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
           <p className="text-ink-400 text-xs mb-1">Receitas no período</p>
-          <p className="font-mono font-medium text-habito">{formatarMoeda(totalReceitas)}</p>
+          <p className="font-mono font-medium text-habito"><ValorMonetario valor={totalReceitas} /></p>
         </div>
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
           <p className="text-ink-400 text-xs mb-1">Despesas no período</p>
-          <p className="font-mono font-medium text-red-400">{formatarMoeda(totalDespesas)}</p>
+          <p className="font-mono font-medium text-red-400"><ValorMonetario valor={totalDespesas} /></p>
         </div>
       </div>
 
@@ -204,7 +208,7 @@ export default async function ExtratoPage({
                   }`}
                 >
                   {t.tipo === "receita" ? "+" : "-"}
-                  {formatarMoeda(t.valor)}
+                  <ValorMonetario valor={t.valor} />
                 </span>
               </div>
               <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { formatarMoeda, primeiroDiaDoMes, nomeDoMesAtual } from "@/lib/financas/formatacao";
+import { primeiroDiaDoMes, nomeDoMesAtual } from "@/lib/financas/formatacao";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoria";
 import { IndicadorSaldo } from "@/components/IndicadorSaldo";
 import { LinkVoltar } from "@/components/LinkVoltar";
+import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
+import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
 import { buscarCalendarioGastos } from "@/lib/financas/consulta";
@@ -196,7 +198,7 @@ export default async function FinancasPage({
                     }`}
                   >
                     {t.tipo === "receita" ? "+" : "-"}
-                    {formatarMoeda(t.valor)}
+                    <ValorMonetario valor={t.valor} />
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
@@ -237,6 +239,10 @@ export default async function FinancasPage({
         </Link>
       </div>
 
+      <div className="flex justify-end -mt-3 mb-3">
+        <BotaoOcultarValores />
+      </div>
+
       {!contas || contas.length === 0 ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
           <p className="font-display font-semibold mb-1">Nenhuma conta ainda</p>
@@ -264,14 +270,14 @@ export default async function FinancasPage({
               className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-habito transition"
             >
               <p className="text-ink-400 text-xs mb-1 capitalize">Receitas · {nomeDoMesAtual()}</p>
-              <p className="font-mono font-medium text-habito">{formatarMoeda(receitasDoMes)}</p>
+              <ValorMonetario valor={receitasDoMes} className="font-mono font-medium text-habito" />
             </Link>
             <Link
               href="/financas/extrato?tipo=despesa&preset=este_mes"
               className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-red-400 transition"
             >
               <p className="text-ink-400 text-xs mb-1 capitalize">Despesas · {nomeDoMesAtual()}</p>
-              <p className="font-mono font-medium text-red-400">{formatarMoeda(despesasDoMes)}</p>
+              <ValorMonetario valor={despesasDoMes} className="font-mono font-medium text-red-400" />
             </Link>
           </div>
 

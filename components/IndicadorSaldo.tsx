@@ -1,4 +1,4 @@
-import { formatarMoeda } from "@/lib/financas/formatacao";
+import { ValorMonetario } from "@/components/ValorMonetario";
 
 export function IndicadorSaldo({ saldo }: { saldo: number }) {
   const positivo = saldo >= 0;
@@ -25,7 +25,9 @@ export function IndicadorSaldo({ saldo }: { saldo: number }) {
           <p className={`text-xs ${positivo ? "text-habito" : "text-red-400"}`}>
             {positivo ? "Saldo positivo" : "Saldo negativo"}
           </p>
-          <p className="text-2xl font-display font-semibold font-mono">{formatarMoeda(saldo)}</p>
+          <p className="text-2xl font-display font-semibold font-mono">
+            <ValorMonetario valor={saldo} />
+          </p>
           <p className="text-xs text-ink-400 mt-0.5">
             {positivo ? "Continue assim! 💪" : "Vale dar uma olhada nos gastos deste mês."}
           </p>
