@@ -68,6 +68,7 @@ git push -u origin main
 | `VAPID_PRIVATE_KEY` | mesmo comando acima | Só se for usar notificação push |
 | `CRON_SECRET` | Você inventa (string aleatória longa) | Só se for usar lembretes automáticos |
 | `TELEGRAM_BOT_TOKEN` | @BotFather no Telegram | Só se for usar integração Telegram |
+| `ANTHROPIC_API_KEY` | console.anthropic.com > API Keys | Só se for usar o Assistente de IA (tem custo por pergunta) |
 | `TIMEZONE_OFFSET_HORAS` | `-3` pra Brasília | Só se for usar lembretes automáticos |
 | `R2_ACCOUNT_ID` | Painel Cloudflare R2 | Sim, se for usar anexos em Notas |
 | `R2_ACCESS_KEY_ID` | Painel Cloudflare R2 | Sim, se for usar anexos em Notas |

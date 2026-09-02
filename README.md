@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 26: Compartilhamento entre Casal/Família
+# VidaTrack — Etapa 27: Popup de Excluir + Recorrência no Formulário + Assistente de IA
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,37 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (27):**
+
+- **Popup de confirmação corrigido** — o "Tem certeza? Sim/Não" que
+  aparecia sobrepondo outros textos (como no seu print) virou um popup
+  de verdade, centralizado na tela. Isso corrige o bug em **todo o
+  app de uma vez**, porque é um componente reutilizado em várias telas
+  (hábitos, tarefas, notas, finanças, categorias)
+- **Recorrência dentro do formulário de lançamento** — em vez de ser
+  uma tela separada, agora tem um checkbox "🔁 Repetir todo mês"
+  direto em "Novo lançamento". Marcando, já cria o lançamento de hoje
+  e configura a recorrência pros próximos meses
+- **Botão "+ Lançamento" mais evidente** — cor de destaque (âmbar,
+  cor de Finanças no app), sombra e leve efeito ao passar o mouse
+- **Assistente de IA nas Finanças** (`/financas/assistente`) — um chat
+  que conhece seus dados reais: saldo, gastos por categoria,
+  comparação com o mês passado, orçamento estourado ou não, contas a
+  pagar, e também hábitos/tarefas pendentes de hoje. Usa a API da
+  Anthropic (Claude) — precisa de uma chave de API configurada
+
+## Configurar o Assistente de IA
+
+1. Crie uma conta em [console.anthropic.com](https://console.anthropic.com)
+   e gere uma chave de API (Settings > API Keys)
+2. Coloque em `ANTHROPIC_API_KEY` no `.env.local` (e depois nas
+   variáveis de ambiente do Vercel)
+3. **Isso tem custo** — cada pergunta consome créditos da API da
+   Anthropic (bem barato pra esse uso, mas não é gratuito como o resto
+   do app). Se preferir não ativar, o app funciona normalmente sem
+   essa chave — só o link do assistente mostra uma mensagem explicando
+   que não está configurado, em vez de dar erro feio
 
 **Novo nesta etapa (26) — pensado pra casal/família:**
 
@@ -573,7 +604,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 24. Trava de zoom + ícone corrigido
 25. Correção de overflow horizontal
 26. Localização simplificada (só permissão)
-27. Compartilhamento entre casal/família — **você está aqui**
+27. Compartilhamento entre casal/família
+28. Popup de excluir + recorrência no formulário + Assistente de IA — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

@@ -157,6 +157,8 @@ function dadosTransacaoDoFormulario(formData: FormData) {
     categoriaId: formData.get("categoriaId"),
     descricao: formData.get("descricao"),
     data: formData.get("data") || new Date().toLocaleDateString("sv-SE"),
+    recorrente: formData.get("recorrente"),
+    diaMes: formData.get("diaMes"),
   };
 }
 
@@ -185,6 +187,21 @@ export async function criarTransacao(formData: FormData) {
 
   if (error) {
     redirect(`/financas/nova?erro=${encodeURIComponent(error.message)}`);
+  }
+
+  // "Repetir todo mês" marcado: além do lançamento de hoje, já deixa
+  // configurada a recorrência pros próximos meses (a mesma tabela que
+  // a tela /financas/recorrentes usa).
+  if (resultado.data.recorrente && resultado.data.diaMes) {
+    await supabase.from("financa_recorrencias").insert({
+      dono_id: user!.id,
+      conta_id: resultado.data.contaId,
+      categoria_id: resultado.data.categoriaId,
+      tipo: resultado.data.tipo,
+      valor: resultado.data.valor,
+      descricao: resultado.data.descricao,
+      dia_mes: resultado.data.diaMes,
+    });
   }
 
   revalidatePath("/financas");

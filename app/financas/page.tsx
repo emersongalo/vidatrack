@@ -99,9 +99,9 @@ export default async function FinancasPage() {
         </div>
         <Link
           href="/financas/nova"
-          className="bg-ink-100 text-base-900 text-sm font-medium rounded-lg px-4 py-2 hover:opacity-90 transition"
+          className="flex items-center gap-1.5 bg-financa text-base-900 text-sm font-semibold rounded-lg px-5 py-2.5 shadow-lg shadow-financa/25 hover:opacity-90 hover:scale-105 transition"
         >
-          + Lançamento
+          <span className="text-base leading-none">+</span> Lançamento
         </Link>
       </div>
 
@@ -164,6 +164,18 @@ export default async function FinancasPage() {
               <p className="text-xs text-ink-400 mt-0.5">Mapa de gastos, comparação com o mês passado e dicas automáticas</p>
             </div>
             <span className="text-ink-400 text-sm shrink-0">Ver →</span>
+          </Link>
+
+          {/* Link do assistente de IA */}
+          <Link
+            href="/financas/assistente"
+            className="flex items-center justify-between bg-base-800 border border-base-600 border-l-4 border-l-nota rounded-xl2 p-4 mb-6 hover:border-nota transition"
+          >
+            <div>
+              <p className="font-medium">🤖 Pergunte ao assistente</p>
+              <p className="text-xs text-ink-400 mt-0.5">Tire dúvidas sobre gastos, orçamento e pendências, na conversa</p>
+            </div>
+            <span className="text-ink-400 text-sm shrink-0">Abrir →</span>
           </Link>
 
           {/* Gráfico de despesas do mês por categoria */}

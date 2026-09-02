@@ -33,6 +33,13 @@ export const esquemaTransacao = z.object({
   categoriaId: uuidOpcional,
   descricao: z.string().trim().max(200, "Descrição muito longa").optional().transform((v) => v || null),
   data: dataISO,
+  recorrente: z.string().nullable().optional().transform((v) => v === "on"),
+  diaMes: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => (v ? Number(v) : null))
+    .pipe(z.number().int().min(1).max(28).nullable()),
 });
 
 export const esquemaConta = z.object({

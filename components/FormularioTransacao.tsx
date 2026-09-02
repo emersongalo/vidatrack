@@ -34,6 +34,8 @@ export function FormularioTransacao({
   };
 }) {
   const [tipo, setTipo] = useState<"despesa" | "receita">(valoresIniciais?.tipo ?? "despesa");
+  const [recorrente, setRecorrente] = useState(false);
+  const ehEdicao = !!valoresIniciais;
 
   const categoriasFiltradas = useMemo(
     () => categorias.filter((c) => c.tipo === tipo),
@@ -164,6 +166,42 @@ export function FormularioTransacao({
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
         </div>
+
+        {!ehEdicao && (
+          <div className="bg-base-800 border border-base-600 rounded-lg p-3">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                name="recorrente"
+                checked={recorrente}
+                onChange={(e) => setRecorrente(e.target.checked)}
+                className="w-4 h-4 accent-financa"
+              />
+              <span className="text-sm">🔁 Repetir todo mês</span>
+            </label>
+            {recorrente && (
+              <div className="mt-3">
+                <label htmlFor="diaMes" className="block text-xs text-ink-400 mb-1">
+                  Todo dia (1 a 28)
+                </label>
+                <input
+                  id="diaMes"
+                  name="diaMes"
+                  type="number"
+                  min={1}
+                  max={28}
+                  defaultValue={new Date().getDate() > 28 ? 28 : new Date().getDate()}
+                  className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition font-mono"
+                />
+                <p className="text-[11px] text-ink-400 mt-1.5">
+                  Esse lançamento de hoje é criado normalmente, e os próximos
+                  meses passam a aparecer sozinhos — dá pra gerenciar depois
+                  em Finanças → Recorrentes.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         <button
           type="submit"

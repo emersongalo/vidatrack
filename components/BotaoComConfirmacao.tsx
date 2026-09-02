@@ -13,40 +13,53 @@ export function BotaoComConfirmacao({
   textoConfirmacao?: string;
   classeBotao?: string;
 }) {
-  const [confirmando, setConfirmando] = useState(false);
+  const [aberto, setAberto] = useState(false);
   const [pendente, iniciarTransicao] = useTransition();
 
-  if (confirmando) {
-    return (
-      <span className="inline-flex items-center gap-2 text-xs whitespace-nowrap">
-        <span className="text-ink-400">{textoConfirmacao}</span>
-        <button
-          type="button"
-          disabled={pendente}
-          onClick={() =>
-            iniciarTransicao(async () => {
-              await acao();
-              setConfirmando(false);
-            })
-          }
-          className="text-red-400 font-medium hover:underline disabled:opacity-50"
-        >
-          {pendente ? "..." : "Sim"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setConfirmando(false)}
-          className="text-ink-400 hover:underline"
-        >
-          Não
-        </button>
-      </span>
-    );
+  function confirmar() {
+    iniciarTransicao(async () => {
+      await acao();
+      setAberto(false);
+    });
   }
 
   return (
-    <button type="button" onClick={() => setConfirmando(true)} className={classeBotao}>
-      {textoBotao}
-    </button>
+    <>
+      <button type="button" onClick={() => setAberto(true)} className={classeBotao}>
+        {textoBotao}
+      </button>
+
+      {aberto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60"
+          onClick={() => !pendente && setAberto(false)}
+        >
+          <div
+            className="bg-base-800 border border-base-600 rounded-xl2 p-5 max-w-xs w-full shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm text-ink-100 mb-4">{textoConfirmacao}</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setAberto(false)}
+                disabled={pendente}
+                className="flex-1 border border-base-600 rounded-lg py-2 text-sm hover:bg-base-700 transition disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmar}
+                disabled={pendente}
+                className="flex-1 bg-red-400 text-base-900 font-medium rounded-lg py-2 text-sm hover:opacity-90 transition disabled:opacity-50"
+              >
+                {pendente ? "..." : "Sim, confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
