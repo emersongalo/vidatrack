@@ -5,6 +5,7 @@ import { buscarItensDoDia } from "@/lib/agenda/consulta";
 import { TiraDeDiasAgenda } from "@/components/TiraDeDiasAgenda";
 import { SugestoesHabito } from "@/components/SugestoesHabito";
 import { ListaHojeComOffline } from "@/components/ListaHojeComOffline";
+import { LinkVoltar } from "@/components/LinkVoltar";
 
 export default async function HojePage({
   searchParams,
@@ -25,11 +26,8 @@ export default async function HojePage({
 
   return (
     <main className="max-w-2xl mx-auto px-6 md:px-12 pt-2">
-      <Link href="/dashboard" className="text-ink-400 text-sm hover:text-ink-100 transition">
-        ← Painel
-      </Link>
-      <div className="flex items-center justify-between mb-4 mt-2">
-        <h1 className="text-2xl font-display font-semibold">Hoje</h1>
+      <div className="flex items-center justify-between mb-1">
+        <LinkVoltar href="/dashboard" texto="Painel" />
         <Link
           href={`/habitos/planejador?data=${dataSelecionada}`}
           className="text-sm text-ink-400 hover:text-ink-100 transition"
@@ -37,6 +35,7 @@ export default async function HojePage({
           🕐 Blocos de tempo
         </Link>
       </div>
+      <h1 className="text-2xl font-display font-semibold mb-4">Hoje</h1>
 
       <TiraDeDiasAgenda dataSelecionada={dataSelecionada} hojeISO={hoje} />
 

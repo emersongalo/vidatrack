@@ -173,47 +173,55 @@ export default async function ExtratoPage({
           {lista.map((t: any) => (
             <li
               key={t.id}
-              className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3"
+              className="bg-base-800 border border-base-600 rounded-lg p-3"
             >
-              <span
-                className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
-                  t.financa_categorias?.cor ?? "financa"
-                )}`}
-              >
-                {t.financa_categorias?.icone ?? (t.tipo === "receita" ? "💰" : "💸")}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm truncate">{t.descricao || mapaContas.get(t.conta_id)}</p>
-                <p className="text-xs text-ink-400">
+              <div className="flex items-center gap-3">
+                <span className="relative shrink-0">
+                  <span
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm ${classeFundoSuave(
+                      t.financa_categorias?.cor ?? "financa"
+                    )}`}
+                  >
+                    {t.financa_categorias?.icone ?? (t.tipo === "receita" ? "💰" : "💸")}
+                  </span>
+                  {mapaNomes.has(t.dono_id) && (
+                    <span
+                      title={t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
+                      className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-semibold border-2 border-base-800 ${
+                        t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
+                      }`}
+                    >
+                      {(t.dono_id === user?.id ? "V" : (mapaNomes.get(t.dono_id) ?? "?")).charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </span>
+                <p className="text-sm truncate flex-1 min-w-0">
+                  {t.descricao || mapaContas.get(t.conta_id)}
+                </p>
+                <span
+                  className={`font-mono text-sm shrink-0 ${
+                    t.tipo === "receita" ? "text-habito" : "text-red-400"
+                  }`}
+                >
+                  {t.tipo === "receita" ? "+" : "-"}
+                  {formatarMoeda(t.valor)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
+                <p className="text-xs text-ink-400 truncate min-w-0">
                   {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
                   {mapaContas.get(t.conta_id)}
                 </p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    href={`/financas/${t.id}/editar`}
+                    className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0"
+                  >
+                    Editar
+                  </Link>
+                  <BotaoRemoverTransacao transacaoId={t.id} />
+                </div>
               </div>
-              {mapaNomes.has(t.dono_id) && (
-                <span
-                  title={t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
-                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium shrink-0 ${
-                    t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
-                  }`}
-                >
-                  {(t.dono_id === user?.id ? "V" : (mapaNomes.get(t.dono_id) ?? "?")).charAt(0).toUpperCase()}
-                </span>
-              )}
-              <span
-                className={`font-mono text-sm shrink-0 ${
-                  t.tipo === "receita" ? "text-habito" : "text-red-400"
-                }`}
-              >
-                {t.tipo === "receita" ? "+" : "-"}
-                {formatarMoeda(t.valor)}
-              </span>
-              <Link
-                href={`/financas/${t.id}/editar`}
-                className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0"
-              >
-                Editar
-              </Link>
-              <BotaoRemoverTransacao transacaoId={t.id} />
             </li>
           ))}
         </ul>

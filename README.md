@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 34: Menu Trilho Animado + Calendário de Gastos
+# VidaTrack — Etapa 35: Correção de Layout no Extrato + Botão de Voltar
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,30 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (35) — 3 correções do seu print:**
+
+- **Nome cortado nos lançamentos, corrigido** — o selo de "quem
+  lançou" competia por espaço horizontal com a descrição, cortando o
+  nome (seu print mostrava "E..." em vez de "Emerson"). Movi o selo
+  pra virar um probleminha no canto do ícone da categoria (como um
+  "badge" de notificação), em vez de disputar espaço na linha —
+  corrigido tanto na tela principal quanto no Extrato
+- **Botão de voltar ficou de verdade um botão** — existia um
+  componente `LinkVoltar` (ícone de seta + texto, em formato de
+  pílula) já pronto no projeto, mas só estava sendo usado numa tela —
+  agora está ligado nas 3 seções principais (Hábitos, Notas,
+  Finanças), com visual consistente em vez de só uma seta solta
+- **Cabeçalho da tela de Hábitos reorganizado** — o "← Painel"
+  empilhado sozinho acima do título "Hoje" ficava com layout confuso;
+  agora fica tudo numa linha só (voltar + blocos de tempo) com o
+  título embaixo
+- **Menu trilho** — a seta "→" que indicava "isso é clicável" só
+  aparecia em hover, que **não existe em toque de celular**. Já estava
+  corrigido pra aparecer sempre visível, com cards de fundo/borda em
+  vez de texto solto, e resposta visual ao toque
+
+Não precisa rodar SQL — é ajuste visual só.
 
 **Novo nesta etapa (34) — o painel principal virou o "trilho":**
 
@@ -759,7 +783,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 32. Nome/foto do Google + ícones de banco
 33. Hábitos estilo HabitNow + correção visual em Finanças
 34. Contraste dos tooltips dos gráficos
-35. Menu trilho animado + calendário de gastos — **você está aqui**
+35. Menu trilho animado + calendário de gastos
+36. Correção de layout no extrato + botão de voltar — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

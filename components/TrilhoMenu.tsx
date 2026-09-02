@@ -58,30 +58,30 @@ export function TrilhoMenu() {
         />
       </div>
 
-      <div className="space-y-16 pl-16 w-full">
+      <div className="space-y-5 pl-16 w-full">
         {ESTACOES.map((estacao, i) => (
           <Link
             key={estacao.href}
             href={estacao.href}
-            className="group relative block outline-none"
+            className="group relative flex items-center justify-between gap-3 rounded-xl2 border border-base-600 bg-base-800 px-4 py-3.5 outline-none transition hover:border-ink-400 active:scale-[0.98]"
             style={{
               opacity: linhaVisivel || semAnimacao ? 1 : 0,
               transform: linhaVisivel || semAnimacao ? "translateX(0)" : "translateX(-8px)",
               transition: semAnimacao
                 ? "none"
-                : `opacity 500ms ease-out ${350 + i * 260}ms, transform 500ms ease-out ${350 + i * 260}ms`,
+                : `opacity 500ms ease-out ${350 + i * 260}ms, transform 500ms ease-out ${350 + i * 260}ms, border-color 150ms, transform 150ms`,
             }}
           >
             <span
-              className={`absolute -left-[46px] top-1 w-3 h-3 rounded-full ${estacao.corPonto} ring-4 ring-base-800 transition-transform group-hover:scale-125 group-focus-visible:scale-125`}
+              className={`absolute -left-[38px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full ${estacao.corPonto} ring-4 ring-base-900 transition-transform group-hover:scale-125 group-focus-visible:scale-125`}
             />
-            <p className="font-display font-semibold text-lg group-hover:opacity-80 transition-opacity">
-              {estacao.titulo}
-              <span className="inline-block ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                →
-              </span>
-            </p>
-            <p className="text-ink-400 text-sm mt-1 max-w-[260px]">{estacao.texto}</p>
+            <div className="min-w-0">
+              <p className="font-display font-semibold text-lg">{estacao.titulo}</p>
+              <p className="text-ink-400 text-sm mt-0.5 truncate">{estacao.texto}</p>
+            </div>
+            <span className="text-ink-400 text-xl shrink-0 transition-transform group-hover:translate-x-0.5">
+              →
+            </span>
           </Link>
         ))}
       </div>

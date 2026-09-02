@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { criarNota, alternarFixarNota } from "./actions";
+import { LinkVoltar } from "@/components/LinkVoltar";
 
 export default async function NotasPage({
   searchParams,
@@ -27,9 +28,7 @@ export default async function NotasPage({
     <main className="min-h-screen p-6 md:p-12 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <Link href="/dashboard" className="text-ink-400 text-sm hover:text-ink-100 transition">
-            ← Painel
-          </Link>
+          <LinkVoltar href="/dashboard" texto="Painel" />
           <h1 className="text-2xl font-display font-semibold mt-2">Notas</h1>
           <Link href="/notas/lixeira" className="text-ink-400 text-xs hover:text-ink-100 transition">
             Lixeira
