@@ -20,6 +20,7 @@ export async function criarConta(formData: FormData) {
   const resultado = esquemaConta.safeParse({
     nome: formData.get("nome"),
     tipo: formData.get("tipo"),
+    banco: formData.get("banco"),
     saldoInicial: formData.get("saldoInicial"),
   });
 
@@ -31,6 +32,7 @@ export async function criarConta(formData: FormData) {
     dono_id: user!.id,
     nome: resultado.data.nome,
     tipo: resultado.data.tipo,
+    banco: resultado.data.banco,
     saldo_inicial: resultado.data.saldoInicial,
   });
 

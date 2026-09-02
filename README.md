@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 30: Extrato com Filtros de Período
+# VidaTrack — Etapa 31: Nome/Foto do Google + Ícones de Banco
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,35 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (31):**
+
+- **Bug corrigido: nome sumia pra quem entrava com Google** — o
+  gatilho que cria o perfil só lia o campo `'nome'` (só existe no
+  cadastro por e-mail); Google manda `'full_name'`. Corrigido, **com
+  correção retroativa** pra quem já tinha se cadastrado antes disso —
+  não precisa recriar conta nem nada, o nome já aparece certo depois
+  de rodar o SQL desta etapa
+- **Tela `/perfil`** — editar nome e trocar foto (upload de verdade
+  pro Cloudflare R2). A foto do Google também é aproveitada
+  automaticamente no cadastro, sem precisar fazer nada
+- **Ícones de banco** — Nubank, Inter, Itaú, Bradesco, Santander, C6,
+  Caixa, Banco do Brasil, PicPay e Mercado Pago, cada um com a cor da
+  marca (sem reproduzir nenhum logotipo — é só um círculo colorido com
+  o ícone de banco). Escolhido num seletor ao criar a conta, não por
+  adivinhação do nome digitado
+
+**O que ainda falta (conversamos sobre isso separadamente):** o
+redesenho visual do dashboard de Finanças estilo Mobills (card de
+saldo, lista de lançamentos agrupada por data, etc.) — é grande o
+bastante pra ser a próxima etapa dedicada.
+
+## Rodar o schema desta etapa
+
+No SQL Editor do Supabase, rode também o `supabase/schema_perfil_google.sql`
+(depois de todos os schemas anteriores) — ele inclui a correção
+retroativa do nome/foto de quem já tinha conta, e a coluna de banco
+nas contas financeiras.
 
 **Novo nesta etapa (30) — tela de Extrato:**
 
@@ -644,7 +673,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 28. Popup de excluir + recorrência no formulário + Assistente de IA
 29. Assistente de IA removido
 30. Ícones nas categorias padrão + fim de recorrência
-31. Extrato com filtros de período — **você está aqui**
+31. Extrato com filtros de período
+32. Nome/foto do Google + ícones de banco — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

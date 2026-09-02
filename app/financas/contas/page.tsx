@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { criarConta, arquivarConta } from "../actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
+import { SeloBanco } from "@/components/SeloBanco";
+import { BANCOS } from "@/lib/financas/bancos";
 
 const RÓTULOS_TIPO: Record<string, string> = {
   carteira: "Carteira",
@@ -19,7 +21,7 @@ export default async function ContasPage({
 
   const { data: contas } = await supabase
     .from("financa_contas")
-    .select("id, nome, tipo, saldo_inicial")
+    .select("id, nome, tipo, banco, saldo_inicial")
     .eq("arquivado", false)
     .order("criado_em", { ascending: true });
 
@@ -48,11 +50,14 @@ export default async function ContasPage({
               key={conta.id}
               className="flex items-center justify-between bg-base-800 border border-base-600 rounded-lg p-3"
             >
-              <div>
-                <p className="text-sm font-medium">{conta.nome}</p>
-                <p className="text-xs text-ink-400">
-                  {RÓTULOS_TIPO[conta.tipo]} · saldo inicial {formatarMoeda(Number(conta.saldo_inicial))}
-                </p>
+              <div className="flex items-center gap-3">
+                <SeloBanco bancoId={conta.banco} />
+                <div>
+                  <p className="text-sm font-medium">{conta.nome}</p>
+                  <p className="text-xs text-ink-400">
+                    {RÓTULOS_TIPO[conta.tipo]} · saldo inicial {formatarMoeda(Number(conta.saldo_inicial))}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <Link
@@ -85,6 +90,19 @@ export default async function ContasPage({
           <option value="carteira">Carteira</option>
           <option value="cartao">Cartão</option>
         </select>
+        <div>
+          <label className="block text-xs text-ink-400 mb-1.5">Banco (pra mostrar o selo certo)</label>
+          <select
+            name="banco"
+            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+          >
+            {BANCOS.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.nome}
+              </option>
+            ))}
+          </select>
+        </div>
         <input
           name="saldoInicial"
           type="text"

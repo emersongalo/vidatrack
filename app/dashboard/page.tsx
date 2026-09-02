@@ -8,6 +8,7 @@ import { buscarItensDoDia } from "@/lib/agenda/consulta";
 import { buscarSaldoTotal, buscarContasAPagar } from "@/lib/financas/consulta";
 import { buscarPrevisaoTempo } from "@/lib/clima/consulta";
 import { formatarMoeda } from "@/lib/financas/formatacao";
+import { resolverUrlFoto } from "@/lib/perfil/foto";
 import { WidgetClima } from "@/components/WidgetClima";
 import { MiniCalendario } from "@/components/MiniCalendario";
 import { DefinirLocalizacao } from "@/components/DefinirLocalizacao";
@@ -18,14 +19,19 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const nome = (user?.user_metadata?.nome as string) || user?.email || "";
-
   const [{ data: perfil }, { itens: itensHoje }, saldoTotal, contasAPagar] = await Promise.all([
-    supabase.from("perfis").select("latitude, longitude, local_nome").eq("id", user?.id ?? "").maybeSingle(),
+    supabase.from("perfis").select("nome, foto_url, latitude, longitude, local_nome").eq("id", user?.id ?? "").maybeSingle(),
     buscarItensDoDia(hojeISO(), ""),
     buscarSaldoTotal(supabase),
     buscarContasAPagar(supabase, 4),
   ]);
+
+  const urlFoto = await resolverUrlFoto(perfil?.foto_url ?? null);
+
+  // Prioriza o nome salvo em `perfis` (funciona tanto pra quem se
+  // cadastrou por e-mail quanto por Google, desde a Etapa 31) — antes
+  // isso só olhava um campo que o login com Google nunca preenchia.
+  const nome = perfil?.nome || user?.email || "";
 
   const previsao =
     perfil?.latitude && perfil?.longitude
@@ -41,7 +47,20 @@ export default async function DashboardPage() {
     <main className="min-h-screen p-6 md:p-12 max-w-5xl mx-auto">
       <header className="flex items-center justify-between mb-8 gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="rounded-lg shrink-0" />
+          <Link href="/perfil" className="shrink-0">
+            {urlFoto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={urlFoto}
+                alt=""
+                width={36}
+                height={36}
+                className="rounded-lg w-9 h-9 object-cover"
+              />
+            ) : (
+              <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="rounded-lg" />
+            )}
+          </Link>
           <div className="min-w-0">
             <p className="text-ink-400 text-xs">Olá,</p>
             <h1 className="text-lg md:text-2xl font-display font-semibold truncate">{nome}</h1>
