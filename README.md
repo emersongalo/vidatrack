@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 33: Contraste dos Tooltips dos Gráficos
+# VidaTrack — Etapa 34: Menu Trilho Animado + Calendário de Gastos
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,40 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (34) — o painel principal virou o "trilho":**
+
+- **Menu animado** — reaproveitei o visual do trilho que já existia na
+  tela de login (linha colorida + 3 pontos) e transformei no menu
+  principal de verdade. A linha "desenha" de cima pra baixo, e os 3
+  módulos (Hábitos, Notas, Finanças) aparecem em sequência, um depois
+  do outro. Clicando em qualquer um, entra na seção — e voltar pro
+  painel faz a animação tocar de novo (é só o componente sendo
+  montado de novo, nada de truque)
+- **Clima e calendário genérico removidos** do painel — como
+  combinado, "o tempo" não fazia falta ali
+- **Resumos movidos pra dentro de cada seção**, em vez de ficarem
+  no painel: o resumo de hábitos/tarefas de hoje já é a própria tela
+  `/habitos` (que agora tem link "← Painel" também, único lugar que
+  ainda não tinha)
+- **Calendário de gastos** — novo, dentro de Finanças. Mostra um
+  calendário do mês com um pontinho vermelho nos dias que teve gasto,
+  e um pontinho âmbar nos dias que tem conta recorrente pra vencer.
+  Navega entre meses pelas setinhas
+- Respeita "menos animação" (`prefers-reduced-motion`) — quem tem essa
+  preferência ativada no aparelho não vê a animação, só o menu já
+  pronto
+
+**O que ainda não entrou, de propósito — preciso de mais clareza sua:**
+- **"Notas a vencer"** — hoje as Notas não têm nenhum campo de data de
+  vencimento (só data de criação/edição). Pra isso aparecer num
+  calendário, precisaria adicionar essa funcionalidade nova nas Notas
+  primeiro. Não inventei isso sem confirmar com você
+- **Um calendário único cruzando hábitos + finanças + notas** — o que
+  construí é o calendário de gastos, dentro de Finanças. Se a ideia
+  era um calendário central mostrando tudo junto (tipo um "hoje" só
+  que em formato de mês, cruzando os 3 módulos), isso é outra etapa —
+  me confirma se é isso que você quer antes de eu partir pra isso
 
 **Novo nesta etapa (33) — bug visual corrigido:**
 
@@ -724,7 +758,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 31. Extrato com filtros de período
 32. Nome/foto do Google + ícones de banco
 33. Hábitos estilo HabitNow + correção visual em Finanças
-34. Contraste dos tooltips dos gráficos — **você está aqui**
+34. Contraste dos tooltips dos gráficos
+35. Menu trilho animado + calendário de gastos — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

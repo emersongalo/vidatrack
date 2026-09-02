@@ -25,7 +25,10 @@ export default async function HojePage({
 
   return (
     <main className="max-w-2xl mx-auto px-6 md:px-12 pt-2">
-      <div className="flex items-center justify-between mb-4">
+      <Link href="/dashboard" className="text-ink-400 text-sm hover:text-ink-100 transition">
+        ← Painel
+      </Link>
+      <div className="flex items-center justify-between mb-4 mt-2">
         <h1 className="text-2xl font-display font-semibold">Hoje</h1>
         <Link
           href={`/habitos/planejador?data=${dataSelecionada}`}

@@ -7,14 +7,24 @@ import { GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoria"
 import { IndicadorSaldo } from "@/components/IndicadorSaldo";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
+import { buscarCalendarioGastos } from "@/lib/financas/consulta";
+import { CalendarioGastos } from "@/components/CalendarioGastos";
 
-export default async function FinancasPage() {
+export default async function FinancasPage({
+  searchParams,
+}: {
+  searchParams: { mesCalendario?: string };
+}) {
   const supabase = createClient();
   await garantirLancamentosRecorrentes();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const mesCalendario =
+    searchParams.mesCalendario ?? new Date().toLocaleDateString("sv-SE").slice(0, 7);
+  const { gastosPorDia, diasComContaAPagar } = await buscarCalendarioGastos(supabase, mesCalendario);
 
   const { data: contas } = await supabase
     .from("financa_contas")
@@ -171,6 +181,16 @@ export default async function FinancasPage() {
             </div>
             <span className="text-ink-400 text-sm shrink-0">Ver →</span>
           </Link>
+
+          {/* Calendário de gastos */}
+          <div className="mb-6">
+            <p className="text-sm text-ink-400 mb-3">Calendário de gastos</p>
+            <CalendarioGastos
+              anoMesISO={mesCalendario}
+              gastosPorDia={gastosPorDia}
+              diasComContaAPagar={diasComContaAPagar}
+            />
+          </div>
 
           {/* Gráfico de despesas do mês por categoria */}
           {dadosGrafico.length > 0 && (
