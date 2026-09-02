@@ -117,7 +117,7 @@ export default async function FinancasPage({
             href="/financas/personalizar"
             className="text-xs text-ink-400 hover:text-ink-100 transition"
           >
-            ⠿ Personalizar ordem
+            ↕ Personalizar ordem
           </Link>
         </div>
         <CalendarioGastos

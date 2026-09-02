@@ -22,8 +22,9 @@ export default async function PersonalizarFinancasPage() {
       <LinkVoltar href="/financas" texto="Finanças" />
       <h1 className="text-2xl font-display font-semibold mt-4 mb-2">Personalizar ordem</h1>
       <p className="text-ink-400 text-sm mb-6">
-        Arraste pra reorganizar como os blocos aparecem na tela de Finanças,
-        a partir do calendário pra baixo. Salva sozinho a cada troca.
+        Use as setinhas ↑ ↓ pra reorganizar como os blocos aparecem na
+        tela de Finanças, a partir do calendário pra baixo. Salva
+        sozinho a cada troca.
       </p>
 
       <ReordenarBlocosFinancas ordemInicial={ordem} />

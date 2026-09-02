@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 36: Calendário em Destaque + Ordem Personalizável
+# VidaTrack — Etapa 37: Reordenar Blocos Corrigido pra Celular
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,27 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (37) — bug corrigido:**
+
+O "arrastar" pra reordenar os blocos de Finanças não funcionava no
+celular — confirmado no seu teste. A causa: usava o recurso nativo de
+**arrastar-e-soltar do navegador (drag-and-drop HTML5)**, que é uma
+tecnologia pensada pra mouse e **não responde a gestos de toque** na
+maioria dos navegadores de celular. Troquei por **botões de ↑ subir /
+↓ descer** em cada bloco — funciona garantido em qualquer aparelho,
+sem depender de gesto nenhum.
+
+**Aviso importante que descobri no processo:** a reordenação de
+**hábitos e tarefas** (que já existe desde etapas bem anteriores) usa
+esse mesmo mecanismo de arrastar nativo — ou seja, é bem provável que
+tenha o mesmo problema no celular. Não mexi nisso agora porque é uma
+funcionalidade já existente e maior (não quis trocar sem confirmar
+com você antes) — mas recomendo testar e, se confirmar o mesmo
+problema, me avisa que aplico a mesma correção (botões ↑ ↓) lá
+também.
+
+Não precisa rodar SQL — é ajuste de componente só.
 
 **Novo nesta etapa (36):**
 
@@ -805,7 +826,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 34. Contraste dos tooltips dos gráficos
 35. Menu trilho animado + calendário de gastos
 36. Correção de layout no extrato + botão de voltar
-37. Calendário em destaque + ordem personalizável — **você está aqui**
+37. Calendário em destaque + ordem personalizável
+38. Reordenar blocos corrigido pra celular — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
