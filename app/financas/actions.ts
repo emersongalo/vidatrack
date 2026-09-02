@@ -52,6 +52,39 @@ export async function arquivarConta(contaId: string) {
   revalidatePath("/financas/contas");
 }
 
+export async function atualizarConta(contaId: string, formData: FormData) {
+  const supabase = createClient();
+
+  const resultado = esquemaConta.safeParse({
+    nome: formData.get("nome"),
+    tipo: formData.get("tipo"),
+    banco: formData.get("banco"),
+    saldoInicial: formData.get("saldoInicial"),
+  });
+
+  if (!resultado.success) {
+    redirect(`/financas/contas/${contaId}/editar?erro=${encodeURIComponent(primeiroErro(resultado))}`);
+  }
+
+  const { error } = await supabase
+    .from("financa_contas")
+    .update({
+      nome: resultado.data.nome,
+      tipo: resultado.data.tipo,
+      banco: resultado.data.banco,
+      saldo_inicial: resultado.data.saldoInicial,
+    })
+    .eq("id", contaId);
+
+  if (error) {
+    redirect(`/financas/contas/${contaId}/editar?erro=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/financas");
+  revalidatePath("/financas/contas");
+  redirect("/financas/contas");
+}
+
 export async function restaurarConta(contaId: string) {
   "use server";
   const supabase = createClient();
@@ -69,6 +102,55 @@ export async function excluirContaDefinitivamente(contaId: string) {
   await supabase.from("compartilhamentos").delete().eq("tipo_item", "financa").eq("item_id", contaId);
   await supabase.from("financa_contas").delete().eq("id", contaId);
   revalidatePath("/financas/contas/lixeira");
+}
+
+/**
+ * Versão da criação de categoria que RETORNA dados em vez de
+ * redirecionar — usada pelo "+ nova categoria" dentro do formulário
+ * de lançamento, pra não perder o que a pessoa já tinha preenchido lá
+ * (valor, conta, data...) navegando pra outra tela.
+ */
+export async function criarCategoriaRapida(dados: {
+  nome: string;
+  tipo: "receita" | "despesa";
+  icone: string;
+}): Promise<{ id: string; nome: string; icone: string; tipo: string } | { erro: string }> {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sessão expirada, atualiza a página." };
+
+  const resultado = esquemaCategoria.safeParse({
+    nome: dados.nome,
+    tipo: dados.tipo,
+    icone: dados.icone,
+    cor: "financa",
+  });
+
+  if (!resultado.success) {
+    return { erro: primeiroErro(resultado) };
+  }
+
+  const { data: nova, error } = await supabase
+    .from("financa_categorias")
+    .insert({
+      dono_id: user.id,
+      nome: resultado.data.nome,
+      tipo: resultado.data.tipo,
+      icone: resultado.data.icone,
+      cor: resultado.data.cor,
+    })
+    .select("id, nome, icone, tipo")
+    .single();
+
+  if (error || !nova) {
+    return { erro: error?.message ?? "Não deu pra criar a categoria." };
+  }
+
+  revalidatePath("/financas/categorias");
+  return nova;
 }
 
 export async function salvarOrdemBlocosFinancas(idsEmOrdem: string[]) {

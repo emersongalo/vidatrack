@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 38: Ocultar Valores
+# VidaTrack — Etapa 39: Contas, Categoria Rápida, Sair do App e Visual Mobills
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,40 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (39):**
+
+- **Editar conta** — antes só dava pra arquivar; agora tem "Editar" em
+  cada conta, com um formulário de verdade
+- **Mostra com quem a conta é compartilhada** — avatares (foto ou
+  inicial) aparecem empilhados do lado do nome da conta, e também no
+  topo da tela de Finanças, se alguma conta for compartilhada
+- **Categoria rápida no lançamento** — botão "+ Nova categoria" dentro
+  do próprio formulário de "Novo lançamento". Cria ali mesmo (nome +
+  ícone), sem navegar pra outra tela e sem perder o que você já tinha
+  preenchido (valor, conta, data...)
+- **Botão voltar do Android** — no painel principal, apertar voltar
+  uma vez mostra um aviso ("toque de novo pra sair"); só sai do app se
+  apertar de novo em até ~2 segundos. Evita fechar o app sem querer
+  com um toque acidental
+- **Topo da tela de Finanças redesenhado**, inspirado no Mobills:
+  saldo grande em destaque, Receitas e Despesas em círculos coloridos
+  (verde/vermelho) lado a lado, olho de ocultar valores junto
+
+**Sobre "layout exatamente idêntico" ao Mobills:** fiz uma aproximação
+real e de propósito no topo da tela (que é a parte mais visível/hero),
+usando a mesma composição (saldo grande, círculos de receita/despesa,
+olho). Não copiei pixel a pixel o app de terceiros — mantive nossas
+próprias cores e fontes, e não reproduzi a marca/logotipo deles. Se
+quiser aprofundar em outras partes da tela também, me fala quais.
+
+**Espaços (Pessoal/Empresa) — combinado que fica pra próxima etapa,
+dedicada só a isso**, por ser uma mudança grande de arquitetura
+(precisa mexer em quase toda tabela de Finanças).
+
+## Rodar o schema desta etapa
+
+Nenhum schema novo — tudo usa tabelas que já existiam.
 
 **Novo nesta etapa (38) — botão de ocultar valores:**
 
@@ -848,7 +882,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 36. Correção de layout no extrato + botão de voltar
 37. Calendário em destaque + ordem personalizável
 38. Reordenar blocos corrigido pra celular
-39. Ocultar valores — **você está aqui**
+39. Ocultar valores
+40. Contas, categoria rápida, sair do app e visual Mobills — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

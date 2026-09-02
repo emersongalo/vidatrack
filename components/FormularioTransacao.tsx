@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { criarTransacao } from "@/app/financas/actions";
+import { criarTransacao, criarCategoriaRapida } from "@/app/financas/actions";
+import { ICONES_CATEGORIA_DESPESA, ICONES_CATEGORIA_RECEITA } from "@/lib/financas/formatacao";
 
 type Conta = { id: string; nome: string };
 type Categoria = { id: string; nome: string; tipo: "receita" | "despesa"; icone?: string };
@@ -38,10 +39,46 @@ export function FormularioTransacao({
   const [duracaoRecorrencia, setDuracaoRecorrencia] = useState<"sempre" | "ate_data">("sempre");
   const ehEdicao = !!valoresIniciais;
 
+  const [categoriasLocais, setCategoriasLocais] = useState(categorias);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState(valoresIniciais?.categoriaId ?? "");
+  const [mostrarNovaCategoria, setMostrarNovaCategoria] = useState(false);
+  const [nomeNovaCategoria, setNomeNovaCategoria] = useState("");
+  const [iconeNovaCategoria, setIconeNovaCategoria] = useState(ICONES_CATEGORIA_DESPESA[0]);
+  const [erroCategoria, setErroCategoria] = useState("");
+  const [criandoCategoria, iniciarCriacaoCategoria] = useTransition();
+
   const categoriasFiltradas = useMemo(
-    () => categorias.filter((c) => c.tipo === tipo),
-    [categorias, tipo]
+    () => categoriasLocais.filter((c) => c.tipo === tipo),
+    [categoriasLocais, tipo]
   );
+
+  function abrirNovaCategoria() {
+    setIconeNovaCategoria(tipo === "despesa" ? ICONES_CATEGORIA_DESPESA[0] : ICONES_CATEGORIA_RECEITA[0]);
+    setNomeNovaCategoria("");
+    setErroCategoria("");
+    setMostrarNovaCategoria(true);
+  }
+
+  function salvarNovaCategoria() {
+    if (!nomeNovaCategoria.trim()) {
+      setErroCategoria("Digite um nome");
+      return;
+    }
+    iniciarCriacaoCategoria(async () => {
+      const resultado = await criarCategoriaRapida({
+        nome: nomeNovaCategoria.trim(),
+        tipo,
+        icone: iconeNovaCategoria,
+      });
+      if ("erro" in resultado) {
+        setErroCategoria(resultado.erro);
+        return;
+      }
+      setCategoriasLocais((atual) => [...atual, resultado as Categoria]);
+      setCategoriaSelecionada(resultado.id);
+      setMostrarNovaCategoria(false);
+    });
+  }
 
   const hoje = new Date().toLocaleDateString("sv-SE");
 
@@ -62,7 +99,10 @@ export function FormularioTransacao({
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => setTipo("despesa")}
+            onClick={() => {
+              setTipo("despesa");
+              setCategoriaSelecionada("");
+            }}
             className={`flex-1 rounded-lg py-2 text-sm border transition ${
               tipo === "despesa"
                 ? "bg-red-400/15 border-red-400 text-red-400"
@@ -73,7 +113,10 @@ export function FormularioTransacao({
           </button>
           <button
             type="button"
-            onClick={() => setTipo("receita")}
+            onClick={() => {
+              setTipo("receita");
+              setCategoriaSelecionada("");
+            }}
             className={`flex-1 rounded-lg py-2 text-sm border transition ${
               tipo === "receita"
                 ? "bg-habito-soft border-habito text-habito"
@@ -121,13 +164,23 @@ export function FormularioTransacao({
         </div>
 
         <div>
-          <label htmlFor="categoriaId" className="block text-sm text-ink-400 mb-1">
-            Categoria
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="categoriaId" className="block text-sm text-ink-400">
+              Categoria
+            </label>
+            <button
+              type="button"
+              onClick={abrirNovaCategoria}
+              className="text-xs text-financa hover:underline"
+            >
+              + Nova categoria
+            </button>
+          </div>
           <select
             id="categoriaId"
             name="categoriaId"
-            defaultValue={valoresIniciais?.categoriaId ?? ""}
+            value={categoriaSelecionada}
+            onChange={(e) => setCategoriaSelecionada(e.target.value)}
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
           >
             <option value="">Sem categoria</option>
@@ -138,6 +191,51 @@ export function FormularioTransacao({
               </option>
             ))}
           </select>
+
+          {mostrarNovaCategoria && (
+            <div className="mt-2 bg-base-800 border border-base-600 rounded-lg p-3 space-y-2.5">
+              <input
+                type="text"
+                value={nomeNovaCategoria}
+                onChange={(e) => setNomeNovaCategoria(e.target.value)}
+                placeholder="Nome da categoria"
+                autoFocus
+                className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
+              />
+              <div className="grid grid-cols-8 gap-1.5">
+                {(tipo === "despesa" ? ICONES_CATEGORIA_DESPESA : ICONES_CATEGORIA_RECEITA).map((ic) => (
+                  <button
+                    type="button"
+                    key={ic}
+                    onClick={() => setIconeNovaCategoria(ic)}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-base border transition ${
+                      iconeNovaCategoria === ic ? "border-ink-100 bg-base-700" : "border-base-600"
+                    }`}
+                  >
+                    {ic}
+                  </button>
+                ))}
+              </div>
+              {erroCategoria && <p className="text-xs text-red-400">{erroCategoria}</p>}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMostrarNovaCategoria(false)}
+                  className="flex-1 border border-base-600 rounded-lg py-1.5 text-xs hover:bg-base-700 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={salvarNovaCategoria}
+                  disabled={criandoCategoria}
+                  className="flex-1 bg-financa text-base-900 font-medium rounded-lg py-1.5 text-xs hover:opacity-90 transition disabled:opacity-50"
+                >
+                  {criandoCategoria ? "Criando..." : "Criar e usar"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div>

@@ -5,8 +5,9 @@ import { primeiroDiaDoMes, nomeDoMesAtual } from "@/lib/financas/formatacao";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoria";
-import { IndicadorSaldo } from "@/components/IndicadorSaldo";
 import { LinkVoltar } from "@/components/LinkVoltar";
+import { HeroFinancas } from "@/components/HeroFinancas";
+import { resolverUrlFoto } from "@/lib/perfil/foto";
 import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
@@ -31,6 +32,10 @@ export default async function FinancasPage({
     searchParams.mesCalendario ?? new Date().toLocaleDateString("sv-SE").slice(0, 7);
   const { gastosPorDia, diasComContaAPagar } = await buscarCalendarioGastos(supabase, mesCalendario);
 
+  // Pessoas com quem alguma conta é compartilhada, pra mostrar os
+  // avatares no topo (só busca se realmente houver compartilhamento).
+  let pessoasCompartilhadas: { nome: string; urlFoto: string | null }[] = [];
+
   const { data: perfilOrdem } = await supabase
     .from("perfis")
     .select("ordem_blocos_financas")
@@ -44,6 +49,38 @@ export default async function FinancasPage({
     .eq("arquivado", false);
 
   const idsContas = (contas ?? []).map((c) => c.id);
+
+  if (idsContas.length > 0) {
+    const { data: compartilhamentosContas } = await supabase
+      .from("compartilhamentos")
+      .select("usuario_convidado_id")
+      .eq("tipo_item", "financa")
+      .in("item_id", idsContas)
+      .not("usuario_convidado_id", "is", null);
+
+    const idsConvidados = Array.from(
+      new Set((compartilhamentosContas ?? []).map((c) => c.usuario_convidado_id as string))
+    );
+
+    if (idsConvidados.length > 0) {
+      const { data: perfisConvidados } = await supabase
+        .from("perfis")
+        .select("id, nome, foto_url")
+        .in("id", idsConvidados);
+
+      const minhaFoto = user?.id
+        ? await resolverUrlFoto(
+            (await supabase.from("perfis").select("foto_url").eq("id", user.id).maybeSingle()).data
+              ?.foto_url ?? null
+          )
+        : null;
+
+      pessoasCompartilhadas = [{ nome: "Você", urlFoto: minhaFoto }];
+      for (const p of perfisConvidados ?? []) {
+        pessoasCompartilhadas.push({ nome: p.nome ?? "Alguém", urlFoto: await resolverUrlFoto(p.foto_url) });
+      }
+    }
+  }
 
   const { data: todasTransacoes } = idsContas.length
     ? await supabase
@@ -258,28 +295,14 @@ export default async function FinancasPage({
         </div>
       ) : (
         <>
-          {/* Saldo total, com indicador animado positivo/negativo */}
-          <div className="mb-4">
-            <IndicadorSaldo saldo={saldoTotal} />
-          </div>
-
-          {/* Resumo do mês */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <Link
-              href="/financas/extrato?tipo=receita&preset=este_mes"
-              className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-habito transition"
-            >
-              <p className="text-ink-400 text-xs mb-1 capitalize">Receitas · {nomeDoMesAtual()}</p>
-              <ValorMonetario valor={receitasDoMes} className="font-mono font-medium text-habito" />
-            </Link>
-            <Link
-              href="/financas/extrato?tipo=despesa&preset=este_mes"
-              className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-red-400 transition"
-            >
-              <p className="text-ink-400 text-xs mb-1 capitalize">Despesas · {nomeDoMesAtual()}</p>
-              <ValorMonetario valor={despesasDoMes} className="font-mono font-medium text-red-400" />
-            </Link>
-          </div>
+          {/* Saldo, receitas, despesas — estilo Mobills, no topo */}
+          <HeroFinancas
+            saldo={saldoTotal}
+            receitas={receitasDoMes}
+            despesas={despesasDoMes}
+            nomeMes={nomeDoMesAtual()}
+            pessoas={pessoasCompartilhadas}
+          />
 
           {/* Orçamento por categoria */}
           {categorias && categorias.length > 0 && (

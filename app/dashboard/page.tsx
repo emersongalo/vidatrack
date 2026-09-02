@@ -5,6 +5,7 @@ import { sair } from "../login/actions";
 import { AlternadorTema } from "@/components/AlternadorTema";
 import { resolverUrlFoto } from "@/lib/perfil/foto";
 import { TrilhoMenu } from "@/components/TrilhoMenu";
+import { ConfirmarSaidaApp } from "@/components/ConfirmarSaidaApp";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -79,6 +80,7 @@ export default async function DashboardPage() {
       </header>
 
       <TrilhoMenu />
+      <ConfirmarSaidaApp />
 
       <p className="text-center mt-4 flex items-center justify-center gap-4">
         <Link href="/doacao" className="text-xs text-ink-400 hover:text-ink-100 transition">
