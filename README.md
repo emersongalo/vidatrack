@@ -20,23 +20,20 @@ das Notas).
   e configura a recorrência pros próximos meses
 - **Botão "+ Lançamento" mais evidente** — cor de destaque (âmbar,
   cor de Finanças no app), sombra e leve efeito ao passar o mouse
-- **Assistente de IA nas Finanças** (`/financas/assistente`) — um chat
-  que conhece seus dados reais: saldo, gastos por categoria,
-  comparação com o mês passado, orçamento estourado ou não, contas a
-  pagar, e também hábitos/tarefas pendentes de hoje. Usa a API da
-  Anthropic (Claude) — precisa de uma chave de API configurada
+- ~~Assistente de IA nas Finanças~~ — removido na Etapa 28 (veja acima)
 
-## Configurar o Assistente de IA
+**Novo nesta etapa (28) — assistente de IA removido:**
 
-1. Crie uma conta em [console.anthropic.com](https://console.anthropic.com)
-   e gere uma chave de API (Settings > API Keys)
-2. Coloque em `ANTHROPIC_API_KEY` no `.env.local` (e depois nas
-   variáveis de ambiente do Vercel)
-3. **Isso tem custo** — cada pergunta consome créditos da API da
-   Anthropic (bem barato pra esse uso, mas não é gratuito como o resto
-   do app). Se preferir não ativar, o app funciona normalmente sem
-   essa chave — só o link do assistente mostra uma mensagem explicando
-   que não está configurado, em vez de dar erro feio
+Removido por decisão consciente: era o único recurso do app que teria
+custo recorrente de verdade (créditos de API por pergunta), o que ia
+contra o objetivo do VidaTrack de ser 100% gratuito. Removidos: a rota
+`/api/assistente`, a página `/financas/assistente`, o componente de
+chat, a função de montar contexto, o link na tela de Finanças, e a
+variável `ANTHROPIC_API_KEY` (não precisa mais dela em lugar nenhum).
+
+Tudo o mais desta etapa (popup de excluir corrigido, recorrência
+dentro do formulário, botão de lançamento mais evidente) continua
+valendo — só o assistente de IA saiu.
 
 **Novo nesta etapa (26) — pensado pra casal/família:**
 
@@ -605,7 +602,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 25. Correção de overflow horizontal
 26. Localização simplificada (só permissão)
 27. Compartilhamento entre casal/família
-28. Popup de excluir + recorrência no formulário + Assistente de IA — **você está aqui**
+28. Popup de excluir + recorrência no formulário + Assistente de IA
+29. Assistente de IA removido — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

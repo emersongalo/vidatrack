@@ -166,18 +166,6 @@ export default async function FinancasPage() {
             <span className="text-ink-400 text-sm shrink-0">Ver →</span>
           </Link>
 
-          {/* Link do assistente de IA */}
-          <Link
-            href="/financas/assistente"
-            className="flex items-center justify-between bg-base-800 border border-base-600 border-l-4 border-l-nota rounded-xl2 p-4 mb-6 hover:border-nota transition"
-          >
-            <div>
-              <p className="font-medium">🤖 Pergunte ao assistente</p>
-              <p className="text-xs text-ink-400 mt-0.5">Tire dúvidas sobre gastos, orçamento e pendências, na conversa</p>
-            </div>
-            <span className="text-ink-400 text-sm shrink-0">Abrir →</span>
-          </Link>
-
           {/* Gráfico de despesas do mês por categoria */}
           {dadosGrafico.length > 0 && (
             <div className="mb-6">
