@@ -71,6 +71,18 @@ export async function excluirContaDefinitivamente(contaId: string) {
   revalidatePath("/financas/contas/lixeira");
 }
 
+export async function salvarOrdemBlocosFinancas(idsEmOrdem: string[]) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  await supabase.from("perfis").update({ ordem_blocos_financas: idsEmOrdem }).eq("id", user.id);
+  revalidatePath("/financas");
+}
+
 export async function criarCategoria(formData: FormData) {
   const supabase = createClient();
   const {

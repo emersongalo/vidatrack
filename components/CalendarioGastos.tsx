@@ -68,32 +68,37 @@ export function CalendarioGastos({
         ))}
         {celulas.map((dia, i) => {
           const gasto = dia ? mapaGastos.get(dia) : undefined;
+          const temGasto = !!gasto;
           const temContaAPagar = dia ? setContaAPagar.has(dia) : false;
           const ehHoje = ehMesAtual && dia === hoje.getDate();
 
+          let classeCirculo = "text-ink-100";
+          if (ehHoje) {
+            classeCirculo = "bg-financa text-base-900 font-semibold";
+          } else if (temGasto && temContaAPagar) {
+            classeCirculo = "bg-red-400/25 text-red-300 font-semibold ring-2 ring-financa";
+          } else if (temGasto) {
+            classeCirculo = "bg-red-400/25 text-red-300 font-semibold";
+          } else if (temContaAPagar) {
+            classeCirculo = "ring-2 ring-financa text-financa font-semibold";
+          }
+
+          const titulo = [
+            temGasto ? `Gasto: ${formatarMoeda(gasto!)}` : null,
+            temContaAPagar ? "Tem conta a pagar" : null,
+          ]
+            .filter(Boolean)
+            .join(" · ");
+
           return (
-            <div key={i} className="flex flex-col items-center gap-0.5 min-h-[38px]">
+            <div key={i} className="flex flex-col items-center min-h-[30px]">
               {dia && (
-                <>
-                  <span
-                    className={`text-xs w-6 h-6 rounded-full flex items-center justify-center ${
-                      ehHoje ? "bg-financa text-base-900 font-semibold" : "text-ink-100"
-                    }`}
-                  >
-                    {dia}
-                  </span>
-                  <div className="flex items-center gap-0.5 h-2">
-                    {gasto ? (
-                      <span
-                        className="w-1.5 h-1.5 rounded-full bg-red-400"
-                        title={`Gasto em ${dia}/${mes}: ${formatarMoeda(gasto)}`}
-                      />
-                    ) : null}
-                    {temContaAPagar && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-financa" title="Conta a pagar nesse dia" />
-                    )}
-                  </div>
-                </>
+                <span
+                  title={titulo || undefined}
+                  className={`text-xs w-7 h-7 rounded-full flex items-center justify-center transition ${classeCirculo}`}
+                >
+                  {dia}
+                </span>
               )}
             </div>
           );
@@ -102,10 +107,10 @@ export function CalendarioGastos({
 
       <div className="flex items-center gap-4 mt-3 pt-3 border-t border-base-600 text-[11px] text-ink-400">
         <span className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-400" /> Dia com gasto
+          <span className="w-3 h-3 rounded-full bg-red-400/25 ring-1 ring-red-400/60" /> Dia com gasto
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-financa" /> Conta a pagar
+          <span className="w-3 h-3 rounded-full ring-2 ring-financa" /> Conta a pagar
         </span>
       </div>
     </div>

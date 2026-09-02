@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { formatarMoeda, primeiroDiaDoMes, nomeDoMesAtual } from "@/lib/financas/formatacao";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
@@ -10,6 +11,7 @@ import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
 import { buscarCalendarioGastos } from "@/lib/financas/consulta";
 import { CalendarioGastos } from "@/components/CalendarioGastos";
+import { normalizarOrdemBlocos } from "@/lib/financas/blocos";
 
 export default async function FinancasPage({
   searchParams,
@@ -26,6 +28,13 @@ export default async function FinancasPage({
   const mesCalendario =
     searchParams.mesCalendario ?? new Date().toLocaleDateString("sv-SE").slice(0, 7);
   const { gastosPorDia, diasComContaAPagar } = await buscarCalendarioGastos(supabase, mesCalendario);
+
+  const { data: perfilOrdem } = await supabase
+    .from("perfis")
+    .select("ordem_blocos_financas")
+    .eq("id", user?.id ?? "")
+    .maybeSingle();
+  const ordemBlocos = normalizarOrdemBlocos(perfilOrdem?.ordem_blocos_financas ?? null);
 
   const { data: contas } = await supabase
     .from("financa_contas")
@@ -98,6 +107,120 @@ export default async function FinancasPage({
     const { data: perfis } = await supabase.from("perfis").select("id, nome").in("id", idsDonosUnicos);
     mapaNomes = new Map((perfis ?? []).map((p) => [p.id, p.nome ?? "Alguém"]));
   }
+
+  const blocosFinancas: Record<string, ReactNode> = {
+    calendario: (
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-ink-400">Calendário de gastos</p>
+          <Link
+            href="/financas/personalizar"
+            className="text-xs text-ink-400 hover:text-ink-100 transition"
+          >
+            ⠿ Personalizar ordem
+          </Link>
+        </div>
+        <CalendarioGastos
+          anoMesISO={mesCalendario}
+          gastosPorDia={gastosPorDia}
+          diasComContaAPagar={diasComContaAPagar}
+        />
+      </div>
+    ),
+    grafico:
+      dadosGrafico.length > 0 ? (
+        <div className="mb-6">
+          <p className="text-sm text-ink-400 mb-3">Despesas por categoria · {nomeDoMesAtual()}</p>
+          <GraficoDespesasCategoria dados={dadosGrafico} />
+        </div>
+      ) : null,
+    linksRapidos: (
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 mb-6 text-sm">
+        <Link href="/financas/extrato" className="text-ink-400 hover:text-ink-100 transition underline">
+          Extrato
+        </Link>
+        <Link href="/financas/contas" className="text-ink-400 hover:text-ink-100 transition underline">
+          Contas
+        </Link>
+        <Link href="/financas/categorias" className="text-ink-400 hover:text-ink-100 transition underline">
+          Categorias
+        </Link>
+        <Link href="/financas/recorrentes" className="text-ink-400 hover:text-ink-100 transition underline">
+          Recorrentes
+        </Link>
+        <Link href="/financas/exportar" className="text-ink-400 hover:text-ink-100 transition underline">
+          Exportar CSV
+        </Link>
+      </div>
+    ),
+    lancamentos: (
+      <>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-ink-400">Últimos lançamentos</p>
+          <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
+            Ver extrato completo →
+          </Link>
+        </div>
+        {ultimasTransacoes.length === 0 ? (
+          <p className="text-ink-400 text-sm">Nenhum lançamento ainda.</p>
+        ) : (
+          <ul className="space-y-2">
+            {ultimasTransacoes.map((t: any) => (
+              <li key={t.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <span className="relative shrink-0">
+                    <span
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm ${classeFundoSuave(
+                        t.financa_categorias?.cor ?? "financa"
+                      )}`}
+                    >
+                      {t.financa_categorias?.icone ?? (t.tipo === "receita" ? "💰" : "💸")}
+                    </span>
+                    {mapaNomes.has(t.dono_id) && (
+                      <span
+                        title={t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
+                        className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-semibold border-2 border-base-800 ${
+                          t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
+                        }`}
+                      >
+                        {(t.dono_id === user?.id ? "V" : (mapaNomes.get(t.dono_id) ?? "?")).charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </span>
+                  <p className="text-sm truncate flex-1 min-w-0">
+                    {t.descricao || mapaContas.get(t.conta_id)}
+                  </p>
+                  <span
+                    className={`font-mono text-sm shrink-0 ${
+                      t.tipo === "receita" ? "text-habito" : "text-red-400"
+                    }`}
+                  >
+                    {t.tipo === "receita" ? "+" : "-"}
+                    {formatarMoeda(t.valor)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
+                  <p className="text-xs text-ink-400 truncate min-w-0">
+                    {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
+                    {mapaContas.get(t.conta_id)}
+                  </p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                      href={`/financas/${t.id}/editar`}
+                      className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0"
+                    >
+                      Editar
+                    </Link>
+                    <BotaoRemoverTransacao transacaoId={t.id} />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </>
+    ),
+  };
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-2xl mx-auto">
@@ -181,110 +304,9 @@ export default async function FinancasPage({
             <span className="text-ink-400 text-sm shrink-0">Ver →</span>
           </Link>
 
-          {/* Calendário de gastos */}
-          <div className="mb-6">
-            <p className="text-sm text-ink-400 mb-3">Calendário de gastos</p>
-            <CalendarioGastos
-              anoMesISO={mesCalendario}
-              gastosPorDia={gastosPorDia}
-              diasComContaAPagar={diasComContaAPagar}
-            />
-          </div>
-
-          {/* Gráfico de despesas do mês por categoria */}
-          {dadosGrafico.length > 0 && (
-            <div className="mb-6">
-              <p className="text-sm text-ink-400 mb-3">Despesas por categoria · {nomeDoMesAtual()}</p>
-              <GraficoDespesasCategoria dados={dadosGrafico} />
-            </div>
-          )}
-
-          {/* Links rápidos */}
-          <div className="flex flex-wrap gap-x-3 gap-y-1.5 mb-6 text-sm">
-            <Link href="/financas/extrato" className="text-ink-400 hover:text-ink-100 transition underline">
-              Extrato
-            </Link>
-            <Link href="/financas/contas" className="text-ink-400 hover:text-ink-100 transition underline">
-              Contas
-            </Link>
-            <Link href="/financas/categorias" className="text-ink-400 hover:text-ink-100 transition underline">
-              Categorias
-            </Link>
-            <Link href="/financas/recorrentes" className="text-ink-400 hover:text-ink-100 transition underline">
-              Recorrentes
-            </Link>
-            <Link href="/financas/exportar" className="text-ink-400 hover:text-ink-100 transition underline">
-              Exportar CSV
-            </Link>
-          </div>
-
-          {/* Últimos lançamentos */}
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-ink-400">Últimos lançamentos</p>
-            <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
-              Ver extrato completo →
-            </Link>
-          </div>
-          {ultimasTransacoes.length === 0 ? (
-            <p className="text-ink-400 text-sm">Nenhum lançamento ainda.</p>
-          ) : (
-            <ul className="space-y-2">
-              {ultimasTransacoes.map((t: any) => (
-                <li
-                  key={t.id}
-                  className="bg-base-800 border border-base-600 rounded-lg p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="relative shrink-0">
-                      <span
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm ${classeFundoSuave(
-                          t.financa_categorias?.cor ?? "financa"
-                        )}`}
-                      >
-                        {t.financa_categorias?.icone ?? (t.tipo === "receita" ? "💰" : "💸")}
-                      </span>
-                      {mapaNomes.has(t.dono_id) && (
-                        <span
-                          title={t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
-                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-semibold border-2 border-base-800 ${
-                            t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
-                          }`}
-                        >
-                          {(t.dono_id === user?.id ? "V" : (mapaNomes.get(t.dono_id) ?? "?")).charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </span>
-                    <p className="text-sm truncate flex-1 min-w-0">
-                      {t.descricao || mapaContas.get(t.conta_id)}
-                    </p>
-                    <span
-                      className={`font-mono text-sm shrink-0 ${
-                        t.tipo === "receita" ? "text-habito" : "text-red-400"
-                      }`}
-                    >
-                      {t.tipo === "receita" ? "+" : "-"}
-                      {formatarMoeda(t.valor)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
-                    <p className="text-xs text-ink-400 truncate min-w-0">
-                      {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
-                      {mapaContas.get(t.conta_id)}
-                    </p>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Link
-                        href={`/financas/${t.id}/editar`}
-                        className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0"
-                      >
-                        Editar
-                      </Link>
-                      <BotaoRemoverTransacao transacaoId={t.id} />
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          {ordemBlocos.map((blocoId) => (
+            <div key={blocoId}>{blocosFinancas[blocoId]}</div>
+          ))}
         </>
       )}
     </main>

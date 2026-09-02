@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 35: Correção de Layout no Extrato + Botão de Voltar
+# VidaTrack — Etapa 36: Calendário em Destaque + Ordem Personalizável
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,26 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (36):**
+
+- **Calendário de gastos mais claro** — antes era só um pontinho
+  minúsculo embaixo do número do dia. Agora o **número do dia** em si
+  fica com fundo vermelho suave (gasto), anel âmbar (conta a pagar),
+  ou os dois combinados — muito mais fácil de bater o olho e entender
+- **Ordem personalizável dos blocos** — em `/financas/personalizar`,
+  dá pra arrastar e reorganizar como aparecem o Calendário, o Gráfico
+  por categoria, os Links rápidos e os Últimos lançamentos (os blocos
+  "a partir do calendário pra baixo", como você pediu — o saldo,
+  resumo do mês e orçamento continuam fixos no topo, sempre visíveis
+  primeiro). Salva sozinho a cada troca, sem precisar de botão "Salvar"
+- Link "⠿ Personalizar ordem" aparece direto ao lado do título do
+  calendário, fácil de achar
+
+## Rodar o schema desta etapa
+
+No SQL Editor do Supabase, rode também o `supabase/schema_ordem_blocos.sql`
+(depois de todos os schemas anteriores).
 
 **Novo nesta etapa (35) — 3 correções do seu print:**
 
@@ -784,7 +804,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 33. Hábitos estilo HabitNow + correção visual em Finanças
 34. Contraste dos tooltips dos gráficos
 35. Menu trilho animado + calendário de gastos
-36. Correção de layout no extrato + botão de voltar — **você está aqui**
+36. Correção de layout no extrato + botão de voltar
+37. Calendário em destaque + ordem personalizável — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
