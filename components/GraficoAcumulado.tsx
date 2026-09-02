@@ -35,6 +35,8 @@ export function GraficoAcumulado({ dados }: { dados: { dia: number; acumulado: n
               fontSize: 12,
               color: "#F2F0EA",
             }}
+            labelStyle={{ color: "#F2F0EA" }}
+            itemStyle={{ color: "#F2F0EA" }}
           />
           <Area
             type="monotone"

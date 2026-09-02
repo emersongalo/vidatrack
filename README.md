@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 32: Hábitos estilo HabitNow + Correção Visual em Finanças
+# VidaTrack — Etapa 33: Contraste dos Tooltips dos Gráficos
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,23 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (33) — bug visual corrigido:**
+
+O gráfico de pizza "Despesas por categoria" (e mais 4 gráficos que usam
+o mesmo padrão) tinha o tooltip configurado com fundo escuro mas
+**sem cor de texto definida** — o Recharts caía num tom padrão que
+ficava quase invisível em cima do fundo escuro do app, exatamente o
+"tudo preto" que você viu no clique da pizza.
+
+Corrigido nos 5 gráficos do app que usam tooltip:
+`GraficoDespesasCategoria`, `GraficoConsistencia`, `RadarOrcamento`,
+`TreemapGastos` e `GraficoAcumulado` — os 2 primeiros eram os únicos
+que realmente tinham o bug (os outros 3 já tinham sido corrigidos
+numa etapa anterior); apliquei a mesma correção reforçada nos 5 pra
+garantir que nenhum volte a ter esse problema no futuro.
+
+Não precisa rodar SQL — é ajuste visual só.
 
 **Novo nesta etapa (32):**
 
@@ -706,7 +723,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 30. Ícones nas categorias padrão + fim de recorrência
 31. Extrato com filtros de período
 32. Nome/foto do Google + ícones de banco
-33. Hábitos estilo HabitNow + correção visual em Finanças — **você está aqui**
+33. Hábitos estilo HabitNow + correção visual em Finanças
+34. Contraste dos tooltips dos gráficos — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

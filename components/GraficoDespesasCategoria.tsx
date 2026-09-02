@@ -36,7 +36,10 @@ export function GraficoDespesasCategoria({
                 border: "1px solid #2A2D35",
                 borderRadius: 8,
                 fontSize: 13,
+                color: "#F2F0EA",
               }}
+              labelStyle={{ color: "#F2F0EA" }}
+              itemStyle={{ color: "#F2F0EA" }}
             />
           </PieChart>
         </ResponsiveContainer>

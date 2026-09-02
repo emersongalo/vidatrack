@@ -57,6 +57,8 @@ export function TreemapGastos({ dados }: { dados: { nome: string; valor: number 
               fontSize: 13,
               color: "#F2F0EA",
             }}
+            labelStyle={{ color: "#F2F0EA" }}
+            itemStyle={{ color: "#F2F0EA" }}
           />
         </Treemap>
       </ResponsiveContainer>

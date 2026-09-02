@@ -30,6 +30,8 @@ export function RadarOrcamento({
               fontSize: 12,
               color: "#F2F0EA",
             }}
+            labelStyle={{ color: "#F2F0EA" }}
+            itemStyle={{ color: "#F2F0EA" }}
           />
         </RadarChart>
       </ResponsiveContainer>
