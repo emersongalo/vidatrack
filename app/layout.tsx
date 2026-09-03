@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Outfit, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { RegistradorPWA } from "@/components/RegistradorPWA";
+import { RegistradorPushNativo } from "@/components/RegistradorPushNativo";
+import { GerenciadorSincronizacaoOffline } from "@/components/GerenciadorSincronizacaoOffline";
 import { AnalyticsAnonimo } from "@/components/AnalyticsAnonimo";
 import { PromptInstalarApp } from "@/components/PromptInstalarApp";
 
@@ -68,6 +70,8 @@ export default function RootLayout({
         />
         {children}
         <RegistradorPWA />
+        <RegistradorPushNativo />
+        <GerenciadorSincronizacaoOffline />
         <AnalyticsAnonimo />
         <PromptInstalarApp />
       </body>

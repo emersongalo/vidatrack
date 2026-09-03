@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ListaHabitosArrastavel } from "@/components/ListaHabitosArrastavel";
+import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
 
 export default async function ListaHabitosPage() {
   const supabase = createClient();
@@ -22,12 +23,7 @@ export default async function ListaHabitosPage() {
           <Link href="/habitos/lixeira" className="text-ink-400 text-sm hover:text-ink-100 transition">
             Lixeira
           </Link>
-          <Link
-            href="/habitos/novo"
-            className="bg-ink-100 text-base-900 text-sm font-medium rounded-lg px-4 py-2 hover:opacity-90 transition"
-          >
-            + Novo
-          </Link>
+          <BotaoNovoHabitoOffline />
         </div>
       </div>
 

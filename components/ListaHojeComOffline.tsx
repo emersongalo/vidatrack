@@ -1,16 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { ItemLinhaAgenda, ItemAgenda } from "@/components/ItemLinhaAgenda";
-import {
-  adicionarNaFila,
-  lerFila,
-  limparFila,
-  salvarCacheHoje,
-  lerCacheHoje,
-} from "@/lib/offline/fila";
-import { alternarCheckin, ajustarQuantidadeHabito } from "@/app/habitos/actions";
-import { alternarConclusaoTarefa } from "@/app/habitos/tarefas/actions";
+import { adicionarNaFila, salvarCacheHoje } from "@/lib/offline/fila";
+import { EVENTO_SINCRONIZACAO_CONCLUIDA } from "@/components/GerenciadorSincronizacaoOffline";
 
 export function ListaHojeComOffline({
   itensServidor,
@@ -21,7 +14,6 @@ export function ListaHojeComOffline({
 }) {
   const [itens, setItens] = useState(itensServidor);
   const [offline, setOffline] = useState(false);
-  const [sincronizando, setSincronizando] = useState(false);
 
   // Sempre que os dados do servidor mudam (nova renderização, revalidação),
   // atualiza o cache local pra essa data.
@@ -30,54 +22,32 @@ export function ListaHojeComOffline({
     salvarCacheHoje(dataISO, itensServidor);
   }, [itensServidor, dataISO]);
 
-  const sincronizarFila = useCallback(async () => {
-    const fila = lerFila();
-    if (fila.length === 0) return;
-
-    setSincronizando(true);
-    for (const acao of fila) {
-      try {
-        if (acao.tipo === "checkin_habito") {
-          await alternarCheckin(acao.habitoId, acao.data);
-        } else if (acao.tipo === "ajuste_habito") {
-          await ajustarQuantidadeHabito(acao.habitoId, acao.data, acao.delta);
-        } else if (acao.tipo === "conclusao_tarefa") {
-          await alternarConclusaoTarefa(acao.tarefaId, acao.data);
-        }
-      } catch {
-        // Se uma ação falhar, para por aqui — tenta de novo na próxima vez
-        // que a conexão for detectada, pra não perder a ordem.
-        setSincronizando(false);
-        return;
-      }
-    }
-    limparFila();
-    setSincronizando(false);
-    window.location.reload(); // busca o estado real do servidor após sincronizar
-  }, []);
-
   useEffect(() => {
     setOffline(!navigator.onLine);
 
     function aoFicarOnline() {
       setOffline(false);
-      sincronizarFila();
     }
     function aoFicarOffline() {
       setOffline(true);
     }
+    // O gerenciador global (GerenciadorSincronizacaoOffline) é quem
+    // processa a fila de verdade — aqui só escutamos quando ele
+    // termina, pra buscar o estado real e atualizado do servidor.
+    function aoSincronizar() {
+      window.location.reload();
+    }
 
     window.addEventListener("online", aoFicarOnline);
     window.addEventListener("offline", aoFicarOffline);
-
-    // Se já tem algo pendente da última vez (ex: fechou o app sem sincronizar)
-    if (navigator.onLine) sincronizarFila();
+    window.addEventListener(EVENTO_SINCRONIZACAO_CONCLUIDA, aoSincronizar);
 
     return () => {
       window.removeEventListener("online", aoFicarOnline);
       window.removeEventListener("offline", aoFicarOffline);
+      window.removeEventListener(EVENTO_SINCRONIZACAO_CONCLUIDA, aoSincronizar);
     };
-  }, [sincronizarFila]);
+  }, []);
 
   function alternarOtimista(item: ItemAgenda) {
     if (navigator.onLine) return; // deixa o ItemLinhaAgenda chamar a action normalmente
@@ -110,9 +80,6 @@ export function ListaHojeComOffline({
           Sem conexão — suas marcações estão sendo guardadas e vão
           sincronizar automaticamente quando a internet voltar.
         </p>
-      )}
-      {sincronizando && (
-        <p className="mb-3 text-xs text-ink-400">Sincronizando alterações feitas offline...</p>
       )}
       <ul className="space-y-2">
         {itens.map((item) => (

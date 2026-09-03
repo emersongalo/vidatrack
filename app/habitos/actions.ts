@@ -53,6 +53,48 @@ export async function criarHabito(formData: FormData) {
   redirect("/habitos");
 }
 
+/**
+ * Versão silenciosa (sem `redirect`) de criar hábito, pra fila offline
+ * (Etapa 44) — escopo reduzido de propósito (nome + ícone + cor +
+ * frequência diária), que é o caso mais comum de "lembrei de um
+ * hábito novo agora, sem internet". Ajustes mais específicos (dias da
+ * semana, meta numérica, lembrete) continuam exigindo estar online,
+ * editando o hábito depois.
+ */
+export async function criarHabitoSilencioso(dados: {
+  nome: string;
+  icone: string;
+  cor: string;
+}): Promise<{ sucesso: boolean; erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { sucesso: false, erro: "Sessão expirada" };
+
+  if (!dados.nome.trim()) return { sucesso: false, erro: "Dê um nome para o hábito" };
+
+  const { count } = await supabase
+    .from("habitos")
+    .select("id", { count: "exact", head: true })
+    .eq("dono_id", user.id);
+
+  const { error } = await supabase.from("habitos").insert({
+    dono_id: user.id,
+    nome: dados.nome.trim(),
+    cor: dados.cor,
+    icone: dados.icone,
+    frequencia: "diaria",
+    dias_semana: [],
+    meta_diaria: 1,
+    ordem: count ?? 0,
+  });
+
+  revalidatePath("/habitos");
+  revalidatePath("/habitos/lista");
+  return { sucesso: !error, erro: error?.message };
+}
+
 export async function atualizarHabito(habitoId: string, formData: FormData) {
   const supabase = createClient();
 

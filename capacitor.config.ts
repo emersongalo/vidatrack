@@ -5,11 +5,13 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // funciona como uma "casca nativa": o WebView carrega o site já
 // publicado no Vercel, em vez de arquivos empacotados dentro do app.
 //
-// Notificações push (Web Push) NÃO têm garantia de funcionar com o
-// app fechado dentro dessa WebView — dependeria do plugin nativo
-// @capacitor/push-notifications + Firebase Cloud Messaging, que não
-// está configurado aqui. O canal que já funciona sem depender disso
-// é o Telegram (Etapa 13), porque é outro app cuidando da notificação.
+// Notificações push (Etapa 42): Web Push sozinho NÃO tem garantia de
+// funcionar com o app fechado dentro dessa WebView — por isso agora
+// tem também o @capacitor/push-notifications + Firebase Cloud
+// Messaging, que é o canal nativo de verdade. Siga o passo a passo no
+// README ("Configurar notificação push nativa") antes de gerar o
+// build — precisa do arquivo google-services.json na pasta
+// android/app, que só existe depois de rodar `npx cap add android`.
 //
 // O modo offline (Etapa 10/11) usa Service Worker e deve funcionar
 // normalmente, já que a WebView moderna do Android suporta isso —
@@ -22,6 +24,11 @@ const config: CapacitorConfig = {
     // Troque pela URL final do seu projeto no Vercel antes de gerar o app
     url: "https://SEU-PROJETO.vercel.app",
     cleartext: false,
+  },
+  plugins: {
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"],
+    },
   },
 };
 

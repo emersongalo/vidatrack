@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { atualizarNota } from "@/app/notas/actions";
+import { adicionarNaFila } from "@/lib/offline/fila";
 
 export function EditorNota({
   notaId,
@@ -16,6 +17,7 @@ export function EditorNota({
 }) {
   const [pendente, iniciarTransicao] = useTransition();
   const [salvoEm, setSalvoEm] = useState<Date | null>(null);
+  const [salvoOffline, setSalvoOffline] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -24,6 +26,24 @@ export function EditorNota({
     timeoutRef.current = setTimeout(() => {
       if (!formRef.current) return;
       const dados = new FormData(formRef.current);
+
+      if (!navigator.onLine) {
+        // Sem internet: guarda na fila em vez de tentar (e falhar) a
+        // chamada de verdade. Cada nova edição enquanto offline
+        // substitui a anterior na fila (não precisa acumular 10
+        // versões do mesmo texto) — só a mais recente importa.
+        adicionarNaFila({
+          id: `editar_nota_${notaId}`, // mesmo id sempre = fica só a versão mais nova
+          tipo: "editar_nota",
+          notaId,
+          titulo: String(dados.get("titulo") ?? ""),
+          conteudo: String(dados.get("conteudo") ?? ""),
+        });
+        setSalvoOffline(true);
+        return;
+      }
+
+      setSalvoOffline(false);
       iniciarTransicao(async () => {
         await atualizarNota(notaId, dados);
         setSalvoEm(new Date());
@@ -62,7 +82,13 @@ export function EditorNota({
         />
       </div>
       <p className="text-xs text-ink-400 h-4">
-        {pendente ? "Salvando..." : salvoEm ? "Salvo" : ""}
+        {salvoOffline
+          ? "📦 Salvo offline — sincroniza quando a internet voltar"
+          : pendente
+            ? "Salvando..."
+            : salvoEm
+              ? "Salvo"
+              : ""}
       </p>
     </form>
   );

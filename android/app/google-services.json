@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "786600583182",
+    "project_id": "vidatrack-1d69c",
+    "storage_bucket": "vidatrack-1d69c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:786600583182:android:312f907c5da20c0fa29c5f",
+        "android_client_info": {
+          "package_name": "com.vidatrack.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANT8oQrgV0y_pNK6LZQV-uA_OWaChGAJo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

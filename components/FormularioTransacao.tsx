@@ -2,8 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { criarTransacao, criarCategoriaRapida } from "@/app/financas/actions";
 import { ICONES_CATEGORIA_DESPESA, ICONES_CATEGORIA_RECEITA } from "@/lib/financas/formatacao";
+import { adicionarNaFila } from "@/lib/offline/fila";
 
 type Conta = { id: string; nome: string };
 type Categoria = { id: string; nome: string; tipo: "receita" | "despesa"; icone?: string };
@@ -81,6 +83,32 @@ export function FormularioTransacao({
   }
 
   const hoje = new Date().toLocaleDateString("sv-SE");
+  const router = useRouter();
+
+  function aoSubmeter(e: React.FormEvent<HTMLFormElement>) {
+    // Só intercepta a criação (não a edição) quando não tem internet —
+    // se estiver online, deixa o <form action> normal cuidar de tudo,
+    // sem mudar em nada o comportamento que já existia.
+    if (navigator.onLine || ehEdicao) return;
+
+    e.preventDefault();
+    const dados = new FormData(e.currentTarget);
+
+    adicionarNaFila({
+      id: crypto.randomUUID(),
+      tipo: "criar_transacao",
+      dados: {
+        tipo: (dados.get("tipo") === "receita" ? "receita" : "despesa") as "receita" | "despesa",
+        valor: String(dados.get("valor") ?? ""),
+        contaId: String(dados.get("contaId") ?? ""),
+        categoriaId: String(dados.get("categoriaId") ?? ""),
+        descricao: String(dados.get("descricao") ?? ""),
+        data: String(dados.get("data") ?? hoje),
+      },
+    });
+
+    router.push("/financas?offline=1");
+  }
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
@@ -95,7 +123,7 @@ export function FormularioTransacao({
         </p>
       )}
 
-      <form action={action} className="space-y-4">
+      <form action={action} onSubmit={aoSubmeter} className="space-y-4">
         <div className="flex gap-2">
           <button
             type="button"

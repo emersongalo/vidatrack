@@ -8,6 +8,7 @@ import { buscarHabitosDoDiaAdmin } from "@/lib/agenda/consultaAdmin";
 import { segredosIguais } from "@/lib/seguranca";
 import { horaAtualNoFuso, dataAtualNoFuso, horaMinutosAtrasNoFuso } from "@/lib/tempo/fuso";
 import { formatarMoeda } from "@/lib/financas/formatacao";
+import { enviarNotificacaoFCM } from "@/lib/fcm/servidor";
 
 /**
  * Chamada por um agendador externo (cron-job.org, GitHub Actions, etc.)
@@ -182,6 +183,26 @@ async function notificarUsuariosDoItem(
         enviados++;
       } catch {
         // Chat pode ter bloqueado o bot — ignora silenciosamente.
+      }
+    }
+
+    // Notificação nativa (app publicado/instalado via .apk) — separada
+    // do Web Push acima, porque o app dentro do Capacitor não recebe
+    // Web Push de forma confiável (é a limitação documentada desde a
+    // Etapa 17). Isso é o canal que resolve isso de vez.
+    const { data: tokensFcm } = await supabase
+      .from("fcm_tokens")
+      .select("id, token")
+      .eq("usuario_id", usuarioId);
+
+    for (const registroFcm of tokensFcm ?? []) {
+      const resultado = await enviarNotificacaoFCM(registroFcm.token, "VidaTrack", texto, url);
+      if (resultado.sucesso) {
+        enviados++;
+      } else if (resultado.tokenInvalido) {
+        // App foi desinstalado ou o token expirou — limpa, pra não
+        // ficar tentando pra sempre num token morto.
+        await supabase.from("fcm_tokens").delete().eq("id", registroFcm.id);
       }
     }
 

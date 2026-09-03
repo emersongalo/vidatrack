@@ -306,6 +306,49 @@ export async function criarTransacao(formData: FormData) {
   redirect("/financas");
 }
 
+/**
+ * Versão silenciosa (sem `redirect`) de criar lançamento, pra fila
+ * offline (Etapa 44) — não lida com recorrência, só o lançamento
+ * simples, que é o caso de uso real de "lancei algo rápido sem
+ * internet".
+ */
+export async function criarTransacaoSilenciosa(dadosFormulario: {
+  tipo: string;
+  valor: string;
+  contaId: string;
+  categoriaId: string;
+  descricao: string;
+  data: string;
+}): Promise<{ sucesso: boolean; erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { sucesso: false, erro: "Sessão expirada" };
+
+  const resultado = esquemaTransacao.safeParse({
+    ...dadosFormulario,
+    recorrente: null,
+    diaMes: null,
+    dataFimRecorrencia: null,
+  });
+
+  if (!resultado.success) return { sucesso: false, erro: primeiroErro(resultado) };
+
+  const { error } = await supabase.from("financa_transacoes").insert({
+    dono_id: user.id,
+    conta_id: resultado.data.contaId,
+    categoria_id: resultado.data.categoriaId,
+    tipo: resultado.data.tipo,
+    valor: resultado.data.valor,
+    descricao: resultado.data.descricao,
+    data: resultado.data.data,
+  });
+
+  revalidatePath("/financas");
+  return { sucesso: !error, erro: error?.message };
+}
+
 export async function atualizarTransacao(transacaoId: string, formData: FormData) {
   const supabase = createClient();
 

@@ -30,6 +30,52 @@ export async function criarNota(formData: FormData) {
   redirect(`/notas/${data!.id}`);
 }
 
+/**
+ * Mesma coisa que `criarNota`, mas SEM `redirect()` — usada pela fila
+ * de sincronização offline (Etapa 44). Rodar `redirect()` de dentro de
+ * uma sincronização automática em segundo plano jogaria a pessoa de
+ * tela sem ela pedir, então essa versão só devolve um resultado.
+ */
+export async function criarNotaSilenciosa(
+  titulo: string,
+  conteudo: string
+): Promise<{ id: string } | { erro: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sessão expirada" };
+
+  const { data, error } = await supabase
+    .from("notas")
+    .insert({ dono_id: user.id, titulo: titulo.trim() || "Sem título", conteudo })
+    .select("id")
+    .single();
+
+  if (error || !data) return { erro: error?.message ?? "Não foi possível criar a nota" };
+  return { id: data.id };
+}
+
+/**
+ * Versão silenciosa de editar nota, pra fila offline — mesma ideia da
+ * `criarNotaSilenciosa` acima.
+ */
+export async function atualizarNotaSilenciosa(
+  notaId: string,
+  titulo: string,
+  conteudo: string
+): Promise<{ sucesso: boolean }> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("notas")
+    .update({ titulo: titulo.trim() || "Sem título", conteudo })
+    .eq("id", notaId);
+
+  revalidatePath(`/notas/${notaId}`);
+  revalidatePath("/notas");
+  return { sucesso: !error };
+}
+
 export async function atualizarNota(notaId: string, formData: FormData) {
   const supabase = createClient();
   const titulo = String(formData.get("titulo") ?? "").trim() || "Sem título";

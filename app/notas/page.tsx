@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { criarNota, alternarFixarNota } from "./actions";
+import { alternarFixarNota } from "./actions";
+import { BotaoNovaNotaOffline } from "@/components/BotaoNovaNotaOffline";
 import { LinkVoltar } from "@/components/LinkVoltar";
 
 export default async function NotasPage({
@@ -34,15 +35,7 @@ export default async function NotasPage({
             Lixeira
           </Link>
         </div>
-        <form action={criarNota}>
-          <input type="hidden" name="titulo" value="Sem título" />
-          <button
-            type="submit"
-            className="bg-ink-100 text-base-900 text-sm font-medium rounded-lg px-4 py-2 hover:opacity-90 transition"
-          >
-            + Nova nota
-          </button>
-        </form>
+        <BotaoNovaNotaOffline />
       </div>
 
       <form method="get" className="mb-5">

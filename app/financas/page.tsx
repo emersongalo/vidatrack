@@ -18,7 +18,7 @@ import { normalizarOrdemBlocos } from "@/lib/financas/blocos";
 export default async function FinancasPage({
   searchParams,
 }: {
-  searchParams: { mesCalendario?: string };
+  searchParams: { mesCalendario?: string; offline?: string };
 }) {
   const supabase = createClient();
   const {
@@ -285,6 +285,12 @@ export default async function FinancasPage({
           <span className="text-base leading-none">+</span> Lançamento
         </Link>
       </div>
+
+      {searchParams.offline && (
+        <p className="mb-4 text-sm text-financa bg-financa-soft border border-financa/30 rounded-lg px-3 py-2">
+          📦 Lançamento guardado — vai ser criado automaticamente assim que a internet voltar.
+        </p>
+      )}
 
       {!contas || contas.length === 0 ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">

@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 41: Deixando o App Mais Rápido
+# VidaTrack — Etapa 44: Criar e Editar Offline (Hábitos, Notas, Finanças)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,90 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (44) — criar e editar offline, de verdade:**
+
+Isso é o projeto grande que combinamos planejar com calma. Construí em
+camadas: primeiro a infraestrutura reutilizável, depois apliquei ela
+nos 3 módulos de uma vez, com escopo consciente em cada um (as ações
+mais comuns primeiro, não 100% de cada tela).
+
+**Infraestrutura (reutilizável, module-agnostic):**
+- **Fila offline generalizada** (`lib/offline/fila.ts`) — guarda no
+  navegador qualquer ação pendente, com deduplicação por id (editar a
+  mesma nota 5 vezes offline vira 1 ação na fila, não 5)
+- **Processador de fila** (`lib/offline/processarFila.ts`) — quando a
+  internet volta, executa cada ação pendente; se uma falhar de
+  verdade, não trava as outras
+- **Gerenciador global** (`GerenciadorSincronizacaoOffline`, no
+  layout raiz) — único responsável por sincronizar, com um avisinho
+  discreto embaixo da tela ("Sincronizando...", "Tudo sincronizado")
+
+**Bug real que evitei antes de acontecer:** várias Server Actions que
+já existiam (`criarNota`, `criarTransacao`...) terminam com
+`redirect()`. Chamar elas direto durante uma sincronização automática
+em segundo plano jogaria você de tela sem pedir, no meio de outra
+coisa que estivesse fazendo. Criei versões "silenciosas" (sem
+redirect) só pra esse uso — `criarNotaSilenciosa`,
+`atualizarNotaSilenciosa`, `criarTransacaoSilenciosa`,
+`criarHabitoSilencioso`.
+
+**Nos 3 módulos:**
+- **Finanças** — criar lançamento offline (o formulário existente já
+  detecta a falta de conexão sozinho)
+- **Notas** — editar uma nota já aberta offline (autosave guarda na
+  fila em vez de tentar e falhar), e criar nota nova offline (modal
+  rápido de título + conteúdo)
+- **Hábitos** — criar hábito novo offline (modal rápido: nome + ícone
+  + cor; frequência sempre diária nesse fluxo — ajustes mais
+  específicos continuam exigindo estar online, editando depois)
+
+**Testei a lógica antes de entregar:** simulei em Node a
+deduplicação da fila (múltiplas edições da mesma nota) — só a versão
+mais recente sobrevive, na ordem certa.
+
+**Escopo consciente que ficou de fora, de propósito** (próximos
+incrementos naturais, usando a MESMA infraestrutura que já existe
+agora):
+- Excluir nota/transação/hábito enquanto offline
+- Editar hábito ou transação **já existente** offline (hoje só cria
+  novo; editar existente ainda exige conexão)
+- Criar hábito com frequência específica (dias da semana, meta
+  numérica) offline — hoje é sempre diário simples
+- Ver dados que você **nunca abriu antes** enquanto offline (hoje,
+  ver dados offline depende do Service Worker já ter guardado aquela
+  página numa visita anterior — não é uma cópia completa do banco no
+  celular)
+
+**Limite honesto sobre armazenamento:** a fila e o cache usam
+`localStorage`, que tem um limite de alguns megabytes por site. Pra
+uso pessoal normal (algumas ações pendentes por vez, não centenas)
+isso nunca deve ser um problema — mas não é um banco de dados local
+ilimitado.
+
+**Novo nesta etapa (42) — notificação push nativa (FCM):**
+
+Resolve de vez a pergunta "as notificações vão funcionar no app
+publicado?" — a resposta agora é **sim**, com o canal certo pra isso.
+
+- **Tabela `fcm_tokens`** — guarda o token de cada aparelho com o app
+  instalado de verdade
+- **`lib/fcm/servidor.ts`** — manda a notificação via Firebase Admin
+  SDK, limpando sozinho token de app desinstalado
+- **`RegistradorPushNativo`** — roda em todo lugar do app, mas só faz
+  alguma coisa quando detecta que está dentro do Capacitor de verdade
+  (no navegador comum, não faz nada — sem risco de quebrar nada lá)
+- **Lembretes de hábito/tarefa/nota** agora mandam também pelo canal
+  nativo, além do Web Push e Telegram que já existiam
+
+**Importante:** isso precisa de configuração manual fora do código —
+criar um projeto Firebase (gratuito), baixar 2 arquivos, e colar uma
+variável de ambiente. Passo a passo completo mais abaixo, na seção
+"Configurar notificação push nativa (FCM)".
+
+**Combinado:** offline em todo o app (não só hábitos) fica pra uma
+próxima etapa, planejada com calma à parte — é grande demais pra
+resolver de passagem.
 
 **Novo nesta etapa (41) — investigação de lentidão:**
 
@@ -700,6 +784,84 @@ lembrete em qualquer hábito ou tarefa e aguarde o horário chegar.
 npm test
 ```
 
+## Configurar notificação push nativa (FCM) — pro app publicado
+
+Essa etapa resolve de vez a limitação documentada desde a Etapa 17:
+Web Push sozinho não funciona com o app fechado dentro do WebView do
+Capacitor. Agora tem também notificação nativa de verdade, via
+Firebase Cloud Messaging — **gratuito, sem limite prático de uso**.
+
+### 1. Criar o projeto no Firebase
+
+1. Entra em [console.firebase.google.com](https://console.firebase.google.com)
+   e clica em **Adicionar projeto**
+2. Dá um nome (ex: "VidaTrack") e segue o assistente — pode desativar
+   o Google Analytics, não precisa dele pra isso
+3. Esse é um projeto **separado do Supabase** — só serve pra essa
+   função de notificação
+
+### 2. Adicionar o app Android ao projeto Firebase
+
+1. Na página inicial do projeto, clica no ícone do Android
+2. **Nome do pacote Android**: exatamente `com.vidatrack.app` (o
+   mesmo `appId` que já está no `capacitor.config.ts`) — se não bater
+   certinho, a notificação não chega
+3. Baixa o arquivo `google-services.json` que ele oferece
+4. Depois de rodar `npx cap add android` no seu projeto (veja a
+   seção "Preparar para Android" abaixo), coloca esse arquivo dentro
+   da pasta `android/app/` do projeto
+
+### 3. Gerar a chave de conta de serviço (pro servidor mandar notificação)
+
+1. No Firebase, vai em **Configurações do projeto** (ícone de
+   engrenagem) **> Contas de serviço**
+2. Clica em **Gerar nova chave privada** — baixa um arquivo `.json`
+3. Esse arquivo é sensível (dá controle total do projeto Firebase) —
+   nunca sobe pro Git nem compartilha ele
+
+### 4. Configurar no VidaTrack
+
+O arquivo baixado é um JSON — precisa converter pra uma linha só em
+base64 antes de colar como variável de ambiente:
+
+```bash
+# No Mac/Linux:
+base64 -i caminho/para/o-arquivo-baixado.json | tr -d '\n'
+
+# No Windows (PowerShell):
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("caminho\para\o-arquivo-baixado.json"))
+```
+
+Copia o resultado (uma linha longa de texto) e cola em
+`FIREBASE_SERVICE_ACCOUNT_BASE64` no `.env.local` e nas variáveis de
+ambiente do Vercel (tipo **Secret**, não Config).
+
+### 5. Sincronizar o projeto Android
+
+```bash
+npm install
+npx cap sync
+```
+
+Isso instala o `@capacitor/push-notifications` de verdade no projeto
+Android e aplica a configuração do `capacitor.config.ts`.
+
+### Como funciona na prática
+
+- Quando alguém abre o app **instalado de verdade** (não pelo
+  navegador), o VidaTrack pede permissão de notificação e guarda um
+  "token" desse aparelho no banco
+- Os lembretes de hábito/tarefa/nota (Etapa 9) agora mandam pra esse
+  token também, além do Web Push e do Telegram — quem tiver os três
+  configurados recebe pelos três (não tem problema, é redundância boa)
+- Se o app for desinstalado, o token para de funcionar — o sistema
+  detecta isso sozinho e limpa o token velho automaticamente, sem
+  precisar de manutenção manual
+
+**Escopo desta etapa:** o resumo diário (Telegram) continua só por
+Telegram por enquanto — estender ele pra notificação nativa também é
+uma extensão pequena, se fizer falta depois.
+
 ## Preparar para Android (Capacitor)
 
 Como o VidaTrack usa Server Actions e renderização no servidor, **não
@@ -944,7 +1106,9 @@ versão Android via Capacitor está descrita na seção específica acima.
 39. Ocultar valores
 40. Contas, categoria rápida, sair do app e visual Mobills
 41. Lançamento por mensagem no Telegram + correções
-42. Deixando o app mais rápido — **você está aqui**
+42. Deixando o app mais rápido
+43. Notificação push nativa (FCM)
+44. Criar e editar offline (Hábitos, Notas, Finanças) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
