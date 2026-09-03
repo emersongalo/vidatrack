@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 46: Offline "Baixa Tudo no Login" (o caminho realista pros 100%)
+# VidaTrack — Etapa 47: Botão de Voltar Duplicado em Hábitos
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,21 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (47) — bug corrigido:**
+
+A seção de Hábitos tem um `layout.tsx` compartilhado (vale pra todas
+as telas dali: Hoje, Lista, Planejador...) que já colocava um "←
+Painel" no topo. A tela "Hoje" especificamente também tinha o próprio
+botão de voltar — os dois juntos criavam a duplicação que você viu.
+
+Corrigido: agora só existe **um** botão de voltar, no layout
+compartilhado (então vale pra toda a seção de Hábitos, não só a tela
+Hoje), e usando o componente `LinkVoltar` de verdade (ícone de seta +
+texto, em formato de pílula) em vez do link de texto simples que
+estava lá antes.
+
+Não precisa rodar SQL — é ajuste de componente só.
 
 **Novo nesta etapa (46) — offline sem precisar ter visitado a tela antes:**
 
@@ -1149,7 +1164,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 43. Notificação push nativa (FCM)
 44. Criar e editar offline (Hábitos, Notas, Finanças)
 45. Correção de segurança no Git (google-services.json)
-46. Offline "baixa tudo no login" — **você está aqui**
+46. Offline "baixa tudo no login"
+47. Botão de voltar duplicado em Hábitos — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
