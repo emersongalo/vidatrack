@@ -8,7 +8,6 @@ import { GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoria"
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { HeroFinancas } from "@/components/HeroFinancas";
 import { resolverUrlFoto } from "@/lib/perfil/foto";
-import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
@@ -274,10 +273,6 @@ export default async function FinancasPage({
         >
           <span className="text-base leading-none">+</span> Lançamento
         </Link>
-      </div>
-
-      <div className="flex justify-end -mt-3 mb-3">
-        <BotaoOcultarValores />
       </div>
 
       {!contas || contas.length === 0 ? (

@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 39: Contas, Categoria Rápida, Sair do App e Visual Mobills
+# VidaTrack — Etapa 40: Lançamento por Mensagem no Telegram + Correções
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,30 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (40):**
+
+- **2 bugs corrigidos** do seu print: o olho de ocultar valores estava
+  duplicado (sobrou um de uma etapa anterior); e o gráfico de pizza
+  não escondia os valores — corrigido nos dois lugares (legenda e
+  tooltip)
+- **Lançar despesa por mensagem no Telegram** — manda algo tipo
+  "Comprei pão por 15,00" ou "Recebi salário 3800,00" pro bot, e ele
+  registra sozinho em Finanças, tentando reconhecer a categoria (por
+  palavra-chave) e a conta/cartão mencionado. Confirma com uma
+  mensagem mostrando o que foi registrado
+- **Comando "Resumo"** — manda a palavra "Resumo" pro bot e ele te
+  responde com ganhos, gastos e saldo do mês atual
+- **Importante: sem IA, sem custo por mensagem** — é reconhecimento
+  por palavras-chave e expressões regulares, não usa nenhuma API paga.
+  Funciona bem com frases diretas ("Gastei 50 no mercado"), mas não é
+  tão flexível quanto um assistente de IA de verdade — é a troca
+  consciente entre "gratuito pra sempre" e "entende qualquer frase"
+
+**Testei antes de entregar:** rodei 9 casos de teste isolados no
+parser, incluindo "pegadinhas" de propósito (hora "14:30", data
+"15/03", "3x" de parcela sozinho) pra confirmar que essas coisas NÃO
+viram lançamento por engano — todos passaram.
 
 **Novo nesta etapa (39):**
 
@@ -883,7 +907,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 37. Calendário em destaque + ordem personalizável
 38. Reordenar blocos corrigido pra celular
 39. Ocultar valores
-40. Contas, categoria rápida, sair do app e visual Mobills — **você está aqui**
+40. Contas, categoria rápida, sair do app e visual Mobills
+41. Lançamento por mensagem no Telegram + correções — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

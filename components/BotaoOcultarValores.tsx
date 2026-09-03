@@ -1,19 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { lerValoresOcultos, alternarValoresOcultos, EVENTO_MUDANCA } from "@/lib/preferencias/valoresOcultos";
+import { alternarValoresOcultos } from "@/lib/preferencias/valoresOcultos";
+import { useValoresOcultos } from "@/lib/preferencias/useValoresOcultos";
 
 export function BotaoOcultarValores() {
-  const [ocultos, setOcultos] = useState(false);
-
-  useEffect(() => {
-    setOcultos(lerValoresOcultos());
-    function aoMudar(e: Event) {
-      setOcultos((e as CustomEvent<boolean>).detail);
-    }
-    window.addEventListener(EVENTO_MUDANCA, aoMudar);
-    return () => window.removeEventListener(EVENTO_MUDANCA, aoMudar);
-  }, []);
+  const ocultos = useValoresOcultos();
 
   return (
     <button

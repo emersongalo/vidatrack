@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { formatarMoeda } from "@/lib/financas/formatacao";
+import { useValoresOcultos } from "@/lib/preferencias/useValoresOcultos";
 
 const PALETA = ["#D9A24C", "#7FB894", "#9C8FD9", "#E08A8A", "#6BA3C7", "#C7A36B", "#8FA6D9"];
 
@@ -10,6 +11,8 @@ export function GraficoDespesasCategoria({
 }: {
   dados: { nome: string; valor: number }[];
 }) {
+  const ocultos = useValoresOcultos();
+
   if (dados.length === 0) return null;
 
   return (
@@ -30,7 +33,7 @@ export function GraficoDespesasCategoria({
               ))}
             </Pie>
             <Tooltip
-              formatter={(valor: number) => formatarMoeda(valor)}
+              formatter={(valor: number) => (ocultos ? "R$ ••••••" : formatarMoeda(valor))}
               contentStyle={{
                 background: "#1F2127",
                 border: "1px solid #2A2D35",
@@ -52,7 +55,7 @@ export function GraficoDespesasCategoria({
               style={{ backgroundColor: PALETA[i % PALETA.length] }}
             />
             <span className="text-ink-400 truncate flex-1">{d.nome}</span>
-            <span className="font-mono shrink-0">{formatarMoeda(d.valor)}</span>
+            <span className="font-mono shrink-0">{ocultos ? "R$ ••••••" : formatarMoeda(d.valor)}</span>
           </div>
         ))}
       </div>

@@ -54,6 +54,13 @@ export default async function NotificacoesPage() {
               ✅ Conectado ao Telegram
             </p>
 
+            <p className="text-xs text-ink-400 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5">
+              💡 Manda uma mensagem pro bot tipo <em>"Comprei pão por 15,00"</em> que ele já
+              registra o gasto em Finanças. Manda <em>"Resumo"</em> pra ver como estão suas
+              contas este mês. Sem IA, sem custo — é reconhecimento por palavras-chave, então
+              funciona melhor com frases simples e diretas.
+            </p>
+
             <form action={atualizarHorarioResumo} className="flex items-center gap-2">
               <label htmlFor="horario" className="text-sm text-ink-400 shrink-0">
                 Resumo diário às

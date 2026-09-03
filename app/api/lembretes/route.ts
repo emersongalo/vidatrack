@@ -3,15 +3,19 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { enviarPush } from "@/lib/push/servidor";
 import { enviarMensagemTelegram, buscarAtualizacoesTelegram } from "@/lib/telegram/servidor";
+import { interpretarMensagem } from "@/lib/telegram/parserLancamento";
 import { buscarHabitosDoDiaAdmin } from "@/lib/agenda/consultaAdmin";
 import { segredosIguais } from "@/lib/seguranca";
 import { horaAtualNoFuso, dataAtualNoFuso, horaMinutosAtrasNoFuso } from "@/lib/tempo/fuso";
+import { formatarMoeda } from "@/lib/financas/formatacao";
 
 /**
  * Chamada por um agendador externo (cron-job.org, GitHub Actions, etc.)
- * a cada poucos minutos. Faz 4 coisas, nessa ordem:
- * 1. Sincroniza códigos de vinculação do Telegram (pessoas que
- *    acabaram de enviar o código pro bot)
+ * a cada poucos minutos. Faz, nessa ordem:
+ * 1. Sincroniza mensagens novas do Telegram — pode ser um código de
+ *    vinculação, o comando "Resumo", ou uma tentativa de lançamento
+ *    financeiro por mensagem (ex: "Comprei pão por 15,00"), que é
+ *    interpretado por palavras-chave — sem IA, sem custo por mensagem
  * 2. Envia lembretes de hábitos/tarefas/notas cujo horário bateu
  * 3. Envia o resumo diário de hábitos pra quem tem Telegram vinculado
  *    e o horário escolhido bateu
@@ -27,7 +31,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
   }
 
-  const supabase = criarClienteAdmin("cron_lembretes", "Verificação periódica de lembretes/resumo diário");
+  const supabase = criarClienteAdmin(
+    "cron_lembretes",
+    "Verificação periódica de lembretes/resumo diário, e processamento de mensagens do bot do Telegram (vínculo de conta, resumo financeiro sob pedido, e lançamentos financeiros enviados por mensagem)"
+  );
   const horaAtual = horaAtualNoFuso();
   const cincoMinAntes = horaMinutosAtrasNoFuso(5);
   const hoje = dataAtualNoFuso();
@@ -212,17 +219,50 @@ async function sincronizarTelegram(supabase: ReturnType<typeof criarClienteAdmin
   for (const att of atualizacoes) {
     maiorUpdateId = Math.max(maiorUpdateId, att.update_id);
 
-    const texto = att.message?.text?.trim().toUpperCase();
+    const textoOriginal = att.message?.text?.trim();
     const chatId = att.message?.chat?.id;
-    if (!texto || !chatId) continue;
+    if (!textoOriginal || !chatId) continue;
 
+    const textoComoCodigo = textoOriginal.toUpperCase();
+
+    // --- Tentativa 1: é um código de vinculação? ---
     const { data: codigo } = await supabase
       .from("telegram_codigos_vinculo")
       .select("usuario_id, expira_em")
-      .eq("codigo", texto)
+      .eq("codigo", textoComoCodigo)
       .maybeSingle();
 
-    if (!codigo) {
+    if (codigo) {
+      if (new Date(codigo.expira_em) < new Date()) {
+        await enviarMensagemTelegram(String(chatId), "Esse código expirou. Gere um novo no app.").catch(() => {});
+        await supabase.from("telegram_codigos_vinculo").delete().eq("codigo", textoComoCodigo);
+        continue;
+      }
+
+      await supabase.from("telegram_vinculos").upsert({
+        usuario_id: codigo.usuario_id,
+        chat_id: String(chatId),
+      });
+      await supabase.from("telegram_codigos_vinculo").delete().eq("codigo", textoComoCodigo);
+
+      await enviarMensagemTelegram(
+        String(chatId),
+        "✅ Conta vinculada! A partir de agora você recebe seus lembretes e o resumo diário por aqui.\n\n" +
+          "💡 Dica: manda uma mensagem tipo \"Comprei pão por 15,00\" que eu já registro o gasto pra você. Manda \"Resumo\" pra ver como estão suas finanças este mês."
+      ).catch(() => {});
+
+      vinculosCriados++;
+      continue;
+    }
+
+    // --- Tentativa 2: chat já vinculado a alguém? ---
+    const { data: vinculo } = await supabase
+      .from("telegram_vinculos")
+      .select("usuario_id")
+      .eq("chat_id", String(chatId))
+      .maybeSingle();
+
+    if (!vinculo) {
       await enviarMensagemTelegram(
         String(chatId),
         "Não reconheci esse código. Gere um novo no app, em Notificações > Conectar ao Telegram."
@@ -230,26 +270,15 @@ async function sincronizarTelegram(supabase: ReturnType<typeof criarClienteAdmin
       continue;
     }
 
-    if (new Date(codigo.expira_em) < new Date()) {
-      await enviarMensagemTelegram(String(chatId), "Esse código expirou. Gere um novo no app.").catch(
-        () => {}
-      );
-      await supabase.from("telegram_codigos_vinculo").delete().eq("codigo", texto);
+    // --- Tentativa 3: comando "Resumo" ---
+    if (textoOriginal.trim().toLowerCase() === "resumo") {
+      const texto = await montarResumoMensal(supabase, vinculo.usuario_id);
+      await enviarMensagemTelegram(String(chatId), texto).catch(() => {});
       continue;
     }
 
-    await supabase.from("telegram_vinculos").upsert({
-      usuario_id: codigo.usuario_id,
-      chat_id: String(chatId),
-    });
-    await supabase.from("telegram_codigos_vinculo").delete().eq("codigo", texto);
-
-    await enviarMensagemTelegram(
-      String(chatId),
-      "✅ Conta vinculada! A partir de agora você recebe seus lembretes e o resumo diário por aqui."
-    ).catch(() => {});
-
-    vinculosCriados++;
+    // --- Tentativa 4: registrar um lançamento financeiro pela mensagem ---
+    await processarMensagemFinanceira(supabase, vinculo.usuario_id, String(chatId), textoOriginal);
   }
 
   if (maiorUpdateId > ultimoUpdateId) {
@@ -257,6 +286,106 @@ async function sincronizarTelegram(supabase: ReturnType<typeof criarClienteAdmin
   }
 
   return vinculosCriados;
+}
+
+/**
+ * Tenta interpretar a mensagem como um lançamento financeiro (sem IA
+ * — por palavras-chave). Se conseguir achar um valor, cria o
+ * lançamento e confirma; se não, manda uma dica de como escrever.
+ */
+async function processarMensagemFinanceira(
+  supabase: ReturnType<typeof criarClienteAdmin>,
+  usuarioId: string,
+  chatId: string,
+  textoOriginal: string
+) {
+  const [{ data: contas }, { data: categorias }] = await Promise.all([
+    supabase.from("financa_contas").select("id, nome").eq("dono_id", usuarioId).eq("arquivado", false),
+    supabase.from("financa_categorias").select("id, nome, tipo").eq("dono_id", usuarioId),
+  ]);
+
+  if (!contas || contas.length === 0) {
+    await enviarMensagemTelegram(
+      chatId,
+      "Você ainda não tem nenhuma conta cadastrada no VidaTrack — cria uma em Finanças > Contas antes de lançar por aqui."
+    ).catch(() => {});
+    return;
+  }
+
+  const interpretado = interpretarMensagem(textoOriginal, contas, categorias ?? []);
+
+  if (!interpretado) {
+    await enviarMensagemTelegram(
+      chatId,
+      'Não entendi isso como um lançamento. Tenta algo tipo "Comprei pão por 15,00" ou "Recebi salário 3800,00". Manda "Resumo" pra ver suas finanças do mês.'
+    ).catch(() => {});
+    return;
+  }
+
+  const { error } = await supabase.from("financa_transacoes").insert({
+    dono_id: usuarioId,
+    conta_id: interpretado.contaId,
+    categoria_id: interpretado.categoriaId,
+    tipo: interpretado.tipo,
+    valor: interpretado.valor,
+    descricao: interpretado.descricao,
+    data: dataAtualNoFuso(),
+  });
+
+  if (error) {
+    await enviarMensagemTelegram(chatId, "Não consegui salvar esse lançamento agora. Tenta de novo em instantes.").catch(() => {});
+    return;
+  }
+
+  const linhas = [
+    "✅ Registrado com sucesso:",
+    `${interpretado.tipo === "receita" ? "📈 Tipo" : "📉 Tipo"}: ${interpretado.tipo === "receita" ? "Receita" : "Despesa"}`,
+    `📝 Descrição: ${interpretado.descricao}`,
+    `💰 Valor: ${formatarMoeda(interpretado.valor)}`,
+    `🏷️ Categoria: ${interpretado.categoriaNome ?? "Sem categoria"}`,
+    `🏦 Conta: ${interpretado.contaNome ?? "—"}`,
+  ];
+  await enviarMensagemTelegram(chatId, linhas.join("\n")).catch(() => {});
+}
+
+async function montarResumoMensal(
+  supabase: ReturnType<typeof criarClienteAdmin>,
+  usuarioId: string
+): Promise<string> {
+  const { data: contas } = await supabase
+    .from("financa_contas")
+    .select("id, saldo_inicial")
+    .eq("dono_id", usuarioId)
+    .eq("arquivado", false);
+
+  const idsContas = (contas ?? []).map((c) => c.id);
+  if (idsContas.length === 0) {
+    return "Você ainda não tem nenhuma conta cadastrada no VidaTrack.";
+  }
+
+  const inicioMes = new Date();
+  const primeiroDiaMes = new Date(inicioMes.getFullYear(), inicioMes.getMonth(), 1).toLocaleDateString("sv-SE");
+
+  const [{ data: transacoesMes }, { data: todasTransacoes }] = await Promise.all([
+    supabase.from("financa_transacoes").select("tipo, valor").in("conta_id", idsContas).gte("data", primeiroDiaMes),
+    supabase.from("financa_transacoes").select("tipo, valor").in("conta_id", idsContas),
+  ]);
+
+  const ganhos = (transacoesMes ?? []).filter((t) => t.tipo === "receita").reduce((a, t) => a + Number(t.valor), 0);
+  const gastos = (transacoesMes ?? []).filter((t) => t.tipo === "despesa").reduce((a, t) => a + Number(t.valor), 0);
+
+  const saldoTotal = (contas ?? []).reduce((total, c) => total + Number(c.saldo_inicial), 0)
+    + (todasTransacoes ?? []).reduce((a, t) => a + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)), 0);
+
+  const nomeMes = new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+  return [
+    "💰 Resumo financeiro!",
+    `🗓️ Período: ${nomeMes}`,
+    `📈 Ganhos: ${formatarMoeda(ganhos)}`,
+    `📉 Gastos: ${formatarMoeda(gastos)}`,
+    `💵 Saldo atual: ${formatarMoeda(saldoTotal)}`,
+  ].join("\n");
 }
 
 async function enviarResumosDiarios(
