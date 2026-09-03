@@ -17,12 +17,10 @@ export default async function HojePage({
   const dataSelecionada = searchParams.data ?? hoje;
   const categoriaFiltro = searchParams.categoria ?? "";
 
-  const { data: categorias } = await supabase
-    .from("categorias_produtividade")
-    .select("id, nome, cor")
-    .order("nome");
-
-  const { itens, temAlgumItemCadastrado } = await buscarItensDoDia(dataSelecionada, categoriaFiltro);
+  const [{ data: categorias }, { itens, temAlgumItemCadastrado }] = await Promise.all([
+    supabase.from("categorias_produtividade").select("id, nome, cor").order("nome"),
+    buscarItensDoDia(dataSelecionada, categoriaFiltro),
+  ]);
 
   return (
     <main className="max-w-2xl mx-auto px-6 md:px-12 pt-2">

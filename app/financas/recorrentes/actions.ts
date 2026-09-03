@@ -107,6 +107,7 @@ export async function garantirLancamentosRecorrentes() {
 
   const idsJaGerados = new Set((jaGerados ?? []).map((t) => t.recorrencia_id));
 
+  const paraInserir = [];
   for (const r of recorrencias) {
     if (idsJaGerados.has(r.id)) continue;
 
@@ -116,7 +117,7 @@ export async function garantirLancamentosRecorrentes() {
     // a recorrência "expirou" sozinha, sem precisar excluir na mão.
     if (r.data_fim && data > r.data_fim) continue;
 
-    await supabase.from("financa_transacoes").insert({
+    paraInserir.push({
       dono_id: user.id,
       conta_id: r.conta_id,
       categoria_id: r.categoria_id,
@@ -126,5 +127,12 @@ export async function garantirLancamentosRecorrentes() {
       data,
       recorrencia_id: r.id,
     });
+  }
+
+  // Um INSERT só com todas as linhas, em vez de um por recorrência —
+  // evita N idas e voltas ao banco quando tem várias recorrências
+  // pra gerar no mesmo dia.
+  if (paraInserir.length > 0) {
+    await supabase.from("financa_transacoes").insert(paraInserir);
   }
 }

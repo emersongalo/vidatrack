@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 40: Lançamento por Mensagem no Telegram + Correções
+# VidaTrack — Etapa 41: Deixando o App Mais Rápido
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,41 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (41) — investigação de lentidão:**
+
+Fui direto no código da tela de Finanças (a mais pesada do app) e
+achei a causa real: ela fazia **mais de 10 buscas ao banco de dados,
+uma esperando a outra terminar**, antes de conseguir mostrar qualquer
+coisa na tela — inclusive repetindo a mesma busca de contas duas
+vezes, e verificando o usuário logado duas vezes. Cada uma dessas
+buscas tem um tempo de ida-e-volta até o Supabase; encadeadas uma
+atrás da outra, isso soma bastante.
+
+**O que mudou:**
+- As buscas que não dependem umas das outras agora rodam **ao mesmo
+  tempo**, em vez de em fila
+- Removi 3 buscas que eram cópia de outra já feita (contas, categorias)
+- O gerador de lançamentos recorrentes (que rodava sozinho, na frente
+  de tudo, toda vez que a tela abria) agora roda **em paralelo** com
+  o resto, em vez de bloquear a tela até terminar
+- Esse mesmo gerador criava um lançamento por vez, um de cada vez —
+  agora cria todos numa única operação
+- As fotos de perfil (que às vezes precisam de um link assinado do
+  R2) agora são resolvidas todas ao mesmo tempo, não uma atrás da
+  outra
+- Pequena otimização também na agenda "Hoje" de Hábitos
+
+**Testei a lógica reorganizada antes de entregar** (simulei os dados
+de conta compartilhada + lançamentos de duas pessoas, pra confirmar
+que os nomes e fotos continuam batendo certinho depois da mudança).
+
+**Sendo honesto sobre limites:** não tenho acesso ao seu app rodando
+de verdade em produção, então não consigo medir o "antes e depois" em
+milissegundos reais — só consigo garantir que o número de idas e
+vindas ao banco caiu bastante nessa tela específica. Se depois de
+testar ainda sentir lentidão, me avisa qual tela especificamente que
+eu continuo essa mesma investigação nela.
 
 **Novo nesta etapa (40):**
 
@@ -908,7 +943,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 38. Reordenar blocos corrigido pra celular
 39. Ocultar valores
 40. Contas, categoria rápida, sair do app e visual Mobills
-41. Lançamento por mensagem no Telegram + correções — **você está aqui**
+41. Lançamento por mensagem no Telegram + correções
+42. Deixando o app mais rápido — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

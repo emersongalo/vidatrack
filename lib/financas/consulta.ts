@@ -59,15 +59,22 @@ export type DiaComGasto = { dia: number; total: number };
  */
 export async function buscarCalendarioGastos(
   supabase: ReturnType<typeof createClient>,
-  anoMesISO: string // "AAAA-MM"
+  anoMesISO: string, // "AAAA-MM"
+  idsContasJaBuscadas?: string[]
 ): Promise<{ gastosPorDia: DiaComGasto[]; diasComContaAPagar: number[] }> {
   const [ano, mes] = anoMesISO.split("-").map(Number);
   const inicio = `${anoMesISO}-01`;
   const ultimoDia = new Date(ano, mes, 0).getDate();
   const fim = `${anoMesISO}-${String(ultimoDia).padStart(2, "0")}`;
 
-  const { data: contas } = await supabase.from("financa_contas").select("id").eq("arquivado", false);
-  const idsContas = (contas ?? []).map((c) => c.id);
+  // Se quem chamou já tinha buscado as contas (é o caso mais comum,
+  // vindo da própria tela de Finanças), reaproveita — evita repetir a
+  // mesma consulta ao banco.
+  let idsContas = idsContasJaBuscadas;
+  if (!idsContas) {
+    const { data: contas } = await supabase.from("financa_contas").select("id").eq("arquivado", false);
+    idsContas = (contas ?? []).map((c) => c.id);
+  }
 
   const { data: transacoes } = idsContas.length
     ? await supabase

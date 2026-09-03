@@ -21,75 +21,106 @@ export default async function FinancasPage({
   searchParams: { mesCalendario?: string };
 }) {
   const supabase = createClient();
-  await garantirLancamentosRecorrentes();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const mesCalendario =
     searchParams.mesCalendario ?? new Date().toLocaleDateString("sv-SE").slice(0, 7);
-  const { gastosPorDia, diasComContaAPagar } = await buscarCalendarioGastos(supabase, mesCalendario);
 
-  // Pessoas com quem alguma conta é compartilhada, pra mostrar os
-  // avatares no topo (só busca se realmente houver compartilhamento).
-  let pessoasCompartilhadas: { nome: string; urlFoto: string | null }[] = [];
+  // Grupo 1: nada aqui depende do resultado de outra consulta, então
+  // tudo roda ao mesmo tempo em vez de uma coisa esperando a outra.
+  // O gerador de recorrências roda em paralelo também — não bloqueia
+  // mais o resto da tela (se criar algo novo hoje, pode não aparecer
+  // nesta visita específica, mas aparece na próxima).
+  const [
+    { data: perfilOrdem },
+    { data: contas },
+    { data: todasCategoriasDespesa },
+  ] = await Promise.all([
+    supabase.from("perfis").select("ordem_blocos_financas").eq("id", user?.id ?? "").maybeSingle(),
+    supabase.from("financa_contas").select("id, nome, saldo_inicial").eq("arquivado", false),
+    supabase.from("financa_categorias").select("id, nome, tipo, meta_mensal").eq("tipo", "despesa"),
+    garantirLancamentosRecorrentes(),
+  ]);
 
-  const { data: perfilOrdem } = await supabase
-    .from("perfis")
-    .select("ordem_blocos_financas")
-    .eq("id", user?.id ?? "")
-    .maybeSingle();
   const ordemBlocos = normalizarOrdemBlocos(perfilOrdem?.ordem_blocos_financas ?? null);
-
-  const { data: contas } = await supabase
-    .from("financa_contas")
-    .select("id, nome, saldo_inicial")
-    .eq("arquivado", false);
-
+  const categorias = (todasCategoriasDespesa ?? []).filter((c) => c.meta_mensal !== null);
   const idsContas = (contas ?? []).map((c) => c.id);
 
-  if (idsContas.length > 0) {
-    const { data: compartilhamentosContas } = await supabase
-      .from("compartilhamentos")
-      .select("usuario_convidado_id")
-      .eq("tipo_item", "financa")
-      .in("item_id", idsContas)
-      .not("usuario_convidado_id", "is", null);
-
-    const idsConvidados = Array.from(
-      new Set((compartilhamentosContas ?? []).map((c) => c.usuario_convidado_id as string))
-    );
-
-    if (idsConvidados.length > 0) {
-      const { data: perfisConvidados } = await supabase
-        .from("perfis")
-        .select("id, nome, foto_url")
-        .in("id", idsConvidados);
-
-      const minhaFoto = user?.id
-        ? await resolverUrlFoto(
-            (await supabase.from("perfis").select("foto_url").eq("id", user.id).maybeSingle()).data
-              ?.foto_url ?? null
-          )
-        : null;
-
-      pessoasCompartilhadas = [{ nome: "Você", urlFoto: minhaFoto }];
-      for (const p of perfisConvidados ?? []) {
-        pessoasCompartilhadas.push({ nome: p.nome ?? "Alguém", urlFoto: await resolverUrlFoto(p.foto_url) });
-      }
-    }
-  }
-
-  const { data: todasTransacoes } = idsContas.length
-    ? await supabase
-        .from("financa_transacoes")
-        .select("id, conta_id, categoria_id, tipo, valor, descricao, data, dono_id, financa_categorias(icone, cor)")
-        .in("conta_id", idsContas)
-        .order("data", { ascending: false })
-    : { data: [] as any[] };
+  // Grupo 2: tudo que só precisa saber quais são as contas (já temos
+  // a resposta do grupo 1), roda em paralelo de novo.
+  const [
+    { data: todasTransacoes },
+    { data: compartilhamentosContas },
+    { gastosPorDia, diasComContaAPagar },
+  ] = await Promise.all([
+    idsContas.length
+      ? supabase
+          .from("financa_transacoes")
+          .select("id, conta_id, categoria_id, tipo, valor, descricao, data, dono_id, financa_categorias(icone, cor)")
+          .in("conta_id", idsContas)
+          .order("data", { ascending: false })
+      : Promise.resolve({ data: [] as any[] }),
+    idsContas.length
+      ? supabase
+          .from("compartilhamentos")
+          .select("usuario_convidado_id")
+          .eq("tipo_item", "financa")
+          .in("item_id", idsContas)
+          .not("usuario_convidado_id", "is", null)
+      : Promise.resolve({ data: [] as any[] }),
+    buscarCalendarioGastos(supabase, mesCalendario, idsContas),
+  ]);
 
   const transacoes = todasTransacoes ?? [];
+
+  // Grupo 3: junta todo mundo cuja foto/nome precisamos exibir (quem
+  // compartilha uma conta + quem lançou cada transação) numa única
+  // consulta de perfis, em vez de uma pra cada finalidade.
+  const idsConvidados = Array.from(
+    new Set((compartilhamentosContas ?? []).map((c) => c.usuario_convidado_id as string))
+  );
+  const idsDonosUnicos = Array.from(new Set(transacoes.map((t: any) => t.dono_id)));
+  const precisaNomesDeLancamento = idsDonosUnicos.length > 1;
+
+  const idsPerfisNecessarios = Array.from(
+    new Set([
+      ...(idsConvidados.length > 0 && user?.id ? [user.id] : []),
+      ...idsConvidados,
+      ...(precisaNomesDeLancamento ? idsDonosUnicos : []),
+    ])
+  );
+
+  const { data: perfisNecessarios } = idsPerfisNecessarios.length
+    ? await supabase.from("perfis").select("id, nome, foto_url").in("id", idsPerfisNecessarios)
+    : { data: [] as any[] };
+
+  const mapaPerfis = new Map((perfisNecessarios ?? []).map((p) => [p.id, p]));
+
+  // As URLs de foto (algumas exigem gerar um link assinado no R2) são
+  // resolvidas todas ao mesmo tempo, não uma de cada vez.
+  const idsParaResolverFoto = (perfisNecessarios ?? []).map((p) => p.id);
+  const urlsResolvidas = await Promise.all(
+    idsParaResolverFoto.map((id) => resolverUrlFoto(mapaPerfis.get(id)?.foto_url ?? null))
+  );
+  const mapaUrlFoto = new Map(idsParaResolverFoto.map((id, i) => [id, urlsResolvidas[i]]));
+
+  let pessoasCompartilhadas: { nome: string; urlFoto: string | null }[] = [];
+  if (idsConvidados.length > 0) {
+    pessoasCompartilhadas = [
+      { nome: "Você", urlFoto: user?.id ? mapaUrlFoto.get(user.id) ?? null : null },
+      ...idsConvidados.map((id) => ({
+        nome: mapaPerfis.get(id)?.nome ?? "Alguém",
+        urlFoto: mapaUrlFoto.get(id) ?? null,
+      })),
+    ];
+  }
+
+  let mapaNomes = new Map<string, string>();
+  if (precisaNomesDeLancamento) {
+    mapaNomes = new Map(idsDonosUnicos.map((id) => [id, mapaPerfis.get(id)?.nome ?? "Alguém"]));
+  }
 
   // Saldo total: saldo inicial de cada conta + receitas - despesas dela
   const saldoTotal = (contas ?? []).reduce((total, conta) => {
@@ -109,17 +140,8 @@ export default async function FinancasPage({
     .reduce((acc, t) => acc + t.valor, 0);
 
   // Orçamento por categoria (só categorias de despesa com meta definida)
-  const { data: categorias } = await supabase
-    .from("financa_categorias")
-    .select("id, nome, tipo, meta_mensal")
-    .eq("tipo", "despesa")
-    .not("meta_mensal", "is", null);
-
-  // Todas as categorias de despesa (com ou sem meta), pro gráfico de pizza
-  const { data: todasCategoriasDespesa } = await supabase
-    .from("financa_categorias")
-    .select("id, nome")
-    .eq("tipo", "despesa");
+  // e o gráfico de pizza usam a mesma consulta já feita lá em cima
+  // (`todasCategoriasDespesa` / `categorias`) — nada novo aqui.
 
   const gastoPorCategoria = new Map<string, number>();
   for (const t of transacoesDoMes) {
@@ -134,17 +156,6 @@ export default async function FinancasPage({
 
   const mapaContas = new Map((contas ?? []).map((c) => [c.id, c.nome]));
   const ultimasTransacoes = transacoes.slice(0, 10);
-
-  // Nomes de quem lançou — só busca se houver mais de uma pessoa
-  // diferente lançando (ou seja, conta compartilhada de verdade).
-  // Pra hábitos particulares/contas sem compartilhamento, isso não
-  // aparece na tela (evita poluir visual à toa).
-  const idsDonosUnicos = Array.from(new Set(transacoes.map((t: any) => t.dono_id)));
-  let mapaNomes = new Map<string, string>();
-  if (idsDonosUnicos.length > 1) {
-    const { data: perfis } = await supabase.from("perfis").select("id, nome").in("id", idsDonosUnicos);
-    mapaNomes = new Map((perfis ?? []).map((p) => [p.id, p.nome ?? "Alguém"]));
-  }
 
   const blocosFinancas: Record<string, ReactNode> = {
     calendario: (
