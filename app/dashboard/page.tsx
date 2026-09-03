@@ -82,14 +82,20 @@ export default async function DashboardPage() {
       <TrilhoMenu />
       <ConfirmarSaidaApp />
 
-      <p className="text-center mt-4 flex items-center justify-center gap-4">
-        <Link href="/doacao" className="text-xs text-ink-400 hover:text-ink-100 transition">
+      <div className="flex items-center justify-center gap-2 mt-2">
+        <Link
+          href="/doacao"
+          className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1"
+        >
           💛 Apoiar o projeto
         </Link>
-        <Link href="/privacidade" className="text-xs text-ink-400 hover:text-ink-100 transition">
+        <Link
+          href="/privacidade"
+          className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1"
+        >
           Privacidade
         </Link>
-      </p>
+      </div>
     </main>
   );
 }

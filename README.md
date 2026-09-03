@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 48: Excluir Conta + Privacidade Pública (exigências da Play Store)
+# VidaTrack — Etapa 49: Área de Toque Maior nos Links do Rodapé
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,29 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (49) — "Privacidade" não respondia ao toque:**
+
+Investiguei os componentes que ficam perto do rodapé do painel (banner
+de instalar app, avisos de sincronização) e nenhum parecia estar
+cobrindo aquele ponto no seu caso. A explicação mais provável: os
+links "Apoiar o projeto" e "Privacidade" eram texto puro (`text-xs`,
+12px) **sem nenhum espaçamento de toque ao redor** — num celular de
+verdade, é fácil o dedo acertar 1-2mm ao lado do texto e não tocar em
+nada, mesmo que pareça estar em cima olhando a tela (a orientação de
+acessibilidade recomenda pelo menos ~44px de área clicável; texto puro
+sem padding fica bem abaixo disso).
+
+Aumentei a área de toque dos dois links com padding, sem mudar como
+eles aparecem visualmente.
+
+**Se mesmo assim continuar sem responder depois desse ajuste**, me
+avisa — nesse caso o próximo passo seria inspecionar o HTML de
+verdade no seu celular (via `chrome://inspect` conectando o celular
+no computador por USB), pra ver exatamente o que está por cima
+daquele ponto na tela.
+
+Não precisa rodar SQL — é ajuste visual só.
 
 **Novo nesta etapa (48) — 2 exigências reais do Google Play que faltavam:**
 
@@ -1184,7 +1207,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 45. Correção de segurança no Git (google-services.json)
 46. Offline "baixa tudo no login"
 47. Botão de voltar duplicado em Hábitos
-48. Excluir conta + privacidade pública — **você está aqui**
+48. Excluir conta + privacidade pública
+49. Área de toque maior nos links do rodapé — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
