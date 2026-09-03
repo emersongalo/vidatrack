@@ -93,6 +93,12 @@ export default async function PerfilPage({
           Salvar
         </button>
       </form>
+
+      <div className="mt-10 pt-6 border-t border-base-600">
+        <Link href="/perfil/excluir-conta" className="text-xs text-red-400/70 hover:text-red-400 transition">
+          Excluir minha conta permanentemente
+        </Link>
+      </div>
     </main>
   );
 }

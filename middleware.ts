@@ -8,6 +8,8 @@ const ROTAS_PUBLICAS = [
   "/redefinir-senha",
   "/verifique-email",
   "/auth/callback",
+  "/privacidade",
+  "/conta-excluida",
 ];
 
 export async function middleware(request: NextRequest) {

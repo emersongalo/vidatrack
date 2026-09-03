@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 47: Botão de Voltar Duplicado em Hábitos
+# VidaTrack — Etapa 48: Excluir Conta + Privacidade Pública (exigências da Play Store)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,24 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (48) — 2 exigências reais do Google Play que faltavam:**
+
+- **Excluir conta permanentemente** (`/perfil/excluir-conta`) — o
+  Google exige isso desde 2023 pra qualquer app que permite criar
+  conta, sem exceção. Apaga tudo: hábitos, notas, finanças,
+  compartilhamentos, foto de perfil, anexos no R2, vínculo do
+  Telegram — de verdade, sem deixar lixo pra trás. Confirmação exige
+  digitar "EXCLUIR" antes de habilitar o botão
+- **A tabela já ajudava** — todo o banco já tinha `on delete cascade`
+  em qualquer referência a `auth.users`, então apagar o usuário no
+  Auth já limpa quase tudo sozinho. Só precisei limpar manualmente o
+  que fica fora do banco (fotos e anexos no Cloudflare R2)
+- **Bug real que achei no processo: a página `/privacidade` exigia
+  login** — isso quebra o requisito do Play Store, porque os
+  revisores do Google (e qualquer visitante) precisam conseguir ler
+  sua política de privacidade sem estar logado. Corrigido — agora é
+  pública, junto com a nova página `/conta-excluida`
 
 **Novo nesta etapa (47) — bug corrigido:**
 
@@ -1165,7 +1183,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 44. Criar e editar offline (Hábitos, Notas, Finanças)
 45. Correção de segurança no Git (google-services.json)
 46. Offline "baixa tudo no login"
-47. Botão de voltar duplicado em Hábitos — **você está aqui**
+47. Botão de voltar duplicado em Hábitos
+48. Excluir conta + privacidade pública — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
