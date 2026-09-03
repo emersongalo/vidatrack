@@ -4,3 +4,10 @@ node_modules
 .vercel
 .DS_Store
 *.log
+
+# Pasta gerada pelo Capacitor — inclui o google-services.json (chave
+# do Firebase) e outros arquivos que não devem ir pro Git. Se precisar
+# dela numa máquina nova, roda `npx cap add android` de novo e
+# coloca o google-services.json na hora.
+android/
+ios/

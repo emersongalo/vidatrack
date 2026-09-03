@@ -4,6 +4,7 @@ import "./globals.css";
 import { RegistradorPWA } from "@/components/RegistradorPWA";
 import { RegistradorPushNativo } from "@/components/RegistradorPushNativo";
 import { GerenciadorSincronizacaoOffline } from "@/components/GerenciadorSincronizacaoOffline";
+import { BaixadorOfflineAutomatico } from "@/components/BaixadorOfflineAutomatico";
 import { AnalyticsAnonimo } from "@/components/AnalyticsAnonimo";
 import { PromptInstalarApp } from "@/components/PromptInstalarApp";
 
@@ -72,6 +73,7 @@ export default function RootLayout({
         <RegistradorPWA />
         <RegistradorPushNativo />
         <GerenciadorSincronizacaoOffline />
+        <BaixadorOfflineAutomatico />
         <AnalyticsAnonimo />
         <PromptInstalarApp />
       </body>

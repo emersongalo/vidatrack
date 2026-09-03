@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 44: Criar e Editar Offline (Hábitos, Notas, Finanças)
+# VidaTrack — Etapa 46: Offline "Baixa Tudo no Login" (o caminho realista pros 100%)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,45 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (46) — offline sem precisar ter visitado a tela antes:**
+
+Esse é o caminho realista que combinamos: em vez de reescrever as ~20
+telas do app pra ler direto de um banco local (projeto de várias
+semanas), baixamos **um retrato completo dos seus dados assim que
+você entra no app**, e criamos uma tela offline esperta que usa esse
+retrato — cobrindo o caso real de "abri o app sem sinal e queria ver
+meus hábitos/notas/finanças", mesmo numa tela que eu nunca tinha
+aberto antes.
+
+- **`/api/offline/baixar-tudo`** — devolve hábitos, tarefas, notas,
+  contas, categorias e os 200 lançamentos mais recentes, tudo numa
+  chamada só
+- **Baixa sozinho em segundo plano** — ao abrir o app (se fizer mais
+  de 6h desde a última vez) e sempre que a conexão voltar, sem travar
+  a tela nem pedir nada
+- **A tela `/offline` (que já existia, mas era só uma mensagem
+  genérica) agora é esperta** — mostra 3 abas com dados reais: Hoje
+  (hábitos/tarefas, com check-in offline), Notas (lista + abrir e
+  editar, mesmo uma nota nunca aberta antes nesse aparelho), Finanças
+  (saldo calculado + últimos lançamentos + lançar novo)
+- Tudo que você faz nessa tela usa a **mesma fila de sincronização da
+  Etapa 44** — quando a internet volta, sincroniza sozinho
+
+**Testei o cálculo do saldo com valores vindos como texto do banco**
+(é assim que o Postgres às vezes devolve números) — confirma que
+formata certo mesmo assim.
+
+**Ainda não é 100% literal, por decisão consciente que já conversamos:**
+- Notas: dá pra ler e editar; criar nota nova funciona; mas o
+  retrato só é atualizado a cada 6h (ou quando a internet volta) — se
+  você criar uma nota em outro aparelho, pode não aparecer aqui até o
+  próximo download
+- Finanças: os lançamentos mostrados são só os 200 mais recentes, não
+  o histórico inteiro
+- Isso ainda depende do app ter sido aberto pelo menos uma vez com
+  internet, alguma vez — não funciona no primeiro uso absoluto, sem
+  nunca ter tido conexão
 
 **Novo nesta etapa (44) — criar e editar offline, de verdade:**
 
@@ -1108,7 +1147,9 @@ versão Android via Capacitor está descrita na seção específica acima.
 41. Lançamento por mensagem no Telegram + correções
 42. Deixando o app mais rápido
 43. Notificação push nativa (FCM)
-44. Criar e editar offline (Hábitos, Notas, Finanças) — **você está aqui**
+44. Criar e editar offline (Hábitos, Notas, Finanças)
+45. Correção de segurança no Git (google-services.json)
+46. Offline "baixa tudo no login" — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
