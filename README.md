@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 52: Painel Principal Travado (sem rolagem)
+# VidaTrack — Etapa 54: Notificações Nativas de Verdade (sem Telegram) + Lembrete de Conta a Pagar
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,87 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (54) — a reta final antes da publicação:**
+
+- **Texto cortado no painel, corrigido** — "Hábitos" e "Notas"
+  mostravam "..." no final da frase (a classe `truncate` estava
+  cortando). Agora o texto quebra em 2 linhas quando precisar, sem
+  cortar nada
+
+- **Telegram removido por completo** — nenhum código, tela, variável
+  de ambiente ou referência sobrou. Removi:
+  - A tela inteira de vínculo/desconexão na página de Notificações
+  - O parser de lançamento por mensagem e o comando "Resumo" (eram
+    recursos exclusivos do Telegram — junto com ele, saem também)
+  - `lib/telegram/` inteiro, `actions_telegram.ts`,
+    `lib/agenda/consultaAdmin.ts` (só existia pro resumo diário do
+    Telegram, ficou sem uso)
+  - `TELEGRAM_BOT_TOKEN` do `.env.local.example` e do guia de deploy
+  - SQL opcional (`schema_remover_telegram.sql`) pra quem quiser
+    apagar as tabelas que ficaram sem uso — não é obrigatório rodar
+
+- **Notificação com som garantido** — ajustei tanto o Web Push
+  (navegador) quanto a notificação nativa (FCM) pra declarar
+  explicitamente `sound: "default"` e vibração, em vez de confiar no
+  comportamento padrão "seja lá qual for" de cada aparelho
+
+- **Novo: lembrete de conta a pagar** — se você tem uma conta
+  recorrente (Finanças → Recorrentes) vencendo **hoje** ou
+  **amanhã**, chega uma notificação automática às 8h da manhã, tipo
+  "💳 Você tem uma conta vencendo HOJE: Aluguel — R$ 1.200,00". Usa
+  os mesmos 2 canais (Web Push + nativo), sem Telegram
+
+**Bug real que achei e corrigi antes de te entregar:** a tabela que
+controla "já mandei esse lembrete hoje" só aceitava os tipos
+`habito`, `tarefa`, `nota` — sem ajustar isso, o lembrete de conta a
+pagar nunca ficaria marcado como enviado, e a pessoa receberia a
+mesma notificação de novo a cada poucos minutos, sem parar. Corrigido
+com uma migração SQL.
+
+**Testei antes de entregar:** simulei em Node os cálculos de
+"hoje/amanhã" em 4 cenários, incluindo os mais traiçoeiros — virada
+de mês (30/09 → 01/10) e virada de ANO (31/12 → 01/01). Todos
+passaram.
+
+## Rodar os schemas desta etapa
+
+No SQL Editor do Supabase, roda:
+1. `supabase/schema_lembrete_conta_a_pagar.sql` (obrigatório — sem
+   isso o lembrete de conta vira spam)
+2. `supabase/schema_remover_telegram.sql` (opcional, só se quiser
+   apagar as tabelas antigas)
+
+**Novo nesta etapa (53) — sobre a demora de 4-5s na primeira vez em cada tela:**
+
+**Diagnóstico:** o padrão que você descreveu ("primeira vez lento,
+depois quase instantâneo, por tela") é a assinatura clássica de
+**"cold start"** — a hospedagem do Vercel "desliga" a função de cada
+tela depois de um tempo sem uso, e a primeira visita paga o custo de
+"ligar" ela de novo. Isso é uma característica de como hospedagem
+serverless (sem servidor dedicado ligado o tempo todo) funciona — não
+é um bug específico nosso, mas dá pra melhorar o quanto isso pesa.
+
+**O que corrigi (gratuito):** achei que 4 telas (Painel, Finanças,
+Contas, Perfil) carregavam o SDK inteiro da Amazon/Cloudflare (usado
+pra gerar links de foto) mesmo quando **a maioria das vezes nem
+precisava dele de verdade** (quem não tem foto customizada, ou usa a
+do Google, nunca usa essa parte do código). Agora esse SDK só é
+carregado de verdade quando realmente vai ser usado — deixa essas 4
+telas mais leves de carregar na primeira vez.
+
+Também conferi que o SDK do Firebase (usado nas notificações) já
+estava isolado corretamente, só na rota do agendador — não pesava
+nas telas do usuário.
+
+**Sobre pagar — resposta honesta:** o plano **Vercel Pro (~US$
+20/mês)** ajuda a reduzir esse "esfriamento" das funções (mais
+capacidade de manter tudo "aquecido"), mas **não elimina completamente**
+esse comportamento — é uma característica de como hospedagem
+serverless funciona, paga ou grátis. Não é algo que eu recomendaria
+pagar só por causa desses 4-5 segundos, a não ser que o app cresça
+muito em uso e isso vire uma reclamação de várias pessoas, não só
+sua ao testar.
 
 **Novo nesta etapa (52) — painel principal travado, sem rolar:**
 
@@ -1292,7 +1373,9 @@ versão Android via Capacitor está descrita na seção específica acima.
 49. Área de toque maior nos links do rodapé
 50. Bug de redirecionamento no middleware (causa real)
 51. Rotas de API livres do redirecionamento de login
-52. Painel principal travado (sem rolagem) — **você está aqui**
+52. Painel principal travado (sem rolagem)
+53. Carregamento preguiçoso do SDK da AWS
+54. Notificações nativas sem Telegram + lembrete de conta a pagar — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

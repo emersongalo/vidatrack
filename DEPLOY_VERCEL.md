@@ -32,6 +32,8 @@ No SQL Editor do Supabase, em **New query**, um de cada vez:
 19. `schema_categorias_padrao_v2.sql`
 20. `schema_ordem_blocos.sql`
 21. `schema_fcm.sql`
+22. `schema_lembrete_conta_a_pagar.sql`
+23. `schema_remover_telegram.sql` (opcional)
 
 Dica: seleciona todos os arquivos de uma vez no seu editor de código,
 copia o conteúdo de cada um e cola em queries separadas — é mais rápido
@@ -72,7 +74,6 @@ git push -u origin main
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | `npm run gerar-chaves-vapid` (local) | Só se for usar notificação push |
 | `VAPID_PRIVATE_KEY` | mesmo comando acima | Só se for usar notificação push |
 | `CRON_SECRET` | Você inventa (string aleatória longa) | Só se for usar lembretes automáticos |
-| `TELEGRAM_BOT_TOKEN` | @BotFather no Telegram | Só se for usar integração Telegram |
 | `FIREBASE_SERVICE_ACCOUNT_BASE64` | Firebase Console > Configurações > Contas de serviço (veja o passo a passo no README) | Só se for usar notificação push nativa no app publicado |
 | `TIMEZONE_OFFSET_HORAS` | `-3` pra Brasília | Só se for usar lembretes automáticos |
 | `R2_ACCOUNT_ID` | Painel Cloudflare R2 | Sim, se for usar anexos em Notas |

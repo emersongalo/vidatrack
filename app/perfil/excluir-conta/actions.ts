@@ -11,7 +11,7 @@ import { r2, BUCKET_ANEXOS } from "@/lib/r2/client";
  * pra qualquer app que permite criar conta (desde 2023). O banco já
  * tem "on delete cascade" em toda tabela ligada a auth.users, então
  * apagar o usuário no Auth já limpa hábitos, notas, finanças,
- * compartilhamentos, vínculo do Telegram, tudo — automaticamente.
+ * compartilhamentos, vínculo de notificações, tudo — automaticamente.
  *
  * O que o banco NÃO limpa sozinho é o que está guardado no
  * Cloudflare R2 (fotos de perfil, anexos de notas), por isso isso é

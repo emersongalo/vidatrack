@@ -77,7 +77,7 @@ export function TrilhoMenu() {
             />
             <div className="min-w-0">
               <p className="font-display font-semibold text-lg">{estacao.titulo}</p>
-              <p className="text-ink-400 text-sm mt-0.5 truncate">{estacao.texto}</p>
+              <p className="text-ink-400 text-sm mt-0.5">{estacao.texto}</p>
             </div>
             <span className="text-ink-400 text-xl shrink-0 transition-transform group-hover:translate-x-0.5">
               →

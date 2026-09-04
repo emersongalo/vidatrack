@@ -43,7 +43,19 @@ export async function enviarNotificacaoFCM(
       token,
       notification: { title: titulo, body: corpo },
       data: url ? { url } : {},
-      android: { priority: "high" },
+      android: {
+        priority: "high",
+        notification: {
+          sound: "default",
+          priority: "high",
+          defaultVibrateTimings: true,
+        },
+      },
+      apns: {
+        payload: {
+          aps: { sound: "default" },
+        },
+      },
     });
     return { sucesso: true };
   } catch (erro: any) {

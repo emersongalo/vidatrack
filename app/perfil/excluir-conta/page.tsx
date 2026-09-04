@@ -32,7 +32,7 @@ export default function ExcluirContaPage({
           <li>Todas as suas notas e anexos</li>
           <li>Todas as suas contas, categorias e lançamentos financeiros</li>
           <li>Compartilhamentos (seus e os que você aceitou de outras pessoas)</li>
-          <li>Seu perfil, foto, e o vínculo com Telegram/notificações</li>
+          <li>Seu perfil, foto, e as notificações que você ativou</li>
         </ul>
       </div>
 
