@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 49: Área de Toque Maior nos Links do Rodapé
+# VidaTrack — Etapa 50: Bug de Redirecionamento no Middleware (a causa real do "Privacidade" não abrir)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,39 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (50) — a causa real, achada de verdade:**
+
+Depois de descartar sobreposição visual, cache, Service Worker e
+Analytics do Vercel (nenhum era a causa), a inspeção de elemento
+mostrou o HTML **perfeito** — o que apontou pra outro lugar: o
+`middleware.ts`.
+
+**A causa real:** o middleware tem uma regra que redireciona quem
+**já está logado** de volta pro painel, ao tentar acessar rotas como
+"/login" ou "/cadastro" (faz sentido — não tem porquê ver a tela de
+login de novo estando logado). O problema: na Etapa 48, quando
+adicionei "/privacidade" e "/conta-excluida" na lista de "rotas
+públicas" (pra reviewers do Google conseguirem ler sem estar
+logados), **sem querer também apliquei essa mesma regra de
+redirecionamento a elas**. Resultado: clicando em "Privacidade" já
+logado, você era jogado de volta pro painel instantaneamente — rápido
+demais pra notar, parecendo que "nada acontecia".
+
+**A correção:** separei em duas listas agora — `ROTAS_PUBLICAS`
+(quem pode ver sem estar logado) e `ROTAS_SO_PARA_DESLOGADO` (dessas,
+quais NÃO fazem sentido pra quem já está logado). "/privacidade" e
+"/conta-excluida" ficam só na primeira lista, não na segunda.
+
+**Testei os 8 cenários que importam** antes de te entregar (logado x
+deslogado, em cada rota relevante) — todos passaram, incluindo o
+caso exato que estava quebrado.
+
+**Para quem quiser aprender com esse caso:** a lição real aqui foi
+process — fomos eliminando hipótese por hipótese com testes
+concretos (não é ficar tentando "conserto genérico" às cegas), até
+sobrar só uma explicação possível. Vale mais a pena esse caminho do
+que eu ficar mandando "correções" chutadas uma atrás da outra.
 
 **Novo nesta etapa (49) — "Privacidade" não respondia ao toque:**
 
@@ -1208,7 +1241,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 46. Offline "baixa tudo no login"
 47. Botão de voltar duplicado em Hábitos
 48. Excluir conta + privacidade pública
-49. Área de toque maior nos links do rodapé — **você está aqui**
+49. Área de toque maior nos links do rodapé
+50. Bug de redirecionamento no middleware (causa real) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
