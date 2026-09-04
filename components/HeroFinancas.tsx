@@ -31,30 +31,36 @@ export function HeroFinancas({
         <ValorMonetario valor={saldo} />
       </p>
 
-      <div className="flex items-center gap-6">
-        <Link href="/financas/extrato?tipo=receita&preset=este_mes" className="flex items-center gap-2.5">
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/financas/extrato?tipo=receita&preset=este_mes"
+          className="flex items-center gap-2.5 min-w-0"
+        >
           <span className="w-9 h-9 rounded-full bg-habito/15 flex items-center justify-center shrink-0">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="#7FB894" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="text-[11px] text-ink-400">Receitas</p>
-            <p className="text-sm font-mono font-medium text-habito">
+            <p className="text-sm font-mono font-medium text-habito truncate">
               <ValorMonetario valor={receitas} />
             </p>
           </div>
         </Link>
 
-        <Link href="/financas/extrato?tipo=despesa&preset=este_mes" className="flex items-center gap-2.5">
+        <Link
+          href="/financas/extrato?tipo=despesa&preset=este_mes"
+          className="flex items-center gap-2.5 min-w-0"
+        >
           <span className="w-9 h-9 rounded-full bg-red-400/15 flex items-center justify-center shrink-0">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="#F87171" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="text-[11px] text-ink-400">Despesas</p>
-            <p className="text-sm font-mono font-medium text-red-400">
+            <p className="text-sm font-mono font-medium text-red-400 truncate">
               <ValorMonetario valor={despesas} />
             </p>
           </div>

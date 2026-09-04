@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 54: Notificações Nativas de Verdade (sem Telegram) + Lembrete de Conta a Pagar
+# VidaTrack — Etapa 55: Layout Receitas/Despesas Corrigido (colunas de largura igual)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,26 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (55) — bug de layout corrigido:**
+
+A causa: Receitas e Despesas ficavam lado a lado com um espaçamento
+fixo, cada um ocupando só o espaço do próprio texto. Quando um valor
+é bem maior que o outro (no seu caso: R$ 5.000,00 x R$ 59.525,00), o
+lado maior não tinha garantia de espaço — podia esbarrar no card ou
+ficar espremido.
+
+Corrigido: agora Receitas e Despesas ficam em **duas colunas de
+largura exatamente igual**, então um valor grande de um lado nunca
+mais invade o espaço do outro lado. Também adicionei uma proteção
+extra (corta com "..." em vez de quebrar feio) pra qualquer valor
+absurdamente grande que ainda assim não coubesse.
+
+Mantive a estrutura geral que você gostou do app de referência — mês
++ olho de ocultar no topo, saldo grande, os 2 círculos coloridos de
+receita/despesa — só corrigi a proporção interna deles.
+
+Não precisa rodar SQL — é ajuste visual só.
 
 **Novo nesta etapa (54) — a reta final antes da publicação:**
 
@@ -1375,7 +1395,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 51. Rotas de API livres do redirecionamento de login
 52. Painel principal travado (sem rolagem)
 53. Carregamento preguiçoso do SDK da AWS
-54. Notificações nativas sem Telegram + lembrete de conta a pagar — **você está aqui**
+54. Notificações nativas sem Telegram + lembrete de conta a pagar
+55. Layout Receitas/Despesas corrigido — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
