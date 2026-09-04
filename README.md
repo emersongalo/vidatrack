@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 55: Layout Receitas/Despesas Corrigido (colunas de largura igual)
+# VidaTrack — Etapa 56: Finanças Reformulada (saldo previsto, navegação por mês, contas com saldo, barra de abas)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,52 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (56) — reformulação grande de Finanças, inspirada na
+referência que você mandou:**
+
+Os 4 pedaços que você pediu, todos feitos:
+
+1. **Saldo atual x Saldo previsto pro fim do mês** — dois números
+   agora, lado a lado. "Saldo em contas" é o que você tem agora de
+   verdade; "Previsto p/ fim do mês" soma as receitas/despesas
+   recorrentes que ainda vão vencer esse mês. Só aparece no mês
+   atual — pra um mês passado não tem nada a "prever", já aconteceu
+2. **A tela inteira navega por mês** — as setinhas no topo (e as do
+   calendário, que agora são a mesma navegação) mudam saldo do mês,
+   receitas, despesas, calendário e gráfico juntos. Aparece "Voltar
+   pra hoje" quando você não está no mês atual
+3. **Lista de contas com saldo real** — antes só dava pra ver isso
+   entrando em Finanças → Contas, e nem mostrava o saldo atual (só o
+   inicial). Agora aparece direto na tela principal, com o saldo de
+   cada conta calculado de verdade (inicial + todas as receitas e
+   despesas dela)
+4. **Barra de abas fixa embaixo** (Início / Contas / Extrato / Mais)
+   + botão flutuante de novo lançamento — em todas as telas da seção
+   de Finanças. A tela "Mais" reúne Categorias, Recorrentes, Análise,
+   Personalizar ordem e Exportar CSV, que antes ficavam soltos como
+   "links rápidos" na tela principal (removidos de lá agora, pra não
+   duplicar navegação)
+
+**Testei antes de entregar:**
+- A matemática do saldo previsto (4 cenários: sem recorrência futura,
+  com despesa futura, mistura de receita+despesa, recorrência já
+  vencida não conta de novo)
+- A navegação de mês anterior/próximo, incluindo as duas viradas de
+  ano (dezembro→janeiro e janeiro→dezembro do ano anterior)
+
+**Bug que encontrei e corrigi no meio do processo:** o calendário de
+gastos ainda usava o nome antigo do parâmetro de mês
+(`mesCalendario`) — sem corrigir isso, a navegação de mês pelo
+calendário ia parar de funcionar assim que unifiquei tudo num
+parâmetro só (`mes`).
+
+**Sendo honesto sobre risco:** essa é uma mudança grande, bem perto
+da publicação — testei a lógica mais delicada isoladamente antes de
+entregar, mas recomendo você testar com calma antes de gerar o build
+final pra Play Store.
+
+Não precisa rodar SQL — é código só.
 
 **Novo nesta etapa (55) — bug de layout corrigido:**
 
@@ -1396,7 +1442,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 52. Painel principal travado (sem rolagem)
 53. Carregamento preguiçoso do SDK da AWS
 54. Notificações nativas sem Telegram + lembrete de conta a pagar
-55. Layout Receitas/Despesas corrigido — **você está aqui**
+55. Layout Receitas/Despesas corrigido
+56. Finanças reformulada (saldo previsto, navegação por mês, contas, abas) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

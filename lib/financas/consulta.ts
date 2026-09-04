@@ -1,6 +1,71 @@
 import { createClient } from "@/lib/supabase/server";
 import { primeiroDiaDoMes } from "@/lib/financas/formatacao";
 
+export type ContaComSaldo = {
+  id: string;
+  nome: string;
+  banco: string | null;
+  tipo: string;
+  saldo: number;
+};
+
+/**
+ * Saldo de CADA conta separadamente (não só o total geral) — usado na
+ * lista de contas com saldo na tela principal de Finanças.
+ */
+export async function buscarSaldoPorConta(
+  supabase: ReturnType<typeof createClient>
+): Promise<ContaComSaldo[]> {
+  const { data: contas } = await supabase
+    .from("financa_contas")
+    .select("id, nome, banco, tipo, saldo_inicial")
+    .eq("arquivado", false)
+    .order("criado_em", { ascending: true });
+
+  const idsContas = (contas ?? []).map((c) => c.id);
+  if (idsContas.length === 0) return [];
+
+  const { data: transacoes } = await supabase
+    .from("financa_transacoes")
+    .select("conta_id, tipo, valor")
+    .in("conta_id", idsContas);
+
+  const somaPorConta = new Map<string, number>();
+  for (const t of transacoes ?? []) {
+    const atual = somaPorConta.get(t.conta_id) ?? 0;
+    somaPorConta.set(t.conta_id, atual + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)));
+  }
+
+  return (contas ?? []).map((c) => ({
+    id: c.id,
+    nome: c.nome,
+    banco: c.banco,
+    tipo: c.tipo,
+    saldo: Number(c.saldo_inicial) + (somaPorConta.get(c.id) ?? 0),
+  }));
+}
+
+/**
+ * Saldo previsto pro fim do mês: saldo atual + receitas recorrentes
+ * que ainda vão vencer esse mês - despesas recorrentes que ainda vão
+ * vencer esse mês. Recorrências com dia <= hoje já foram lançadas
+ * (viram transação de verdade via `garantirLancamentosRecorrentes`),
+ * então já estão dentro do saldo atual — contar elas de novo aqui
+ * duplicaria o valor.
+ */
+export function calcularSaldoPrevisto(
+  saldoAtual: number,
+  recorrencias: { tipo: string; valor: number; diaMes: number }[],
+  diaAtual: number
+): number {
+  let saldo = saldoAtual;
+  for (const r of recorrencias) {
+    if (r.diaMes <= diaAtual) continue;
+    saldo += r.tipo === "receita" ? Number(r.valor) : -Number(r.valor);
+  }
+  return saldo;
+}
+
 export async function buscarSaldoTotal(supabase: ReturnType<typeof createClient>): Promise<number> {
   const { data: contas } = await supabase
     .from("financa_contas")

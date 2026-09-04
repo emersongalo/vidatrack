@@ -1,32 +1,45 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { primeiroDiaDoMes, nomeDoMesAtual } from "@/lib/financas/formatacao";
+import { primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoria";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { HeroFinancas } from "@/components/HeroFinancas";
+import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { resolverUrlFoto } from "@/lib/perfil/foto";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
-import { buscarCalendarioGastos } from "@/lib/financas/consulta";
+import { buscarCalendarioGastos, buscarSaldoPorConta, calcularSaldoPrevisto } from "@/lib/financas/consulta";
 import { CalendarioGastos } from "@/components/CalendarioGastos";
 import { normalizarOrdemBlocos } from "@/lib/financas/blocos";
 
 export default async function FinancasPage({
   searchParams,
 }: {
-  searchParams: { mesCalendario?: string; offline?: string };
+  searchParams: { mes?: string; offline?: string };
 }) {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const mesCalendario =
-    searchParams.mesCalendario ?? new Date().toLocaleDateString("sv-SE").slice(0, 7);
+  const hoje = new Date();
+  const mesAtualISO = hoje.toLocaleDateString("sv-SE").slice(0, 7);
+  const mesSelecionado = searchParams.mes ?? mesAtualISO;
+  const ehMesAtual = mesSelecionado === mesAtualISO;
+
+  const [anoSel, mesSelNum] = mesSelecionado.split("-").map(Number);
+  const dataMesAnterior = new Date(anoSel, mesSelNum - 2, 1);
+  const dataMesProximo = new Date(anoSel, mesSelNum, 1);
+  const mesAnteriorISO = `${dataMesAnterior.getFullYear()}-${String(dataMesAnterior.getMonth() + 1).padStart(2, "0")}`;
+  const mesProximoISO = `${dataMesProximo.getFullYear()}-${String(dataMesProximo.getMonth() + 1).padStart(2, "0")}`;
+  const nomeDoMesSelecionado = new Date(anoSel, mesSelNum - 1, 1).toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
 
   // Grupo 1: nada aqui depende do resultado de outra consulta, então
   // tudo roda ao mesmo tempo em vez de uma coisa esperando a outra.
@@ -37,10 +50,16 @@ export default async function FinancasPage({
     { data: perfilOrdem },
     { data: contas },
     { data: todasCategoriasDespesa },
+    contasComSaldo,
+    { data: recorrenciasAtivas },
   ] = await Promise.all([
     supabase.from("perfis").select("ordem_blocos_financas").eq("id", user?.id ?? "").maybeSingle(),
     supabase.from("financa_contas").select("id, nome, saldo_inicial").eq("arquivado", false),
     supabase.from("financa_categorias").select("id, nome, tipo, meta_mensal").eq("tipo", "despesa"),
+    buscarSaldoPorConta(supabase),
+    ehMesAtual
+      ? supabase.from("financa_recorrencias").select("tipo, valor, dia_mes, data_fim").eq("ativo", true)
+      : Promise.resolve({ data: [] as any[] }),
     garantirLancamentosRecorrentes(),
   ]);
 
@@ -70,7 +89,7 @@ export default async function FinancasPage({
           .in("item_id", idsContas)
           .not("usuario_convidado_id", "is", null)
       : Promise.resolve({ data: [] as any[] }),
-    buscarCalendarioGastos(supabase, mesCalendario, idsContas),
+    buscarCalendarioGastos(supabase, mesSelecionado, idsContas),
   ]);
 
   const transacoes = todasTransacoes ?? [];
@@ -122,7 +141,9 @@ export default async function FinancasPage({
     mapaNomes = new Map(idsDonosUnicos.map((id) => [id, mapaPerfis.get(id)?.nome ?? "Alguém"]));
   }
 
-  // Saldo total: saldo inicial de cada conta + receitas - despesas dela
+  // Saldo atual: saldo inicial de cada conta + receitas - despesas dela,
+  // sempre "agora" — não muda navegando entre meses (seu saldo de hoje
+  // é o mesmo, esteja você olhando o extrato de março ou de setembro).
   const saldoTotal = (contas ?? []).reduce((total, conta) => {
     const doTransacoes = transacoes
       .filter((t) => t.conta_id === conta.id)
@@ -130,8 +151,24 @@ export default async function FinancasPage({
     return total + Number(conta.saldo_inicial) + doTransacoes;
   }, 0);
 
-  const inicioMes = primeiroDiaDoMes();
-  const transacoesDoMes = transacoes.filter((t) => t.data >= inicioMes);
+  // Previsto pro fim do mês: só faz sentido "prever o futuro" pro mês
+  // atual — pra um mês passado, já sabemos exatamente como terminou
+  // (é só olhar o extrato), não tem nada a prever.
+  const saldoPrevisto = ehMesAtual
+    ? calcularSaldoPrevisto(
+        saldoTotal,
+        (recorrenciasAtivas ?? [])
+          .filter((r) => !r.data_fim || r.data_fim >= mesAtualISO + "-31")
+          .map((r) => ({ tipo: r.tipo, valor: r.valor, diaMes: r.dia_mes })),
+        hoje.getDate()
+      )
+    : null;
+
+  const inicioMesSelecionado = primeiroDiaDoMes(mesSelecionado + "-01");
+  const fimMesSelecionado = ultimoDiaDoMes(mesSelecionado + "-01");
+  const transacoesDoMes = transacoes.filter(
+    (t) => t.data >= inicioMesSelecionado && t.data <= fimMesSelecionado
+  );
   const receitasDoMes = transacoesDoMes
     .filter((t) => t.tipo === "receita")
     .reduce((acc, t) => acc + t.valor, 0);
@@ -155,7 +192,7 @@ export default async function FinancasPage({
     .sort((a, b) => b.valor - a.valor);
 
   const mapaContas = new Map((contas ?? []).map((c) => [c.id, c.nome]));
-  const ultimasTransacoes = transacoes.slice(0, 10);
+  const ultimasTransacoes = transacoesDoMes.slice(0, 10);
 
   const blocosFinancas: Record<string, ReactNode> = {
     calendario: (
@@ -170,7 +207,7 @@ export default async function FinancasPage({
           </Link>
         </div>
         <CalendarioGastos
-          anoMesISO={mesCalendario}
+          anoMesISO={mesSelecionado}
           gastosPorDia={gastosPorDia}
           diasComContaAPagar={diasComContaAPagar}
         />
@@ -179,39 +216,20 @@ export default async function FinancasPage({
     grafico:
       dadosGrafico.length > 0 ? (
         <div className="mb-6">
-          <p className="text-sm text-ink-400 mb-3">Despesas por categoria · {nomeDoMesAtual()}</p>
+          <p className="text-sm text-ink-400 mb-3 capitalize">Despesas por categoria · {nomeDoMesSelecionado}</p>
           <GraficoDespesasCategoria dados={dadosGrafico} />
         </div>
       ) : null,
-    linksRapidos: (
-      <div className="flex flex-wrap gap-x-3 gap-y-1.5 mb-6 text-sm">
-        <Link href="/financas/extrato" className="text-ink-400 hover:text-ink-100 transition underline">
-          Extrato
-        </Link>
-        <Link href="/financas/contas" className="text-ink-400 hover:text-ink-100 transition underline">
-          Contas
-        </Link>
-        <Link href="/financas/categorias" className="text-ink-400 hover:text-ink-100 transition underline">
-          Categorias
-        </Link>
-        <Link href="/financas/recorrentes" className="text-ink-400 hover:text-ink-100 transition underline">
-          Recorrentes
-        </Link>
-        <Link href="/financas/exportar" className="text-ink-400 hover:text-ink-100 transition underline">
-          Exportar CSV
-        </Link>
-      </div>
-    ),
     lancamentos: (
       <>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm text-ink-400">Últimos lançamentos</p>
+          <p className="text-sm text-ink-400">Lançamentos do mês</p>
           <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
             Ver extrato completo →
           </Link>
         </div>
         {ultimasTransacoes.length === 0 ? (
-          <p className="text-ink-400 text-sm">Nenhum lançamento ainda.</p>
+          <p className="text-ink-400 text-sm">Nenhum lançamento nesse mês.</p>
         ) : (
           <ul className="space-y-2">
             {ultimasTransacoes.map((t: any) => (
@@ -273,18 +291,8 @@ export default async function FinancasPage({
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <LinkVoltar href="/dashboard" texto="Painel" />
-          <h1 className="text-2xl font-display font-semibold mt-2">Finanças</h1>
-        </div>
-        <Link
-          href="/financas/nova"
-          className="flex items-center gap-1.5 bg-financa text-base-900 text-sm font-semibold rounded-lg px-5 py-2.5 shadow-lg shadow-financa/25 hover:opacity-90 hover:scale-105 transition"
-        >
-          <span className="text-base leading-none">+</span> Lançamento
-        </Link>
-      </div>
+      <LinkVoltar href="/dashboard" texto="Painel" />
+      <h1 className="text-2xl font-display font-semibold mt-2 mb-6">Finanças</h1>
 
       {searchParams.offline && (
         <p className="mb-4 text-sm text-financa bg-financa-soft border border-financa/30 rounded-lg px-3 py-2">
@@ -307,14 +315,22 @@ export default async function FinancasPage({
         </div>
       ) : (
         <>
-          {/* Saldo, receitas, despesas — estilo Mobills, no topo */}
+          {/* Saldo atual + previsto, navegação por mês, receitas/despesas */}
           <HeroFinancas
             saldo={saldoTotal}
+            saldoPrevisto={saldoPrevisto}
             receitas={receitasDoMes}
             despesas={despesasDoMes}
-            nomeMes={nomeDoMesAtual()}
+            nomeMes={nomeDoMesSelecionado}
             pessoas={pessoasCompartilhadas}
+            hrefMesAnterior={`/financas?mes=${mesAnteriorISO}`}
+            hrefMesProximo={`/financas?mes=${mesProximoISO}`}
+            hrefHoje="/financas"
+            ehMesAtual={ehMesAtual}
           />
+
+          {/* Lista de contas com o saldo de cada uma */}
+          <ListaContasComSaldo contas={contasComSaldo} />
 
           {/* Orçamento por categoria */}
           {categorias && categorias.length > 0 && (

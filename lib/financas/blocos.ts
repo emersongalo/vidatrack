@@ -1,16 +1,14 @@
-export type BlocoFinancasId = "calendario" | "grafico" | "linksRapidos" | "lancamentos";
+export type BlocoFinancasId = "calendario" | "grafico" | "lancamentos";
 
 export const BLOCOS_FINANCAS_PADRAO: BlocoFinancasId[] = [
   "calendario",
   "grafico",
-  "linksRapidos",
   "lancamentos",
 ];
 
 export const NOMES_BLOCOS_FINANCAS: Record<BlocoFinancasId, string> = {
   calendario: "📅 Calendário de gastos",
   grafico: "🥧 Gráfico por categoria",
-  linksRapidos: "🔗 Links rápidos",
   lancamentos: "🧾 Últimos lançamentos",
 };
 

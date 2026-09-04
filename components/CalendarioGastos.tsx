@@ -44,7 +44,7 @@ export function CalendarioGastos({
     <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
       <div className="flex items-center justify-between mb-3">
         <Link
-          href={`/financas?mesCalendario=${mesAnterior()}`}
+          href={`/financas?mes=${mesAnterior()}`}
           className="text-ink-400 hover:text-ink-100 transition px-1"
         >
           ‹
@@ -53,7 +53,7 @@ export function CalendarioGastos({
           {NOMES_MES[mes - 1]} {ano}
         </p>
         <Link
-          href={`/financas?mesCalendario=${proximoMes()}`}
+          href={`/financas?mes=${proximoMes()}`}
           className="text-ink-400 hover:text-ink-100 transition px-1"
         >
           ›

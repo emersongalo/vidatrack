@@ -5,31 +5,79 @@ import { AvataresEmpilhados } from "@/components/AvataresEmpilhados";
 
 export function HeroFinancas({
   saldo,
+  saldoPrevisto,
   receitas,
   despesas,
   nomeMes,
   pessoas,
+  hrefMesAnterior,
+  hrefMesProximo,
+  hrefHoje,
+  ehMesAtual,
 }: {
   saldo: number;
+  saldoPrevisto: number | null;
   receitas: number;
   despesas: number;
   nomeMes: string;
   pessoas?: { nome: string; urlFoto: string | null }[];
+  hrefMesAnterior: string;
+  hrefMesProximo: string;
+  hrefHoje: string;
+  ehMesAtual: boolean;
 }) {
   return (
     <div className="bg-base-800 border border-base-600 rounded-xl2 p-5 mb-6">
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {pessoas && pessoas.length > 0 && <AvataresEmpilhados pessoas={pessoas} tamanho={24} />}
-          <p className="text-sm text-ink-400 capitalize">{nomeMes}</p>
         </div>
         <BotaoOcultarValores />
       </div>
 
-      <p className="text-xs text-ink-400 mb-1">Saldo até o fim do mês</p>
-      <p className="text-3xl font-display font-semibold font-mono mb-5">
-        <ValorMonetario valor={saldo} />
-      </p>
+      {/* Navegação por mês */}
+      <div className="flex items-center justify-center gap-4 mb-4">
+        <Link
+          href={hrefMesAnterior}
+          aria-label="Mês anterior"
+          className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+        >
+          ‹
+        </Link>
+        <div className="text-center">
+          <p className="text-sm font-medium capitalize">{nomeMes}</p>
+          {!ehMesAtual && (
+            <Link href={hrefHoje} className="text-[11px] text-financa hover:underline">
+              Voltar pra hoje
+            </Link>
+          )}
+        </div>
+        <Link
+          href={hrefMesProximo}
+          aria-label="Próximo mês"
+          className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+        >
+          ›
+        </Link>
+      </div>
+
+      {/* Saldo atual + previsto */}
+      <div className="flex items-end justify-between gap-3 mb-5">
+        <div className="min-w-0">
+          <p className="text-xs text-ink-400 mb-1">Saldo em contas</p>
+          <p className="text-3xl font-display font-semibold font-mono truncate">
+            <ValorMonetario valor={saldo} />
+          </p>
+        </div>
+        {saldoPrevisto !== null && (
+          <div className="text-right shrink-0">
+            <p className="text-xs text-ink-400 mb-1">Previsto p/ fim do mês</p>
+            <p className="text-sm font-mono font-medium text-ink-100">
+              <ValorMonetario valor={saldoPrevisto} />
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Link
@@ -42,7 +90,7 @@ export function HeroFinancas({
             </svg>
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] text-ink-400">Receitas</p>
+            <p className="text-[11px] text-ink-400">Receitas do mês</p>
             <p className="text-sm font-mono font-medium text-habito truncate">
               <ValorMonetario valor={receitas} />
             </p>
@@ -59,7 +107,7 @@ export function HeroFinancas({
             </svg>
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] text-ink-400">Despesas</p>
+            <p className="text-[11px] text-ink-400">Despesas do mês</p>
             <p className="text-sm font-mono font-medium text-red-400 truncate">
               <ValorMonetario valor={despesas} />
             </p>
