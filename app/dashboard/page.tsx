@@ -27,7 +27,7 @@ export default async function DashboardPage() {
   const nome = perfil?.nome || user?.email || "";
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-lg mx-auto flex flex-col">
+    <main className="h-screen h-[100dvh] overflow-hidden p-6 md:p-12 max-w-lg mx-auto flex flex-col">
       <header className="flex items-center justify-between mb-2 gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/perfil" className="shrink-0">

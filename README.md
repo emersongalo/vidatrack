@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 51: Rotas de API Não Passam Mais Pelo Redirecionamento de Login
+# VidaTrack — Etapa 52: Painel Principal Travado (sem rolagem)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,26 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (52) — painel principal travado, sem rolar:**
+
+O painel usava `min-h-screen` (altura MÍNIMA de uma tela) — se o
+conteúdo passasse um pouco disso (ou o navegador do celular
+recolhesse/expandisse a barra de endereço, mudando a altura visível
+na hora), a página ficava rolável, permitindo aquele efeito de
+"arrastar" que cortava o cabeçalho no seu print.
+
+Troquei pra altura EXATA da tela (`h-[100dvh]`, que se adapta
+corretamente à barra de endereço do celular, ao contrário do `vh`
+comum) mais `overflow-hidden`, travando de vez a rolagem só nessa
+tela específica.
+
+**Importante: só mexi no painel principal.** Telas como Finanças,
+que têm mais conteúdo do que cabe numa tela e precisam rolar de
+verdade pra ver tudo, continuam rolando normalmente — isso não foi
+tocado.
+
+Não precisa rodar SQL — é ajuste visual só.
 
 **Novo nesta etapa (51) — bug de correção real achado ao investigar a lentidão:**
 
@@ -1271,7 +1291,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 48. Excluir conta + privacidade pública
 49. Área de toque maior nos links do rodapé
 50. Bug de redirecionamento no middleware (causa real)
-51. Rotas de API livres do redirecionamento de login — **você está aqui**
+51. Rotas de API livres do redirecionamento de login
+52. Painel principal travado (sem rolagem) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
