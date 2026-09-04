@@ -51,6 +51,20 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Rotas de API nunca devem ser redirecionadas pra uma página HTML de
+  // login — isso não faz sentido pra quem está chamando programaticamente
+  // (o agendador externo dos lembretes, por exemplo, nem tem sessão
+  // nenhuma, e usa seu próprio segredo — sendo redirecionado aqui, a
+  // chamada dele nunca chegava a rodar de verdade). Cada rota de API já
+  // cuida da própria autorização e devolve o erro certo em JSON.
+  //
+  // Ainda deixamos a chamada `getUser()` acima rodar mesmo pra essas
+  // rotas — é o que mantém a sessão renovada nos cookies — só não
+  // aplicamos o redirecionamento de página em cima do resultado.
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return response;
+  }
+
   const rotaPublica = ROTAS_PUBLICAS.some((rota) =>
     request.nextUrl.pathname.startsWith(rota)
   );

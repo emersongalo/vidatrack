@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 50: Bug de Redirecionamento no Middleware (a causa real do "Privacidade" não abrir)
+# VidaTrack — Etapa 51: Rotas de API Não Passam Mais Pelo Redirecionamento de Login
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,34 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (51) — bug de correção real achado ao investigar a lentidão:**
+
+Enquanto investigava o "sinto ele meio lento", achei algo mais sério
+que só devagar: as rotas de API (`/api/lembretes`, `/api/hoje`,
+`/api/analytics`) passavam pela mesma regra de redirecionamento de
+página do middleware. Isso é conceitualmente errado — uma API deve
+responder com erro em JSON, nunca redirecionar pra uma tela HTML de
+login — e o pior: **o agendador externo que dispara os lembretes
+(`/api/lembretes`) não tem sessão nenhuma** (usa um segredo próprio),
+então era exatamente o tipo de chamada que essa regra redirecionava
+antes mesmo de chegar no código que checa o segredo. Corrigido: rotas
+de API agora nunca são redirecionadas — cada uma continua responsável
+por checar sua própria autorização (e já fazem isso corretamente).
+
+**Sobre a lentidão nos cliques, de forma honesta:** o middleware
+verifica sua sessão com o Supabase (uma ida-e-volta real de rede) a
+cada navegação — isso é assim de propósito, é o jeito seguro
+recomendado de confirmar que a sessão não expirou/foi revogada,
+diferente de só ler um token guardado localmente sem confirmar com o
+servidor. Não tem como zerar esse custo sem abrir mão dessa garantia
+de segurança. A correção desta etapa remove pelo menos a verificação
+duplicada nas chamadas de API, que ajuda uma parte real da
+lentidão percebida (principalmente em telas que fazem várias chamadas
+de API, como a sincronização offline).
+
+**Testei os 7 cenários relevantes** (incluindo o do cron sem sessão)
+antes de entregar — todos passaram.
 
 **Novo nesta etapa (50) — a causa real, achada de verdade:**
 
@@ -1242,7 +1270,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 47. Botão de voltar duplicado em Hábitos
 48. Excluir conta + privacidade pública
 49. Área de toque maior nos links do rodapé
-50. Bug de redirecionamento no middleware (causa real) — **você está aqui**
+50. Bug de redirecionamento no middleware (causa real)
+51. Rotas de API livres do redirecionamento de login — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
