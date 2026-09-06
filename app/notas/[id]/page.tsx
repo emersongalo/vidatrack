@@ -18,7 +18,7 @@ export default async function NotaPage({
 
   const { data: nota } = await supabase
     .from("notas")
-    .select("id, titulo, conteudo, horario_lembrete")
+    .select("id, titulo, conteudo, horario_lembrete, data_lembrete")
     .eq("id", params.id)
     .single();
 
@@ -61,6 +61,7 @@ export default async function NotaPage({
         tituloInicial={nota.titulo}
         conteudoInicial={nota.conteudo}
         horarioLembreteInicial={nota.horario_lembrete}
+        dataLembreteInicial={nota.data_lembrete}
       />
 
       <div className="mt-8 pt-6 border-t border-base-600">

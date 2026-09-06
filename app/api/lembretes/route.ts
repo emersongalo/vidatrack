@@ -88,13 +88,17 @@ export async function GET(request: Request) {
   // --- Notas com lembrete ---
   const { data: notas } = await supabase
     .from("notas")
-    .select("id, titulo, dono_id, horario_lembrete")
+    .select("id, titulo, dono_id, horario_lembrete, data_lembrete")
     .eq("arquivado", false)
     .not("horario_lembrete", "is", null);
 
   for (const n of notas ?? []) {
     const horario = (n.horario_lembrete as string).slice(0, 5);
     if (!(horario >= cincoMinAntes && horario <= horaAtual)) continue;
+
+    // Sem data marcada = dispara todo dia (como sempre foi). Com data
+    // marcada = dispara só naquele dia específico, uma vez.
+    if (n.data_lembrete && n.data_lembrete !== hoje) continue;
 
     enviados += await notificarUsuariosDoItem(
       supabase,

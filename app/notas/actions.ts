@@ -81,10 +81,18 @@ export async function atualizarNota(notaId: string, formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim() || "Sem título";
   const conteudo = String(formData.get("conteudo") ?? "");
   const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
+  const dataLembreteRaw = String(formData.get("dataLembrete") ?? "");
 
   await supabase
     .from("notas")
-    .update({ titulo, conteudo, horario_lembrete: horarioLembreteRaw || null })
+    .update({
+      titulo,
+      conteudo,
+      horario_lembrete: horarioLembreteRaw || null,
+      // Vazio = "todo dia" (repete sempre). Preenchida = só naquela
+      // data específica, uma vez.
+      data_lembrete: dataLembreteRaw || null,
+    })
     .eq("id", notaId);
 
   revalidatePath(`/notas/${notaId}`);

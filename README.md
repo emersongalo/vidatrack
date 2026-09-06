@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 57: Ordem do Hero Corrigida (saldo em cima, sozinho)
+# VidaTrack — Etapa 58: Lembrete de Nota com Data Clara (todo dia x só uma vez)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,33 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (58) — lembrete de nota, agora claro:**
+
+Achei a causa da confusão: as notas só tinham um **horário**, sem
+nenhum conceito de "qual dia" — na prática, um lembrete de nota
+disparava **todo santo dia, pra sempre**, sem opção de ser só uma vez
+numa data específica.
+
+Agora, ao ativar o lembrete de uma nota, você escolhe entre:
+- **Todo dia** — continua funcionando como antes, dispara sempre
+  naquele horário
+- **Só numa data** — escolhe o dia certo, e o aviso chega só naquela
+  data, uma vez
+
+Cada opção mostra uma frase explicando exatamente o que vai acontecer
+("Vai avisar todo dia, sempre nesse horário, até você desmarcar" /
+"Vai avisar só uma vez, nessa data e horário").
+
+Não implementei "dias da semana" pras notas (tipo hábitos) —
+avaliei que "todo dia" ou "uma data específica" cobre o caso real de
+nota bem melhor. Se sentir falta de "toda segunda-feira" pra alguma
+nota específica, me avisa que adiciono.
+
+## Rodar o schema desta etapa
+
+No SQL Editor do Supabase, roda `supabase/schema_lembrete_nota_data.sql`
+(depois de todos os schemas anteriores).
 
 **Novo nesta etapa (57) — reorganizei a ordem do topo de Finanças:**
 
@@ -1466,7 +1493,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 54. Notificações nativas sem Telegram + lembrete de conta a pagar
 55. Layout Receitas/Despesas corrigido
 56. Finanças reformulada (saldo previsto, navegação por mês, contas, abas)
-57. Ordem do hero corrigida (saldo em cima, sozinho) — **você está aqui**
+57. Ordem do hero corrigida (saldo em cima, sozinho)
+58. Lembrete de nota com data clara — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
