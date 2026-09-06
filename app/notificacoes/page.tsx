@@ -1,5 +1,6 @@
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { BotaoAtivarNotificacoes } from "@/components/BotaoAtivarNotificacoes";
+import { Globe, Smartphone } from "lucide-react";
 
 export default function NotificacoesPage() {
   return (
@@ -16,7 +17,7 @@ export default function NotificacoesPage() {
 
       <div className="mt-6 space-y-3">
         <div className="flex items-start gap-3 bg-base-800 border border-base-600 rounded-xl2 p-4">
-          <span className="text-lg shrink-0">🔔</span>
+          <span className="text-lg shrink-0"><Globe size={20} strokeWidth={2} /></span>
           <div>
             <p className="text-sm font-medium">No navegador (computador ou celular)</p>
             <p className="text-xs text-ink-400 mt-0.5">
@@ -27,7 +28,7 @@ export default function NotificacoesPage() {
         </div>
 
         <div className="flex items-start gap-3 bg-base-800 border border-base-600 rounded-xl2 p-4">
-          <span className="text-lg shrink-0">📱</span>
+          <span className="text-lg shrink-0"><Smartphone size={20} strokeWidth={2} /></span>
           <div>
             <p className="text-sm font-medium">No app instalado</p>
             <p className="text-xs text-ink-400 mt-0.5">

@@ -6,6 +6,7 @@ import { AlternadorTema } from "@/components/AlternadorTema";
 import { resolverUrlFoto } from "@/lib/perfil/foto";
 import { TrilhoMenu } from "@/components/TrilhoMenu";
 import { ConfirmarSaidaApp } from "@/components/ConfirmarSaidaApp";
+import { Bell } from "lucide-react";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -55,7 +56,7 @@ export default async function DashboardPage() {
             aria-label="Notificações"
             className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
           >
-            🔔
+            <Bell size={18} strokeWidth={2} />
           </Link>
           <AlternadorTema />
           <form action={sair}>

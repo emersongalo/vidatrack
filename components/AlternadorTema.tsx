@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Sun, Moon } from "lucide-react";
 
 export function AlternadorTema() {
   const [tema, setTema] = useState<"dark" | "light">("dark");
@@ -23,7 +24,7 @@ export function AlternadorTema() {
       aria-label="Alternar tema claro/escuro"
       className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition shrink-0"
     >
-      <span className="text-base leading-none">{tema === "dark" ? "☀︎" : "☾"}</span>
+      {tema === "dark" ? <Sun size={18} strokeWidth={2} /> : <Moon size={18} strokeWidth={2} />}
     </button>
   );
 }

@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 58: Lembrete de Nota com Data Clara (todo dia x só uma vez)
+# VidaTrack — Etapa 59: Ícones de Verdade (Lucide) no Lugar dos Emojis de Interface
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,34 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (59) — ícones modernos, no lugar dos emojis "de
+interface":**
+
+Adicionei o **Lucide** (biblioteca de ícones usada por apps
+modernos de verdade — traço fino, consistente, sem parecer clipart).
+Troquei nos lugares mais visíveis:
+
+- **Barra de abas de Finanças** (Início/Contas/Extrato/Mais) + botão
+  flutuante de "+"
+- **Barra de abas de Hábitos** (Hoje/Hábitos/Tarefas/Categorias/Timer)
+- **Tela "Mais" de Finanças** (Categorias, Recorrentes, Análise,
+  Personalizar, Exportar, Lixeira)
+- **Cabeçalho do painel** (sino de notificação, sol/lua do tema)
+- **Notas** (fixar/desafixar, lembrete, avisos de "salvo offline")
+- **Tela de Notificações** (navegador, app instalado)
+
+**Testei antes de entregar:** instalei a biblioteca temporariamente e
+confirmei que todos os 22 ícones que usei existem de verdade nela —
+não quis arriscar um nome errado quebrando o build, igual quase
+aconteceu com a versão do Capacitor lá atrás.
+
+**O que ficou de fora, de propósito:** os ícones que você mesmo
+escolhe pra cada hábito/categoria/nota (aquele seletor de emoji ao
+criar um hábito, por exemplo) continuam emoji — ali faz sentido ser
+divertido e colorido, é uma personalização seguida por você, não
+"interface do sistema". Se quiser ir além (calendário, gráficos, ou
+os emojis de categoria financeira também), me avisa que continuo.
 
 **Novo nesta etapa (58) — lembrete de nota, agora claro:**
 
@@ -1494,7 +1522,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 55. Layout Receitas/Despesas corrigido
 56. Finanças reformulada (saldo previsto, navegação por mês, contas, abas)
 57. Ordem do hero corrigida (saldo em cima, sozinho)
-58. Lembrete de nota com data clara — **você está aqui**
+58. Lembrete de nota com data clara
+59. Ícones de verdade (Lucide) no lugar dos emojis de interface — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

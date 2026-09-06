@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PackageCheck } from "lucide-react";
 import { criarNota } from "@/app/notas/actions";
 import { adicionarNaFila } from "@/lib/offline/fila";
 
@@ -38,7 +39,9 @@ export function BotaoNovaNotaOffline() {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60">
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-5 max-w-sm w-full">
           {criada ? (
-            <p className="text-sm text-habito">📦 Guardada — vai aparecer assim que a internet voltar.</p>
+            <p className="text-sm text-habito flex items-center gap-1.5">
+              <PackageCheck size={15} strokeWidth={2} /> Guardada — vai aparecer assim que a internet voltar.
+            </p>
           ) : (
             <>
               <p className="text-sm text-ink-400 mb-3">

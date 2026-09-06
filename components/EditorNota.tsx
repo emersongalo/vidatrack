@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { Bell, PackageCheck } from "lucide-react";
 import { atualizarNota } from "@/app/notas/actions";
 import { adicionarNaFila } from "@/lib/offline/fila";
 
@@ -88,7 +89,9 @@ export function EditorNota({
             }}
             className="w-4 h-4 accent-nota"
           />
-          <span className="text-sm">🔔 Lembrete</span>
+          <span className="text-sm flex items-center gap-1.5">
+            <Bell size={15} strokeWidth={2} /> Lembrete
+          </span>
         </label>
 
         {temLembrete && (
@@ -160,14 +163,18 @@ export function EditorNota({
         {!temLembrete && <input type="hidden" name="horarioLembrete" value="" />}
       </div>
 
-      <p className="text-xs text-ink-400 h-4">
-        {salvoOffline
-          ? "📦 Salvo offline — sincroniza quando a internet voltar"
-          : pendente
-            ? "Salvando..."
-            : salvoEm
-              ? "Salvo"
-              : ""}
+      <p className="text-xs text-ink-400 h-4 flex items-center gap-1.5">
+        {salvoOffline ? (
+          <>
+            <PackageCheck size={13} strokeWidth={2} /> Salvo offline — sincroniza quando a internet voltar
+          </>
+        ) : pendente ? (
+          "Salvando..."
+        ) : salvoEm ? (
+          "Salvo"
+        ) : (
+          ""
+        )}
       </p>
     </form>
   );

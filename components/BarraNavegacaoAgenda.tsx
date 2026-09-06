@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CalendarCheck, Repeat, CheckSquare, LayoutGrid, Timer } from "lucide-react";
 
 const ABAS = [
-  { href: "/habitos", rotulo: "Hoje", icone: "📅" },
-  { href: "/habitos/lista", rotulo: "Hábitos", icone: "🔁" },
-  { href: "/habitos/tarefas", rotulo: "Tarefas", icone: "✓" },
-  { href: "/habitos/categorias", rotulo: "Categorias", icone: "▦" },
-  { href: "/habitos/timer", rotulo: "Timer", icone: "⏱" },
+  { href: "/habitos", rotulo: "Hoje", Icone: CalendarCheck },
+  { href: "/habitos/lista", rotulo: "Hábitos", Icone: Repeat },
+  { href: "/habitos/tarefas", rotulo: "Tarefas", Icone: CheckSquare },
+  { href: "/habitos/categorias", rotulo: "Categorias", Icone: LayoutGrid },
+  { href: "/habitos/timer", rotulo: "Timer", Icone: Timer },
 ];
 
 export function BarraNavegacaoAgenda() {
@@ -24,11 +25,11 @@ export function BarraNavegacaoAgenda() {
             <Link
               key={aba.href}
               href={aba.href}
-              className={`flex flex-col items-center gap-0.5 py-2.5 text-xs transition ${
+              className={`flex flex-col items-center gap-1 py-2.5 text-xs transition ${
                 ativa ? "text-habito" : "text-ink-400 hover:text-ink-100"
               }`}
             >
-              <span className="text-base leading-none">{aba.icone}</span>
+              <aba.Icone size={19} strokeWidth={2} />
               {aba.rotulo}
             </Link>
           );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { alternarFixarNota } from "./actions";
 import { BotaoNovaNotaOffline } from "@/components/BotaoNovaNotaOffline";
@@ -92,7 +93,7 @@ export default async function NotasPage({
                     nota.fixada ? "text-nota" : "text-ink-400 opacity-0 group-hover:opacity-100"
                   }`}
                 >
-                  📌
+                  <Pin size={16} strokeWidth={2} fill={nota.fixada ? "currentColor" : "none"} />
                 </button>
               </form>
             </div>
