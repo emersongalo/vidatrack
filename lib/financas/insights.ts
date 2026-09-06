@@ -41,7 +41,16 @@ export async function buscarInsightsFinanceiros(
   const inicioMes = primeiroDiaDoMes(mesReferenciaISO);
   const inicioMesAnterior = mesAnteriorISO(inicioMes);
 
-  const { data: contas } = await supabase.from("financa_contas").select("id").eq("arquivado", false);
+  // "contas" e "categoriasComMeta" não dependem uma da outra — rodam
+  // juntas, em vez de "categoriasComMeta" ser a 3ª espera na fila.
+  const [{ data: contas }, { data: categoriasComMeta }] = await Promise.all([
+    supabase.from("financa_contas").select("id").eq("arquivado", false),
+    supabase
+      .from("financa_categorias")
+      .select("nome, meta_mensal")
+      .eq("tipo", "despesa")
+      .not("meta_mensal", "is", null),
+  ]);
   const idsContas = (contas ?? []).map((c) => c.id);
 
   if (idsContas.length === 0) {
@@ -130,13 +139,8 @@ export async function buscarInsightsFinanceiros(
 
   const dicas = gerarDicas({ categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto });
 
-  // --- Orçamento vs realizado (pro radar) ---
-  const { data: categoriasComMeta } = await supabase
-    .from("financa_categorias")
-    .select("nome, meta_mensal")
-    .eq("tipo", "despesa")
-    .not("meta_mensal", "is", null);
-
+  // --- Orçamento vs realizado (pro radar) — usa "categoriasComMeta"
+  // que já buscamos lá em cima, em paralelo com "contas". ---
   const orcamentoComparado: OrcamentoComparado[] = (categoriasComMeta ?? []).map((c) => ({
     nome: c.nome,
     orcamento: Number(c.meta_mensal),

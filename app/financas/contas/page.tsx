@@ -20,15 +20,22 @@ export default async function ContasPage({
   searchParams: { erro?: string };
 }) {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: contas } = await supabase
-    .from("financa_contas")
-    .select("id, nome, tipo, banco, saldo_inicial, dono_id")
-    .eq("arquivado", false)
-    .order("criado_em", { ascending: true });
+  // auth.getUser() e a busca de contas não dependem uma da outra —
+  // rodam juntas em vez de uma esperando a outra terminar.
+  const [
+    {
+      data: { user },
+    },
+    { data: contas },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("financa_contas")
+      .select("id, nome, tipo, banco, saldo_inicial, dono_id")
+      .eq("arquivado", false)
+      .order("criado_em", { ascending: true }),
+  ]);
 
   const idsContas = (contas ?? []).map((c) => c.id);
 
@@ -40,40 +47,46 @@ export default async function ContasPage({
         .in("item_id", idsContas)
     : { data: [] as any[] };
 
-  const idsPessoasCompartilhadas = Array.from(
+  const idsConvidados = Array.from(
     new Set((compartilhamentos ?? []).map((c) => c.usuario_convidado_id).filter(Boolean))
   );
 
-  const { data: perfisCompartilhados } = idsPessoasCompartilhadas.length
-    ? await supabase.from("perfis").select("id, nome, foto_url").in("id", idsPessoasCompartilhadas)
+  // Já busca você (se houver algum compartilhamento) junto com as
+  // outras pessoas, numa única consulta — antes isso era uma consulta
+  // à parte só pra pegar a sua própria foto, redundante com essa aqui.
+  const idsPerfisNecessarios = Array.from(
+    new Set([...(idsConvidados.length > 0 && user?.id ? [user.id] : []), ...idsConvidados])
+  );
+
+  const { data: perfisNecessarios } = idsPerfisNecessarios.length
+    ? await supabase.from("perfis").select("id, nome, foto_url").in("id", idsPerfisNecessarios)
     : { data: [] as any[] };
 
-  const mapaPerfis = new Map((perfisCompartilhados ?? []).map((p) => [p.id, p]));
+  const mapaPerfis = new Map((perfisNecessarios ?? []).map((p) => [p.id, p]));
 
   // Resolve as URLs de foto (algumas podem ser chave do R2, que
-  // precisa de link assinado) de uma vez só, fora do loop de render.
-  const mapaUrlFoto = new Map<string, string | null>();
-  for (const p of perfisCompartilhados ?? []) {
-    mapaUrlFoto.set(p.id, await resolverUrlFoto(p.foto_url));
-  }
-
-  const minhaFotoUrl = user?.id ? await resolverUrlFoto((await supabase.from("perfis").select("foto_url").eq("id", user.id).maybeSingle()).data?.foto_url ?? null) : null;
+  // precisa de link assinado) todas ao mesmo tempo, não uma de cada vez.
+  const idsParaResolverFoto = (perfisNecessarios ?? []).map((p) => p.id);
+  const urlsResolvidas = await Promise.all(
+    idsParaResolverFoto.map((id) => resolverUrlFoto(mapaPerfis.get(id)?.foto_url ?? null))
+  );
+  const mapaUrlFoto = new Map(idsParaResolverFoto.map((id, i) => [id, urlsResolvidas[i]]));
 
   function pessoasDaConta(contaId: string, donoId: string) {
-    const idsConvidados = (compartilhamentos ?? [])
+    const idsConvidadosDaConta = (compartilhamentos ?? [])
       .filter((c) => c.item_id === contaId && c.usuario_convidado_id)
       .map((c) => c.usuario_convidado_id as string);
 
-    if (idsConvidados.length === 0) return [];
+    if (idsConvidadosDaConta.length === 0) return [];
 
-    const pessoas = idsConvidados.map((id) => {
+    const pessoas = idsConvidadosDaConta.map((id) => {
       const perfil = mapaPerfis.get(id);
       return { nome: perfil?.nome ?? "Alguém", urlFoto: mapaUrlFoto.get(id) ?? null };
     });
 
     // Inclui você também na pilha de avatares, se a conta for sua
     if (donoId === user?.id) {
-      pessoas.unshift({ nome: "Você", urlFoto: minhaFotoUrl });
+      pessoas.unshift({ nome: "Você", urlFoto: user?.id ? mapaUrlFoto.get(user.id) ?? null : null });
     }
 
     return pessoas;

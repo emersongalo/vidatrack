@@ -9,16 +9,14 @@ export default async function NovaTransacaoPage({
 }) {
   const supabase = createClient();
 
-  const { data: contas } = await supabase
-    .from("financa_contas")
-    .select("id, nome")
-    .eq("arquivado", false)
-    .order("criado_em", { ascending: true });
-
-  const { data: categorias } = await supabase
-    .from("financa_categorias")
-    .select("id, nome, tipo, icone")
-    .order("nome", { ascending: true });
+  const [{ data: contas }, { data: categorias }] = await Promise.all([
+    supabase
+      .from("financa_contas")
+      .select("id, nome")
+      .eq("arquivado", false)
+      .order("criado_em", { ascending: true }),
+    supabase.from("financa_categorias").select("id, nome, tipo, icone").order("nome", { ascending: true }),
+  ]);
 
   if (!contas || contas.length === 0) {
     return (

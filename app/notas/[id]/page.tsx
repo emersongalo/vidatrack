@@ -16,19 +16,22 @@ export default async function NotaPage({
 }) {
   const supabase = createClient();
 
-  const { data: nota } = await supabase
-    .from("notas")
-    .select("id, titulo, conteudo, horario_lembrete, data_lembrete")
-    .eq("id", params.id)
-    .single();
+  // "anexos" usa params.id diretamente (não o id vindo de "nota"),
+  // então as duas buscas não dependem uma da outra — rodam juntas.
+  const [{ data: nota }, { data: anexos }] = await Promise.all([
+    supabase
+      .from("notas")
+      .select("id, titulo, conteudo, horario_lembrete, data_lembrete")
+      .eq("id", params.id)
+      .single(),
+    supabase
+      .from("nota_anexos")
+      .select("id, nome_arquivo, caminho_storage, tipo, tamanho_bytes")
+      .eq("nota_id", params.id)
+      .order("criado_em", { ascending: false }),
+  ]);
 
   if (!nota) notFound();
-
-  const { data: anexos } = await supabase
-    .from("nota_anexos")
-    .select("id, nome_arquivo, caminho_storage, tipo, tamanho_bytes")
-    .eq("nota_id", params.id)
-    .order("criado_em", { ascending: false });
 
   const anexosComUrl = await Promise.all(
     (anexos ?? []).map(async (anexo) => ({

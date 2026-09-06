@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 61: Removida Duplicação de Consultas em Finanças (regressão da Etapa 56)
+# VidaTrack — Etapa 62: Auditoria Completa de Performance (antes de publicar)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,45 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (62) — auditoria sistemática, não mais bug por bug:**
+
+Percorri as telas mais visitadas do app (Painel, Hábitos, Notas,
+Finanças e suas subtelas) procurando o mesmo padrão de problema já
+encontrado antes: buscas ao banco duplicadas ou rodando uma atrás da
+outra quando poderiam ser paralelas.
+
+**O que já estava bom (revisei e confirmei, sem mudar):**
+- Painel principal — enxuto
+- Hábitos "Hoje" — já bem otimizada desde a Etapa 41
+- Notas (lista) — busca única, sem duplicação
+- Perfil — cadeia de dependência real, não dá pra paralelizar mais
+
+**4 problemas reais encontrados e corrigidos:**
+1. **`/financas/contas`** — o maior achado. Tinha uma busca inteira
+   duplicada só pra pegar a sua própria foto (quando ela já vinha
+   dentro de outra busca que já existia), mais um loop de fotos
+   rodando uma pessoa de cada vez em vez de todas juntas. Reescrita
+   seguindo o mesmo padrão já aplicado na tela principal lá na
+   Etapa 39
+2. **`/financas/nova`** (tela de novo lançamento — a mais usada do
+   app, você abre toda vez que lança algo) — 2 buscas independentes
+   rodavam uma depois da outra; agora rodam juntas
+3. **`/notas/[id]`** (abrir uma nota) — a busca dos anexos não
+   dependia da nota em si (usa o mesmo id da URL) — agora roda junto
+4. **Análise financeira** — uma das 3 buscas não dependia de nada
+   anterior e ainda assim era a última da fila; agora roda em
+   paralelo desde o início
+
+**Sendo honesto sobre o limite real:** depois dessa auditoria, o que
+sobra de lentidão é majoritariamente o "cold start" do Vercel (a
+hospedagem "desligando" cada função depois de um tempo sem uso) e a
+verificação de sessão em toda navegação (necessária por segurança).
+Nenhum dos dois tem correção de graça — expliquei isso com mais
+detalhe lá na Etapa 53. O que dava pra melhorar de graça no nosso
+próprio código, acredito que já está feito.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (61) — achei uma regressão real de performance:**
 
@@ -1580,7 +1619,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 58. Lembrete de nota com data clara
 59. Ícones de verdade (Lucide) no lugar dos emojis de interface
 60. Varredura completa de emoji em Finanças
-61. Removida duplicação de consultas em Finanças — **você está aqui**
+61. Removida duplicação de consultas em Finanças
+62. Auditoria completa de performance — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
