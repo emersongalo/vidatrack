@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 60: Varredura Completa de Emoji em Finanças (não só o menu)
+# VidaTrack — Etapa 61: Removida Duplicação de Consultas em Finanças (regressão da Etapa 56)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,33 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (61) — achei uma regressão real de performance:**
+
+Quando adicionei a "lista de contas com saldo" na reformulação
+grande de Finanças (Etapa 56), a função que calcula isso
+(`buscarSaldoPorConta`) fazia **2 buscas próprias ao banco**
+(contas + transações) — totalmente duplicadas com dados que a
+própria página já tinha acabado de buscar segundos antes, na mesma
+carga de tela. Isso empilhou 2 idas-e-voltas extras exatamente na
+tela que você reclamou ser a mais lenta.
+
+**Corrigido:** virou uma função pura — recebe os dados que a página
+já carregou e só calcula em cima deles, sem nenhuma busca nova ao
+banco. Testei o cálculo isoladamente antes de trocar, pra garantir
+que o resultado continua idêntico.
+
+**Sobre Hábitos e Notas:** revisei as duas — `/notas` já é enxuta (uma
+busca só, sem duplicação nenhuma), e `/habitos` já tinha sido
+otimizada lá na Etapa 41. Não achei uma causa concreta parecida
+nelas — o que sobra de lentidão ali é o "cold start" que já
+expliquei (característica da hospedagem gratuita, sem solução
+mágica sem custo).
+
+**Mais uma pasta duplicada por engano** no meu processo de
+empacotamento — removida e confirmada antes de gerar o zip final.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (60) — varredura completa em Finanças, não só o menu:**
 
@@ -1552,7 +1579,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 57. Ordem do hero corrigida (saldo em cima, sozinho)
 58. Lembrete de nota com data clara
 59. Ícones de verdade (Lucide) no lugar dos emojis de interface
-60. Varredura completa de emoji em Finanças — **você está aqui**
+60. Varredura completa de emoji em Finanças
+61. Removida duplicação de consultas em Finanças — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

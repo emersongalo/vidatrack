@@ -13,7 +13,7 @@ import { resolverUrlFoto } from "@/lib/perfil/foto";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
-import { buscarCalendarioGastos, buscarSaldoPorConta, calcularSaldoPrevisto } from "@/lib/financas/consulta";
+import { buscarCalendarioGastos, calcularSaldoPorConta, calcularSaldoPrevisto } from "@/lib/financas/consulta";
 import { CalendarioGastos } from "@/components/CalendarioGastos";
 import { normalizarOrdemBlocos } from "@/lib/financas/blocos";
 
@@ -51,13 +51,11 @@ export default async function FinancasPage({
     { data: perfilOrdem },
     { data: contas },
     { data: todasCategoriasDespesa },
-    contasComSaldo,
     { data: recorrenciasAtivas },
   ] = await Promise.all([
     supabase.from("perfis").select("ordem_blocos_financas").eq("id", user?.id ?? "").maybeSingle(),
-    supabase.from("financa_contas").select("id, nome, saldo_inicial").eq("arquivado", false),
+    supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial").eq("arquivado", false),
     supabase.from("financa_categorias").select("id, nome, tipo, meta_mensal").eq("tipo", "despesa"),
-    buscarSaldoPorConta(supabase),
     ehMesAtual
       ? supabase.from("financa_recorrencias").select("tipo, valor, dia_mes, data_fim").eq("ativo", true)
       : Promise.resolve({ data: [] as any[] }),
@@ -94,6 +92,11 @@ export default async function FinancasPage({
   ]);
 
   const transacoes = todasTransacoes ?? [];
+
+  // Calculado em cima dos dados já carregados acima — nenhuma busca
+  // nova ao banco pra isso (antes, essa lista fazia 2 buscas próprias
+  // e redundantes; ver Etapa 61).
+  const contasComSaldo = calcularSaldoPorConta(contas ?? [], transacoes);
 
   // Grupo 3: junta todo mundo cuja foto/nome precisamos exibir (quem
   // compartilha uma conta + quem lançou cada transação) numa única

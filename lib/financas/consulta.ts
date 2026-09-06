@@ -12,31 +12,24 @@ export type ContaComSaldo = {
 /**
  * Saldo de CADA conta separadamente (não só o total geral) — usado na
  * lista de contas com saldo na tela principal de Finanças.
+ *
+ * Antes, essa função buscava contas e transações sozinha (2 idas ao
+ * banco A MAIS, totalmente duplicadas com o que a própria página já
+ * tinha acabado de buscar). Agora é uma função pura: recebe os dados
+ * que a página já carregou e só calcula em cima deles — zero busca
+ * nova ao banco.
  */
-export async function buscarSaldoPorConta(
-  supabase: ReturnType<typeof createClient>
-): Promise<ContaComSaldo[]> {
-  const { data: contas } = await supabase
-    .from("financa_contas")
-    .select("id, nome, banco, tipo, saldo_inicial")
-    .eq("arquivado", false)
-    .order("criado_em", { ascending: true });
-
-  const idsContas = (contas ?? []).map((c) => c.id);
-  if (idsContas.length === 0) return [];
-
-  const { data: transacoes } = await supabase
-    .from("financa_transacoes")
-    .select("conta_id, tipo, valor")
-    .in("conta_id", idsContas);
-
+export function calcularSaldoPorConta(
+  contas: { id: string; nome: string; banco: string | null; tipo: string; saldo_inicial: number | string }[],
+  transacoes: { conta_id: string; tipo: string; valor: number | string }[]
+): ContaComSaldo[] {
   const somaPorConta = new Map<string, number>();
-  for (const t of transacoes ?? []) {
+  for (const t of transacoes) {
     const atual = somaPorConta.get(t.conta_id) ?? 0;
     somaPorConta.set(t.conta_id, atual + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)));
   }
 
-  return (contas ?? []).map((c) => ({
+  return contas.map((c) => ({
     id: c.id,
     nome: c.nome,
     banco: c.banco,
