@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { PackageCheck, PieChart, TrendingUp, TrendingDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
@@ -241,7 +242,13 @@ export default async function FinancasPage({
                         t.financa_categorias?.cor ?? "financa"
                       )}`}
                     >
-                      {t.financa_categorias?.icone ?? (t.tipo === "receita" ? "💰" : "💸")}
+                      {t.financa_categorias?.icone ?? (
+                        t.tipo === "receita" ? (
+                          <TrendingUp size={16} strokeWidth={2} />
+                        ) : (
+                          <TrendingDown size={16} strokeWidth={2} />
+                        )
+                      )}
                     </span>
                     {mapaNomes.has(t.dono_id) && (
                       <span
@@ -295,8 +302,9 @@ export default async function FinancasPage({
       <h1 className="text-2xl font-display font-semibold mt-2 mb-6">Finanças</h1>
 
       {searchParams.offline && (
-        <p className="mb-4 text-sm text-financa bg-financa-soft border border-financa/30 rounded-lg px-3 py-2">
-          📦 Lançamento guardado — vai ser criado automaticamente assim que a internet voltar.
+        <p className="mb-4 text-sm text-financa bg-financa-soft border border-financa/30 rounded-lg px-3 py-2 flex items-center gap-2">
+          <PackageCheck size={16} strokeWidth={2} className="shrink-0" />
+          Lançamento guardado — vai ser criado automaticamente assim que a internet voltar.
         </p>
       )}
 
@@ -352,10 +360,13 @@ export default async function FinancasPage({
           {/* Link de destaque pra análise avançada */}
           <Link
             href="/financas/analise"
-            className="flex items-center justify-between bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-6 hover:border-financa transition"
+            className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-6 hover:border-financa transition"
           >
-            <div>
-              <p className="font-medium">📊 Para onde vai seu dinheiro</p>
+            <span className="w-9 h-9 rounded-lg bg-financa/15 flex items-center justify-center text-financa shrink-0">
+              <PieChart size={18} strokeWidth={2} />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium">Para onde vai seu dinheiro</p>
               <p className="text-xs text-ink-400 mt-0.5">Mapa de gastos, comparação com o mês passado e dicas automáticas</p>
             </div>
             <span className="text-ink-400 text-sm shrink-0">Ver →</span>

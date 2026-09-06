@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   calcularPeriodo,
@@ -186,7 +187,13 @@ export default async function ExtratoPage({
                       t.financa_categorias?.cor ?? "financa"
                     )}`}
                   >
-                    {t.financa_categorias?.icone ?? (t.tipo === "receita" ? "💰" : "💸")}
+                    {t.financa_categorias?.icone ?? (
+                      t.tipo === "receita" ? (
+                        <TrendingUp size={16} strokeWidth={2} />
+                      ) : (
+                        <TrendingDown size={16} strokeWidth={2} />
+                      )
+                    )}
                   </span>
                   {mapaNomes.has(t.dono_id) && (
                     <span

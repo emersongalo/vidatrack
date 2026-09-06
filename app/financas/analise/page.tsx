@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Lightbulb } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
@@ -61,7 +62,9 @@ export default async function AnaliseFinanceiraPage({
                 key={i}
                 className="flex items-start gap-3 bg-financa-soft border border-financa/30 rounded-xl2 p-4"
               >
-                <span className="text-lg shrink-0">💡</span>
+                <span className="text-financa shrink-0">
+                  <Lightbulb size={18} strokeWidth={2} />
+                </span>
                 <p className="text-sm text-ink-100">{dica}</p>
               </div>
             ))}

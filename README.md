@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 59: Ícones de Verdade (Lucide) no Lugar dos Emojis de Interface
+# VidaTrack — Etapa 60: Varredura Completa de Emoji em Finanças (não só o menu)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,34 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (60) — varredura completa em Finanças, não só o menu:**
+
+Da última vez só troquei a barra de abas. Dessa vez varri **todo o
+código de `app/financas`** (não só onde eu lembrava, usei um script
+de verdade pra achar qualquer emoji restante) e encontrei mais 5
+pontos:
+
+- Ícone de lançamento sem categoria (💰/💸 → setas de tendência, na
+  cor certa de receita/despesa)
+- Aviso de "lançamento guardado offline" (📦 → ícone de pacote)
+- Link "Para onde vai seu dinheiro" (📊 → ícone de gráfico, agora
+  num selo colorido, igual o resto do app)
+- Mesma correção no Extrato
+- Ícone de dica automática na tela de Análise (💡 → lâmpada)
+
+**Bônus:** achei um componente inteiro (`IndicadorSaldo.tsx`) que não
+era mais usado em lugar nenhum desde a Etapa 39 — tinha ficado
+esquecido lá, com emoji e tudo. Removi em vez de gastar tempo
+modernizando ícone que nunca aparece pra ninguém.
+
+**Testei antes de entregar:** confirmei que os 5 ícones novos
+existem de verdade na biblioteca, e rodei a varredura de novo depois
+das correções — zero emoji restante em `app/financas`.
+
+**O que continua emoji, de propósito:** os ícones que você escolhe
+pra cada categoria financeira (🍔 Alimentação, 🏠 Moradia...) — isso é
+personalização sua, não "interface do sistema".
 
 **Novo nesta etapa (59) — ícones modernos, no lugar dos emojis "de
 interface":**
@@ -1523,7 +1551,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 56. Finanças reformulada (saldo previsto, navegação por mês, contas, abas)
 57. Ordem do hero corrigida (saldo em cima, sozinho)
 58. Lembrete de nota com data clara
-59. Ícones de verdade (Lucide) no lugar dos emojis de interface — **você está aqui**
+59. Ícones de verdade (Lucide) no lugar dos emojis de interface
+60. Varredura completa de emoji em Finanças — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
