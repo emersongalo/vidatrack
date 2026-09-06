@@ -18,7 +18,7 @@ export function BarraNavegacaoFinancas() {
       <Link
         href="/financas/nova"
         aria-label="Novo lançamento"
-        className="fixed bottom-20 right-5 z-20 w-14 h-14 rounded-full bg-financa text-base-900 flex items-center justify-center text-2xl font-semibold shadow-lg shadow-financa/30 hover:opacity-90 active:scale-95 transition"
+        className="fixed bottom-24 right-5 z-20 w-14 h-14 rounded-full bg-financa text-base-900 flex items-center justify-center text-2xl font-semibold shadow-lg shadow-financa/30 hover:opacity-90 active:scale-95 transition"
       >
         +
       </Link>

@@ -61,25 +61,15 @@ export function HeroFinancas({
         </Link>
       </div>
 
-      {/* Saldo atual + previsto */}
-      <div className="flex items-end justify-between gap-3 mb-5">
-        <div className="min-w-0">
-          <p className="text-xs text-ink-400 mb-1">Saldo em contas</p>
-          <p className="text-3xl font-display font-semibold font-mono truncate">
-            <ValorMonetario valor={saldo} />
-          </p>
-        </div>
-        {saldoPrevisto !== null && (
-          <div className="text-right shrink-0">
-            <p className="text-xs text-ink-400 mb-1">Previsto p/ fim do mês</p>
-            <p className="text-sm font-mono font-medium text-ink-100">
-              <ValorMonetario valor={saldoPrevisto} />
-            </p>
-          </div>
-        )}
+      {/* Saldo atual — sozinho, com espaço de sobra pro número */}
+      <div className="mb-5">
+        <p className="text-xs text-ink-400 mb-1">Saldo em contas</p>
+        <p className="text-3xl font-display font-semibold font-mono">
+          <ValorMonetario valor={saldo} />
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <Link
           href="/financas/extrato?tipo=receita&preset=este_mes"
           className="flex items-center gap-2.5 min-w-0"
@@ -114,6 +104,15 @@ export function HeroFinancas({
           </div>
         </Link>
       </div>
+
+      {saldoPrevisto !== null && (
+        <div className="flex items-center justify-between pt-3 border-t border-base-600">
+          <p className="text-xs text-ink-400">Previsto p/ fim do mês</p>
+          <p className="text-sm font-mono font-medium text-ink-100">
+            <ValorMonetario valor={saldoPrevisto} />
+          </p>
+        </div>
+      )}
     </div>
   );
 }

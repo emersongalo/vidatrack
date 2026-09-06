@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 56: Finanças Reformulada (saldo previsto, navegação por mês, contas com saldo, barra de abas)
+# VidaTrack — Etapa 57: Ordem do Hero Corrigida (saldo em cima, sozinho)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,28 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (57) — reorganizei a ordem do topo de Finanças:**
+
+- **"Saldo em contas"** agora fica sozinho, numa linha inteira pra ele
+  — antes dividia espaço com "Previsto", e o número grande ficava
+  cortado com "..."
+- **"Previsto p/ fim do mês"** desceu pra **depois** de Receitas/
+  Despesas do mês, como você pediu
+- Nova ordem: avatares/olho → navegação de mês → Saldo em contas
+  (grande, sozinho) → Receitas/Despesas do mês → Previsto pro fim do
+  mês (linha fina, embaixo de tudo)
+
+**Bônus que reparei no seu print e já corrigi:** o botão flutuante
+"+" estava exatamente em cima dos botões "Editar"/"X" do último
+lançamento visível na tela. Dei mais espaço entre ele e a barra de
+abas.
+
+**Também achei outra pasta duplicada por engano** no meu processo de
+empacotamento (mesmo tipo de coisa que já pegamos antes nesta sessão)
+— removida antes de te entregar, confirmei que o zip está limpo.
+
+Não precisa rodar SQL — é ajuste visual só.
 
 **Novo nesta etapa (56) — reformulação grande de Finanças, inspirada na
 referência que você mandou:**
@@ -1443,7 +1465,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 53. Carregamento preguiçoso do SDK da AWS
 54. Notificações nativas sem Telegram + lembrete de conta a pagar
 55. Layout Receitas/Despesas corrigido
-56. Finanças reformulada (saldo previsto, navegação por mês, contas, abas) — **você está aqui**
+56. Finanças reformulada (saldo previsto, navegação por mês, contas, abas)
+57. Ordem do hero corrigida (saldo em cima, sozinho) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
