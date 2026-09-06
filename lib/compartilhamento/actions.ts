@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 
-export type TipoItem = "habito" | "nota" | "financa" | "tarefa";
+export type TipoItem = "habito" | "financa" | "tarefa";
 
 export async function convidarCompartilhamento(
   tipoItem: TipoItem,

@@ -40,11 +40,6 @@ export function calcularPeriodo(preset: PresetPeriodo): { inicio: string; fim: s
   }
 }
 
-export const ICONES_CATEGORIA_DESPESA = [
-  "🍔", "🏠", "🚗", "💊", "🎬", "📚", "📱", "🛍️", "✈️", "🐾", "🎁", "💡",
-];
-export const ICONES_CATEGORIA_RECEITA = ["💼", "💰", "📈", "🏦", "🎯", "✨"];
-
 export function nomeDoMesAtual(): string {
   return new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 }

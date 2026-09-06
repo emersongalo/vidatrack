@@ -2,9 +2,6 @@ export type AcaoPendente =
   | { tipo: "checkin_habito"; habitoId: string; data: string }
   | { tipo: "ajuste_habito"; habitoId: string; data: string; delta: number }
   | { tipo: "conclusao_tarefa"; tarefaId: string; data: string }
-  | { id: string; tipo: "criar_nota"; titulo: string; conteudo: string; notaIdTemporario: string }
-  | { id: string; tipo: "editar_nota"; notaId: string; titulo: string; conteudo: string }
-  | { id: string; tipo: "excluir_nota"; notaId: string }
   | {
       id: string;
       tipo: "criar_transacao";

@@ -17,7 +17,6 @@ export async function GET() {
     { data: habitos },
     { data: tarefas },
     { data: categoriasProdutividade },
-    { data: notas },
     { data: contas },
     { data: categoriasFinancas },
   ] = await Promise.all([
@@ -30,11 +29,6 @@ export async function GET() {
       .select("id, titulo, icone, repetir, dias_semana, data, concluida, ordem")
       .eq("arquivada", false),
     supabase.from("categorias_produtividade").select("id, nome, cor"),
-    supabase
-      .from("notas")
-      .select("id, titulo, conteudo, fixada, atualizado_em")
-      .eq("arquivado", false)
-      .order("atualizado_em", { ascending: false }),
     supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial").eq("arquivado", false),
     supabase.from("financa_categorias").select("id, nome, tipo, icone, cor"),
   ]);
@@ -57,7 +51,6 @@ export async function GET() {
     habitos: habitos ?? [],
     tarefas: tarefas ?? [],
     categoriasProdutividade: categoriasProdutividade ?? [],
-    notas: notas ?? [],
     financas: {
       contas: contas ?? [],
       categorias: categoriasFinancas ?? [],

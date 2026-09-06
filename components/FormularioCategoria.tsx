@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { criarCategoria } from "@/app/financas/actions";
-import { ICONES_CATEGORIA_DESPESA, ICONES_CATEGORIA_RECEITA } from "@/lib/financas/formatacao";
+import { ICONES_CATEGORIA } from "@/lib/financas/icones-categoria";
 import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
 
 export function FormularioCategoria({
@@ -28,10 +28,8 @@ export function FormularioCategoria({
   };
 }) {
   const [tipo, setTipo] = useState<"despesa" | "receita">(valoresIniciais?.tipo ?? "despesa");
-  const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_CATEGORIA_DESPESA[0]);
+  const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_CATEGORIA[0].nome);
   const [cor, setCor] = useState(valoresIniciais?.cor ?? "financa");
-
-  const opcoesIcone = tipo === "despesa" ? ICONES_CATEGORIA_DESPESA : ICONES_CATEGORIA_RECEITA;
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
@@ -67,10 +65,7 @@ export function FormularioCategoria({
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => {
-                setTipo("despesa");
-                setIcone(ICONES_CATEGORIA_DESPESA[0]);
-              }}
+              onClick={() => setTipo("despesa")}
               className={`flex-1 rounded-lg py-2 text-sm border transition ${
                 tipo === "despesa"
                   ? "bg-red-400/15 border-red-400 text-red-400"
@@ -81,10 +76,7 @@ export function FormularioCategoria({
             </button>
             <button
               type="button"
-              onClick={() => {
-                setTipo("receita");
-                setIcone(ICONES_CATEGORIA_RECEITA[0]);
-              }}
+              onClick={() => setTipo("receita")}
               className={`flex-1 rounded-lg py-2 text-sm border transition ${
                 tipo === "receita"
                   ? "bg-habito-soft border-habito text-habito"
@@ -99,17 +91,18 @@ export function FormularioCategoria({
 
         <div>
           <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-          <div className="grid grid-cols-6 gap-2">
-            {opcoesIcone.map((opcao) => (
+          <div className="grid grid-cols-6 gap-2 max-h-56 overflow-y-auto pr-1">
+            {ICONES_CATEGORIA.map(({ nome, Icone }) => (
               <button
                 type="button"
-                key={opcao}
-                onClick={() => setIcone(opcao)}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg border transition ${
-                  icone === opcao ? "border-ink-100 bg-base-700" : "border-base-600 hover:border-ink-400"
+                key={nome}
+                onClick={() => setIcone(nome)}
+                aria-label={nome}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center border transition ${
+                  icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
                 }`}
               >
-                {opcao}
+                <Icone size={18} strokeWidth={2} />
               </button>
             ))}
           </div>

@@ -1,7 +1,6 @@
 import { lerFila, salvarFilaCompleta, type AcaoPendente } from "@/lib/offline/fila";
 import { alternarCheckin, ajustarQuantidadeHabito, criarHabitoSilencioso } from "@/app/habitos/actions";
 import { alternarConclusaoTarefa } from "@/app/habitos/tarefas/actions";
-import { criarNotaSilenciosa, atualizarNotaSilenciosa } from "@/app/notas/actions";
 import { criarTransacaoSilenciosa } from "@/app/financas/actions";
 
 async function executarAcao(acao: AcaoPendente): Promise<void> {
@@ -14,22 +13,6 @@ async function executarAcao(acao: AcaoPendente): Promise<void> {
       return;
     case "conclusao_tarefa":
       await alternarConclusaoTarefa(acao.tarefaId, acao.data);
-      return;
-    case "criar_nota": {
-      const resultado = await criarNotaSilenciosa(acao.titulo, acao.conteudo);
-      if ("erro" in resultado) throw new Error(resultado.erro);
-      return;
-    }
-    case "editar_nota": {
-      const resultado = await atualizarNotaSilenciosa(acao.notaId, acao.titulo, acao.conteudo);
-      if (!resultado.sucesso) throw new Error("Falha ao sincronizar edição de nota");
-      return;
-    }
-    case "excluir_nota":
-      // Exclusão de verdade continua exigindo confirmação explícita
-      // (Etapa 15) — no offline, só marcamos a intenção; a pessoa
-      // confirma a exclusão quando a conexão voltar. Por segurança,
-      // isso não é auto-executado aqui de propósito.
       return;
     case "criar_transacao": {
       const resultado = await criarTransacaoSilenciosa(acao.dados);

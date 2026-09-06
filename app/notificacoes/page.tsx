@@ -9,7 +9,7 @@ export default function NotificacoesPage() {
       <h1 className="text-2xl font-display font-semibold mt-4 mb-2">Notificações</h1>
       <p className="text-ink-400 text-sm mb-6">
         Receba um aviso, com som, no horário que você definiu pra cada
-        hábito, tarefa ou nota — e também quando tiver uma conta a pagar
+        hábito ou tarefa — e também quando tiver uma conta a pagar
         vencendo hoje ou amanhã.
       </p>
 

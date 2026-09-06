@@ -5,7 +5,6 @@ export type SnapshotOffline = {
   habitos: any[];
   tarefas: any[];
   categoriasProdutividade: any[];
-  notas: any[];
   financas: {
     contas: any[];
     categorias: any[];

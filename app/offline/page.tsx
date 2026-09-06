@@ -5,16 +5,14 @@ import { lerSnapshotOffline, type SnapshotOffline } from "@/lib/offline/snapshot
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { adicionarNaFila } from "@/lib/offline/fila";
 import { formatarMoeda } from "@/lib/financas/formatacao";
-import { BotaoNovaNotaOffline } from "@/components/BotaoNovaNotaOffline";
 import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
 
-type Aba = "hoje" | "notas" | "financas";
+type Aba = "hoje" | "financas";
 
 export default function OfflinePage() {
   const [snapshot, setSnapshot] = useState<SnapshotOffline | null | undefined>(undefined);
   const [aba, setAba] = useState<Aba>("hoje");
   const [feitos, setFeitos] = useState<Set<string>>(new Set());
-  const [notaAberta, setNotaAberta] = useState<any | null>(null);
 
   useEffect(() => {
     setSnapshot(lerSnapshotOffline());
@@ -92,7 +90,6 @@ export default function OfflinePage() {
       <div className="flex gap-2 mb-5">
         {[
           { id: "hoje" as const, label: "Hoje" },
-          { id: "notas" as const, label: "Notas" },
           { id: "financas" as const, label: "Finanças" },
         ].map((t) => (
           <button
@@ -143,27 +140,6 @@ export default function OfflinePage() {
         </div>
       )}
 
-      {aba === "notas" && (
-        <div>
-          <div className="flex justify-end mb-3">
-            <BotaoNovaNotaOffline />
-          </div>
-          <ul className="space-y-2">
-            {snapshot.notas.map((n) => (
-              <li
-                key={n.id}
-                onClick={() => setNotaAberta(n)}
-                className="bg-base-800 border border-base-600 rounded-lg p-3 cursor-pointer"
-              >
-                <p className="text-sm font-medium truncate">{n.titulo || "Sem título"}</p>
-                <p className="text-xs text-ink-400 truncate mt-0.5">{n.conteudo || "Sem conteúdo"}</p>
-              </li>
-            ))}
-            {snapshot.notas.length === 0 && <p className="text-sm text-ink-400">Nenhuma nota guardada.</p>}
-          </ul>
-        </div>
-      )}
-
       {aba === "financas" && (
         <div>
           <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-4">
@@ -196,55 +172,7 @@ export default function OfflinePage() {
           </ul>
         </div>
       )}
-
-      {notaAberta && (
-        <ModalNotaOffline nota={notaAberta} onFechar={() => setNotaAberta(null)} />
-      )}
     </main>
-  );
-}
-
-function ModalNotaOffline({ nota, onFechar }: { nota: any; onFechar: () => void }) {
-  const [titulo, setTitulo] = useState(nota.titulo ?? "");
-  const [conteudo, setConteudo] = useState(nota.conteudo ?? "");
-  const [salvo, setSalvo] = useState(false);
-
-  function salvar() {
-    adicionarNaFila({ id: `editar_nota_${nota.id}`, tipo: "editar_nota", notaId: nota.id, titulo, conteudo });
-    setSalvo(true);
-    setTimeout(onFechar, 1000);
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60" onClick={onFechar}>
-      <div className="bg-base-800 border border-base-600 rounded-xl2 p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-        {salvo ? (
-          <p className="text-sm text-habito">📦 Guardado — sincroniza quando a internet voltar.</p>
-        ) : (
-          <>
-            <input
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm mb-2 outline-none focus:border-ink-100 transition"
-            />
-            <textarea
-              value={conteudo}
-              onChange={(e) => setConteudo(e.target.value)}
-              rows={8}
-              className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm mb-3 outline-none focus:border-ink-100 transition resize-none"
-            />
-            <div className="flex gap-2">
-              <button onClick={onFechar} className="flex-1 border border-base-600 rounded-lg py-2 text-sm hover:bg-base-700 transition">
-                Cancelar
-              </button>
-              <button onClick={salvar} className="flex-1 bg-ink-100 text-base-900 font-medium rounded-lg py-2 text-sm hover:opacity-90 transition">
-                Guardar
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
   );
 }
 

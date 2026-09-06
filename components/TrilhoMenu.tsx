@@ -13,14 +13,6 @@ const ESTACOES = [
     texto: "Constância visível, dia após dia.",
   },
   {
-    href: "/notas",
-    cor: "nota",
-    corPonto: "bg-nota",
-    corAnel: "ring-nota/30",
-    titulo: "Notas",
-    texto: "Ideias organizadas, do jeito que fizer sentido.",
-  },
-  {
     href: "/financas",
     cor: "financa",
     corPonto: "bg-financa",

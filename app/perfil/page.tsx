@@ -74,7 +74,7 @@ export default async function PerfilPage({
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
           <p className="text-xs text-ink-400 mt-1.5">
-            Esse é o nome que aparece pra quem você compartilha hábitos, notas
+            Esse é o nome que aparece pra quem você compartilha hábitos
             ou contas.
           </p>
         </div>

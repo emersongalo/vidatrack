@@ -20,7 +20,7 @@ export default function LoginPage({
             </p>
           </div>
           <p className="text-ink-400 mt-1 text-sm">
-            hábitos · notas · finanças, num único trilho
+            hábitos · finanças, num único trilho
           </p>
         </div>
 
@@ -31,11 +31,6 @@ export default function LoginPage({
               cor="habito"
               titulo="Hábitos"
               texto="Constância visível, dia após dia."
-            />
-            <Estacao
-              cor="nota"
-              titulo="Notas"
-              texto="Ideias organizadas, do jeito que fizer sentido."
             />
             <Estacao
               cor="financa"

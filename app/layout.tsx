@@ -27,9 +27,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VidaTrack — Hábitos, Notas e Finanças",
+  title: "VidaTrack — Hábitos e Finanças",
   description:
-    "Um único lugar para acompanhar seus hábitos, organizar suas notas e controlar suas finanças.",
+    "Um único lugar para acompanhar seus hábitos e controlar suas finanças.",
   manifest: "/manifest.json",
   icons: {
     icon: [

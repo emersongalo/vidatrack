@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { PackageCheck, PieChart, TrendingUp, TrendingDown } from "lucide-react";
+import { IconeCategoria } from "@/components/IconeCategoria";
 import { createClient } from "@/lib/supabase/server";
 import { primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
@@ -245,12 +246,12 @@ export default async function FinancasPage({
                         t.financa_categorias?.cor ?? "financa"
                       )}`}
                     >
-                      {t.financa_categorias?.icone ?? (
-                        t.tipo === "receita" ? (
-                          <TrendingUp size={16} strokeWidth={2} />
-                        ) : (
-                          <TrendingDown size={16} strokeWidth={2} />
-                        )
+                      {t.financa_categorias?.icone ? (
+                        <IconeCategoria icone={t.financa_categorias.icone} />
+                      ) : t.tipo === "receita" ? (
+                        <TrendingUp size={16} strokeWidth={2} />
+                      ) : (
+                        <TrendingDown size={16} strokeWidth={2} />
                       )}
                     </span>
                     {mapaNomes.has(t.dono_id) && (

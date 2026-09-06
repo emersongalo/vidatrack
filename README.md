@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 62: Auditoria Completa de Performance (antes de publicar)
+# VidaTrack — Etapa 64: Módulo de Notas Removido (agora só Hábitos + Finanças)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,61 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (64) — Notas removida de vez, o app agora é só
+Hábitos + Finanças:**
+
+Removido por completo (dados continuam no banco, sem uso, sem
+risco nenhum de perda):
+- Toda a pasta `app/notas/` e os componentes exclusivos dela
+  (editor, botão de nota offline, lista de anexos, ações da lixeira)
+- Estação de Notas no painel principal e no card da tela de login
+- Aba de Notas no modo offline (`/offline`) — ficou só Hoje e
+  Finanças
+- Seção de lembrete de nota na rota de notificações automáticas
+- Busca de notas no "baixar tudo" offline
+- Textos em Notificações, Perfil, Privacidade e no título do app que
+  mencionavam Notas
+
+**Bug real que peguei antes de virar quebra de build:** um arquivo
+da fila offline ainda importava de dentro da pasta de notas que eu
+tinha acabado de apagar — corrigido antes de empacotar.
+
+**Descoberta importante no meio do caminho:** "nota" também é o
+nome de uma **cor do tema** usada em Tarefas, históricos e outros
+componentes, sem relação nenhuma com o módulo — tive cuidado de
+**não mexer** nesses casos (são dezenas de arquivos que usam essa
+cor, intactos).
+
+**Testei antes de entregar:** rodei a varredura completa de imports
+depois de tudo — zero referência quebrada, zero import apontando pra
+algo que não existe mais.
+
+Não precisa rodar SQL — os dados de notas continuam no banco,
+intactos, só sem nenhuma tela usando eles.
+
+**Novo nesta etapa (63) — ícones de categoria, no mesmo estilo dos menus:**
+
+- **73 ícones** pra escolher (antes eram só 12 de despesa + 6 de
+  receita) — qualquer ícone serve pra qualquer tipo agora, sem
+  separação forçada
+- Usados ao criar/editar categoria, na lista de categorias, nos
+  lançamentos da tela principal e no extrato
+
+**Limitação real do HTML que encontrei:** o menu suspenso de escolher
+categoria (`<select>`) não consegue mostrar ícones de verdade — é uma
+limitação do próprio navegador, não dá pra contornar sem trocar o
+componente inteiro por um customizado. Optei por deixar esse menu só
+com o nome (mais limpo que mostrar texto tipo "Utensils Alimentação")
+— o ícone de verdade aparece em todo o resto da tela.
+
+**Compatibilidade com categorias antigas:** categorias criadas antes
+desta etapa continuam com o emoji de sempre — criei um componente
+que reconhece automaticamente se é um ícone novo ou um emoji antigo,
+e mostra do jeito certo. Não precisa editar nada nas categorias já
+existentes, a não ser que queira trocar o ícone delas também.
+
+Não precisa rodar SQL — é código só.
 
 **Novo nesta etapa (62) — auditoria sistemática, não mais bug por bug:**
 
@@ -1620,7 +1675,9 @@ versão Android via Capacitor está descrita na seção específica acima.
 59. Ícones de verdade (Lucide) no lugar dos emojis de interface
 60. Varredura completa de emoji em Finanças
 61. Removida duplicação de consultas em Finanças
-62. Auditoria completa de performance — **você está aqui**
+62. Auditoria completa de performance
+63. Ícones de categoria modernizados (73 opções)
+64. Módulo de Notas removido — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

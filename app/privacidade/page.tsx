@@ -18,7 +18,7 @@ export default function PrivacidadePage() {
             Outras pessoas não veem seus dados
           </h2>
           <p className="text-sm text-ink-100 leading-relaxed">
-            Todo hábito, nota e lançamento financeiro que você cria fica protegido por uma
+            Todo hábito e lançamento financeiro que você cria fica protegido por uma
             regra técnica no banco de dados chamada <em>Row Level Security</em> — na prática,
             o próprio banco recusa mostrar seus dados pra qualquer conta que não seja a sua,
             mesmo que alguém tente. A única exceção é quando <strong>você mesmo</strong> convida
@@ -42,8 +42,8 @@ export default function PrivacidadePage() {
             <li className="flex gap-2">
               <span className="text-financa shrink-0">•</span>
               <span>
-                <strong>Nunca</strong> abrimos ou consultamos dados financeiros, hábitos ou
-                notas de um usuário específico por curiosidade, teste ou qualquer motivo que
+                <strong>Nunca</strong> abrimos ou consultamos dados financeiros ou hábitos
+                de um usuário específico por curiosidade, teste ou qualquer motivo que
                 não seja resolver um problema técnico que você mesmo reportou.
               </span>
             </li>

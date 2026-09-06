@@ -29,7 +29,7 @@ export default function ExcluirContaPage({
         <p className="text-sm text-ink-400">Ao excluir sua conta, apagamos para sempre:</p>
         <ul className="text-sm text-ink-400 list-disc list-inside space-y-0.5">
           <li>Todos os seus hábitos, tarefas e o histórico de check-ins</li>
-          <li>Todas as suas notas e anexos</li>
+          <li>Todos os seus arquivos anexados</li>
           <li>Todas as suas contas, categorias e lançamentos financeiros</li>
           <li>Compartilhamentos (seus e os que você aceitou de outras pessoas)</li>
           <li>Seu perfil, foto, e as notificações que você ativou</li>

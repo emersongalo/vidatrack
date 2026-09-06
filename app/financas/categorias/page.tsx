@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { removerCategoria } from "../actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
+import { IconeCategoria } from "@/components/IconeCategoria";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 
 export default async function CategoriasPage({
@@ -54,7 +55,7 @@ export default async function CategoriasPage({
                 className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5"
               >
                 <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(cat.cor)}`}>
-                  {cat.icone}
+                  <IconeCategoria icone={cat.icone} />
                 </span>
                 <span className="flex-1 text-sm truncate">{cat.nome}</span>
                 {cat.meta_mensal && (
@@ -85,7 +86,7 @@ export default async function CategoriasPage({
                 className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5"
               >
                 <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(cat.cor)}`}>
-                  {cat.icone}
+                  <IconeCategoria icone={cat.icone} />
                 </span>
                 <span className="flex-1 text-sm truncate">{cat.nome}</span>
                 <Link

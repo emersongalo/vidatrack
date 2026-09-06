@@ -4,7 +4,8 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { criarTransacao, criarCategoriaRapida } from "@/app/financas/actions";
-import { ICONES_CATEGORIA_DESPESA, ICONES_CATEGORIA_RECEITA } from "@/lib/financas/formatacao";
+import { ICONES_CATEGORIA } from "@/lib/financas/icones-categoria";
+import { IconeCategoria } from "@/components/IconeCategoria";
 import { adicionarNaFila } from "@/lib/offline/fila";
 
 type Conta = { id: string; nome: string };
@@ -45,7 +46,7 @@ export function FormularioTransacao({
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(valoresIniciais?.categoriaId ?? "");
   const [mostrarNovaCategoria, setMostrarNovaCategoria] = useState(false);
   const [nomeNovaCategoria, setNomeNovaCategoria] = useState("");
-  const [iconeNovaCategoria, setIconeNovaCategoria] = useState(ICONES_CATEGORIA_DESPESA[0]);
+  const [iconeNovaCategoria, setIconeNovaCategoria] = useState(ICONES_CATEGORIA[0].nome);
   const [erroCategoria, setErroCategoria] = useState("");
   const [criandoCategoria, iniciarCriacaoCategoria] = useTransition();
 
@@ -55,7 +56,7 @@ export function FormularioTransacao({
   );
 
   function abrirNovaCategoria() {
-    setIconeNovaCategoria(tipo === "despesa" ? ICONES_CATEGORIA_DESPESA[0] : ICONES_CATEGORIA_RECEITA[0]);
+    setIconeNovaCategoria(ICONES_CATEGORIA[0].nome);
     setNomeNovaCategoria("");
     setErroCategoria("");
     setMostrarNovaCategoria(true);
@@ -214,7 +215,6 @@ export function FormularioTransacao({
             <option value="">Sem categoria</option>
             {categoriasFiltradas.map((cat) => (
               <option key={cat.id} value={cat.id}>
-                {cat.icone ? `${cat.icone} ` : ""}
                 {cat.nome}
               </option>
             ))}
@@ -230,17 +230,18 @@ export function FormularioTransacao({
                 autoFocus
                 className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
               />
-              <div className="grid grid-cols-8 gap-1.5">
-                {(tipo === "despesa" ? ICONES_CATEGORIA_DESPESA : ICONES_CATEGORIA_RECEITA).map((ic) => (
+              <div className="grid grid-cols-8 gap-1.5 max-h-40 overflow-y-auto">
+                {ICONES_CATEGORIA.map(({ nome, Icone }) => (
                   <button
                     type="button"
-                    key={ic}
-                    onClick={() => setIconeNovaCategoria(ic)}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-base border transition ${
-                      iconeNovaCategoria === ic ? "border-ink-100 bg-base-700" : "border-base-600"
+                    key={nome}
+                    onClick={() => setIconeNovaCategoria(nome)}
+                    aria-label={nome}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center border transition ${
+                      iconeNovaCategoria === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400"
                     }`}
                   >
-                    {ic}
+                    <Icone size={16} strokeWidth={2} />
                   </button>
                 ))}
               </div>

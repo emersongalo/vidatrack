@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
   const supabase = criarClienteAdmin(
     "cron_lembretes",
-    "Verificação periódica de lembretes de hábitos/tarefas/notas e de contas a pagar (hoje/amanhã)"
+    "Verificação periódica de lembretes de hábitos/tarefas e de contas a pagar (hoje/amanhã)"
   );
   const horaAtual = horaAtualNoFuso();
   const cincoMinAntes = horaMinutosAtrasNoFuso(5);
@@ -85,32 +85,6 @@ export async function GET(request: Request) {
     );
   }
 
-  // --- Notas com lembrete ---
-  const { data: notas } = await supabase
-    .from("notas")
-    .select("id, titulo, dono_id, horario_lembrete, data_lembrete")
-    .eq("arquivado", false)
-    .not("horario_lembrete", "is", null);
-
-  for (const n of notas ?? []) {
-    const horario = (n.horario_lembrete as string).slice(0, 5);
-    if (!(horario >= cincoMinAntes && horario <= horaAtual)) continue;
-
-    // Sem data marcada = dispara todo dia (como sempre foi). Com data
-    // marcada = dispara só naquele dia específico, uma vez.
-    if (n.data_lembrete && n.data_lembrete !== hoje) continue;
-
-    enviados += await notificarUsuariosDoItem(
-      supabase,
-      "nota",
-      n.id,
-      n.dono_id,
-      `📝 ${n.titulo}`,
-      `/notas/${n.id}`,
-      hoje
-    );
-  }
-
   // --- Contas a pagar (recorrências financeiras) vencendo hoje/amanhã ---
   // Roda só uma vez por dia (perto das 8h da manhã) — não faz sentido
   // mandar lembrete de conta a cada poucos minutos o dia inteiro.
@@ -132,7 +106,7 @@ async function notificarUsuariosDoItem(
 ): Promise<number> {
   // Dono + convidados com acesso (só se aplica a hábito/tarefa/nota —
   // contas a pagar notificam só o dono, ver notificarContasAPagar)
-  const { data: compartilhados } = ["habito", "tarefa", "nota"].includes(tipoItem)
+  const { data: compartilhados } = ["habito", "tarefa"].includes(tipoItem)
     ? await supabase
         .from("compartilhamentos")
         .select("usuario_convidado_id")
