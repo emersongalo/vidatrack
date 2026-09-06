@@ -20,7 +20,13 @@ import { enviarNotificacaoFCM } from "@/lib/fcm/servidor";
  */
 export async function GET(request: Request) {
   const segredoEsperado = process.env.CRON_SECRET;
-  const segredoRecebido = request.headers.get("authorization")?.replace("Bearer ", "");
+  // Aceita o segredo tanto no cabeçalho Authorization (é assim que o
+  // agendador externo de verdade chama) quanto num parâmetro de URL
+  // (?secret=...) — isso deixa testar manualmente sem precisar do
+  // Console do navegador, só colando um link.
+  const segredoDoCabecalho = request.headers.get("authorization")?.replace("Bearer ", "");
+  const segredoDaUrl = new URL(request.url).searchParams.get("secret");
+  const segredoRecebido = segredoDoCabecalho ?? segredoDaUrl;
 
   if (!segredoEsperado || !segredoRecebido || !segredosIguais(segredoRecebido, segredoEsperado)) {
     return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });

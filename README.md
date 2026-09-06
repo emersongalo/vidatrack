@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 64: Módulo de Notas Removido (agora só Hábitos + Finanças)
+# VidaTrack — Etapa 65: Teste de Lembretes Direto Pela URL (sem precisar do Console)
 
 App único de **hábitos**, **notas** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,23 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 das Notas).
 
 ## O que já está pronto
+
+**Novo nesta etapa (65) — testar lembretes sem precisar do Console:**
+
+A rota de lembretes agora aceita o segredo de duas formas: no
+cabeçalho `Authorization` (como o agendador externo de verdade
+chama) OU num parâmetro na própria URL (`?secret=...`) — isso deixa
+testar manualmente **só colando um link no navegador**, sem precisar
+abrir o Console/DevTools, que estava causando dificuldade.
+
+**Como testar agora:**
+```
+https://SEU-APP.vercel.app/api/lembretes?secret=SEU_CRON_SECRET
+```
+Só colar esse link (com os valores reais) na barra de endereço e
+apertar Enter — aparece a resposta na tela mesma.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (64) — Notas removida de vez, o app agora é só
 Hábitos + Finanças:**
@@ -1677,7 +1694,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 61. Removida duplicação de consultas em Finanças
 62. Auditoria completa de performance
 63. Ícones de categoria modernizados (73 opções)
-64. Módulo de Notas removido — **você está aqui**
+64. Módulo de Notas removido
+65. Teste de lembretes direto pela URL — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
