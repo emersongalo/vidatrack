@@ -181,9 +181,28 @@ async function notificarUsuariosDoItem(
           { titulo: "VidaTrack", corpo: texto, url }
         );
         enviados++;
-      } catch {
-        // Inscrição expirada ou inválida — poderia limpar aqui, mantido
-        // simples por enquanto.
+        await supabase.from("log_notificacoes").insert({
+          usuario_id: usuarioId,
+          canal: "webpush",
+          sucesso: true,
+        });
+      } catch (erro: any) {
+        // Guarda o motivo real do erro — antes isso era silenciado
+        // por completo, e nunca dava pra saber por que uma
+        // notificação não chegava. O pacote web-push costuma incluir
+        // o código de status HTTP da tentativa, que ajuda mais que
+        // só a mensagem genérica.
+        const detalhe = erro?.statusCode
+          ? `HTTP ${erro.statusCode}: ${erro?.body ?? erro?.message ?? ""}`
+          : erro instanceof Error
+            ? erro.message
+            : String(erro);
+        await supabase.from("log_notificacoes").insert({
+          usuario_id: usuarioId,
+          canal: "webpush",
+          sucesso: false,
+          erro: detalhe,
+        });
       }
     }
 
@@ -196,10 +215,23 @@ async function notificarUsuariosDoItem(
       const resultado = await enviarNotificacaoFCM(registroFcm.token, "VidaTrack", texto, url);
       if (resultado.sucesso) {
         enviados++;
-      } else if (resultado.tokenInvalido) {
-        // App foi desinstalado ou o token expirou — limpa, pra não
-        // ficar tentando pra sempre num token morto.
-        await supabase.from("fcm_tokens").delete().eq("id", registroFcm.id);
+        await supabase.from("log_notificacoes").insert({
+          usuario_id: usuarioId,
+          canal: "fcm",
+          sucesso: true,
+        });
+      } else {
+        await supabase.from("log_notificacoes").insert({
+          usuario_id: usuarioId,
+          canal: "fcm",
+          sucesso: false,
+          erro: resultado.erro ?? "Falha desconhecida",
+        });
+        if (resultado.tokenInvalido) {
+          // App foi desinstalado ou o token expirou — limpa, pra não
+          // ficar tentando pra sempre num token morto.
+          await supabase.from("fcm_tokens").delete().eq("id", registroFcm.id);
+        }
       }
     }
 

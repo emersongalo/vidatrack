@@ -34,9 +34,9 @@ export async function enviarNotificacaoFCM(
   titulo: string,
   corpo: string,
   url?: string
-): Promise<{ sucesso: boolean; tokenInvalido?: boolean }> {
+): Promise<{ sucesso: boolean; tokenInvalido?: boolean; erro?: string }> {
   const app = obterAppFirebase();
-  if (!app) return { sucesso: false };
+  if (!app) return { sucesso: false, erro: "Firebase não configurado (FIREBASE_SERVICE_ACCOUNT_BASE64 ausente ou inválida)" };
 
   try {
     await getMessaging(app).send({
@@ -66,6 +66,6 @@ export async function enviarNotificacaoFCM(
     if (!tokenInvalido) {
       console.error("Erro ao enviar notificação FCM:", erro);
     }
-    return { sucesso: false, tokenInvalido };
+    return { sucesso: false, tokenInvalido, erro: erro?.message ?? codigo ?? String(erro) };
   }
 }

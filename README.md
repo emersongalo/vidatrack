@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 68: Conta de Investimento (separada do saldo principal)
+# VidaTrack — Etapa 69: Log Real de Falhas no Envio de Notificação
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,26 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (69) — achamos onde a notificação está falhando de verdade:**
+
+O agendador automático (cron-job.org) já estava disparando sozinho —
+confirmamos isso pelo registro em `lembretes_enviados`. Mas a
+notificação não chegava, e o código **engolia qualquer erro do envio
+em silêncio**, sem guardar o motivo — não dava pra saber se era o
+Web Push, o FCM, ou os dois.
+
+**Corrigido:** criei uma tabela nova (`log_notificacoes`) que guarda,
+pra cada tentativa de envio, se deu certo ou não — e se não deu, o
+erro real (código de status do Web Push, ou o erro específico do
+Firebase). Da próxima vez que testarmos, consigo consultar essa
+tabela direto e ver exatamente onde travou, em vez de ficar no
+escuro de novo.
+
+Não precisa rodar SQL manualmente — já apliquei a tabela nova direto
+no seu banco (`log_notificacoes`) durante esta conversa, mas o
+arquivo `supabase/schema_log_notificacoes.sql` também está aqui, caso
+precise recriar num outro ambiente.
 
 **Novo nesta etapa (68) — dinheiro investido, separado do saldo:**
 
@@ -1787,7 +1807,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 65. Teste de lembretes direto pela URL
 66. Rota de lembretes sem cache + modo de depuração
 67. Bug real do fuso horário corrigido
-68. Conta de investimento separada do saldo — **você está aqui**
+68. Conta de investimento separada do saldo
+69. Log real de falhas no envio de notificação — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
