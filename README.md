@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 70: 4 Bugs Reais Corrigidos (categorias, botão voltar, extrato)
+# VidaTrack — Etapa 72: Notificações Confirmadas Funcionando + Limpeza de Inscrições Mortas 🎉
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,39 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (72) — confirmado: notificação automática está
+funcionando de ponta a ponta! 🎉**
+
+O log (Etapa 69) finalmente revelou tudo: a causa de "não chega" nos
+testes anteriores era o **controle de duplicidade fazendo o trabalho
+certo** — o primeiro disparo automático (lá de manhã cedo) já tinha
+marcado "lembrete enviado hoje" pra esse hábito, e o sistema
+corretamente recusava mandar de novo no mesmo dia, mesmo eu trocando
+o horário várias vezes pra testar.
+
+Depois de limpar esse registro de teste, a notificação chegou — e o
+log mostrou **2 envios com sucesso** e 3 falhas por inscrições de
+navegador expiradas (código HTTP 410 — normal, de testes em sessões
+diferentes ao longo do dia).
+
+**Corrigido nesta etapa:** o Web Push agora limpa sozinho inscrições
+mortas (código 404/410), do mesmo jeito que já fazíamos com tokens
+FCM inválidos — evita ficar tentando mandar pra endereços que não
+existem mais.
+
+Não precisa rodar SQL — é ajuste de código só.
+
+**Novo nesta etapa (71) — limpeza, sem afetar o funcionamento:**
+
+Achei um `vercel.json` configurando um cron **nativo do Vercel**
+chamando `/api/lembretes` 1x por dia — uma sobra de antes de
+configurarmos o cron-job.org (que já roda a cada 2 minutos, de
+verdade). Não causava conflito (são chamadas independentes, o
+controle de "já enviei hoje" evita duplicidade), mas ficou redundante.
+Removido.
+
+Não precisa rodar SQL — é limpeza de arquivo só.
 
 **Novo nesta etapa (70) — 4 bugs reais, todos com causa concreta:**
 
@@ -1837,7 +1870,9 @@ versão Android via Capacitor está descrita na seção específica acima.
 67. Bug real do fuso horário corrigido
 68. Conta de investimento separada do saldo
 69. Log real de falhas no envio de notificação
-70. 4 bugs reais corrigidos (categorias, voltar, extrato) — **você está aqui**
+70. 4 bugs reais corrigidos (categorias, voltar, extrato)
+71. Removido cron redundante do Vercel
+72. Notificações confirmadas funcionando + limpeza — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

@@ -171,7 +171,7 @@ async function notificarUsuariosDoItem(
 
     const { data: inscricoes } = await supabase
       .from("push_inscricoes")
-      .select("endpoint, chaves")
+      .select("id, endpoint, chaves")
       .eq("usuario_id", usuarioId);
 
     for (const inscricao of inscricoes ?? []) {
@@ -203,6 +203,15 @@ async function notificarUsuariosDoItem(
           sucesso: false,
           erro: detalhe,
         });
+
+        // 404 ou 410 = a inscrição não existe mais de verdade (a
+        // pessoa desinstalou, limpou os dados do navegador, etc.) —
+        // limpa daqui, senão ficamos tentando mandar pra um endereço
+        // morto pra sempre (é o mesmo cuidado que já tínhamos com
+        // token do FCM, só que essa parte do Web Push ainda não tinha).
+        if (erro?.statusCode === 404 || erro?.statusCode === 410) {
+          await supabase.from("push_inscricoes").delete().eq("id", inscricao.id);
+        }
       }
     }
 
