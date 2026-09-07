@@ -241,7 +241,7 @@ export default async function FinancasPage({
         </div>
       ) : null,
     lancamentos: (
-      <>
+      <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm text-ink-400">Lançamentos do mês</p>
           <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
@@ -311,7 +311,7 @@ export default async function FinancasPage({
             ))}
           </ul>
         )}
-      </>
+      </div>
     ),
   };
 

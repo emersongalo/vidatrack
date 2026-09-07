@@ -35,7 +35,7 @@ export default async function EditarTransacaoPage({
       voltarHref="/financas"
       valoresIniciais={{
         tipo: transacao.tipo,
-        valor: String(transacao.valor).replace(".", ","),
+        valor: String(transacao.valor),
         contaId: transacao.conta_id,
         categoriaId: transacao.categoria_id,
         data: transacao.data,

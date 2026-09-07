@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 73: Gráficos Sem Cortar + Tipo de Gráfico + Comparação Mensal + Valor com Centavo Automático
+# VidaTrack — Etapa 74: 3 Bugs Reais Corrigidos (extrato, editar lançamento, espaçamento)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,29 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (74) — 3 bugs reais, todos com causa concreta:**
+
+1. **Filtro do extrato ("este mês") ia só até hoje, não até o fim do
+   mês de verdade** — corrigido pra ir do dia 1 até o último dia do
+   mês. Você ainda pode trocar o filtro livremente na tela
+
+2. **Editar lançamento não mostrava o valor** — achei a causa exata:
+   a tela de edição convertia o valor pra vírgula (formato antigo)
+   ANTES de passar pro campo novo (Etapa 73), que já faz essa
+   conversão sozinho — a combinação dos dois quebrava tudo, o campo
+   ficava vazio. Corrigido, e testei o fluxo completo (banco → tela
+   → campo) isoladamente antes de entregar
+
+3. **Gráfico "Despesas por categoria" colado no último lançamento** —
+   o bloco de lançamentos não tinha a mesma margem inferior que os
+   outros blocos (Calendário, Gráfico). Corrigido pra ficar
+   consistente
+
+**Mais uma pasta duplicada por engano** no meu processo — removida e
+confirmada antes de empacotar.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (73) — vários ajustes visuais + 2 funcionalidades novas:**
 
@@ -1911,7 +1934,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 70. 4 bugs reais corrigidos (categorias, voltar, extrato)
 71. Removido cron redundante do Vercel
 72. Notificações confirmadas funcionando + limpeza
-73. Gráficos sem cortar + tipo de gráfico + comparação mensal + valor com centavo automático — **você está aqui**
+73. Gráficos sem cortar + tipo de gráfico + comparação mensal + valor com centavo automático
+74. 3 bugs reais corrigidos (extrato, editar lançamento, espaçamento) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

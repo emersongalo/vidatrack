@@ -23,7 +23,7 @@ export function calcularPeriodo(preset: PresetPeriodo): { inicio: string; fim: s
 
   switch (preset) {
     case "este_mes":
-      return { inicio: primeiroDiaDoMes(), fim: hojeISO };
+      return { inicio: primeiroDiaDoMes(), fim: ultimoDiaDoMes() };
     case "mes_passado": {
       const mesPassado = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1).toLocaleDateString("sv-SE");
       return { inicio: primeiroDiaDoMes(mesPassado), fim: ultimoDiaDoMes(mesPassado) };
