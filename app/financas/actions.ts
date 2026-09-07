@@ -384,3 +384,85 @@ export async function removerTransacao(transacaoId: string) {
   await supabase.from("financa_transacoes").delete().eq("id", transacaoId);
   revalidatePath("/financas");
 }
+
+/**
+ * Transfere dinheiro de uma conta comum pra uma conta de investimento
+ * — cria uma despesa na origem (categorizada como "Investimento",
+ * pra aparecer identificada no extrato) e uma receita na conta de
+ * investimento, ao mesmo tempo. É assim que o dinheiro "some" do
+ * saldo disponível e passa a contar no total guardado.
+ */
+export async function transferirParaInvestimento(formData: FormData) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const contaOrigemId = String(formData.get("contaOrigemId") ?? "");
+  const contaInvestimentoId = String(formData.get("contaInvestimentoId") ?? "");
+  const valor = Number(String(formData.get("valor") ?? "").replace(",", "."));
+  const data = String(formData.get("data") ?? "") || new Date().toLocaleDateString("sv-SE");
+
+  if (!contaOrigemId || !contaInvestimentoId || !valor || valor <= 0) {
+    redirect(
+      `/financas/investir?erro=${encodeURIComponent("Preencha a conta de origem, a conta de investimento e um valor válido")}`
+    );
+  }
+
+  if (contaOrigemId === contaInvestimentoId) {
+    redirect(`/financas/investir?erro=${encodeURIComponent("A conta de origem precisa ser diferente da de investimento")}`);
+  }
+
+  // Acha a categoria "Investimento" (criada automaticamente pra todo
+  // mundo) pra já sair categorizado certo no extrato.
+  const { data: categoriaInvestimento } = await supabase
+    .from("financa_categorias")
+    .select("id")
+    .eq("dono_id", user!.id)
+    .eq("nome", "Investimento")
+    .eq("tipo", "despesa")
+    .maybeSingle();
+
+  const { error: erroDespesa } = await supabase.from("financa_transacoes").insert({
+    dono_id: user!.id,
+    conta_id: contaOrigemId,
+    categoria_id: categoriaInvestimento?.id ?? null,
+    tipo: "despesa",
+    valor,
+    descricao: "Transferência pra investimento",
+    data,
+  });
+
+  if (erroDespesa) {
+    redirect(`/financas/investir?erro=${encodeURIComponent(erroDespesa.message)}`);
+  }
+
+  const { error: erroReceita } = await supabase.from("financa_transacoes").insert({
+    dono_id: user!.id,
+    conta_id: contaInvestimentoId,
+    categoria_id: null,
+    tipo: "receita",
+    valor,
+    descricao: "Transferência recebida",
+    data,
+  });
+
+  if (erroReceita) {
+    // A despesa já foi criada — desfaz ela, senão o dinheiro "some"
+    // sem aparecer em lugar nenhum.
+    await supabase
+      .from("financa_transacoes")
+      .delete()
+      .eq("dono_id", user!.id)
+      .eq("conta_id", contaOrigemId)
+      .eq("descricao", "Transferência pra investimento")
+      .eq("valor", valor)
+      .eq("data", data);
+    redirect(`/financas/investir?erro=${encodeURIComponent(erroReceita.message)}`);
+  }
+
+  revalidatePath("/financas");
+  revalidatePath("/financas/contas");
+  redirect("/financas?investido=1");
+}

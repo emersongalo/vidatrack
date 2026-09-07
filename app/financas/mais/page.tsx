@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2 } from "lucide-react";
+import { Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank } from "lucide-react";
 import { LinkVoltar } from "@/components/LinkVoltar";
 
 const ITENS = [
+  { href: "/financas/investir", Icone: PiggyBank, titulo: "Guardar em investimento", texto: "Separe dinheiro do seu saldo pra investimento" },
   { href: "/financas/categorias", Icone: Tags, titulo: "Categorias", texto: "Organize receitas e despesas por tipo" },
   { href: "/financas/recorrentes", Icone: Repeat, titulo: "Recorrentes", texto: "Contas e receitas que se repetem todo mês" },
   { href: "/financas/analise", Icone: BarChart3, titulo: "Análise", texto: "Mapa de gastos e comparação com o mês passado" },

@@ -12,6 +12,7 @@ const RÓTULOS_TIPO: Record<string, string> = {
   carteira: "Carteira",
   banco: "Banco",
   cartao: "Cartão",
+  investimento: "Investimento",
 };
 
 export default async function ContasPage({
@@ -170,7 +171,13 @@ export default async function ContasPage({
           <option value="banco">Banco</option>
           <option value="carteira">Carteira</option>
           <option value="cartao">Cartão</option>
+          <option value="investimento">Investimento</option>
         </select>
+        <p className="text-xs text-ink-400 -mt-1.5">
+          Contas do tipo "Investimento" ficam separadas do seu saldo principal —
+          o dinheiro guardado ali aparece numa seção própria, não conta como
+          "disponível pra gastar".
+        </p>
         <div>
           <label className="block text-xs text-ink-400 mb-1.5">Banco (pra mostrar o selo certo)</label>
           <select

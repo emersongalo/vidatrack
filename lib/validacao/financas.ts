@@ -49,7 +49,7 @@ export const esquemaTransacao = z.object({
 
 export const esquemaConta = z.object({
   nome: z.string().trim().min(1, "Dê um nome para a conta").max(60, "Nome muito longo"),
-  tipo: z.enum(["carteira", "banco", "cartao"]),
+  tipo: z.enum(["carteira", "banco", "cartao", "investimento"]),
   banco: z.string().trim().optional().transform((v) => v || "outro"),
   saldoInicial: z
     .string()

@@ -21,7 +21,7 @@ import { normalizarOrdemBlocos } from "@/lib/financas/blocos";
 export default async function FinancasPage({
   searchParams,
 }: {
-  searchParams: { mes?: string; offline?: string };
+  searchParams: { mes?: string; offline?: string; investido?: string };
 }) {
   const supabase = createClient();
   const {
@@ -149,12 +149,27 @@ export default async function FinancasPage({
   // Saldo atual: saldo inicial de cada conta + receitas - despesas dela,
   // sempre "agora" — não muda navegando entre meses (seu saldo de hoje
   // é o mesmo, esteja você olhando o extrato de março ou de setembro).
-  const saldoTotal = (contas ?? []).reduce((total, conta) => {
-    const doTransacoes = transacoes
-      .filter((t) => t.conta_id === conta.id)
-      .reduce((acc, t) => acc + (t.tipo === "receita" ? t.valor : -t.valor), 0);
-    return total + Number(conta.saldo_inicial) + doTransacoes;
-  }, 0);
+  // Contas de investimento ficam de fora de propósito — esse dinheiro
+  // já foi "separado", não é mais considerado disponível pra gastar.
+  const saldoTotal = (contas ?? [])
+    .filter((conta) => conta.tipo !== "investimento")
+    .reduce((total, conta) => {
+      const doTransacoes = transacoes
+        .filter((t) => t.conta_id === conta.id)
+        .reduce((acc, t) => acc + (t.tipo === "receita" ? t.valor : -t.valor), 0);
+      return total + Number(conta.saldo_inicial) + doTransacoes;
+    }, 0);
+
+  // Total investido — a soma de tudo que está guardado nas contas de
+  // investimento, separado do saldo "pra gastar" de propósito.
+  const saldoInvestido = (contas ?? [])
+    .filter((conta) => conta.tipo === "investimento")
+    .reduce((total, conta) => {
+      const doTransacoes = transacoes
+        .filter((t) => t.conta_id === conta.id)
+        .reduce((acc, t) => acc + (t.tipo === "receita" ? t.valor : -t.valor), 0);
+      return total + Number(conta.saldo_inicial) + doTransacoes;
+    }, 0);
 
   // Previsto pro fim do mês: só faz sentido "prever o futuro" pro mês
   // atual — pra um mês passado, já sabemos exatamente como terminou
@@ -309,6 +324,12 @@ export default async function FinancasPage({
         <p className="mb-4 text-sm text-financa bg-financa-soft border border-financa/30 rounded-lg px-3 py-2 flex items-center gap-2">
           <PackageCheck size={16} strokeWidth={2} className="shrink-0" />
           Lançamento guardado — vai ser criado automaticamente assim que a internet voltar.
+        </p>
+      )}
+
+      {searchParams.investido && (
+        <p className="mb-4 text-sm text-financa bg-financa-soft border border-financa/30 rounded-lg px-3 py-2">
+          Dinheiro guardado com sucesso — já aparece separado na seção "Investido" abaixo.
         </p>
       )}
 

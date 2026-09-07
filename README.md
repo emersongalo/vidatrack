@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 67: Bug Real do Fuso Horário Corrigido (causa raiz encontrada)
+# VidaTrack — Etapa 68: Conta de Investimento (separada do saldo principal)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,43 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (68) — dinheiro investido, separado do saldo:**
+
+- **Novo tipo de conta: "Investimento"** — ao criar ou editar uma
+  conta, agora tem essa opção
+- **Fica de fora do "Saldo em contas"** da tela principal — o
+  dinheiro guardado não conta mais como "disponível pra gastar"
+- **Seção própria "💰 Investido"**, com o total guardado em destaque
+  e a lista de cada conta de investimento
+- **Nova tela "Guardar em investimento"** (Finanças → Mais) — escolhe
+  de qual conta sai o dinheiro e pra qual conta de investimento vai;
+  cria automaticamente uma despesa na origem (categorizada como
+  "Investimento") e uma receita na conta de investimento, ao mesmo
+  tempo. Se uma das duas partes falhar, desfaz a outra, pra nunca
+  ficar com dinheiro "perdido" no meio do caminho
+
+**Sobre juros compostos:** por enquanto não calculamos isso
+automaticamente — o valor guardado cresce conforme você registra
+transferências. Se quiser refletir o rendimento real (o dinheiro
+"rendeu" sozinho no banco/corretora), dá pra editar o saldo inicial
+da conta de investimento manualmente por enquanto. Calcular juros
+automaticamente é um projeto à parte, se quiser no futuro.
+
+**Bug real que achei antes de virar problema silencioso:** a
+validação (Zod) da tela de criar/editar conta ainda não aceitava
+"investimento" como valor válido — sem corrigir isso, toda tentativa
+de criar uma conta de investimento falharia com um erro genérico.
+Corrigido antes de entregar.
+
+**Testei antes de entregar:** simulei o cálculo completo (salário
+recebido + parte transferida pra investimento) — o saldo principal
+não incluiu o valor investido, e o total investido bateu certinho.
+
+## Rodar o schema desta etapa
+
+No SQL Editor do Supabase, roda `supabase/schema_conta_investimento.sql`
+(depois de todos os schemas anteriores).
 
 **Novo nesta etapa (67) — achamos de verdade, graças ao modo de
 depuração da etapa passada:**
@@ -1749,7 +1786,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 64. Módulo de Notas removido
 65. Teste de lembretes direto pela URL
 66. Rota de lembretes sem cache + modo de depuração
-67. Bug real do fuso horário corrigido — **você está aqui**
+67. Bug real do fuso horário corrigido
+68. Conta de investimento separada do saldo — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

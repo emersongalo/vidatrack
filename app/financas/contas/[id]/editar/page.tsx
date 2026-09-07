@@ -50,6 +50,7 @@ export default async function EditarContaPage({
           <option value="banco">Banco</option>
           <option value="carteira">Carteira</option>
           <option value="cartao">Cartão</option>
+          <option value="investimento">Investimento</option>
         </select>
         <div>
           <label className="block text-xs text-ink-400 mb-1.5">Banco (pra mostrar o selo certo)</label>
