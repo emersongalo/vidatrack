@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 74: 3 Bugs Reais Corrigidos (extrato, editar lançamento, espaçamento)
+# VidaTrack — Etapa 77: Cache Travando Telas de Editar (causa real do "funciona só às vezes")
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,27 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (77) — achamos por que "funcionava só em alguns
+lançamentos":**
+
+O print que você mandou foi decisivo — o "0,00" aparecia em cinza
+claro (é o texto de exemplo, não um valor de verdade). Isso, mais o
+padrão de "esse funciona, aquele não" no MESMO dono e MESMA conta,
+apontou pra a mesma causa que já resolvemos antes nesta conversa: o
+**Next.js guardando em cache a resposta de uma tela específica**. Uma
+nota visitada ANTES da correção do campo de valor (Etapa 74) ficava
+"presa" numa versão antiga da página pra sempre — mesmo o código já
+estando corrigido — enquanto uma tela nunca visitada antes pegava a
+versão nova certinha.
+
+**Corrigido:** adicionei a mesma proteção que já usamos na rota de
+notificações (`dynamic = "force-dynamic"`) em **todas as 7 telas
+parecidas** do app (editar lançamento, categoria, conta, hábito,
+tarefa, e as telas de compartilhar) — não só na que você reportou,
+já que todas tinham o mesmo risco.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (74) — 3 bugs reais, todos com causa concreta:**
 
@@ -1935,7 +1956,10 @@ versão Android via Capacitor está descrita na seção específica acima.
 71. Removido cron redundante do Vercel
 72. Notificações confirmadas funcionando + limpeza
 73. Gráficos sem cortar + tipo de gráfico + comparação mensal + valor com centavo automático
-74. 3 bugs reais corrigidos (extrato, editar lançamento, espaçamento) — **você está aqui**
+74. 3 bugs reais corrigidos (extrato, editar lançamento, espaçamento)
+75. (sem mudanças de código — investigação/confirmação de cache)
+76. (sem mudanças de código — investigação/confirmação de cache)
+77. Cache travando telas de editar (causa real) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

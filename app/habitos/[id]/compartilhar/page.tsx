@@ -1,3 +1,10 @@
+// Evita que o Next.js guarde essa página em cache por muito tempo pra
+// um "id" específico — sem isso, uma tela editada corrigia no código
+// mas continuava mostrando dado antigo pra quem já tinha visitado
+// aquele id específico antes da correção.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
