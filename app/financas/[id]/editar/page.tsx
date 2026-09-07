@@ -13,13 +13,6 @@ import { FormularioTransacao } from "@/components/FormularioTransacao";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// Sem isso, o Next.js pode guardar em cache a versão renderizada
-// dessa página (é dinâmica por natureza — muda pra cada lançamento —
-// mas nada aqui força isso de propósito). Mesmo tipo de causa que já
-// resolvemos antes na rota de lembretes.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 
 export default async function EditarTransacaoPage({
   params,
