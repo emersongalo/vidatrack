@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 66: Rota de Lembretes Sem Cache + Modo de Depuração
+# VidaTrack — Etapa 67: Bug Real do Fuso Horário Corrigido (causa raiz encontrada)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,32 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (67) — achamos de verdade, graças ao modo de
+depuração da etapa passada:**
+
+A resposta com `debug=1` mostrou a causa exata: o servidor achava que
+eram **08:49**, quando no Brasil real eram **05:49** — 3 horas de
+diferença. Isso quer dizer que o servidor estava calculando o horário
+em UTC puro, sem aplicar o fuso do Brasil.
+
+**A causa raiz:** o código tinha `Number(process.env.TIMEZONE_OFFSET_HORAS ?? "-3")`.
+O `??` só usa o valor padrão quando a variável é `null`/`undefined` —
+mas se ela existir no Vercel **em branco** (texto vazio, não
+apagada), `Number("")` vira `0`, não cai no `-3`. É exatamente esse
+o cenário que bateu aqui.
+
+**Corrigido no código:** agora só usa o valor da variável de ambiente
+se ele for um número válido de verdade; qualquer outra coisa
+(em branco, ausente, texto inválido) cai no padrão `-3` (Brasília).
+Testei os 5 cenários possíveis antes de entregar — todos passaram.
+
+**Vale você também conferir/corrigir a variável em si:** no Vercel,
+Settings > Environment Variables > `TIMEZONE_OFFSET_HORAS` — se
+estiver em branco, ou apaga ela (o código agora cai no padrão certo
+sozinho) ou preenche com `-3` mesmo.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (66) — a causa mais provável do "enviados: 0":**
 
@@ -1722,7 +1748,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 63. Ícones de categoria modernizados (73 opções)
 64. Módulo de Notas removido
 65. Teste de lembretes direto pela URL
-66. Rota de lembretes sem cache + modo de depuração — **você está aqui**
+66. Rota de lembretes sem cache + modo de depuração
+67. Bug real do fuso horário corrigido — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
