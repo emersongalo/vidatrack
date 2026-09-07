@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 69: Log Real de Falhas no Envio de Notificação
+# VidaTrack — Etapa 70: 4 Bugs Reais Corrigidos (categorias, botão voltar, extrato)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,34 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (70) — 4 bugs reais, todos com causa concreta:**
+
+1. **"Erro de caractere" ao criar categoria** — a validação ainda
+   esperava um emoji curto (limite de 8 caracteres), mas os ícones
+   novos (Etapa 63) são nomes tipo "GraduationCap" — 13 caracteres.
+   Aumentei o limite pra 30
+2. **Não deixava mudar a cor do ícone** — o seletor de cor tem 10
+   opções (Etapa 32), mas a validação só aceitava 4. Escolher
+   qualquer uma das outras 6 falhava sem aviso claro. Corrigido pra
+   aceitar todas
+3. **Botão físico de voltar do Android** — o código antigo usava um
+   truque de histórico do navegador, mas isso tem um bug real: no
+   segundo toque, o Android já navega de verdade pra página anterior
+   ANTES do nosso código conseguir reagir — por isso aparecia o
+   aviso, mas o app "voltava" mesmo assim. Reescrevi usando o plugin
+   `@capacitor/app`, que intercepta o botão físico direto (o jeito
+   certo, dentro de app nativo). **Bônus:** descobri que o
+   `package.json` nunca tinha sido atualizado com os pacotes do
+   Capacitor que você instalou direto na sua máquina (core, cli,
+   android) — corrigido também, pra próxima vez o zip já vir
+   completo
+4. **Extrato com filtro pré-aplicado** — clicar em "Receitas do mês"
+   ou "Despesas do mês" no painel levava direto pro extrato já
+   filtrado só por um tipo, escondendo o outro. Agora abre o mês
+   inteiro, com os dois tipos — você aplica o filtro que quiser de lá
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (69) — achamos onde a notificação está falhando de verdade:**
 
@@ -1808,7 +1836,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 66. Rota de lembretes sem cache + modo de depuração
 67. Bug real do fuso horário corrigido
 68. Conta de investimento separada do saldo
-69. Log real de falhas no envio de notificação — **você está aqui**
+69. Log real de falhas no envio de notificação
+70. 4 bugs reais corrigidos (categorias, voltar, extrato) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

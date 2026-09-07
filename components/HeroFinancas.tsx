@@ -71,7 +71,7 @@ export function HeroFinancas({
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Link
-          href="/financas/extrato?tipo=receita&preset=este_mes"
+          href="/financas/extrato?preset=este_mes"
           className="flex items-center gap-2.5 min-w-0"
         >
           <span className="w-9 h-9 rounded-full bg-habito/15 flex items-center justify-center shrink-0">
@@ -88,7 +88,7 @@ export function HeroFinancas({
         </Link>
 
         <Link
-          href="/financas/extrato?tipo=despesa&preset=este_mes"
+          href="/financas/extrato?preset=este_mes"
           className="flex items-center gap-2.5 min-w-0"
         >
           <span className="w-9 h-9 rounded-full bg-red-400/15 flex items-center justify-center shrink-0">

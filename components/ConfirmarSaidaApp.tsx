@@ -8,33 +8,52 @@ export function ConfirmarSaidaApp() {
   useEffect(() => {
     let prontoParaSair = false;
     let idTimeout: ReturnType<typeof setTimeout>;
+    let removerListener: (() => void) | null = null;
+    let cancelado = false;
 
-    function empilharEstado() {
-      window.history.pushState({ vidatrackAncora: true }, "", window.location.href);
+    async function configurar() {
+      // O botão físico de voltar do Android, dentro do app instalado,
+      // não é a mesma coisa que o "voltar" do navegador — o truque
+      // antigo (empilhar um estado extra no histórico) tinha um bug
+      // real: no segundo toque, o Android já tinha navegado de
+      // verdade pra página anterior ANTES do nosso código conseguir
+      // reagir, então o aviso aparecia mas o app "voltava" mesmo
+      // assim. O jeito certo é interceptar o botão físico direto,
+      // via o plugin do Capacitor — só existe dentro do app nativo,
+      // por isso os imports são dinâmicos e tudo dentro de um
+      // try/catch (no navegador comum, isso simplesmente não roda).
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (!Capacitor.isNativePlatform()) return;
+        if (cancelado) return;
+
+        const { App } = await import("@capacitor/app");
+        const handle = await App.addListener("backButton", () => {
+          if (prontoParaSair) {
+            App.exitApp();
+            return;
+          }
+          setAvisoVisivel(true);
+          prontoParaSair = true;
+          clearTimeout(idTimeout);
+          idTimeout = setTimeout(() => {
+            prontoParaSair = false;
+            setAvisoVisivel(false);
+          }, 2200);
+        });
+        removerListener = () => handle.remove();
+      } catch {
+        // Pacotes nativos ainda não instalados/sincronizados, ou
+        // rodando fora do app — sem problema, só não ativa isso aqui.
+      }
     }
 
-    // Assim que entra no painel, já empilha um estado extra — é esse
-    // estado que o primeiro "voltar" vai consumir, sem sair do app.
-    empilharEstado();
+    configurar();
 
-    function aoVoltar() {
-      if (prontoParaSair) return; // deixa acontecer de verdade dessa vez
-
-      empilharEstado();
-      setAvisoVisivel(true);
-      prontoParaSair = true;
-
-      clearTimeout(idTimeout);
-      idTimeout = setTimeout(() => {
-        prontoParaSair = false;
-        setAvisoVisivel(false);
-      }, 2200);
-    }
-
-    window.addEventListener("popstate", aoVoltar);
     return () => {
-      window.removeEventListener("popstate", aoVoltar);
+      cancelado = true;
       clearTimeout(idTimeout);
+      removerListener?.();
     };
   }, []);
 
