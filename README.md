@@ -1,11 +1,37 @@
-# VidaTrack — Etapa 65: Teste de Lembretes Direto Pela URL (sem precisar do Console)
+# VidaTrack — Etapa 66: Rota de Lembretes Sem Cache + Modo de Depuração
 
-App único de **hábitos**, **notas** e **finanças**, com telas próprias por
+App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
-**Supabase** (banco + autenticação) e **Cloudflare R2** (arquivos e fotos
-das Notas).
+**Supabase** (banco + autenticação) e **Cloudflare R2** (fotos de
+perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (66) — a causa mais provável do "enviados: 0":**
+
+Testamos 2 vezes seguidas com o horário certo e ambas vieram
+`enviados: 0`. Isso é o padrão clássico de **cache** — a rota não
+tinha nenhuma instrução dizendo pro Vercel "nunca guarde essa
+resposta", então tanto o servidor quanto o próprio navegador podem
+estar reaproveitando a primeira resposta em vez de rodar de novo de
+verdade.
+
+**Corrigido:**
+- `export const dynamic = "force-dynamic"` — força a rota rodar de
+  novo a cada chamada, nunca servir uma versão guardada
+- `Cache-Control: no-store` na resposta — garante que o navegador
+  também não guarde essa resposta pra reusar depois
+
+**Bônus — modo de depuração**, pra não ficarmos adivinhando se isso
+não resolver: adicionando `&debug=1` na URL, a resposta mostra
+exatamente o horário que o servidor está calculando, a janela de
+verificação, e a lista de hábitos com lembrete configurado.
+
+```
+https://SEU-APP.vercel.app/api/lembretes?secret=SEU_CRON_SECRET&debug=1
+```
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (65) — testar lembretes sem precisar do Console:**
 
@@ -1695,7 +1721,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 62. Auditoria completa de performance
 63. Ícones de categoria modernizados (73 opções)
 64. Módulo de Notas removido
-65. Teste de lembretes direto pela URL — **você está aqui**
+65. Teste de lembretes direto pela URL
+66. Rota de lembretes sem cache + modo de depuração — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

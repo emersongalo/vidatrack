@@ -7,6 +7,13 @@ import { horaAtualNoFuso, dataAtualNoFuso, horaMinutosAtrasNoFuso } from "@/lib/
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { enviarNotificacaoFCM } from "@/lib/fcm/servidor";
 
+// Sem cookie nem sessão, o Next.js não tem como saber sozinho que essa
+// rota precisa rodar de novo a cada chamada — sem isso aqui, o Vercel
+// pode devolver a mesma resposta guardada em cache pras próximas
+// chamadas, mesmo que o horário real já tenha mudado.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 /**
  * Chamada por um agendador externo (cron-job.org, GitHub Actions, etc.)
  * a cada poucos minutos. Envia notificação nativa (celular) e Web Push
@@ -98,7 +105,33 @@ export async function GET(request: Request) {
     enviados += await notificarContasAPagar(supabase, hoje);
   }
 
-  return NextResponse.json({ ok: true, enviados });
+  // Modo de depuração (?debug=1) — mostra exatamente o que o servidor
+  // está calculando, pra comparar com o que você espera. Ajuda a achar
+  // qualquer diferença de horário/fuso sem precisar adivinhar.
+  if (new URL(request.url).searchParams.get("debug") === "1") {
+    return NextResponse.json(
+      {
+        ok: true,
+        enviados,
+        depuracao: {
+          horaAtualNoServidor: horaAtual,
+          janelaDeVerificacao: `${cincoMinAntes} até ${horaAtual}`,
+          dataAtualNoServidor: hoje,
+          habitosComLembrete: (habitos ?? []).map((h) => ({
+            nome: h.nome,
+            horario: h.horario_lembrete,
+            frequencia: h.frequencia,
+          })),
+        },
+      },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
+  }
+
+  return NextResponse.json(
+    { ok: true, enviados },
+    { headers: { "Cache-Control": "no-store, max-age=0" } }
+  );
 }
 
 async function notificarUsuariosDoItem(
