@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 72: Notificações Confirmadas Funcionando + Limpeza de Inscrições Mortas 🎉
+# VidaTrack — Etapa 73: Gráficos Sem Cortar + Tipo de Gráfico + Comparação Mensal + Valor com Centavo Automático
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,44 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (73) — vários ajustes visuais + 2 funcionalidades novas:**
+
+**Cortes de texto corrigidos:**
+- Legenda do gráfico de pizza — era 2 colunas apertadas, agora é
+  lista de 1 coluna, cada nome com o espaço inteiro pra si
+- "Receitas do mês" / "Despesas do mês" no painel — eram lado a
+  lado disputando espaço, agora ficam empilhados, cada um com a
+  largura inteira do card
+- Lista de Hábitos — achei a causa real: 3 botões de texto
+  ("Editar", "Compartilhar", "Arquivar") competindo por espaço fixo
+  sobravam quase nada pro nome do hábito. Troquei por ícones
+  compactos (mesmo padrão do resto do app)
+
+**2 funcionalidades novas:**
+- **Escolher tipo de gráfico** — o gráfico de despesas por categoria
+  agora tem um alternador pizza/colunas
+- **Comparação com o mês passado** — nova seção na tela de Análise,
+  gráfico de colunas lado a lado (mês passado x este mês) por
+  categoria, usando dados que já calculávamos ali mesmo
+
+**Valor digitado como app de banco de verdade:**
+Agora ao digitar o valor de um lançamento, os 2 últimos dígitos
+sempre viram centavos automaticamente — digita "255954" e já
+aparece "2.559,54", sem precisar digitar vírgula.
+
+**Bug real que achei junto com isso (e que já estava presente antes,
+não é novo desta etapa):** a validação de valor só trocava a vírgula
+por ponto, mas não removia o ponto de milhar — isso significa que
+**qualquer lançamento acima de R$ 1.000,00 já estava quebrando
+silenciosamente** antes desta correção, em 4 lugares diferentes do
+código (lançamento normal, saldo inicial de conta, meta de
+categoria, transferência pra investimento). Corrigido em todos, e
+testei cada caso isoladamente antes de entregar (formatação ao
+digitar, conversão do valor ao editar um lançamento existente, e o
+parse final que vai pro banco).
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (72) — confirmado: notificação automática está
 funcionando de ponta a ponta! 🎉**
@@ -1872,7 +1910,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 69. Log real de falhas no envio de notificação
 70. 4 bugs reais corrigidos (categorias, voltar, extrato)
 71. Removido cron redundante do Vercel
-72. Notificações confirmadas funcionando + limpeza — **você está aqui**
+72. Notificações confirmadas funcionando + limpeza
+73. Gráficos sem cortar + tipo de gráfico + comparação mensal + valor com centavo automático — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

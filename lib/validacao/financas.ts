@@ -5,14 +5,17 @@ const valorMonetario = z
   .string()
   .trim()
   .min(1, "Informe um valor")
-  .transform((v) => Number(v.replace(",", ".")))
+  // Remove pontos de milhar (ex: "2.559,54") antes de trocar a
+  // vírgula decimal — sem isso, um valor acima de R$ 1.000 quebrava
+  // o cálculo (virava "2.559.54", inválido).
+  .transform((v) => Number(v.replace(/\./g, "").replace(",", ".")))
   .pipe(z.number({ invalid_type_error: "Valor inválido" }).positive("O valor precisa ser maior que zero"));
 
 const valorMonetarioOpcional = z
   .string()
   .trim()
   .optional()
-  .transform((v) => (v ? Number(v.replace(",", ".")) : null))
+  .transform((v) => (v ? Number(v.replace(/\./g, "").replace(",", ".")) : null))
   .pipe(z.number().positive("O valor precisa ser maior que zero").nullable());
 
 const uuidObrigatorio = (mensagem: string) => z.string().uuid(mensagem);
@@ -55,7 +58,7 @@ export const esquemaConta = z.object({
     .string()
     .trim()
     .optional()
-    .transform((v) => (v ? Number(v.replace(",", ".")) : 0))
+    .transform((v) => (v ? Number(v.replace(/\./g, "").replace(",", ".")) : 0))
     .pipe(z.number({ invalid_type_error: "Saldo inicial inválido" })),
 });
 

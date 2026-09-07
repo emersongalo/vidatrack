@@ -9,7 +9,7 @@ export function BotaoComConfirmacao({
   classeBotao = "text-ink-400 hover:text-red-400 transition text-xs",
 }: {
   acao: () => void | Promise<void>;
-  textoBotao: string;
+  textoBotao: React.ReactNode;
   textoConfirmacao?: string;
   classeBotao?: string;
 }) {

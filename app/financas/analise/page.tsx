@@ -5,6 +5,7 @@ import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { buscarInsightsFinanceiros } from "@/lib/financas/insights";
 import { TreemapGastos } from "@/components/TreemapGastos";
+import { GraficoComparacaoMensal } from "@/components/GraficoComparacaoMensal";
 import { GraficoAcumulado } from "@/components/GraficoAcumulado";
 import { RadarOrcamento } from "@/components/RadarOrcamento";
 
@@ -99,6 +100,14 @@ export default async function AnaliseFinanceiraPage({
             <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
               <TreemapGastos dados={categorias.map((c) => ({ nome: c.nome, valor: c.valor }))} />
             </div>
+          </div>
+
+          {/* Comparação com o mês passado */}
+          <div className="mb-6">
+            <p className="text-sm text-ink-400 mb-3">Este mês x mês passado, por categoria</p>
+            <GraficoComparacaoMensal
+              dados={categorias.map((c) => ({ nome: c.nome, valor: c.valor, valorMesAnterior: c.valorMesAnterior }))}
+            />
           </div>
 
           {/* Acumulado do mês */}

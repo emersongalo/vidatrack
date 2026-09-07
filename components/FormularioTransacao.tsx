@@ -7,6 +7,7 @@ import { criarTransacao, criarCategoriaRapida } from "@/app/financas/actions";
 import { ICONES_CATEGORIA } from "@/lib/financas/icones-categoria";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { adicionarNaFila } from "@/lib/offline/fila";
+import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 
 type Conta = { id: string; nome: string };
 type Categoria = { id: string; nome: string; tipo: "receita" | "despesa"; icone?: string };
@@ -161,14 +162,11 @@ export function FormularioTransacao({
           <label htmlFor="valor" className="block text-sm text-ink-400 mb-1">
             Valor
           </label>
-          <input
+          <CampoValorMonetario
             id="valor"
             name="valor"
-            type="text"
-            inputMode="decimal"
+            valorInicial={valoresIniciais?.valor}
             required
-            defaultValue={valoresIniciais?.valor}
-            placeholder="0,00"
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
           />
         </div>

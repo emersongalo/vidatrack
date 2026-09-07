@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Pencil, Share2, Archive } from "lucide-react";
 import { ListaArrastavel } from "@/components/ListaArrastavel";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
@@ -48,14 +49,27 @@ export function ListaHabitosArrastavel({ habitos }: { habitos: Habito[] }) {
               {habito.categorias_produtividade?.nome && ` · ${habito.categorias_produtividade.nome}`}
             </p>
           </div>
-          <div className="flex items-center gap-3 text-xs shrink-0">
-            <Link href={`/habitos/${habito.id}/editar`} className="text-ink-400 hover:text-ink-100 transition">
-              Editar
+          <div className="flex items-center gap-2.5 text-xs shrink-0">
+            <Link
+              href={`/habitos/${habito.id}/editar`}
+              aria-label="Editar"
+              className="text-ink-400 hover:text-ink-100 transition"
+            >
+              <Pencil size={15} strokeWidth={2} />
             </Link>
-            <Link href={`/habitos/${habito.id}/compartilhar`} className="text-ink-400 hover:text-ink-100 transition">
-              Compartilhar
+            <Link
+              href={`/habitos/${habito.id}/compartilhar`}
+              aria-label="Compartilhar"
+              className="text-ink-400 hover:text-ink-100 transition"
+            >
+              <Share2 size={15} strokeWidth={2} />
             </Link>
-            <BotaoComConfirmacao acao={() => arquivarHabito(habito.id)} textoBotao="Arquivar" />
+            <BotaoComConfirmacao
+              acao={() => arquivarHabito(habito.id)}
+              textoBotao={<Archive size={15} strokeWidth={2} />}
+              textoConfirmacao={`Arquivar "${habito.nome}"?`}
+              classeBotao="text-ink-400 hover:text-red-400 transition"
+            />
           </div>
         </div>
       )}

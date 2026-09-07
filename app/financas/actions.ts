@@ -401,7 +401,7 @@ export async function transferirParaInvestimento(formData: FormData) {
 
   const contaOrigemId = String(formData.get("contaOrigemId") ?? "");
   const contaInvestimentoId = String(formData.get("contaInvestimentoId") ?? "");
-  const valor = Number(String(formData.get("valor") ?? "").replace(",", "."));
+  const valor = Number(String(formData.get("valor") ?? "").replace(/\./g, "").replace(",", "."));
   const data = String(formData.get("data") ?? "") || new Date().toLocaleDateString("sv-SE");
 
   if (!contaOrigemId || !contaInvestimentoId || !valor || valor <= 0) {
