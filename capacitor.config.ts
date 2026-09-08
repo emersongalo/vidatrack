@@ -21,8 +21,7 @@ const config: CapacitorConfig = {
   appName: "VidaTrack",
   webDir: "public", // exigido pelo Capacitor, mas não é o que carrega de fato
   server: {
-    // Troque pela URL final do seu projeto no Vercel antes de gerar o app
-    url: "https://SEU-PROJETO.vercel.app",
+    url: "https://www.vidatrack.online",
     cleartext: false,
   },
   plugins: {

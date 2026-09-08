@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 85: Lançamento Duplicado Corrigido (clique duplo no botão de salvar)
+# VidaTrack — Etapa 86: Domínio Novo no App Nativo (capacitor.config.ts)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,41 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (86) — o que realmente precisava mudar com o
+domínio novo:**
+
+Conferi o código inteiro em busca de qualquer lugar travado no
+domínio antigo. Achado real: `capacitor.config.ts` (a configuração
+do app nativo/Android) ainda tinha um placeholder genérico
+apontando pro Vercel — atualizei pra `https://www.vidatrack.online`.
+
+**O manifest.json (PWA) já estava certo** — usa caminho relativo, se
+adapta sozinho a qualquer domínio, não precisava mexer.
+
+**O código de notificação (Web Push e Service Worker) também já
+estava certo** — não tem nada travado em domínio específico ali.
+
+## O que ainda precisa fazer manualmente (não é código, é processo)
+
+1. **Reconstruir o app Android** — como o app nativo carrega o site
+   de dentro de um WebView configurado nesse arquivo, só trocar o
+   código aqui não atualiza quem já tem o app instalado. Precisa
+   rodar `npx cap sync android`, gerar um novo `.apk`/`.aab`, e
+   reinstalar (ou publicar a atualização, se já estiver na Play
+   Store)
+2. **Inscrições de notificação do navegador (Web Push) não migram
+   sozinhas** — como são vinculadas ao domínio pelo próprio
+   navegador, quem já tinha ativado notificação em
+   `vidatrack.vercel.app` vai precisar **entrar de novo em
+   `vidatrack.online` e ativar notificação outra vez** lá. É
+   automático assim que a pessoa visitar e permitir — não precisa
+   mexer em nada no banco
+3. **Tokens do app nativo (FCM)** devem continuar funcionando
+   normalmente depois do app reconstruído, sem precisar de nada
+   extra — o FCM não é vinculado ao domínio do site, só ao Firebase
+
+Não precisa rodar SQL — é ajuste de configuração só.
 
 **Novo nesta etapa (85) — achamos a causa real do lançamento
 duplicado:**
@@ -2145,7 +2180,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 82. Resumo semanal de hábitos + dicas automáticas
 83. Desktop em todas as sub-telas
 84. Timer também ajustado pro desktop
-85. Lançamento duplicado corrigido (clique duplo) — **você está aqui**
+85. Lançamento duplicado corrigido (clique duplo)
+86. Domínio novo no app nativo (capacitor.config.ts) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
