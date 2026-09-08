@@ -31,6 +31,29 @@ export function calcularStreak(datasCheckin: string[]): number {
   return streak;
 }
 
+function diasEntre(dataInicioISO: string, dataFimISO: string): number {
+  const inicio = new Date(dataInicioISO + "T00:00:00");
+  const fim = new Date(dataFimISO + "T00:00:00");
+  return Math.round((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Hábito NEGATIVO (parar de fazer algo, tipo "não fumar") funciona
+ * ao contrário do positivo: cada check-in registrado é uma
+ * "recaída", não um sucesso. O streak aqui é "dias desde a última
+ * recaída" (ou desde que o hábito foi criado, se nunca teve nenhuma).
+ */
+export function calcularStreakNegativo(datasLapso: string[], dataCriacaoISO: string): number {
+  const hoje = hojeISO();
+  if (datasLapso.length === 0) {
+    return diasEntre(dataCriacaoISO, hoje);
+  }
+  const ultimoLapso = [...datasLapso].sort().at(-1)!;
+  return diasEntre(ultimoLapso, hoje);
+}
+
+export const MARCOS_CONQUISTA = [7, 30, 100, 365];
+
 /**
  * Calcula o RECORDE — a maior sequência de dias consecutivos que o
  * hábito já teve, em toda a história de check-ins (diferente do

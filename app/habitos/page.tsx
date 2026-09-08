@@ -21,8 +21,11 @@ export default async function HojePage({
     buscarItensDoDia(dataSelecionada, categoriaFiltro),
   ]);
 
+  const feitos = itens.filter((i) => i.feito).length;
+  const total = itens.length;
+
   return (
-    <main className="max-w-2xl lg:max-w-3xl mx-auto px-6 md:px-12 pt-2">
+    <main className="max-w-2xl lg:max-w-5xl mx-auto px-6 md:px-12 pt-2">
       <div className="flex items-center justify-end mb-1">
         <Link
           href={`/habitos/planejador?data=${dataSelecionada}`}
@@ -33,6 +36,8 @@ export default async function HojePage({
       </div>
       <h1 className="text-2xl font-display font-semibold mb-4">Hoje</h1>
 
+      <div className="lg:grid lg:grid-cols-[1fr_260px] lg:gap-6 lg:items-start">
+      <div>
       <TiraDeDiasAgenda dataSelecionada={dataSelecionada} hojeISO={hoje} />
 
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 mt-4 mb-5 scrollbar-none">
@@ -96,6 +101,26 @@ export default async function HojePage({
       ) : (
         <ListaHojeComOffline itensServidor={itens} dataISO={dataSelecionada} />
       )}
+      </div>
+
+      {total > 0 && (
+        <div className="hidden lg:block bg-base-800 border border-base-600 rounded-xl2 p-4 sticky top-6">
+          <p className="text-xs text-ink-400 mb-1">Hoje</p>
+          <p className="text-3xl font-display font-bold mb-1">
+            {feitos}<span className="text-ink-400 text-xl">/{total}</span>
+          </p>
+          <div className="h-1.5 bg-base-600 rounded-full overflow-hidden mb-4">
+            <div
+              className="h-full bg-habito rounded-full"
+              style={{ width: `${total > 0 ? Math.round((feitos / total) * 100) : 0}%` }}
+            />
+          </div>
+          <Link href="/habitos/estatisticas" className="text-xs text-ink-400 hover:text-ink-100 transition">
+            Ver estatísticas →
+          </Link>
+        </div>
+      )}
+      </div>
     </main>
   );
 }

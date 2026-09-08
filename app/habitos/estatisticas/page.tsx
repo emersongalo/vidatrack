@@ -119,6 +119,8 @@ export default async function EstatisticasHabitosPage() {
     ? comDadosEstaSemana.reduce((a, b) => (b.pct < a.pct ? b : a))
     : null;
 
+  const comparacaoOrdenada = [...comDadosEstaSemana].sort((a, b) => b.pct - a.pct);
+
   const diferencaSemanas = resumoAtual.percentual - resumoAnterior.percentual;
 
   // Dicas simples, baseadas só no que realmente aconteceu — nada
@@ -182,6 +184,28 @@ export default async function EstatisticasHabitosPage() {
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-6">
           <p className="text-sm text-ink-400 mb-3">Mapa de contribuições · último ano</p>
           <MapaContribuicoes pontos={mapaContribuicoes} />
+        </div>
+      )}
+
+      {comparacaoOrdenada.length > 1 && (
+        <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-6">
+          <p className="text-sm text-ink-400 mb-3">Comparação entre hábitos · essa semana</p>
+          <div className="space-y-3">
+            {comparacaoOrdenada.map((c) => (
+              <div key={c.habito.id}>
+                <div className="flex items-baseline justify-between mb-1">
+                  <span className="text-sm truncate">{c.habito.nome}</span>
+                  <span className="text-xs font-mono text-ink-400 shrink-0">{c.pct}%</span>
+                </div>
+                <div className="h-1.5 bg-base-600 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${c.pct >= 70 ? "bg-habito" : c.pct >= 40 ? "bg-financa" : "bg-red-400"}`}
+                    style={{ width: `${c.pct}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

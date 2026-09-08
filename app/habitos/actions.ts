@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { hojeISO, calcularStreak } from "@/lib/habitos/streak";
+import { hojeISO, calcularStreak, MARCOS_CONQUISTA } from "@/lib/habitos/streak";
 
 export async function criarHabito(formData: FormData) {
   const supabase = createClient();
@@ -26,6 +26,7 @@ export async function criarHabito(formData: FormData) {
   const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
   const metaDiaria = Math.max(1, Number(formData.get("metaDiaria") ?? "1") || 1);
   const unidade = String(formData.get("unidade") ?? "").trim() || null;
+  const ehNegativo = formData.get("ehNegativo") === "true";
 
   if (!nome) {
     redirect(`/habitos/novo?erro=${encodeURIComponent("Dê um nome para o hábito")}`);
@@ -42,6 +43,7 @@ export async function criarHabito(formData: FormData) {
     horario_lembrete: horarioLembreteRaw || null,
     meta_diaria: metaDiaria,
     unidade,
+    eh_negativo: ehNegativo,
     ordem: count ?? 0,
   });
 
@@ -107,6 +109,7 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
   const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
   const metaDiaria = Math.max(1, Number(formData.get("metaDiaria") ?? "1") || 1);
   const unidade = String(formData.get("unidade") ?? "").trim() || null;
+  const ehNegativo = formData.get("ehNegativo") === "true";
 
   if (!nome) {
     redirect(`/habitos/${habitoId}/editar?erro=${encodeURIComponent("Dê um nome para o hábito")}`);
@@ -124,6 +127,7 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
       horario_lembrete: horarioLembreteRaw || null,
       meta_diaria: metaDiaria,
       unidade,
+      eh_negativo: ehNegativo,
     })
     .eq("id", habitoId);
 
@@ -135,8 +139,6 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
   revalidatePath("/habitos/lista");
   redirect("/habitos/lista");
 }
-
-export const MARCOS_CONQUISTA = [7, 30, 100, 365];
 
 export async function alternarCheckin(habitoId: string, dataISO?: string) {
   "use server";

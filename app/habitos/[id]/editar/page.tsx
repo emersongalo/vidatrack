@@ -23,7 +23,7 @@ export default async function EditarHabitoPage({
   const [{ data: habito }, { data: categorias }] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, cor, icone, frequencia, dias_semana, categoria_id, horario_lembrete, meta_diaria, unidade")
+      .select("id, nome, cor, icone, frequencia, dias_semana, categoria_id, horario_lembrete, meta_diaria, unidade, eh_negativo")
       .eq("id", params.id)
       .single(),
     supabase.from("categorias_produtividade").select("id, nome").order("nome"),
@@ -58,6 +58,7 @@ export default async function EditarHabitoPage({
           horarioLembrete: habito.horario_lembrete,
           metaDiaria: habito.meta_diaria ?? 1,
           unidade: habito.unidade,
+          ehNegativo: habito.eh_negativo,
         }}
       />
     </main>

@@ -6,6 +6,7 @@ import { AlternadorTema } from "@/components/AlternadorTema";
 import { resolverUrlFoto } from "@/lib/perfil/foto";
 import { TrilhoMenu } from "@/components/TrilhoMenu";
 import { ConfirmarSaidaApp } from "@/components/ConfirmarSaidaApp";
+import { formatarMoeda } from "@/lib/financas/formatacao";
 import { Bell } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -27,8 +28,26 @@ export default async function DashboardPage() {
   // isso só olhava um campo que o login com Google nunca preenchia.
   const nome = perfil?.nome || user?.email || "";
 
+  // Resumo rápido, só pra quem tem tela larga (desktop) — no celular
+  // continua igual, essa tela é de propósito só o trilho, sem rolar.
+  const [{ data: contas }, { data: transacoesMes }] = await Promise.all([
+    supabase.from("financa_contas").select("id, saldo_inicial, tipo").eq("arquivado", false),
+    supabase
+      .from("financa_transacoes")
+      .select("conta_id, tipo, valor")
+      .gte("data", new Date().toLocaleDateString("sv-SE").slice(0, 8) + "01"),
+  ]);
+
+  const contasComuns = (contas ?? []).filter((c) => c.tipo !== "investimento");
+  const saldoAtual = contasComuns.reduce((total, conta) => {
+    const doTransacoes = (transacoesMes ?? [])
+      .filter((t) => t.conta_id === conta.id)
+      .reduce((acc, t) => acc + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)), 0);
+    return total + Number(conta.saldo_inicial) + doTransacoes;
+  }, 0);
+
   return (
-    <main className="h-screen h-[100dvh] overflow-hidden p-6 md:p-12 max-w-lg mx-auto flex flex-col">
+    <main className="h-screen h-[100dvh] overflow-hidden p-6 md:p-12 max-w-lg lg:max-w-3xl mx-auto flex flex-col">
       <header className="flex items-center justify-between mb-2 gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/perfil" className="shrink-0">
@@ -80,8 +99,29 @@ export default async function DashboardPage() {
         </div>
       </header>
 
+      <div className="lg:grid lg:grid-cols-[1fr_240px] lg:gap-6 lg:flex-1 lg:min-h-0">
       <TrilhoMenu />
       <ConfirmarSaidaApp />
+
+      <div className="hidden lg:flex lg:flex-col lg:gap-3 lg:pt-2">
+        <Link
+          href="/habitos/estatisticas"
+          className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-habito transition"
+        >
+          <p className="text-xs text-ink-400 mb-1">Hábitos</p>
+          <p className="text-sm">Ver estatísticas →</p>
+        </Link>
+        <Link
+          href="/financas"
+          className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-financa transition"
+        >
+          <p className="text-xs text-ink-400 mb-1">Saldo em contas</p>
+          <p className={`text-xl font-mono font-semibold ${saldoAtual < 0 ? "text-red-400" : ""}`}>
+            {formatarMoeda(saldoAtual)}
+          </p>
+        </Link>
+      </div>
+      </div>
 
       <div className="flex items-center justify-center gap-2 mt-2">
         <Link

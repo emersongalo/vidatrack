@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 100: Correção de Build (componente morto removido)
+# VidaTrack — Etapa 102: Correção de Build (constante num arquivo "use server")
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,53 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (102) — corrige o erro de build da Etapa 101.**
+
+Arquivos com `"use server"` só podem exportar funções assíncronas —
+na Etapa 98, adicionei `MARCOS_CONQUISTA` (uma lista de números) no
+mesmo arquivo de actions de hábito, o que quebra essa regra.
+
+**Corrigido:** movi essa constante pra `lib/habitos/streak.ts` (onde
+já mora a lógica de sequência, faz mais sentido ficar junto mesmo).
+
+**Fiz uma varredura em TODOS os arquivos "use server" do projeto**
+atrás do mesmo problema — só achei esse, mais nenhum quebrado.
+
+Não precisa rodar SQL — é reorganização de código só.
+
+**Novo nesta etapa (101) — as 5 melhorias restantes, todas
+entregues:**
+
+**1. Hábitos negativos** — ao criar/editar um hábito, escolhe entre
+"Fazer algo" ou "Parar de fazer algo" (ex: não fumar). No tipo
+negativo, a sequência é calculada ao contrário: dias limpos desde a
+última "recaída" registrada (🛡️ em vez de 🔥). **Escopo desta
+etapa:** a tela "Hoje" ainda usa a mesma linguagem visual pra marcar
+— adaptar o texto/confirmação lá fica pra um refinamento futuro, se
+fizer falta.
+
+**2. Insight comparando hábitos** — nova seção na tela de
+Estatísticas, comparando todos os hábitos lado a lado (barra de
+percentual da semana, do melhor pro pior).
+
+**3. Hoje em 2 colunas (desktop)** — lista à esquerda, resumo do dia
+(X/Y feitos + link pra Estatísticas) à direita.
+
+**4. Atalhos de teclado (desktop)** — teclas 1-9 marcam/desmarcam os
+itens da lista "Hoje" na ordem que aparecem, sem precisar clicar.
+Não ativa se você estiver digitando em algum campo.
+
+**5. Resumo maior no Painel (desktop)** — ao lado do trilho
+Hábitos/Finanças, um painel com atalho pras Estatísticas e o saldo
+atual em contas.
+
+**Testei antes de construir:** a lógica de sequência pra hábito
+negativo (4 cenários, incluindo nunca ter tido recaída e datas fora
+de ordem).
+
+Não precisa rodar SQL — já apliquei a coluna nova (`eh_negativo` em
+`habitos`) direto no banco.
 
 **Novo nesta etapa (100) — corrige o erro de build da Etapa 99.**
 
@@ -2498,7 +2545,9 @@ versão Android via Capacitor está descrita na seção específica acima.
 97. Patrimônio líquido ao longo do tempo 🎉
 98. Sequência visível + conquistas + nota rápida (Hábitos)
 99. Mapa de contribuições (calendário do ano)
-100. Correção de build (componente morto removido) — **você está aqui**
+100. Correção de build (componente morto removido)
+101. Hábitos negativos + insight + desktop (Hoje, atalhos, painel) 🎉
+102. Correção de build (constante em arquivo "use server") — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

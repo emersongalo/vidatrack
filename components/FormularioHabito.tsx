@@ -35,11 +35,13 @@ export function FormularioHabito({
     horarioLembrete: string | null;
     metaDiaria: number;
     unidade: string | null;
+    ehNegativo?: boolean;
   };
   textoBotao: string;
 }) {
   const [cor, setCor] = useState(valoresIniciais?.cor ?? "habito");
   const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_HABITO[0].nome);
+  const [ehNegativo, setEhNegativo] = useState(valoresIniciais?.ehNegativo ?? false);
   const [frequencia, setFrequencia] = useState<"diaria" | "dias_semana">(
     (valoresIniciais?.frequencia as "diaria" | "dias_semana") ?? "diaria"
   );
@@ -69,6 +71,37 @@ export function FormularioHabito({
           placeholder="Ex: Beber água, Ler 10 páginas, Meditar"
           className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
         />
+      </div>
+
+      <div>
+        <span className="block text-sm text-ink-400 mb-2">Tipo de hábito</span>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setEhNegativo(false)}
+            className={`rounded-lg py-2.5 text-sm border transition ${
+              !ehNegativo ? "bg-habito text-base-900 border-habito font-medium" : "border-base-600 text-ink-400"
+            }`}
+          >
+            Fazer algo
+          </button>
+          <button
+            type="button"
+            onClick={() => setEhNegativo(true)}
+            className={`rounded-lg py-2.5 text-sm border transition ${
+              ehNegativo ? "bg-red-400 text-base-900 border-red-400 font-medium" : "border-base-600 text-ink-400"
+            }`}
+          >
+            Parar de fazer algo
+          </button>
+        </div>
+        {ehNegativo && (
+          <p className="text-xs text-ink-400 mt-1.5">
+            Nesse tipo, você registra quando "escorregar" (ex: fumou um cigarro) — a sequência conta os
+            dias limpos desde a última vez.
+          </p>
+        )}
+        <input type="hidden" name="ehNegativo" value={ehNegativo ? "true" : "false"} />
       </div>
 
       <div>

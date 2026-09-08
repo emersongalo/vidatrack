@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ItemLinhaAgenda, ItemAgenda } from "@/components/ItemLinhaAgenda";
 import { adicionarNaFila, salvarCacheHoje } from "@/lib/offline/fila";
 import { EVENTO_SINCRONIZACAO_CONCLUIDA } from "@/components/GerenciadorSincronizacaoOffline";
@@ -14,6 +14,7 @@ export function ListaHojeComOffline({
 }) {
   const [itens, setItens] = useState(itensServidor);
   const [offline, setOffline] = useState(false);
+  const refLista = useRef<HTMLUListElement>(null);
 
   // Sempre que os dados do servidor mudam (nova renderização, revalidação),
   // atualiza o cache local pra essa data.
@@ -49,6 +50,28 @@ export function ListaHojeComOffline({
     };
   }, []);
 
+  // Atalho de teclado (só faz sentido no desktop, com teclado de
+  // verdade): dígitos 1-9 marcam/desmarcam o item correspondente na
+  // lista, na ordem em que aparecem na tela — não ativa se a pessoa
+  // estiver digitando em algum campo de texto.
+  useEffect(() => {
+    function aoTeclar(e: KeyboardEvent) {
+      const alvo = e.target as HTMLElement;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(alvo.tagName)) return;
+
+      const numero = Number(e.key);
+      if (!Number.isInteger(numero) || numero < 1 || numero > 9) return;
+
+      const itensDaLista = refLista.current?.querySelectorAll(":scope > li");
+      const itemAlvo = itensDaLista?.[numero - 1];
+      const botao = itemAlvo?.querySelector<HTMLButtonElement>("button[aria-pressed], button[aria-label='Aumentar']");
+      botao?.click();
+    }
+
+    window.addEventListener("keydown", aoTeclar);
+    return () => window.removeEventListener("keydown", aoTeclar);
+  }, []);
+
   function alternarOtimista(item: ItemAgenda) {
     if (navigator.onLine) return; // deixa o ItemLinhaAgenda chamar a action normalmente
 
@@ -81,7 +104,10 @@ export function ListaHojeComOffline({
           sincronizar automaticamente quando a internet voltar.
         </p>
       )}
-      <ul className="space-y-2">
+      <p className="hidden lg:block text-xs text-ink-400 mb-2">
+        Dica: teclas 1-9 marcam os itens na ordem da lista
+      </p>
+      <ul ref={refLista} className="space-y-2">
         {itens.map((item) => (
           <ItemLinhaAgenda
             key={`${item.tipo}-${item.id}`}

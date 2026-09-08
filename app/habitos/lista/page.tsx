@@ -2,14 +2,14 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ListaHabitosArrastavel } from "@/components/ListaHabitosArrastavel";
 import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
-import { calcularStreak, calcularMelhorStreak } from "@/lib/habitos/streak";
+import { calcularStreak, calcularMelhorStreak, calcularStreakNegativo } from "@/lib/habitos/streak";
 
 export default async function ListaHabitosPage() {
   const supabase = createClient();
 
   const { data: habitos } = await supabase
     .from("habitos")
-    .select("id, nome, cor, icone, frequencia, categorias_produtividade(nome)")
+    .select("id, nome, cor, icone, frequencia, eh_negativo, criado_em, categorias_produtividade(nome)")
     .eq("arquivado", false)
     .order("ordem", { ascending: true });
 
@@ -27,6 +27,13 @@ export default async function ListaHabitosPage() {
 
   const habitosComStreak = (habitos ?? []).map((h) => {
     const datas = datasPorHabito.get(h.id) ?? [];
+    if (h.eh_negativo) {
+      return {
+        ...h,
+        streakAtual: calcularStreakNegativo(datas, (h.criado_em as string).slice(0, 10)),
+        melhorStreak: 0, // "recorde" não faz muito sentido pra hábito negativo — o que importa é o streak atual
+      };
+    }
     return {
       ...h,
       streakAtual: calcularStreak(datas),

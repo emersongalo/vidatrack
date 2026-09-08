@@ -22,6 +22,7 @@ type Habito = {
   categorias_produtividade: { nome: string } | null;
   streakAtual?: number;
   melhorStreak?: number;
+  eh_negativo?: boolean;
 };
 
 export function ListaHabitosArrastavel({ habitos }: { habitos: Habito[] }) {
@@ -50,11 +51,17 @@ export function ListaHabitosArrastavel({ habitos }: { habitos: Habito[] }) {
             <p className="text-xs text-ink-400">
               {RÓTULOS_FREQUENCIA[habito.frequencia]}
               {habito.categorias_produtividade?.nome && ` · ${habito.categorias_produtividade.nome}`}
-              {(habito.streakAtual ?? 0) > 0 && (
-                <span className="text-financa"> · 🔥 {habito.streakAtual}</span>
-              )}
-              {(habito.melhorStreak ?? 0) > 0 && (
-                <span> · recorde {habito.melhorStreak}</span>
+              {habito.eh_negativo ? (
+                (habito.streakAtual ?? 0) > 0 && (
+                  <span className="text-financa"> · 🛡️ {habito.streakAtual} dias limpo</span>
+                )
+              ) : (
+                <>
+                  {(habito.streakAtual ?? 0) > 0 && (
+                    <span className="text-financa"> · 🔥 {habito.streakAtual}</span>
+                  )}
+                  {(habito.melhorStreak ?? 0) > 0 && <span> · recorde {habito.melhorStreak}</span>}
+                </>
               )}
             </p>
           </div>
