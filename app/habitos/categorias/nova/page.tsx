@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { criarCategoriaProdutividade } from "../actions";
+import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
 
 export default function NovaCategoriaPage({
@@ -58,12 +59,7 @@ export default function NovaCategoriaPage({
           <input type="hidden" name="cor" value={cor} />
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
-        >
-          Criar categoria
-        </button>
+        <BotaoSalvarFormulario>Criar categoria</BotaoSalvarFormulario>
       </form>
     </main>
   );

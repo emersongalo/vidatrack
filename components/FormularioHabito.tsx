@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ICONES_HABITO } from "@/lib/agenda/icones-habito";
 import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
+import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 
 type Categoria = { id: string; nome: string };
 
@@ -221,12 +222,7 @@ export function FormularioHabito({
         </p>
       </div>
 
-      <button
-        type="submit"
-        className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
-      >
-        {textoBotao}
-      </button>
+      <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
     </form>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { criarTarefa } from "@/app/habitos/tarefas/actions";
 import { ICONES_HABITO } from "@/lib/agenda/icones-habito";
+import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 
 type Categoria = { id: string; nome: string };
 
@@ -247,12 +248,7 @@ export function FormularioTarefa({
           </div>
         )}
 
-        <button
-          type="submit"
-          className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
-        >
-          {textoBotao}
-        </button>
+        <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
       </form>
     </main>
   );

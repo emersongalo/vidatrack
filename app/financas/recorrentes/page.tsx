@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { criarRecorrencia, alternarAtivaRecorrencia, removerRecorrencia } from "./actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
+import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 
 export default async function RecorrentesPage({
   searchParams,
@@ -150,12 +151,7 @@ export default async function RecorrentesPage({
               placeholder="Descrição (ex: Aluguel, Salário)"
               className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
-            <button
-              type="submit"
-              className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
-            >
-              Criar recorrência
-            </button>
+            <BotaoSalvarFormulario>Criar recorrência</BotaoSalvarFormulario>
           </form>
           <p className="text-xs text-ink-400 mt-3">
             O lançamento do mês é criado automaticamente na primeira vez

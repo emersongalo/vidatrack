@@ -10,6 +10,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { atualizarConta } from "@/app/financas/actions";
 import { BANCOS } from "@/lib/financas/bancos";
+import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 
 export default async function EditarContaPage({
   params,
@@ -83,12 +84,7 @@ export default async function EditarContaPage({
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
           />
         </div>
-        <button
-          type="submit"
-          className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
-        >
-          Salvar alterações
-        </button>
+        <BotaoSalvarFormulario>Salvar alterações</BotaoSalvarFormulario>
       </form>
     </main>
   );

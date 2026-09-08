@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Pencil, Share2, Archive, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { criarConta, arquivarConta, excluirContaDefinitivamente } from "../actions";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { SeloBanco } from "@/components/SeloBanco";
@@ -212,12 +213,7 @@ export default async function ContasPage({
           placeholder="Saldo inicial (opcional, ex: 150,00)"
           className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
         />
-        <button
-          type="submit"
-          className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
-        >
-          Criar conta
-        </button>
+        <BotaoSalvarFormulario>Criar conta</BotaoSalvarFormulario>
       </form>
     </main>
   );

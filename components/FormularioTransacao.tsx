@@ -8,6 +8,7 @@ import { ICONES_CATEGORIA } from "@/lib/financas/icones-categoria";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { adicionarNaFila } from "@/lib/offline/fila";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
+import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 
 type Conta = { id: string; nome: string };
 type Categoria = { id: string; nome: string; tipo: "receita" | "despesa"; icone?: string };
@@ -373,12 +374,7 @@ export function FormularioTransacao({
           </div>
         )}
 
-        <button
-          type="submit"
-          className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
-        >
-          {textoBotao}
-        </button>
+        <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
       </form>
     </main>
   );

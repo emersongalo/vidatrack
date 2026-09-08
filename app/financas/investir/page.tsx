@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { transferirParaInvestimento } from "../actions";
+import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 
 export default async function InvestirPage({
   searchParams,
@@ -103,12 +104,9 @@ export default async function InvestirPage({
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-financa text-base-900 font-semibold rounded-lg py-2.5 hover:opacity-90 transition"
-          >
+          <BotaoSalvarFormulario className="w-full bg-financa text-base-900 font-semibold rounded-lg py-2.5 hover:opacity-90 transition disabled:opacity-50">
             Guardar
-          </button>
+          </BotaoSalvarFormulario>
         </form>
       )}
     </main>

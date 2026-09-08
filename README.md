@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 84: Timer Também Ajustado pro Desktop
+# VidaTrack — Etapa 85: Lançamento Duplicado Corrigido (clique duplo no botão de salvar)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,41 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (85) — achamos a causa real do lançamento
+duplicado:**
+
+Não era conexão com dois bancos — era o **botão de salvar sem
+nenhuma proteção contra clique duplo**. Se a resposta do servidor
+demorasse um pouquinho, um segundo clique (ou clique impaciente)
+criava um segundo registro idêntico.
+
+**Corrigido em 9 formulários diferentes**, todos usando um novo
+componente reutilizável (`BotaoSalvarFormulario`) que desabilita o
+botão e mostra "Salvando..." enquanto processa — impossível clicar
+duas vezes agora:
+1. Lançamento financeiro
+2. Categoria financeira
+3. Hábito
+4. Tarefa
+5. Criar conta
+6. Editar conta
+7. Recorrência
+8. Transferência pra investimento
+9. Categoria de produtividade (hábitos)
+
+**Bug que eu mesmo cometi e corrigi antes de entregar:** ao editar um
+dos arquivos, deixei uma tag HTML sobrando por engano — conferi
+todos os 9 lugares editados um por um antes de empacotar, pra
+garantir que nenhum outro tinha o mesmo problema.
+
+**O que ficou de fora de propósito:** telas de alternar estado
+(marcar tarefa como feita, ativar/desativar recorrência) e de filtro
+(extrato) — essas não criam registro novo, então clique duplo nelas
+não causa duplicação de dado, só um efeito colateral inofensivo
+(volta ao estado original).
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (84) — Timer corrigido:**
 
@@ -2109,7 +2144,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 81. Notificação única + ícones de hábitos modernizados
 82. Resumo semanal de hábitos + dicas automáticas
 83. Desktop em todas as sub-telas
-84. Timer também ajustado pro desktop — **você está aqui**
+84. Timer também ajustado pro desktop
+85. Lançamento duplicado corrigido (clique duplo) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
