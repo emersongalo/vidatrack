@@ -19,7 +19,7 @@ export async function criarHabito(formData: FormData) {
 
   const nome = String(formData.get("nome") ?? "").trim();
   const cor = String(formData.get("cor") ?? "habito");
-  const icone = String(formData.get("icone") ?? "💧");
+  const icone = String(formData.get("icone") ?? "Droplet");
   const frequencia = String(formData.get("frequencia") ?? "diaria");
   const diasSemana = formData.getAll("diasSemana").map(Number);
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
@@ -100,7 +100,7 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
 
   const nome = String(formData.get("nome") ?? "").trim();
   const cor = String(formData.get("cor") ?? "habito");
-  const icone = String(formData.get("icone") ?? "💧");
+  const icone = String(formData.get("icone") ?? "Droplet");
   const frequencia = String(formData.get("frequencia") ?? "diaria");
   const diasSemana = formData.getAll("diasSemana").map(Number);
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
@@ -206,11 +206,11 @@ export async function ajustarQuantidadeHabito(habitoId: string, dataISO: string,
 }
 
 const SUGESTOES_HABITO: Record<string, { icone: string; cor: string }> = {
-  "Beber água": { icone: "💧", cor: "habito" },
-  "Exercitar-se": { icone: "🏃", cor: "financa" },
-  Ler: { icone: "📖", cor: "nota" },
-  Meditar: { icone: "🧘", cor: "habito" },
-  "Dormir cedo": { icone: "😴", cor: "neutro" },
+  "Beber água": { icone: "Droplet", cor: "habito" },
+  "Exercitar-se": { icone: "Footprints", cor: "financa" },
+  Ler: { icone: "BookOpen", cor: "nota" },
+  Meditar: { icone: "Flower2", cor: "habito" },
+  "Dormir cedo": { icone: "Moon", cor: "neutro" },
 };
 
 export async function criarHabitoRapido(nome: string) {
@@ -221,7 +221,7 @@ export async function criarHabitoRapido(nome: string) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const sugestao = SUGESTOES_HABITO[nome] ?? { icone: "✨", cor: "habito" };
+  const sugestao = SUGESTOES_HABITO[nome] ?? { icone: "Sparkles", cor: "habito" };
 
   await supabase.from("habitos").insert({
     dono_id: user!.id,

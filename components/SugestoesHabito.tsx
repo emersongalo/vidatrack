@@ -2,13 +2,14 @@
 
 import { useTransition } from "react";
 import { criarHabitoRapido } from "@/app/habitos/actions";
+import { IconeHabito } from "@/components/IconeHabito";
 
 const SUGESTOES = [
-  { nome: "Beber água", icone: "💧" },
-  { nome: "Exercitar-se", icone: "🏃" },
-  { nome: "Ler", icone: "📖" },
-  { nome: "Meditar", icone: "🧘" },
-  { nome: "Dormir cedo", icone: "😴" },
+  { nome: "Beber água", icone: "Droplet" },
+  { nome: "Exercitar-se", icone: "Footprints" },
+  { nome: "Ler", icone: "BookOpen" },
+  { nome: "Meditar", icone: "Flower2" },
+  { nome: "Dormir cedo", icone: "Moon" },
 ];
 
 export function SugestoesHabito() {
@@ -21,9 +22,9 @@ export function SugestoesHabito() {
           key={s.nome}
           disabled={pendente}
           onClick={() => iniciarTransicao(() => criarHabitoRapido(s.nome))}
-          className="text-sm border border-base-600 rounded-full px-3 py-1.5 hover:border-habito hover:text-habito transition disabled:opacity-50"
+          className="flex items-center gap-1.5 text-sm border border-base-600 rounded-full px-3 py-1.5 hover:border-habito hover:text-habito transition disabled:opacity-50"
         >
-          {s.icone} {s.nome}
+          <IconeHabito icone={s.icone} tamanho={15} /> {s.nome}
         </button>
       ))}
     </div>

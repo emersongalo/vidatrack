@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ListaArrastavel } from "@/components/ListaArrastavel";
 import { reordenarTarefas } from "@/app/habitos/tarefas/actions";
+import { IconeHabito } from "@/components/IconeHabito";
 
 type Tarefa = {
   id: string;
@@ -32,7 +33,7 @@ export function ListaTarefasArrastavel({ tarefas }: { tarefas: Tarefa[] }) {
             </span>
             <Link href={`/habitos/tarefas/${tarefa.id}`} className="flex items-center gap-3 flex-1 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-nota/15 flex items-center justify-center text-lg shrink-0">
-                {tarefa.icone}
+                <IconeHabito icone={tarefa.icone} tamanho={19} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className={`font-medium truncate ${tarefa.concluida ? "line-through text-ink-400" : ""}`}>

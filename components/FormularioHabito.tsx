@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ICONES_DISPONIVEIS, CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
+import { ICONES_HABITO } from "@/lib/agenda/icones-habito";
+import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
 
 type Categoria = { id: string; nome: string };
 
@@ -37,7 +38,7 @@ export function FormularioHabito({
   textoBotao: string;
 }) {
   const [cor, setCor] = useState(valoresIniciais?.cor ?? "habito");
-  const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_DISPONIVEIS[0]);
+  const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_HABITO[0].nome);
   const [frequencia, setFrequencia] = useState<"diaria" | "dias_semana">(
     (valoresIniciais?.frequencia as "diaria" | "dias_semana") ?? "diaria"
   );
@@ -71,17 +72,18 @@ export function FormularioHabito({
 
       <div>
         <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-        <div className="grid grid-cols-8 gap-2">
-          {ICONES_DISPONIVEIS.map((opcao) => (
+        <div className="grid grid-cols-6 gap-2 max-h-56 overflow-y-auto pr-1">
+          {ICONES_HABITO.map(({ nome, Icone }) => (
             <button
               type="button"
-              key={opcao}
-              onClick={() => setIcone(opcao)}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg border transition ${
-                icone === opcao ? "border-ink-100 bg-base-700" : "border-base-600 hover:border-ink-400"
+              key={nome}
+              onClick={() => setIcone(nome)}
+              aria-label={nome}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center border transition ${
+                icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
               }`}
             >
-              {opcao}
+              <Icone size={18} strokeWidth={2} />
             </button>
           ))}
         </div>

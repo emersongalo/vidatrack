@@ -8,6 +8,7 @@ export const revalidate = 0;
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { IconeHabito } from "@/components/IconeHabito";
 import { arquivarTarefa, alternarConclusaoTarefaUnica } from "../actions";
 import { CheckboxSubtarefa } from "@/components/CheckboxSubtarefa";
 import { PainelCompartilhamento } from "@/components/PainelCompartilhamento";
@@ -52,7 +53,7 @@ export default async function DetalheTarefaPage({
 
       <div className="flex items-center gap-3 mb-6">
         <div className="w-12 h-12 rounded-xl bg-nota/15 flex items-center justify-center text-2xl shrink-0">
-          {tarefa.icone}
+          <IconeHabito icone={tarefa.icone} tamanho={22} />
         </div>
         <div>
           <h1 className={`text-xl font-display font-semibold ${tarefa.concluida ? "line-through text-ink-400" : ""}`}>

@@ -1,10 +1,3 @@
-export const ICONES_DISPONIVEIS = [
-  "💧", "🏃", "📖", "🧘", "🙏", "😴", "🥗", "💪",
-  "📝", "🧹", "💊", "🎯", "🎸", "🚭", "💰", "☀️",
-  "❤️", "🎓", "🚴", "➕", "📚", "🧠", "🎨", "🌱",
-  "🦷", "🚶", "🍎", "☕️", "📵", "🧴", "🐾", "🎧",
-];
-
 // A paleta original (habito/nota/financa/neutro) ligava a cor ao
 // MÓDULO do app. A partir daqui, cada hábito/tarefa pode ter sua
 // própria cor vibrante, independente do módulo — é o que dá aquele

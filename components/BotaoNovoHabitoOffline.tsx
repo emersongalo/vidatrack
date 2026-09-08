@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { adicionarNaFila } from "@/lib/offline/fila";
+import { IconeHabito } from "@/components/IconeHabito";
 
-const ICONES_RAPIDOS = ["💧", "🏃", "📖", "🧘", "🙏", "💪", "❤️", "🎯"];
+const ICONES_RAPIDOS = ["Droplet", "Footprints", "BookOpen", "Flower2", "HandHeart", "Dumbbell", "Heart", "Target"];
 const CORES_RAPIDAS = [
   { valor: "habito", classe: "bg-habito" },
   { valor: "rosa", classe: "bg-[#E5567A]" },
@@ -64,11 +65,12 @@ export function BotaoNovoHabitoOffline() {
                   <button
                     key={ic}
                     onClick={() => setIcone(ic)}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-base border transition ${
-                      icone === ic ? "border-ink-100 bg-base-700" : "border-base-600"
+                    aria-label={ic}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center border transition ${
+                      icone === ic ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400"
                     }`}
                   >
-                    {ic}
+                    <IconeHabito icone={ic} tamanho={16} />
                   </button>
                 ))}
               </div>

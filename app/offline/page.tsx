@@ -5,6 +5,7 @@ import { lerSnapshotOffline, type SnapshotOffline } from "@/lib/offline/snapshot
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { adicionarNaFila } from "@/lib/offline/fila";
 import { formatarMoeda } from "@/lib/financas/formatacao";
+import { IconeHabito } from "@/components/IconeHabito";
 import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
 
 type Aba = "hoje" | "financas";
@@ -120,7 +121,7 @@ export default function OfflinePage() {
                     onClick={() => marcarFeito(item._tipo, item.id)}
                     className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 cursor-pointer"
                   >
-                    <span className="text-lg">{item.icone}</span>
+                    <span className="text-lg"><IconeHabito icone={item.icone} /></span>
                     <p className={`flex-1 text-sm ${feito ? "line-through text-ink-400" : ""}`}>
                       {item._tipo === "habito" ? item.nome : item.titulo}
                     </p>

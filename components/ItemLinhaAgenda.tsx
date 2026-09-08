@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
+import { RefreshCw, Bell } from "lucide-react";
 import { classeCor, classeFundoSuave, classeTextoCor } from "@/lib/agenda/estilo";
+import { IconeHabito } from "@/components/IconeHabito";
 import { alternarCheckin, ajustarQuantidadeHabito } from "@/app/habitos/actions";
 import { alternarConclusaoTarefa } from "@/app/habitos/tarefas/actions";
 
@@ -69,7 +71,7 @@ export function ItemLinhaAgenda({
           item.cor
         )}`}
       >
-        {item.icone}
+        <IconeHabito icone={item.icone} tamanho={20} />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -94,9 +96,15 @@ export function ItemLinhaAgenda({
               {item.meta.atual}/{item.meta.alvo} {item.meta.unidade ?? ""}
             </span>
           )}
-          {item.repete && <span className="text-ink-400 text-xs">🔁</span>}
+          {item.repete && (
+            <span className="text-ink-400">
+              <RefreshCw size={12} strokeWidth={2} />
+            </span>
+          )}
           {item.horarioLembrete && (
-            <span className="text-[11px] text-ink-400">🔔 {item.horarioLembrete.slice(0, 5)}</span>
+            <span className="text-[11px] text-ink-400 flex items-center gap-1">
+              <Bell size={11} strokeWidth={2} /> {item.horarioLembrete.slice(0, 5)}
+            </span>
           )}
         </div>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AcoesLixeiraTarefa } from "@/components/AcoesLixeiraTarefa";
+import { IconeHabito } from "@/components/IconeHabito";
 
 export default async function LixeiraTarefasPage() {
   const supabase = createClient();
@@ -27,7 +28,7 @@ export default async function LixeiraTarefasPage() {
               key={t.id}
               className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-xl2 p-3"
             >
-              <span className="text-lg">{t.icone}</span>
+              <span className="text-lg"><IconeHabito icone={t.icone} /></span>
               <span className="flex-1 text-sm truncate">{t.titulo}</span>
               <AcoesLixeiraTarefa tarefaId={t.id} />
             </li>

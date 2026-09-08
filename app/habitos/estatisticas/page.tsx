@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hojeISO } from "@/lib/habitos/streak";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { hexDaCor } from "@/lib/agenda/estilo";
+import { IconeHabito } from "@/components/IconeHabito";
 import { GraficoConsistencia } from "@/components/GraficoConsistencia";
 
 function ultimosNDias(n: number): string[] {
@@ -85,7 +86,7 @@ export default async function EstatisticasHabitosPage() {
               <div key={habito.id} className="bg-base-800 border border-base-600 rounded-xl2 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{habito.icone}</span>
+                    <span className="text-lg"><IconeHabito icone={habito.icone} /></span>
                     <p className="font-medium">{habito.nome}</p>
                   </div>
                   <p className="text-sm font-mono text-ink-400">

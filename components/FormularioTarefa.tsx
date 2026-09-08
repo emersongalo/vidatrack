@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { criarTarefa } from "@/app/habitos/tarefas/actions";
-import { ICONES_DISPONIVEIS } from "@/lib/agenda/estilo";
+import { ICONES_HABITO } from "@/lib/agenda/icones-habito";
 
 type Categoria = { id: string; nome: string };
 
@@ -46,7 +46,7 @@ export function FormularioTarefa({
     horarioLembrete: string | null;
   };
 }) {
-  const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_DISPONIVEIS[8]); // 📝
+  const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_HABITO[8].nome); // NotebookPen
   const [repetir, setRepetir] = useState<"nenhuma" | "diaria" | "dias_semana">(
     valoresIniciais?.repetir ?? "nenhuma"
   );
@@ -92,17 +92,18 @@ export function FormularioTarefa({
 
         <div>
           <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-          <div className="grid grid-cols-8 gap-2">
-            {ICONES_DISPONIVEIS.map((opcao) => (
+          <div className="grid grid-cols-6 gap-2 max-h-56 overflow-y-auto pr-1">
+            {ICONES_HABITO.map(({ nome, Icone }) => (
               <button
                 type="button"
-                key={opcao}
-                onClick={() => setIcone(opcao)}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg border transition ${
-                  icone === opcao ? "border-ink-100 bg-base-700" : "border-base-600 hover:border-ink-400"
+                key={nome}
+                onClick={() => setIcone(nome)}
+                aria-label={nome}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center border transition ${
+                  icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
                 }`}
               >
-                {opcao}
+                <Icone size={18} strokeWidth={2} />
               </button>
             ))}
           </div>

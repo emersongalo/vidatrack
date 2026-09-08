@@ -169,56 +169,64 @@ async function notificarUsuariosDoItem(
       .maybeSingle();
     if (jaEnviado) continue;
 
-    const { data: inscricoes } = await supabase
-      .from("push_inscricoes")
-      .select("id, endpoint, chaves")
-      .eq("usuario_id", usuarioId);
-
-    for (const inscricao of inscricoes ?? []) {
-      try {
-        await enviarPush(
-          { endpoint: inscricao.endpoint, chaves: inscricao.chaves as any },
-          { titulo: "VidaTrack", corpo: texto, url }
-        );
-        enviados++;
-        await supabase.from("log_notificacoes").insert({
-          usuario_id: usuarioId,
-          canal: "webpush",
-          sucesso: true,
-        });
-      } catch (erro: any) {
-        // Guarda o motivo real do erro — antes isso era silenciado
-        // por completo, e nunca dava pra saber por que uma
-        // notificação não chegava. O pacote web-push costuma incluir
-        // o código de status HTTP da tentativa, que ajuda mais que
-        // só a mensagem genérica.
-        const detalhe = erro?.statusCode
-          ? `HTTP ${erro.statusCode}: ${erro?.body ?? erro?.message ?? ""}`
-          : erro instanceof Error
-            ? erro.message
-            : String(erro);
-        await supabase.from("log_notificacoes").insert({
-          usuario_id: usuarioId,
-          canal: "webpush",
-          sucesso: false,
-          erro: detalhe,
-        });
-
-        // 404 ou 410 = a inscrição não existe mais de verdade (a
-        // pessoa desinstalou, limpou os dados do navegador, etc.) —
-        // limpa daqui, senão ficamos tentando mandar pra um endereço
-        // morto pra sempre (é o mesmo cuidado que já tínhamos com
-        // token do FCM, só que essa parte do Web Push ainda não tinha).
-        if (erro?.statusCode === 404 || erro?.statusCode === 410) {
-          await supabase.from("push_inscricoes").delete().eq("id", inscricao.id);
-        }
-      }
-    }
-
+    // Se a pessoa tem o app instalado (token do FCM), a notificação
+    // nativa já é mais confiável — não faz sentido mandar as duas
+    // (navegador + app) pro mesmo dispositivo. Prioriza o app: só usa
+    // o Web Push do navegador se não tiver nenhum token de app.
     const { data: tokensFcm } = await supabase
       .from("fcm_tokens")
       .select("id, token")
       .eq("usuario_id", usuarioId);
+
+    const temAppInstalado = (tokensFcm ?? []).length > 0;
+
+    if (!temAppInstalado) {
+      const { data: inscricoes } = await supabase
+        .from("push_inscricoes")
+        .select("id, endpoint, chaves")
+        .eq("usuario_id", usuarioId);
+
+      for (const inscricao of inscricoes ?? []) {
+        try {
+          await enviarPush(
+            { endpoint: inscricao.endpoint, chaves: inscricao.chaves as any },
+            { titulo: "VidaTrack", corpo: texto, url }
+          );
+          enviados++;
+          await supabase.from("log_notificacoes").insert({
+            usuario_id: usuarioId,
+            canal: "webpush",
+            sucesso: true,
+          });
+        } catch (erro: any) {
+          // Guarda o motivo real do erro — antes isso era silenciado
+          // por completo, e nunca dava pra saber por que uma
+          // notificação não chegava. O pacote web-push costuma incluir
+          // o código de status HTTP da tentativa, que ajuda mais que
+          // só a mensagem genérica.
+          const detalhe = erro?.statusCode
+            ? `HTTP ${erro.statusCode}: ${erro?.body ?? erro?.message ?? ""}`
+            : erro instanceof Error
+              ? erro.message
+              : String(erro);
+          await supabase.from("log_notificacoes").insert({
+            usuario_id: usuarioId,
+            canal: "webpush",
+            sucesso: false,
+            erro: detalhe,
+          });
+
+          // 404 ou 410 = a inscrição não existe mais de verdade (a
+          // pessoa desinstalou, limpou os dados do navegador, etc.) —
+          // limpa daqui, senão ficamos tentando mandar pra um endereço
+          // morto pra sempre (é o mesmo cuidado que já tínhamos com
+          // token do FCM, só que essa parte do Web Push ainda não tinha).
+          if (erro?.statusCode === 404 || erro?.statusCode === 410) {
+            await supabase.from("push_inscricoes").delete().eq("id", inscricao.id);
+          }
+        }
+      }
+    }
 
     for (const registroFcm of tokensFcm ?? []) {
       const resultado = await enviarNotificacaoFCM(registroFcm.token, "VidaTrack", texto, url);

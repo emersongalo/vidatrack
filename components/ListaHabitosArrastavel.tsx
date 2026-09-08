@@ -5,6 +5,7 @@ import { Pencil, Share2, Archive } from "lucide-react";
 import { ListaArrastavel } from "@/components/ListaArrastavel";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
+import { IconeHabito } from "@/components/IconeHabito";
 import { arquivarHabito, reordenarHabitos } from "@/app/habitos/actions";
 
 const RÓTULOS_FREQUENCIA: Record<string, string> = {
@@ -40,7 +41,7 @@ export function ListaHabitosArrastavel({ habitos }: { habitos: Habito[] }) {
               habito.cor
             )}`}
           >
-            {habito.icone}
+            <IconeHabito icone={habito.icone} tamanho={19} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{habito.nome}</p>

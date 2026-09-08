@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 80: Ícone do App Trocado (trilho, igual à logo nova)
+# VidaTrack — Etapa 81: Notificação Única (prioriza o app) + Ícones de Hábitos Modernizados
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,39 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (81) — 2 dos 3 pedidos resolvidos:**
+
+**1. Notificação duplicada (navegador + app) corrigida:** o sistema
+agora prioriza o app instalado — se você tem o app (token do FCM
+existe), ele **não manda mais pelo navegador** ao mesmo tempo. Só
+usa o navegador se não tiver o app instalado nesse dispositivo.
+(Vale notar: essa prioridade é por pessoa, não por aparelho — se você
+usa o app no celular mas queria notificação do navegador no
+computador também, essa combinação específica não vem incluída; me
+avisa se esse for o seu caso que ajusto.)
+
+**2. Ícones de hábitos e tarefas modernizados**, no mesmo padrão que
+já fizemos pras categorias financeiras (Etapa 63):
+- 32 ícones Lucide novos pra escolher (antes eram emoji)
+- O ícone de **"recorrente"** (antes 🔁) e o de **lembrete** (antes 🔔)
+  na tela "Hoje" agora são ícones de verdade também
+- Compatibilidade com hábitos/tarefas antigos — continuam mostrando
+  o emoji de antes até você trocar
+- Corrigido em **11 lugares diferentes** do código: formulários de
+  criar/editar hábito e tarefa, tela Hoje, lixeiras, estatísticas,
+  detalhe de tarefa, listas arrastáveis, modo offline, sugestões
+  rápidas de hábito, e criação rápida offline — todos usando o mesmo
+  padrão agora, sem nenhum lugar esquecido
+
+Não precisa rodar SQL — é ajuste de código só.
+
+## Ainda falta (métricas de hábitos)
+
+Sobre mostrar evolução, o que foi feito/não feito e dar dicas: **já
+existe uma tela `/habitos/estatisticas`** no projeto. Vou olhar o que
+já tem construído ali antes de propor o que adicionar, pra não
+duplicar trabalho — fica pra próxima etapa.
 
 **Novo nesta etapa (80) — ícone do app atualizado:**
 
@@ -2011,7 +2044,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 77. Cache travando telas de editar (causa real)
 78. Excluir conta direto, sem precisar da lixeira
 79. Layout de desktop (menu lateral + colunas)
-80. Ícone do app trocado (trilho) — **você está aqui**
+80. Ícone do app trocado (trilho)
+81. Notificação única + ícones de hábitos modernizados — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

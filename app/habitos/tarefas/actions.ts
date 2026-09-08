@@ -19,7 +19,7 @@ export async function criarTarefa(formData: FormData) {
     .eq("dono_id", user!.id);
 
   const titulo = String(formData.get("titulo") ?? "").trim();
-  const icone = String(formData.get("icone") ?? "📝");
+  const icone = String(formData.get("icone") ?? "NotebookPen");
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
   const repetir = String(formData.get("repetir") ?? "nenhuma");
   const diasSemana = formData.getAll("diasSemana").map(Number);
@@ -63,7 +63,7 @@ export async function atualizarTarefa(tarefaId: string, formData: FormData) {
   const supabase = createClient();
 
   const titulo = String(formData.get("titulo") ?? "").trim();
-  const icone = String(formData.get("icone") ?? "📝");
+  const icone = String(formData.get("icone") ?? "NotebookPen");
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
   const repetir = String(formData.get("repetir") ?? "nenhuma");
   const diasSemana = formData.getAll("diasSemana").map(Number);
