@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 99: Mapa de Contribuições (calendário do ano inteiro)
+# VidaTrack — Etapa 100: Correção de Build (componente morto removido)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,21 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (100) — corrige o erro de build da Etapa 99.**
+
+O `components/BotaoCheckin.tsx` não é usado em lugar nenhum do app
+(já tinha confirmado isso antes) — mas o Next.js ainda compila TODOS
+os arquivos da pasta, usados ou não. Quando mudei o que
+`alternarCheckin` devolve (pra detectar conquistas, na Etapa 98),
+esse componente morto parou de bater com o novo tipo, e quebrou o
+build.
+
+**Removido** — conferi todos os outros lugares que chamam essa mesma
+função (incluindo a fila offline) pra garantir que não sobrou mais
+nenhum quebrado.
+
+Não precisa rodar SQL — é remoção de arquivo só.
 
 **Novo nesta etapa (99) — mapa de contribuições, estilo GitHub.**
 
@@ -2482,7 +2497,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 96. Dividir despesa entre pessoas
 97. Patrimônio líquido ao longo do tempo 🎉
 98. Sequência visível + conquistas + nota rápida (Hábitos)
-99. Mapa de contribuições (calendário do ano) — **você está aqui**
+99. Mapa de contribuições (calendário do ano)
+100. Correção de build (componente morto removido) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
