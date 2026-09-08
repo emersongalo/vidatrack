@@ -5,6 +5,8 @@ import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { hexDaCor } from "@/lib/agenda/estilo";
 import { IconeHabito } from "@/components/IconeHabito";
 import { GraficoConsistencia } from "@/components/GraficoConsistencia";
+import { MapaContribuicoes } from "@/components/MapaContribuicoes";
+import { calcularMapaContribuicoes } from "@/lib/habitos/mapa-contribuicoes";
 
 function ultimosNDias(n: number): string[] {
   const dias: string[] = [];
@@ -46,6 +48,31 @@ export default async function EstatisticasHabitosPage() {
     if (!checkinsPorHabito.has(c.habito_id)) checkinsPorHabito.set(c.habito_id, new Map());
     checkinsPorHabito.get(c.habito_id)!.set(c.data, c.quantidade);
   }
+
+  // Mapa de contribuições (o ano inteiro) precisa de uma janela bem
+  // maior que os 30 dias que o resto da página usa — busca separada.
+  const umAnoAtras = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 364);
+    return d.toLocaleDateString("sv-SE");
+  })();
+
+  const { data: checkinsAno } = idsHabitos.length
+    ? await supabase
+        .from("habito_checkins")
+        .select("habito_id, data")
+        .eq("usuario_id", user?.id ?? "")
+        .gte("data", umAnoAtras)
+        .in("habito_id", idsHabitos)
+    : { data: [] as { habito_id: string; data: string }[] };
+
+  const checkinsPorHabitoAno = new Map<string, Set<string>>();
+  for (const c of checkinsAno ?? []) {
+    if (!checkinsPorHabitoAno.has(c.habito_id)) checkinsPorHabitoAno.set(c.habito_id, new Set());
+    checkinsPorHabitoAno.get(c.habito_id)!.add(c.data);
+  }
+
+  const mapaContribuicoes = calcularMapaContribuicoes(habitos ?? [], checkinsPorHabitoAno, 365, hojeISO());
 
   // Resumo semanal: últimos 7 dias x os 7 dias antes desses — dá pra
   // ver se a semana está melhor ou pior que a passada, sem precisar
@@ -148,6 +175,13 @@ export default async function EstatisticasHabitosPage() {
               </p>
             ))}
           </div>
+        </div>
+      )}
+
+      {habitos && habitos.length > 0 && (
+        <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-6">
+          <p className="text-sm text-ink-400 mb-3">Mapa de contribuições · último ano</p>
+          <MapaContribuicoes pontos={mapaContribuicoes} />
         </div>
       )}
 

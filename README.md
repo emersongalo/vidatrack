@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 98: Sequência Visível + Conquistas + Nota Rápida (Hábitos)
+# VidaTrack — Etapa 99: Mapa de Contribuições (calendário do ano inteiro)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,32 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (99) — mapa de contribuições, estilo GitHub.**
+
+Na tela de Estatísticas de Hábitos, novo calendário mostrando os
+últimos 365 dias como quadradinhos coloridos — quanto mais escuro
+(mais "verde"), maior o percentual de hábitos cumpridos naquele dia.
+Passa o mouse em cima de um quadradinho pra ver a data e o
+percentual exato.
+
+**Testei antes de construir a tela:** a lógica de cálculo do
+percentual por dia, incluindo um cenário 100% e um parcial, e
+conferi manualmente os dias da semana calculados pelo JavaScript
+(pra garantir que domingo cai na primeira linha certinha).
+
+Não precisa rodar SQL — é ajuste de código só.
+
+## O que falta em Hábitos
+
+- Hábitos negativos (parar de fazer algo)
+- Histórico/insight comparando hábitos entre si
+
+## E os 3 pedidos de desktop, ainda pendentes
+
+- Hoje em 2 colunas
+- Atalhos de teclado
+- Resumo maior no Painel
 
 **Novo nesta etapa (98) — as 3 primeiras das 6 melhorias em Hábitos
 que você escolheu:**
@@ -2455,7 +2481,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 95. Importar extrato do banco (OFX/CSV)
 96. Dividir despesa entre pessoas
 97. Patrimônio líquido ao longo do tempo 🎉
-98. Sequência visível + conquistas + nota rápida (Hábitos) — **você está aqui**
+98. Sequência visível + conquistas + nota rápida (Hábitos)
+99. Mapa de contribuições (calendário do ano) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
