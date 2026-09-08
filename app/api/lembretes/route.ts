@@ -105,6 +105,13 @@ export async function GET(request: Request) {
     enviados += await notificarContasAPagar(supabase, hoje);
   }
 
+  // --- Orçamento estourado (categorias com meta mensal) ---
+  // Também só 1x por dia — o gasto do mês não muda tão rápido a
+  // ponto de precisar checar a cada poucos minutos.
+  if (horaAtual >= "08:05" && horaAtual <= "08:10") {
+    enviados += await notificarOrcamentosEstourados(supabase, hoje);
+  }
+
   // Modo de depuração (?debug=1) — mostra exatamente o que o servidor
   // está calculando, pra comparar com o que você espera. Ajuda a achar
   // qualquer diferença de horário/fuso sem precisar adivinhar.
@@ -310,6 +317,52 @@ async function notificarContasAPagar(
       texto,
       "/financas",
       hoje
+    );
+  }
+
+  return enviados;
+}
+
+async function notificarOrcamentosEstourados(
+  supabase: ReturnType<typeof criarClienteAdmin>,
+  hoje: string
+): Promise<number> {
+  const primeiroDiaDoMes = hoje.slice(0, 7) + "-01"; // ex: "2026-09-01" — usado só como chave de "já avisei esse mês"
+  const dataRef = new Date(primeiroDiaDoMes + "T00:00:00");
+  const primeiroDiaProximoMes = new Date(dataRef.getFullYear(), dataRef.getMonth() + 1, 1).toLocaleDateString("sv-SE");
+
+  const { data: categorias } = await supabase
+    .from("financa_categorias")
+    .select("id, nome, meta_mensal, dono_id")
+    .not("meta_mensal", "is", null)
+    .eq("tipo", "despesa");
+
+  let enviados = 0;
+
+  for (const cat of categorias ?? []) {
+    const { data: transacoes } = await supabase
+      .from("financa_transacoes")
+      .select("valor")
+      .eq("categoria_id", cat.id)
+      .eq("tipo", "despesa")
+      .gte("data", primeiroDiaDoMes)
+      .lt("data", primeiroDiaProximoMes);
+
+    const gastoTotal = (transacoes ?? []).reduce((soma, t) => soma + Number(t.valor), 0);
+    if (gastoTotal <= Number(cat.meta_mensal)) continue;
+
+    const texto = `⚠️ Orçamento de "${cat.nome}" estourou este mês: ${formatarMoeda(gastoTotal)} de ${formatarMoeda(
+      Number(cat.meta_mensal)
+    )}`;
+
+    enviados += await notificarUsuariosDoItem(
+      supabase,
+      "orcamento_estourado",
+      cat.id,
+      cat.dono_id,
+      texto,
+      "/financas/categorias",
+      primeiroDiaDoMes
     );
   }
 

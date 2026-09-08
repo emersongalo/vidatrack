@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 92: Campo de Observações nas Tarefas 🎉 (notificação confirmada funcionando)
+# VidaTrack — Etapa 93: Aviso de Orçamento Estourado + Metas de Economia
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,39 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (93) — as 2 primeiras das 6 melhorias
+significativas em Finanças que você pediu:**
+
+**1. Aviso automático de orçamento estourado** — todo dia (mesmo
+horário que já checamos contas a pagar), o sistema confere se algum
+gasto do mês passou da meta de alguma categoria, e manda notificação
+push (mesmo sistema de sempre) — só uma vez por categoria por mês,
+não fica repetindo.
+
+**2. Metas de economia** — nova tela em Finanças → Mais → "Metas de
+economia". Cria uma meta com nome e valor alvo (e data alvo
+opcional), vai "guardando" aos poucos com um campo de +valor, e
+acompanha o progresso numa barra visual. Quando bate o valor, marca
+como concluída sozinha. Separado do "Investido" de propósito — uma
+meta pode ser guardada em qualquer lugar (até debaixo do colchão),
+não precisa ser uma conta de investimento de verdade.
+
+**Testei antes de entregar:** a lógica de cálculo do primeiro
+dia do mês e do mês seguinte (incluindo virada de ano), isoladamente.
+
+## Rodar o schema desta etapa
+
+Já apliquei tudo direto no seu banco durante a conversa (tabela nova
+de metas + ajuste na tabela de controle de notificação) — não
+precisa rodar nada.
+
+## As 4 melhorias que faltam (próximas etapas)
+
+3. Fatura de cartão de crédito de verdade
+4. Importar extrato do banco (CSV/OFX)
+5. Dividir despesa entre pessoas
+6. Patrimônio líquido ao longo do tempo
 
 **Confirmado: notificação funcionando de ponta a ponta no domínio
 novo** — depois de descobrir que o navegador guardava a inscrição
@@ -2267,7 +2300,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 89. Alarme na tela (reforço, independente do push)
 90. Ícone próprio no "badge" da notificação
 91. (sem mudanças de código — resolução final da notificação)
-92. Campo de observações nas tarefas 🎉 — **você está aqui**
+92. Campo de observações nas tarefas 🎉
+93. Aviso de orçamento estourado + metas de economia — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

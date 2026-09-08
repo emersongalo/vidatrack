@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank } from "lucide-react";
+import { Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target } from "lucide-react";
 import { LinkVoltar } from "@/components/LinkVoltar";
 
 const ITENS = [
+  { href: "/financas/metas", Icone: Target, titulo: "Metas de economia", texto: "Guarde dinheiro pra um objetivo específico" },
   { href: "/financas/investir", Icone: PiggyBank, titulo: "Guardar em investimento", texto: "Separe dinheiro do seu saldo pra investimento" },
   { href: "/financas/categorias", Icone: Tags, titulo: "Categorias", texto: "Organize receitas e despesas por tipo" },
   { href: "/financas/recorrentes", Icone: Repeat, titulo: "Recorrentes", texto: "Contas e receitas que se repetem todo mês" },
