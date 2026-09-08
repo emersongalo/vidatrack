@@ -45,12 +45,12 @@ export function TimerFoco() {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="grid grid-cols-5 gap-2 mb-8 w-full">
+      <div className="grid grid-cols-5 gap-2 lg:gap-3 mb-8 w-full">
         {PRESETS.map((min) => (
           <button
             key={min}
             onClick={() => escolherPreset(min)}
-            className={`rounded-lg py-2 text-sm border transition ${
+            className={`rounded-lg py-2 lg:py-3 text-sm lg:text-base border transition ${
               minutosEscolhidos === min && !rodando
                 ? "bg-ink-100 text-base-900 border-ink-100"
                 : "border-base-600 text-ink-400 hover:text-ink-100"
@@ -62,7 +62,7 @@ export function TimerFoco() {
       </div>
 
       <div
-        className={`font-mono font-semibold text-6xl mb-8 tabular-nums ${
+        className={`font-mono font-semibold text-6xl lg:text-8xl mb-8 tabular-nums ${
           terminou ? "text-habito" : ""
         }`}
       >
@@ -75,13 +75,13 @@ export function TimerFoco() {
         <button
           onClick={() => setRodando((r) => !r)}
           disabled={terminou}
-          className="flex-1 bg-ink-100 text-base-900 font-medium rounded-lg py-3 hover:opacity-90 transition disabled:opacity-40"
+          className="flex-1 bg-ink-100 text-base-900 font-medium rounded-lg py-3 lg:py-4 lg:text-lg hover:opacity-90 transition disabled:opacity-40"
         >
           {rodando ? "Pausar" : "Iniciar"}
         </button>
         <button
           onClick={reiniciar}
-          className="flex-1 border border-base-600 rounded-lg py-3 hover:bg-base-800 transition"
+          className="flex-1 border border-base-600 rounded-lg py-3 lg:py-4 lg:text-lg hover:bg-base-800 transition"
         >
           Reiniciar
         </button>

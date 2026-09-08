@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 83: Desktop em Todas as Sub-telas (não só a Início)
+# VidaTrack — Etapa 84: Timer Também Ajustado pro Desktop
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,22 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (84) — Timer corrigido:**
+
+A tela do Timer usava uma largura (`max-w-sm`) que minha varredura da
+Etapa 83 não pegou (só tinha buscado `max-w-md` e `max-w-2xl`) — por
+isso ela continuou com cara de celular solta no meio da tela. Corrigi
+e também **aumentei o tamanho** dos números do timer e dos botões no
+desktop, pra não ficar só "a mesma versão pequena, sozinha numa tela
+grande" — agora ocupa o espaço de verdade.
+
+Também fiz uma varredura em **todas** as páginas de Finanças e
+Hábitos (30 telas) pra confirmar que não sobrou mais nenhuma com
+largura esquecida — só as telas de formulário continuam mais
+estreitas de propósito (é melhor pra preencher).
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (83) — todas as sub-telas agora se adaptam pro
 desktop, não só a tela inicial:**
@@ -2092,7 +2108,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 80. Ícone do app trocado (trilho)
 81. Notificação única + ícones de hábitos modernizados
 82. Resumo semanal de hábitos + dicas automáticas
-83. Desktop em todas as sub-telas — **você está aqui**
+83. Desktop em todas as sub-telas
+84. Timer também ajustado pro desktop — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
