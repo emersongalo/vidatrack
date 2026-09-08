@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 97: Patrimônio Líquido ao Longo do Tempo 🎉 (as 6 melhorias completas)
+# VidaTrack — Etapa 98: Sequência Visível + Conquistas + Nota Rápida (Hábitos)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,39 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (98) — as 3 primeiras das 6 melhorias em Hábitos
+que você escolheu:**
+
+**1. Sequência (streak) visível em cada hábito** — na tela de Lista
+de Hábitos, cada um agora mostra a sequência atual (🔥) e o recorde,
+sem precisar abrir Estatísticas.
+
+**2. Conquistas com celebração** — ao marcar um hábito e a sequência
+bater 7, 30, 100 ou 365 dias, aparece uma tela de celebração na hora.
+
+**3. Nota rápida ao marcar** — depois de marcar um hábito (não ao
+desmarcar), aparece um convite opcional pra anotar algo sobre aquele
+dia. Pular não custa nada, é só clicar "Pular".
+
+**Testei antes de construir a tela:** a lógica de "maior sequência
+já alcançada" (recorde) — 7 cenários, incluindo datas fora de ordem,
+duplicadas e virada de mês.
+
+Não precisa rodar SQL — já apliquei a coluna nova
+(`observacao` em `habito_checkins`) direto no banco.
+
+## As 3 melhorias que faltam em Hábitos
+
+- Calendário tipo "mapa de contribuições" (o ano inteiro)
+- Hábitos negativos (parar de fazer algo)
+- Histórico/insight comparando hábitos entre si
+
+## E os 3 pedidos de desktop, ainda pendentes
+
+- Hoje em 2 colunas
+- Atalhos de teclado
+- Resumo maior no Painel
 
 **Novo nesta etapa (97) — melhoria #6 das 6, e a última:
 patrimônio líquido.**
@@ -2421,7 +2454,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 94. Fatura de cartão de crédito de verdade
 95. Importar extrato do banco (OFX/CSV)
 96. Dividir despesa entre pessoas
-97. Patrimônio líquido ao longo do tempo 🎉 — **você está aqui**
+97. Patrimônio líquido ao longo do tempo 🎉
+98. Sequência visível + conquistas + nota rápida (Hábitos) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

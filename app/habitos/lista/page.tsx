@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ListaHabitosArrastavel } from "@/components/ListaHabitosArrastavel";
 import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
+import { calcularStreak, calcularMelhorStreak } from "@/lib/habitos/streak";
 
 export default async function ListaHabitosPage() {
   const supabase = createClient();
@@ -11,6 +12,27 @@ export default async function ListaHabitosPage() {
     .select("id, nome, cor, icone, frequencia, categorias_produtividade(nome)")
     .eq("arquivado", false)
     .order("ordem", { ascending: true });
+
+  const idsHabitos = (habitos ?? []).map((h) => h.id);
+  const { data: checkins } =
+    idsHabitos.length > 0
+      ? await supabase.from("habito_checkins").select("habito_id, data").in("habito_id", idsHabitos)
+      : { data: [] as { habito_id: string; data: string }[] };
+
+  const datasPorHabito = new Map<string, string[]>();
+  for (const c of checkins ?? []) {
+    if (!datasPorHabito.has(c.habito_id)) datasPorHabito.set(c.habito_id, []);
+    datasPorHabito.get(c.habito_id)!.push(c.data);
+  }
+
+  const habitosComStreak = (habitos ?? []).map((h) => {
+    const datas = datasPorHabito.get(h.id) ?? [];
+    return {
+      ...h,
+      streakAtual: calcularStreak(datas),
+      melhorStreak: calcularMelhorStreak(datas),
+    };
+  });
 
   return (
     <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2">
@@ -35,7 +57,7 @@ export default async function ListaHabitosPage() {
       ) : (
         <>
           <p className="text-xs text-ink-400 mb-3">Arraste ⠿ para reordenar</p>
-          <ListaHabitosArrastavel habitos={habitos as any} />
+          <ListaHabitosArrastavel habitos={habitosComStreak as any} />
         </>
       )}
     </main>

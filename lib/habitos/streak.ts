@@ -32,6 +32,34 @@ export function calcularStreak(datasCheckin: string[]): number {
 }
 
 /**
+ * Calcula o RECORDE — a maior sequência de dias consecutivos que o
+ * hábito já teve, em toda a história de check-ins (diferente do
+ * streak atual, que só olha pra trás a partir de hoje).
+ */
+export function calcularMelhorStreak(datasCheckin: string[]): number {
+  if (datasCheckin.length === 0) return 0;
+  const datasOrdenadas = [...new Set(datasCheckin)].sort();
+
+  let melhor = 1;
+  let atual = 1;
+
+  for (let i = 1; i < datasOrdenadas.length; i++) {
+    const anterior = new Date(datasOrdenadas[i - 1] + "T00:00:00");
+    const atualData = new Date(datasOrdenadas[i] + "T00:00:00");
+    const diffDias = Math.round((atualData.getTime() - anterior.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDias === 1) {
+      atual++;
+      melhor = Math.max(melhor, atual);
+    } else {
+      atual = 1;
+    }
+  }
+
+  return melhor;
+}
+
+/**
  * Retorna os últimos `dias` dias (do mais antigo ao mais recente),
  * marcando se cada um teve check-in — usado na tira de histórico visual.
  */

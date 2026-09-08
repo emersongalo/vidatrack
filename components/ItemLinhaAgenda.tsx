@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { RefreshCw, Bell } from "lucide-react";
 import { classeCor, classeFundoSuave, classeTextoCor } from "@/lib/agenda/estilo";
 import { IconeHabito } from "@/components/IconeHabito";
-import { alternarCheckin, ajustarQuantidadeHabito } from "@/app/habitos/actions";
+import { CelebracaoConquista } from "@/components/CelebracaoConquista";
+import { alternarCheckin, ajustarQuantidadeHabito, salvarObservacaoCheckin } from "@/app/habitos/actions";
 import { alternarConclusaoTarefa } from "@/app/habitos/tarefas/actions";
 
 export type ItemAgenda = {
@@ -38,6 +39,9 @@ export function ItemLinhaAgenda({
   aoAjustarOffline?: (delta: number) => void;
 }) {
   const [pendente, iniciarTransicao] = useTransition();
+  const [marcoAtingido, setMarcoAtingido] = useState<number | null>(null);
+  const [mostrarNota, setMostrarNota] = useState(false);
+  const [textoNota, setTextoNota] = useState("");
   const ehNumerico = item.tipo === "habito" && item.meta && item.meta.alvo > 1;
 
   function alternar() {
@@ -45,12 +49,26 @@ export function ItemLinhaAgenda({
       aoClicarOffline();
       return;
     }
-    iniciarTransicao(() => {
+    iniciarTransicao(async () => {
       if (item.tipo === "habito") {
-        alternarCheckin(item.id, dataISO);
+        const feitoAntes = item.feito;
+        const resultado = await alternarCheckin(item.id, dataISO);
+        if (resultado?.marcoAtingido) setMarcoAtingido(resultado.marcoAtingido);
+        // Convite pra anotar só quando está MARCANDO (não quando
+        // desmarca) — não faz sentido pedir nota de algo que a
+        // pessoa acabou de dizer que não fez.
+        if (!feitoAntes && !resultado?.marcoAtingido) setMostrarNota(true);
       } else {
-        alternarConclusaoTarefa(item.id, dataISO);
+        await alternarConclusaoTarefa(item.id, dataISO);
       }
+    });
+  }
+
+  function salvarNota() {
+    iniciarTransicao(async () => {
+      await salvarObservacaoCheckin(item.id, dataISO, textoNota);
+      setMostrarNota(false);
+      setTextoNota("");
     });
   }
 
@@ -127,6 +145,14 @@ export function ItemLinhaAgenda({
   );
 
   return (
+    <>
+    {marcoAtingido && (
+      <CelebracaoConquista
+        marco={marcoAtingido}
+        nomeHabito={item.titulo}
+        onFechar={() => setMarcoAtingido(null)}
+      />
+    )}
     <li className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-xl2 p-3">
       {item.tipo === "tarefa" && item.progressoSubtarefas ? (
         <Link href={`/habitos/tarefas/${item.id}`} className="flex items-center gap-3 flex-1 min-w-0">
@@ -181,5 +207,37 @@ export function ItemLinhaAgenda({
         </button>
       )}
     </li>
+
+    {mostrarNota && (
+      <li className="bg-base-800 border border-base-600 rounded-xl2 p-3 -mt-1">
+        <textarea
+          value={textoNota}
+          onChange={(e) => setTextoNota(e.target.value)}
+          placeholder="Quer anotar algo sobre hoje? (opcional)"
+          rows={2}
+          autoFocus
+          className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition resize-none mb-2"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setMostrarNota(false);
+              setTextoNota("");
+            }}
+            className="flex-1 text-xs text-ink-400 hover:text-ink-100 transition py-1.5"
+          >
+            Pular
+          </button>
+          <button
+            onClick={salvarNota}
+            disabled={!textoNota.trim()}
+            className="flex-1 bg-habito text-base-900 text-xs font-medium rounded-lg py-1.5 hover:opacity-90 transition disabled:opacity-40"
+          >
+            Salvar nota
+          </button>
+        </div>
+      </li>
+    )}
+    </>
   );
 }

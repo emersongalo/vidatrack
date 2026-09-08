@@ -20,6 +20,8 @@ type Habito = {
   icone: string;
   frequencia: string;
   categorias_produtividade: { nome: string } | null;
+  streakAtual?: number;
+  melhorStreak?: number;
 };
 
 export function ListaHabitosArrastavel({ habitos }: { habitos: Habito[] }) {
@@ -48,6 +50,12 @@ export function ListaHabitosArrastavel({ habitos }: { habitos: Habito[] }) {
             <p className="text-xs text-ink-400">
               {RÓTULOS_FREQUENCIA[habito.frequencia]}
               {habito.categorias_produtividade?.nome && ` · ${habito.categorias_produtividade.nome}`}
+              {(habito.streakAtual ?? 0) > 0 && (
+                <span className="text-financa"> · 🔥 {habito.streakAtual}</span>
+              )}
+              {(habito.melhorStreak ?? 0) > 0 && (
+                <span> · recorde {habito.melhorStreak}</span>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2.5 text-xs shrink-0">

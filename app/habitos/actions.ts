@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { hojeISO } from "@/lib/habitos/streak";
+import { hojeISO, calcularStreak } from "@/lib/habitos/streak";
 
 export async function criarHabito(formData: FormData) {
   const supabase = createClient();
@@ -136,6 +136,8 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
   redirect("/habitos/lista");
 }
 
+export const MARCOS_CONQUISTA = [7, 30, 100, 365];
+
 export async function alternarCheckin(habitoId: string, dataISO?: string) {
   "use server";
   const supabase = createClient();
@@ -156,15 +158,33 @@ export async function alternarCheckin(habitoId: string, dataISO?: string) {
 
   if (existente) {
     await supabase.from("habito_checkins").delete().eq("id", existente.id);
-  } else {
-    await supabase.from("habito_checkins").insert({
-      habito_id: habitoId,
-      usuario_id: user!.id,
-      data,
-    });
+    revalidatePath("/habitos");
+    return { marcoAtingido: null };
   }
 
+  await supabase.from("habito_checkins").insert({
+    habito_id: habitoId,
+    usuario_id: user!.id,
+    data,
+  });
+
   revalidatePath("/habitos");
+
+  // Só vale a pena checar conquista quando a pessoa está marcando o
+  // dia de HOJE — marcar um dia passado (raro, mas possível) não deve
+  // disparar uma comemoração de "streak atual" que não reflete hoje.
+  if (data !== hojeISO()) return { marcoAtingido: null };
+
+  const { data: checkins } = await supabase
+    .from("habito_checkins")
+    .select("data")
+    .eq("habito_id", habitoId)
+    .eq("usuario_id", user!.id);
+
+  const novoStreak = calcularStreak((checkins ?? []).map((c) => c.data));
+  const marcoAtingido = MARCOS_CONQUISTA.includes(novoStreak) ? novoStreak : null;
+
+  return { marcoAtingido };
 }
 
 /**
@@ -269,4 +289,22 @@ export async function excluirHabitoDefinitivamente(habitoId: string) {
   await supabase.from("compartilhamentos").delete().eq("tipo_item", "habito").eq("item_id", habitoId);
   await supabase.from("habitos").delete().eq("id", habitoId);
   revalidatePath("/habitos/lixeira");
+}
+
+export async function salvarObservacaoCheckin(habitoId: string, dataISO: string, observacao: string) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  await supabase
+    .from("habito_checkins")
+    .update({ observacao: observacao.trim() || null })
+    .eq("habito_id", habitoId)
+    .eq("usuario_id", user.id)
+    .eq("data", dataISO);
+
+  revalidatePath("/habitos");
 }
