@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 95: Importar Extrato do Banco (OFX/CSV)
+# VidaTrack — Etapa 96: Dividir Despesa Entre Pessoas
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,33 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (96) — melhoria #5 das 6: dividir despesa entre
+pessoas.**
+
+Nova seção em Finanças → Mais → "Dividir despesas":
+- Escolhe um lançamento já existente, informa o e-mail da pessoa e
+  quanto ela deve pagar
+- Tela de resumo mostra **"Devem pra você"** e **"Você deve"**,
+  separados, com total de cada
+- Marca como pago com um toque
+- Se a pessoa já tem conta no VidaTrack (reconhecida por já ter
+  aceitado um compartilhamento com você antes), a divisão fica
+  vinculada ao usuário dela de verdade; se não, fica só com o e-mail
+  registrado
+
+**Bug real que corrigi durante a construção:** comecei escrevendo a
+ação de criar divisão esperando que a despesa já viesse escolhida de
+antemão, mas a tela real deixa a pessoa **escolher a despesa dentro
+do próprio formulário** — troquei a estrutura pra ler isso do
+formulário certinho antes de finalizar.
+
+Não precisa rodar SQL — já apliquei a tabela nova
+(`divisoes_despesa`, com permissões de segurança) direto no banco.
+
+## A última melhoria que falta
+
+6. Patrimônio líquido ao longo do tempo
 
 **Novo nesta etapa (95) — melhoria #4 das 6: importar extrato do
 banco.**
@@ -2368,7 +2395,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 92. Campo de observações nas tarefas 🎉
 93. Aviso de orçamento estourado + metas de economia
 94. Fatura de cartão de crédito de verdade
-95. Importar extrato do banco (OFX/CSV) — **você está aqui**
+95. Importar extrato do banco (OFX/CSV)
+96. Dividir despesa entre pessoas — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
