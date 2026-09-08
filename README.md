@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 77: Cache Travando Telas de Editar (causa real do "funciona só às vezes")
+# VidaTrack — Etapa 79: Layout de Desktop (menu lateral + colunas)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,33 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (79) — o app agora se adapta pra tela de computador:**
+
+- **Menu lateral fixo no desktop**, substituindo a barra de baixo
+  (que continua normal no celular) — Hábitos e Finanças cada um com
+  seu próprio menu, cores certas, link de volta pro Painel e pro
+  Perfil
+- **Tela de Finanças em 2 colunas no desktop** — Contas/Investido,
+  Orçamento, Análise, Calendário, Gráfico e Lançamentos fluem lado a
+  lado em vez de ficarem todos empilhados numa coluna só e estreita
+- Telas mais largas de modo geral no desktop, aproveitando o espaço
+  da tela
+
+Não precisa rodar SQL — é ajuste de código só.
+
+**Novo na etapa (78) — excluir conta direto, sem precisar da lixeira:**
+
+A exclusão definitiva de conta já existia, mas escondida atrás de um
+caminho de 2 passos (arquivar → depois achar na lixeira → aí sim
+excluir). Agora tem um botão de excluir direto na tela principal de
+Contas, ao lado de Arquivar — com um aviso bem claro de que isso
+apaga todos os lançamentos e recorrências daquela conta, sem volta.
+Também converti os botões de ação (Editar/Compartilhar/Arquivar/Excluir)
+pra ícones, evitando o mesmo problema de espaço apertado que já
+corrigimos em Hábitos antes.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (77) — achamos por que "funcionava só em alguns
 lançamentos":**
@@ -1959,7 +1986,9 @@ versão Android via Capacitor está descrita na seção específica acima.
 74. 3 bugs reais corrigidos (extrato, editar lançamento, espaçamento)
 75. (sem mudanças de código — investigação/confirmação de cache)
 76. (sem mudanças de código — investigação/confirmação de cache)
-77. Cache travando telas de editar (causa real) — **você está aqui**
+77. Cache travando telas de editar (causa real)
+78. Excluir conta direto, sem precisar da lixeira
+79. Layout de desktop (menu lateral + colunas) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

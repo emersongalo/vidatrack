@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { Pencil, Share2, Archive, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { criarConta, arquivarConta } from "../actions";
+import { criarConta, arquivarConta, excluirContaDefinitivamente } from "../actions";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { SeloBanco } from "@/components/SeloBanco";
 import { ValorMonetario } from "@/components/ValorMonetario";
@@ -133,21 +134,34 @@ export default async function ContasPage({
                   </div>
                   {pessoas.length > 0 && <AvataresEmpilhados pessoas={pessoas} />}
                 </div>
-                <div className="flex items-center gap-3 mt-2.5 pt-2.5 border-t border-base-600">
+                <div className="flex items-center gap-4 mt-2.5 pt-2.5 border-t border-base-600">
                   <Link
                     href={`/financas/contas/${conta.id}/editar`}
-                    className="text-ink-400 hover:text-ink-100 transition text-xs"
+                    aria-label="Editar"
+                    className="text-ink-400 hover:text-ink-100 transition"
                   >
-                    Editar
+                    <Pencil size={15} strokeWidth={2} />
                   </Link>
                   <Link
                     href={`/financas/contas/${conta.id}/compartilhar`}
-                    className="text-ink-400 hover:text-ink-100 transition text-xs"
+                    aria-label={pessoas.length > 0 ? "Gerenciar compartilhamento" : "Compartilhar"}
+                    className="text-ink-400 hover:text-ink-100 transition"
                   >
-                    {pessoas.length > 0 ? "Gerenciar compartilhamento" : "Compartilhar"}
+                    <Share2 size={15} strokeWidth={2} />
                   </Link>
                   <span className="flex-1" />
-                  <BotaoComConfirmacao acao={arquivarConta.bind(null, conta.id)} textoBotao="Arquivar" />
+                  <BotaoComConfirmacao
+                    acao={arquivarConta.bind(null, conta.id)}
+                    textoBotao={<Archive size={15} strokeWidth={2} />}
+                    textoConfirmacao={`Arquivar "${conta.nome}"? Ela some das listas, mas os dados continuam guardados — dá pra restaurar depois.`}
+                    classeBotao="text-ink-400 hover:text-ink-100 transition"
+                  />
+                  <BotaoComConfirmacao
+                    acao={excluirContaDefinitivamente.bind(null, conta.id)}
+                    textoBotao={<Trash2 size={15} strokeWidth={2} />}
+                    textoConfirmacao={`Excluir "${conta.nome}" de vez? Isso apaga TODOS os lançamentos e recorrências dela, sem volta nenhuma.`}
+                    classeBotao="text-ink-400 hover:text-red-400 transition"
+                  />
                 </div>
               </li>
             );

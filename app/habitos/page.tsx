@@ -22,7 +22,7 @@ export default async function HojePage({
   ]);
 
   return (
-    <main className="max-w-2xl mx-auto px-6 md:px-12 pt-2">
+    <main className="max-w-2xl lg:max-w-3xl mx-auto px-6 md:px-12 pt-2">
       <div className="flex items-center justify-end mb-1">
         <Link
           href={`/habitos/planejador?data=${dataSelecionada}`}

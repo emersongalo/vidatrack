@@ -316,7 +316,7 @@ export default async function FinancasPage({
   };
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-2xl mx-auto">
+    <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-5xl mx-auto">
       <LinkVoltar href="/dashboard" texto="Painel" />
       <h1 className="text-2xl font-display font-semibold mt-2 mb-6">Finanças</h1>
 
@@ -348,7 +348,8 @@ export default async function FinancasPage({
         </div>
       ) : (
         <>
-          {/* Saldo atual + previsto, navegação por mês, receitas/despesas */}
+          {/* Saldo atual + previsto, navegação por mês, receitas/despesas —
+              fica full-width em cima, é o número mais importante da tela */}
           <HeroFinancas
             saldo={saldoTotal}
             saldoPrevisto={saldoPrevisto}
@@ -362,12 +363,16 @@ export default async function FinancasPage({
             ehMesAtual={ehMesAtual}
           />
 
-          {/* Lista de contas com o saldo de cada uma */}
+          {/* No desktop, o resto flui em 2 colunas — usa a largura extra
+              da tela em vez de ficar tudo empilhado numa coluna só */}
+          <div className="lg:columns-2 lg:gap-6">
+          <div className="lg:break-inside-avoid">
           <ListaContasComSaldo contas={contasComSaldo} />
+          </div>
 
           {/* Orçamento por categoria */}
           {categorias && categorias.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-6 lg:break-inside-avoid">
               <p className="text-sm text-ink-400 mb-3">Orçamento do mês</p>
               <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 space-y-4">
                 {categorias.map((cat) => (
@@ -385,7 +390,7 @@ export default async function FinancasPage({
           {/* Link de destaque pra análise avançada */}
           <Link
             href="/financas/analise"
-            className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-6 hover:border-financa transition"
+            className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-6 hover:border-financa transition lg:break-inside-avoid"
           >
             <span className="w-9 h-9 rounded-lg bg-financa/15 flex items-center justify-center text-financa shrink-0">
               <PieChart size={18} strokeWidth={2} />
@@ -398,8 +403,9 @@ export default async function FinancasPage({
           </Link>
 
           {ordemBlocos.map((blocoId) => (
-            <div key={blocoId}>{blocosFinancas[blocoId]}</div>
+            <div key={blocoId} className="lg:break-inside-avoid">{blocosFinancas[blocoId]}</div>
           ))}
+          </div>
         </>
       )}
     </main>
