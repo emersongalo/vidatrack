@@ -13,7 +13,7 @@ export default async function LixeiraTarefasPage() {
     .order("criado_em", { ascending: false });
 
   return (
-    <main className="max-w-2xl mx-auto px-6 md:px-12 pt-2 pb-20">
+    <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2 pb-20">
       <Link href="/habitos/tarefas" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Tarefas
       </Link>

@@ -13,7 +13,7 @@ export default async function CategoriasProdutividadePage() {
     .order("nome");
 
   return (
-    <main className="max-w-md mx-auto px-6 md:px-12 pt-2">
+    <main className="max-w-md lg:max-w-3xl mx-auto px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-display font-semibold">Categorias</h1>
         <Link
@@ -32,7 +32,7 @@ export default async function CategoriasProdutividadePage() {
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2 lg:space-y-0">
           {categorias.map((cat) => (
             <li
               key={cat.id}

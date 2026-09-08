@@ -21,7 +21,7 @@ export default async function RecorrentesPage({
   ]);
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-3xl mx-auto">
       <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Finanças
       </Link>
@@ -37,7 +37,7 @@ export default async function RecorrentesPage({
       )}
 
       {recorrencias && recorrencias.length > 0 && (
-        <ul className="space-y-2 mb-8">
+        <ul className="space-y-2 mb-8 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {recorrencias.map((r: any) => (
             <li
               key={r.id}

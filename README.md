@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 82: Resumo Semanal de Hábitos + Dicas Automáticas
+# VidaTrack — Etapa 83: Desktop em Todas as Sub-telas (não só a Início)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,26 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (83) — todas as sub-telas agora se adaptam pro
+desktop, não só a tela inicial:**
+
+**Alargadas (14 telas):** Contas, Categorias, Extrato, Mais,
+Recorrentes, Análise e Lixeira de contas (Finanças); Lista, Tarefas,
+Categorias, Lixeira, Lixeira de tarefas, Estatísticas e Planejador
+(Hábitos).
+
+**Viraram grade de 2 colunas no desktop** (pra não sobrar espaço
+vazio dos lados numa lista de itens curtos): Contas, Categorias
+(Despesas e Receitas lado a lado), Recorrentes e Mais (Finanças);
+Categorias (Hábitos).
+
+**O que ficou de propósito só alargado, sem virar coluna:** telas de
+formulário (criar/editar um hábito, categoria, conta, lançamento) —
+um formulário muito largo fica pior de preencher, não melhor, então
+mantive esses mais estreitos e centralizados mesmo no desktop.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (82) — as 3 melhorias que você escolheu, em
 `/habitos/estatisticas`:**
@@ -2071,7 +2091,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 79. Layout de desktop (menu lateral + colunas)
 80. Ícone do app trocado (trilho)
 81. Notificação única + ícones de hábitos modernizados
-82. Resumo semanal de hábitos + dicas automáticas — **você está aqui**
+82. Resumo semanal de hábitos + dicas automáticas
+83. Desktop em todas as sub-telas — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

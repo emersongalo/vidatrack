@@ -117,7 +117,7 @@ export default async function EstatisticasHabitosPage() {
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-2xl mx-auto pb-16">
+    <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-4xl mx-auto pb-16">
       <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Hábitos
       </Link>

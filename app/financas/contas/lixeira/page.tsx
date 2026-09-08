@@ -12,7 +12,7 @@ export default async function LixeiraContasPage() {
     .order("criado_em", { ascending: false });
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-3xl mx-auto">
       <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Contas
       </Link>

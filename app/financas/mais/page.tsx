@@ -14,11 +14,11 @@ const ITENS = [
 
 export default function MaisFinancasPage() {
   return (
-    <main className="min-h-screen p-6 pb-24 max-w-2xl mx-auto">
+    <main className="min-h-screen p-6 pb-24 max-w-2xl lg:max-w-4xl mx-auto">
       <LinkVoltar href="/financas" texto="Finanças" />
       <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Mais</h1>
 
-      <ul className="space-y-2">
+      <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
         {ITENS.map((item) => (
           <li key={item.href}>
             <Link

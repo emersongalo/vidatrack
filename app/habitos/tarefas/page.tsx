@@ -12,7 +12,7 @@ export default async function TarefasPage() {
     .order("ordem", { ascending: true });
 
   return (
-    <main className="max-w-2xl mx-auto px-6 md:px-12 pt-2">
+    <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-display font-semibold">Tarefas</h1>
         <Link

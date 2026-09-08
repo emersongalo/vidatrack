@@ -23,7 +23,7 @@ export default async function CategoriasPage({
   const despesas = (categorias ?? []).filter((c) => c.tipo === "despesa");
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
@@ -45,6 +45,7 @@ export default async function CategoriasPage({
         </p>
       )}
 
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
       {despesas.length > 0 && (
         <div className="mb-5">
           <p className="text-xs text-ink-400 mb-2 uppercase tracking-wide">Despesas</p>
@@ -101,6 +102,7 @@ export default async function CategoriasPage({
           </ul>
         </div>
       )}
+      </div>
 
       {(!categorias || categorias.length === 0) && (
         <p className="text-ink-400 text-sm">Nenhuma categoria ainda.</p>
