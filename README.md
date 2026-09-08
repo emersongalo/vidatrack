@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 81: Notificação Única (prioriza o app) + Ícones de Hábitos Modernizados
+# VidaTrack — Etapa 82: Resumo Semanal de Hábitos + Dicas Automáticas
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,31 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (82) — as 3 melhorias que você escolheu, em
+`/habitos/estatisticas`:**
+
+1. **Visão geral da semana** — um placar único somando TODOS os
+   hábitos: quantos "dia de hábito" eram esperados essa semana vs
+   quantos foram realmente feitos, em percentual
+2. **Comparação com a semana passada** — mostra os dois números lado
+   a lado, com uma seta (↑/↓) indicando se melhorou ou piorou, e por
+   quantos pontos percentuais
+3. **Dicas automáticas**, geradas só a partir do que realmente
+   aconteceu (nada inventado): qual hábito teve melhor desempenho
+   (se bateu 100%), qual precisa de mais atenção (se ficou abaixo de
+   50%), e um comentário sobre a evolução em relação à semana
+   passada
+
+**Testei antes de entregar:** simulei um cenário com 2 hábitos e
+conferi cada número isoladamente (total aplicável, total feito,
+percentual, melhor e pior hábito) — todos bateram certinho.
+
+A tela já é acessível pela lista de Hábitos (não mexi no menu de
+navegação, já que essa opção específica não foi escolhida — me avisa
+se quiser adicionar lá também depois).
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (81) — 2 dos 3 pedidos resolvidos:**
 
@@ -2045,7 +2070,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 78. Excluir conta direto, sem precisar da lixeira
 79. Layout de desktop (menu lateral + colunas)
 80. Ícone do app trocado (trilho)
-81. Notificação única + ícones de hábitos modernizados — **você está aqui**
+81. Notificação única + ícones de hábitos modernizados
+82. Resumo semanal de hábitos + dicas automáticas — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
