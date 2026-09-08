@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 79: Layout de Desktop (menu lateral + colunas)
+# VidaTrack — Etapa 80: Ícone do App Trocado (trilho, igual à logo nova)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,28 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (80) — ícone do app atualizado:**
+
+Troquei o ícone "V" antigo pelo desenho novo do trilho (mesma logo
+que fizemos pro Instagram) — em todos os tamanhos que o app usa:
+
+- `icon-192.png` e `icon-512.png` (ícone padrão)
+- `icon-maskable-512.png` (versão com margem de segurança pro
+  Android recortar em círculo, quadrado arredondado, etc., sem
+  cortar nada importante)
+- `apple-touch-icon.png` (ícone do iPhone/iPad)
+- `favicon.ico` (aba do navegador)
+
+O `manifest.json` já apontava pros mesmos nomes de arquivo, então não
+precisei mexer em mais nada — só troquei o conteúdo das imagens.
+
+Não precisa rodar SQL — é arquivo de imagem só.
+
+**Repare que depois do deploy, o ícone pode demorar pra atualizar**
+no seu celular — isso é cache do próprio Android/navegador guardando
+o ícone antigo. Se não atualizar sozinho em alguns dias, o jeito mais
+rápido é desinstalar e reinstalar o app.
 
 **Novo nesta etapa (79) — o app agora se adapta pra tela de computador:**
 
@@ -1988,7 +2010,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 76. (sem mudanças de código — investigação/confirmação de cache)
 77. Cache travando telas de editar (causa real)
 78. Excluir conta direto, sem precisar da lixeira
-79. Layout de desktop (menu lateral + colunas) — **você está aqui**
+79. Layout de desktop (menu lateral + colunas)
+80. Ícone do app trocado (trilho) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
