@@ -10,6 +10,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { atualizarConta } from "@/app/financas/actions";
 import { BANCOS } from "@/lib/financas/bancos";
+import { SeletorTipoConta } from "@/components/SeletorTipoConta";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 
 export default async function EditarContaPage({
@@ -23,7 +24,7 @@ export default async function EditarContaPage({
 
   const { data: conta } = await supabase
     .from("financa_contas")
-    .select("id, nome, tipo, banco, saldo_inicial")
+    .select("id, nome, tipo, banco, saldo_inicial, dia_fechamento, dia_vencimento")
     .eq("id", params.id)
     .single();
 
@@ -50,16 +51,11 @@ export default async function EditarContaPage({
           defaultValue={conta.nome}
           className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
         />
-        <select
-          name="tipo"
-          defaultValue={conta.tipo}
-          className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
-        >
-          <option value="banco">Banco</option>
-          <option value="carteira">Carteira</option>
-          <option value="cartao">Cartão</option>
-          <option value="investimento">Investimento</option>
-        </select>
+        <SeletorTipoConta
+          tipoInicial={conta.tipo}
+          diaFechamentoInicial={conta.dia_fechamento}
+          diaVencimentoInicial={conta.dia_vencimento}
+        />
         <div>
           <label className="block text-xs text-ink-400 mb-1.5">Banco (pra mostrar o selo certo)</label>
           <select

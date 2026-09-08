@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Pencil, Share2, Archive, Trash2 } from "lucide-react";
+import { Pencil, Share2, Archive, Trash2, Receipt } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { criarConta, arquivarConta, excluirContaDefinitivamente } from "../actions";
+import { SeletorTipoConta } from "@/components/SeletorTipoConta";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { SeloBanco } from "@/components/SeloBanco";
 import { ValorMonetario } from "@/components/ValorMonetario";
@@ -35,7 +36,7 @@ export default async function ContasPage({
     supabase.auth.getUser(),
     supabase
       .from("financa_contas")
-      .select("id, nome, tipo, banco, saldo_inicial, dono_id")
+      .select("id, nome, tipo, banco, saldo_inicial, dono_id, dia_fechamento")
       .eq("arquivado", false)
       .order("criado_em", { ascending: true }),
   ]);
@@ -136,6 +137,15 @@ export default async function ContasPage({
                   {pessoas.length > 0 && <AvataresEmpilhados pessoas={pessoas} />}
                 </div>
                 <div className="flex items-center gap-4 mt-2.5 pt-2.5 border-t border-base-600">
+                  {conta.tipo === "cartao" && conta.dia_fechamento && (
+                    <Link
+                      href={`/financas/contas/${conta.id}/fatura`}
+                      aria-label="Ver fatura"
+                      className="text-ink-400 hover:text-financa transition"
+                    >
+                      <Receipt size={15} strokeWidth={2} />
+                    </Link>
+                  )}
                   <Link
                     href={`/financas/contas/${conta.id}/editar`}
                     aria-label="Editar"
@@ -179,20 +189,7 @@ export default async function ContasPage({
           placeholder="Ex: Carteira, Nubank, Cartão Inter"
           className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
         />
-        <select
-          name="tipo"
-          className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
-        >
-          <option value="banco">Banco</option>
-          <option value="carteira">Carteira</option>
-          <option value="cartao">Cartão</option>
-          <option value="investimento">Investimento</option>
-        </select>
-        <p className="text-xs text-ink-400 -mt-1.5">
-          Contas do tipo "Investimento" ficam separadas do seu saldo principal —
-          o dinheiro guardado ali aparece numa seção própria, não conta como
-          "disponível pra gastar".
-        </p>
+        <SeletorTipoConta />
         <div>
           <label className="block text-xs text-ink-400 mb-1.5">Banco (pra mostrar o selo certo)</label>
           <select

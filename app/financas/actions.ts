@@ -22,6 +22,8 @@ export async function criarConta(formData: FormData) {
     tipo: formData.get("tipo"),
     banco: formData.get("banco"),
     saldoInicial: formData.get("saldoInicial"),
+    diaFechamento: formData.get("diaFechamento"),
+    diaVencimento: formData.get("diaVencimento"),
   });
 
   if (!resultado.success) {
@@ -34,6 +36,8 @@ export async function criarConta(formData: FormData) {
     tipo: resultado.data.tipo,
     banco: resultado.data.banco,
     saldo_inicial: resultado.data.saldoInicial,
+    dia_fechamento: resultado.data.diaFechamento,
+    dia_vencimento: resultado.data.diaVencimento,
   });
 
   if (error) {
@@ -60,6 +64,8 @@ export async function atualizarConta(contaId: string, formData: FormData) {
     tipo: formData.get("tipo"),
     banco: formData.get("banco"),
     saldoInicial: formData.get("saldoInicial"),
+    diaFechamento: formData.get("diaFechamento"),
+    diaVencimento: formData.get("diaVencimento"),
   });
 
   if (!resultado.success) {
@@ -73,6 +79,8 @@ export async function atualizarConta(contaId: string, formData: FormData) {
       tipo: resultado.data.tipo,
       banco: resultado.data.banco,
       saldo_inicial: resultado.data.saldoInicial,
+      dia_fechamento: resultado.data.diaFechamento,
+      dia_vencimento: resultado.data.diaVencimento,
     })
     .eq("id", contaId);
 

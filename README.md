@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 93: Aviso de Orçamento Estourado + Metas de Economia
+# VidaTrack — Etapa 94: Fatura de Cartão de Crédito de Verdade
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,41 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (94) — melhoria #3 das 6: fatura de cartão de
+verdade.**
+
+Achei uma coisa importante: parte dessa funcionalidade **já tinha
+sido construída antes** nesta conversa (formulário já pedia dia de
+fechamento/vencimento, e a lógica de cálculo de período já existia)
+— mas achei um bug real: **as telas de criar/editar conta pediam
+esses campos, mas as actions de salvar não os capturavam nem
+salvavam** — ficavam perdidos silenciosamente. Corrigido.
+
+**O que constrói de novo:**
+- Tela de **Fatura** pra cada cartão configurado (ícone de recibo
+  aparece na lista de Contas, só pra cartões com fechamento
+  cadastrado)
+- Mostra a fatura **fechada** (a que está vencendo) por padrão, com
+  total e data de vencimento
+- Navegação entre faturas anteriores/seguintes
+- Lista de lançamentos de cada fatura
+
+**Testei antes de construir a tela:** rodei 7 cenários na lógica de
+cálculo já existente (período normal, antes/depois do fechamento,
+vencimento no mês seguinte, virada de ano, navegação entre
+períodos) — todos corretos, então usei ela como está.
+
+## Rodar o schema desta etapa
+
+Já apliquei direto no seu banco (2 colunas novas em `financa_contas`)
+— não precisa rodar nada.
+
+## As 3 melhorias que faltam
+
+4. Importar extrato do banco (CSV/OFX)
+5. Dividir despesa entre pessoas
+6. Patrimônio líquido ao longo do tempo
 
 **Novo nesta etapa (93) — as 2 primeiras das 6 melhorias
 significativas em Finanças que você pediu:**
@@ -2301,7 +2336,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 90. Ícone próprio no "badge" da notificação
 91. (sem mudanças de código — resolução final da notificação)
 92. Campo de observações nas tarefas 🎉
-93. Aviso de orçamento estourado + metas de economia — **você está aqui**
+93. Aviso de orçamento estourado + metas de economia
+94. Fatura de cartão de crédito de verdade — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

@@ -60,6 +60,18 @@ export const esquemaConta = z.object({
     .optional()
     .transform((v) => (v ? Number(v.replace(/\./g, "").replace(",", ".")) : 0))
     .pipe(z.number({ invalid_type_error: "Saldo inicial inválido" })),
+  diaFechamento: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? Number(v) : null))
+    .pipe(z.number().int().min(1).max(28).nullable()),
+  diaVencimento: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? Number(v) : null))
+    .pipe(z.number().int().min(1).max(28).nullable()),
 });
 
 export const esquemaCategoria = z.object({
