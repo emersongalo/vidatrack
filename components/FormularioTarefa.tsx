@@ -63,7 +63,7 @@ export function FormularioTarefa({
   }
 
   return (
-    <main className="max-w-md mx-auto px-6 md:px-12 pt-2">
+    <main className="max-w-md lg:max-w-xl mx-auto px-6 md:px-12 pt-2">
       <Link href={voltarHref} className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Tarefas
       </Link>
@@ -93,7 +93,7 @@ export function FormularioTarefa({
 
         <div>
           <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-          <div className="grid grid-cols-6 gap-2 max-h-56 overflow-y-auto pr-1">
+          <div className="grid grid-cols-6 lg:grid-cols-9 gap-2 max-h-56 overflow-y-auto pr-1">
             {ICONES_HABITO.map(({ nome, Icone }) => (
               <button
                 type="button"

@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 86: Domínio Novo no App Nativo (capacitor.config.ts)
+# VidaTrack — Etapa 89: Alarme na Tela (reforço, independente do push)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,47 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (89) — alarme direto na tela, com som:**
+
+Enquanto o app estiver aberto numa aba do navegador (qualquer tela,
+não só Hábitos), ele confere a cada 15 segundos se algum hábito ou
+tarefa tem horário de lembrete batendo com o horário atual. Se
+bater, aparece um alerta na tela (com o nome, o horário, botão de
+"Ver" e "Dispensar") e toca um bipe duplo.
+
+**Isso é um reforço, não substitui o push** — funciona só enquanto a
+aba está aberta (se fechar, para de conferir, igual o Timer já
+avisa). A vantagem é que **não depende do agendador externo
+funcionar** — é tudo calculado no seu próprio navegador, em tempo
+real.
+
+**Um detalhe técnico importante:** navegadores modernos bloqueiam
+som automático até você interagir com a página pelo menos uma vez
+(clicar em qualquer lugar) — é uma política de segurança do próprio
+navegador, não tem como contornar. O alerta visual sempre aparece
+normalmente; só o som pode ficar mudo na primeiríssima vez, antes de
+qualquer clique na página.
+
+**Testei antes de entregar:** a lógica de comparação de horário
+(hora atual formatada como "HH:MM") isoladamente, com vários
+cenários incluindo meia-noite e fim do dia.
+
+Não precisa rodar SQL — é ajuste de código só.
+
+**Novo nesta etapa (88) — formulários com seletor de ícone
+melhorados pro desktop:**
+
+Os formulários de criar/editar Tarefa, Hábito, Categoria e a criação
+rápida de categoria (dentro do lançamento financeiro) tinham a
+grade de ícones sempre com 6 (ou 8) colunas, mesmo com a tela
+larga — sobrava espaço e precisava rolar pra ver todos. Agora no
+desktop a grade usa mais colunas (9 ou 12, dependendo do
+formulário), e o formulário em si ficou um pouco mais largo também —
+sem virar um formulário gigante, só o suficiente pra não parecer
+"celular esticado".
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (86) — o que realmente precisava mudar com o
 domínio novo:**
@@ -2181,7 +2222,10 @@ versão Android via Capacitor está descrita na seção específica acima.
 83. Desktop em todas as sub-telas
 84. Timer também ajustado pro desktop
 85. Lançamento duplicado corrigido (clique duplo)
-86. Domínio novo no app nativo (capacitor.config.ts) — **você está aqui**
+86. Domínio novo no app nativo (capacitor.config.ts)
+87. (sem mudanças de código — investigação de notificação/cron após troca de domínio)
+88. Formulários com ícone mais largos no desktop
+89. Alarme na tela (reforço, independente do push) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

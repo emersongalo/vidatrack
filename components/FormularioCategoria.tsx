@@ -33,7 +33,7 @@ export function FormularioCategoria({
   const [cor, setCor] = useState(valoresIniciais?.cor ?? "financa");
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-xl mx-auto">
       <Link href={voltarHref} className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Categorias
       </Link>
@@ -92,7 +92,7 @@ export function FormularioCategoria({
 
         <div>
           <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-          <div className="grid grid-cols-6 gap-2 max-h-56 overflow-y-auto pr-1">
+          <div className="grid grid-cols-6 lg:grid-cols-9 gap-2 max-h-56 overflow-y-auto pr-1">
             {ICONES_CATEGORIA.map(({ nome, Icone }) => (
               <button
                 type="button"

@@ -15,7 +15,7 @@ export default async function NovoHabitoPage({
     .order("nome");
 
   return (
-    <main className="max-w-md mx-auto px-6 md:px-12 pt-2">
+    <main className="max-w-md lg:max-w-xl mx-auto px-6 md:px-12 pt-2">
       <Link href="/habitos" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Hoje
       </Link>

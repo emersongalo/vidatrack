@@ -114,7 +114,7 @@ export function FormularioTransacao({
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-xl mx-auto">
       <Link href={voltarHref} className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Finanças
       </Link>
@@ -229,7 +229,7 @@ export function FormularioTransacao({
                 autoFocus
                 className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
               />
-              <div className="grid grid-cols-8 gap-1.5 max-h-40 overflow-y-auto">
+              <div className="grid grid-cols-8 lg:grid-cols-12 gap-1.5 max-h-40 overflow-y-auto">
                 {ICONES_CATEGORIA.map(({ nome, Icone }) => (
                   <button
                     type="button"

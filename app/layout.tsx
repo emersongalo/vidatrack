@@ -7,6 +7,7 @@ import { GerenciadorSincronizacaoOffline } from "@/components/GerenciadorSincron
 import { BaixadorOfflineAutomatico } from "@/components/BaixadorOfflineAutomatico";
 import { AnalyticsAnonimo } from "@/components/AnalyticsAnonimo";
 import { PromptInstalarApp } from "@/components/PromptInstalarApp";
+import { AlarmeAlertaTela } from "@/components/AlarmeAlertaTela";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -76,6 +77,7 @@ export default function RootLayout({
         <BaixadorOfflineAutomatico />
         <AnalyticsAnonimo />
         <PromptInstalarApp />
+        <AlarmeAlertaTela />
       </body>
     </html>
   );
