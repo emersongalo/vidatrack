@@ -23,7 +23,7 @@ export default async function EditarTarefaPage({
   const [{ data: tarefa }, { data: categorias }] = await Promise.all([
     supabase
       .from("tarefas")
-      .select("id, titulo, icone, categoria_id, repetir, dias_semana, data, horario_lembrete")
+      .select("id, titulo, icone, categoria_id, repetir, dias_semana, data, horario_lembrete, observacoes")
       .eq("id", params.id)
       .single(),
     supabase.from("categorias_produtividade").select("id, nome").order("nome"),
@@ -49,6 +49,7 @@ export default async function EditarTarefaPage({
         diasSemana: tarefa.dias_semana ?? [],
         data: tarefa.data,
         horarioLembrete: tarefa.horario_lembrete,
+        observacoes: tarefa.observacoes,
       }}
     />
   );

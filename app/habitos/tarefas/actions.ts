@@ -26,6 +26,7 @@ export async function criarTarefa(formData: FormData) {
   const dataRaw = String(formData.get("data") ?? "");
   const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
   const subtarefasTexto = formData.getAll("subtarefaTexto").map((t) => String(t).trim()).filter(Boolean);
+  const observacoes = String(formData.get("observacoes") ?? "").trim();
 
   if (!titulo) {
     redirect(`/habitos/tarefas/nova?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
@@ -47,6 +48,7 @@ export async function criarTarefa(formData: FormData) {
     data: repetir === "nenhuma" ? dataRaw || hojeISO() : null,
     horario_lembrete: horarioLembreteRaw || null,
     subtarefas,
+    observacoes: observacoes || null,
     ordem: count ?? 0,
   });
 
@@ -69,6 +71,7 @@ export async function atualizarTarefa(tarefaId: string, formData: FormData) {
   const diasSemana = formData.getAll("diasSemana").map(Number);
   const dataRaw = String(formData.get("data") ?? "");
   const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
+  const observacoes = String(formData.get("observacoes") ?? "").trim();
 
   if (!titulo) {
     redirect(`/habitos/tarefas/${tarefaId}/editar?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
@@ -84,6 +87,7 @@ export async function atualizarTarefa(tarefaId: string, formData: FormData) {
       dias_semana: repetir === "dias_semana" ? diasSemana : [],
       data: repetir === "nenhuma" ? dataRaw || hojeISO() : null,
       horario_lembrete: horarioLembreteRaw || null,
+      observacoes: observacoes || null,
     })
     .eq("id", tarefaId);
 

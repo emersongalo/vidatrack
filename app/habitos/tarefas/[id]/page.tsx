@@ -25,7 +25,7 @@ export default async function DetalheTarefaPage({
 
   const { data: tarefa } = await supabase
     .from("tarefas")
-    .select("id, titulo, icone, repetir, data, concluida, subtarefas")
+    .select("id, titulo, icone, repetir, data, concluida, subtarefas, observacoes")
     .eq("id", params.id)
     .single();
 
@@ -80,6 +80,15 @@ export default async function DetalheTarefaPage({
             {tarefa.concluida ? "Marcada como concluída ✓" : "Marcar como concluída"}
           </button>
         </form>
+      )}
+
+      {tarefa.observacoes && (
+        <div className="mb-6">
+          <p className="text-sm text-ink-400 mb-2">Observações</p>
+          <p className="bg-base-800 border border-base-600 rounded-xl2 p-4 text-sm whitespace-pre-wrap">
+            {tarefa.observacoes}
+          </p>
+        </div>
       )}
 
       {subtarefas.length > 0 && (

@@ -45,6 +45,7 @@ export function FormularioTarefa({
     diasSemana: number[];
     data: string | null;
     horarioLembrete: string | null;
+    observacoes?: string | null;
   };
 }) {
   const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_HABITO[8].nome); // NotebookPen
@@ -213,6 +214,20 @@ export function FormularioTarefa({
             type="time"
             defaultValue={valoresIniciais?.horarioLembrete ?? ""}
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="observacoes" className="block text-sm text-ink-400 mb-1.5">
+            Observações (opcional)
+          </label>
+          <textarea
+            id="observacoes"
+            name="observacoes"
+            rows={3}
+            defaultValue={valoresIniciais?.observacoes ?? ""}
+            placeholder="Alguma anotação sobre essa tarefa..."
+            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition resize-none"
           />
         </div>
 

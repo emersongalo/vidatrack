@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 90: Ícone Próprio no "Badge" da Notificação
+# VidaTrack — Etapa 92: Campo de Observações nas Tarefas 🎉 (notificação confirmada funcionando)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,24 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Confirmado: notificação funcionando de ponta a ponta no domínio
+novo** — depois de descobrir que o navegador guardava a inscrição
+antiga localmente (mesmo com o banco limpo), desativar e ativar de
+novo resolveu. Chegou certinho.
+
+**Novo nesta etapa (92) — campo de Observações nas tarefas:**
+
+Tarefas agora têm um campo de texto livre pra anotações — aparece no
+formulário de criar/editar, e também na tela de detalhe da tarefa
+(só quando tiver algo escrito).
+
+Já apliquei a migração direto no seu banco durante a conversa — o
+arquivo `supabase/schema_observacoes_tarefa.sql` também está aqui,
+só pra manter o histórico completo, caso precise recriar num outro
+ambiente.
+
+Não precisa rodar SQL agora (já foi aplicado).
 
 **Novo nesta etapa (90) — sobre o print que você mandou:**
 
@@ -2247,7 +2265,9 @@ versão Android via Capacitor está descrita na seção específica acima.
 87. (sem mudanças de código — investigação de notificação/cron após troca de domínio)
 88. Formulários com ícone mais largos no desktop
 89. Alarme na tela (reforço, independente do push)
-90. Ícone próprio no "badge" da notificação — **você está aqui**
+90. Ícone próprio no "badge" da notificação
+91. (sem mudanças de código — resolução final da notificação)
+92. Campo de observações nas tarefas 🎉 — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
