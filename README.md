@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 94: Fatura de Cartão de Crédito de Verdade
+# VidaTrack — Etapa 95: Importar Extrato do Banco (OFX/CSV)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,36 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (95) — melhoria #4 das 6: importar extrato do
+banco.**
+
+Nova tela em Finanças → Mais → "Importar extrato":
+1. Escolhe a conta de destino
+2. Sobe um arquivo **OFX** (o formato padrão que a maioria dos bancos
+   brasileiros exporta) ou **CSV** (com colunas Data, Descrição e
+   Valor)
+3. Confere a prévia — cada lançamento vem com checkbox, dá pra
+   desmarcar o que não quiser importar
+4. Confirma, e pronto
+
+**Proteção contra duplicata:** se você importar o mesmo extrato duas
+vezes (ou um período que já tinha lançamentos manuais), o sistema
+reconhece pela combinação de data + valor + descrição e **pula
+automaticamente** o que já existe — te avisa quantos foram
+ignorados assim.
+
+**Testei antes de construir a tela:** os dois parsers (OFX no
+formato antigo sem tags de fechamento, OFX no formato XML mais novo,
+e CSV com vírgula decimal brasileira) — todos com dados de exemplo
+realistas, conferindo cada campo extraído.
+
+Não precisa rodar SQL — é ajuste de código só.
+
+## As 2 melhorias que faltam
+
+5. Dividir despesa entre pessoas
+6. Patrimônio líquido ao longo do tempo
 
 **Novo nesta etapa (94) — melhoria #3 das 6: fatura de cartão de
 verdade.**
@@ -2337,7 +2367,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 91. (sem mudanças de código — resolução final da notificação)
 92. Campo de observações nas tarefas 🎉
 93. Aviso de orçamento estourado + metas de economia
-94. Fatura de cartão de crédito de verdade — **você está aqui**
+94. Fatura de cartão de crédito de verdade
+95. Importar extrato do banco (OFX/CSV) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
