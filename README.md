@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 96: Dividir Despesa Entre Pessoas
+# VidaTrack — Etapa 97: Patrimônio Líquido ao Longo do Tempo 🎉 (as 6 melhorias completas)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,30 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (97) — melhoria #6 das 6, e a última:
+patrimônio líquido.**
+
+Nova tela em Finanças → Mais → "Patrimônio líquido": gráfico de
+linha mostrando a evolução de **tudo que você tem** (todas as contas
++ investido, somados) mês a mês, nos últimos 12 meses. Mostra também
+o valor atual e a variação total desse período.
+
+**Testei antes de construir a tela:** simulei um cenário de 3 meses
+com movimentações em cada um, conferindo que o valor de cada mês
+bate exatamente com a soma esperada (saldo inicial + tudo que
+aconteceu até o fim daquele mês).
+
+Não precisa rodar SQL — é ajuste de código só.
+
+## 🎉 As 6 melhorias significativas em Finanças, completas
+
+1. Metas de economia (Etapa 93)
+2. Aviso de orçamento estourado (Etapa 93)
+3. Fatura de cartão de crédito de verdade (Etapa 94)
+4. Importar extrato do banco — OFX/CSV (Etapa 95)
+5. Dividir despesa entre pessoas (Etapa 96)
+6. Patrimônio líquido ao longo do tempo (Etapa 97) — **você está aqui**
 
 **Novo nesta etapa (96) — melhoria #5 das 6: dividir despesa entre
 pessoas.**
@@ -2396,7 +2420,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 93. Aviso de orçamento estourado + metas de economia
 94. Fatura de cartão de crédito de verdade
 95. Importar extrato do banco (OFX/CSV)
-96. Dividir despesa entre pessoas — **você está aqui**
+96. Dividir despesa entre pessoas
+97. Patrimônio líquido ao longo do tempo 🎉 — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

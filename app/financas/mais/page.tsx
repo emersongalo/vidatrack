@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target, Upload, Users } from "lucide-react";
+import { Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target, Upload, Users, TrendingUp } from "lucide-react";
 import { LinkVoltar } from "@/components/LinkVoltar";
 
 const ITENS = [
+  { href: "/financas/patrimonio", Icone: TrendingUp, titulo: "Patrimônio líquido", texto: "Evolução de tudo que você tem, mês a mês" },
   { href: "/financas/divisoes", Icone: Users, titulo: "Dividir despesas", texto: "Controle quem te deve e quem você deve" },
   { href: "/financas/importar", Icone: Upload, titulo: "Importar extrato", texto: "Sobe um arquivo OFX ou CSV do seu banco" },
   { href: "/financas/metas", Icone: Target, titulo: "Metas de economia", texto: "Guarde dinheiro pra um objetivo específico" },
