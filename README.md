@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 89: Alarme na Tela (reforço, independente do push)
+# VidaTrack — Etapa 90: Ícone Próprio no "Badge" da Notificação
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,27 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (90) — sobre o print que você mandou:**
+
+Conferi o código — o ícone grande da notificação (`icon`) **já
+estava correto**, usando nossa logo nova desde a Etapa 80. A
+notificação do seu print especificamente veio do domínio antigo
+(`vidatrack.vercel...`), então é bem provável que tenha sido de uma
+inscrição/Service Worker de antes dessa atualização — não um
+problema no código atual.
+
+**O que achei de real pra melhorar:** o "badge" (o ícone pequeno que
+aparece na barra de notificação do Android) ainda usava o mesmo
+arquivo colorido do ícone grande — mas esse tipo de ícone funciona
+melhor com fundo **transparente**, só o desenho em branco, porque o
+Android costuma pintar ele da cor que quiser por cima. Criei uma
+versão própria só pra isso.
+
+Não precisa rodar SQL — é arquivo de imagem + 1 linha de código.
+
+**Pra ver isso funcionando de verdade:** teste numa notificação nova,
+já pelo `vidatrack.online` (não pelo domínio antigo do print).
 
 **Novo nesta etapa (89) — alarme direto na tela, com som:**
 
@@ -2225,7 +2246,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 86. Domínio novo no app nativo (capacitor.config.ts)
 87. (sem mudanças de código — investigação de notificação/cron após troca de domínio)
 88. Formulários com ícone mais largos no desktop
-89. Alarme na tela (reforço, independente do push) — **você está aqui**
+89. Alarme na tela (reforço, independente do push)
+90. Ícone próprio no "badge" da notificação — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

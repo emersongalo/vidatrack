@@ -50,7 +50,7 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(dados.titulo, {
       body: dados.corpo,
       icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      badge: "/icons/badge-notificacao.png",
       vibrate: [200, 100, 200],
       silent: false,
       data: { url: dados.url },
