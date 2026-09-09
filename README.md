@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 102: Correção de Build (constante num arquivo "use server")
+# VidaTrack — Etapa 103: Painel do Celular Corrigido (regressão do desktop)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,21 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (103) — corrige o painel subindo e sobrando
+espaço em branco no celular.**
+
+Causa real: ao adicionar o painel de resumo pro desktop (Etapa 101),
+embrulhei o `TrilhoMenu` numa `<div>` nova, mas só dei as classes de
+layout (`flex-1`, etc.) pra ela usando o prefixo `lg:` (só desktop) —
+no celular, essa div ficava sem nenhum comportamento de flexbox,
+quebrando o preenchimento vertical que fazia o trilho ficar centralizado
+na tela.
+
+**Corrigido:** as classes de flexbox agora valem em qualquer tamanho
+de tela; só o `grid` de 2 colunas continua exclusivo do desktop.
+
+Não precisa rodar SQL — é ajuste de CSS só.
 
 **Novo nesta etapa (102) — corrige o erro de build da Etapa 101.**
 
@@ -2547,7 +2562,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 99. Mapa de contribuições (calendário do ano)
 100. Correção de build (componente morto removido)
 101. Hábitos negativos + insight + desktop (Hoje, atalhos, painel) 🎉
-102. Correção de build (constante em arquivo "use server") — **você está aqui**
+102. Correção de build (constante em arquivo "use server")
+103. Painel do celular corrigido (regressão do desktop) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

@@ -99,7 +99,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <div className="lg:grid lg:grid-cols-[1fr_240px] lg:gap-6 lg:flex-1 lg:min-h-0">
+      <div className="flex flex-col flex-1 min-h-0 lg:grid lg:grid-cols-[1fr_240px] lg:gap-6">
       <TrilhoMenu />
       <ConfirmarSaidaApp />
 
