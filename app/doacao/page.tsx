@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 // Troque pela sua chave Pix real antes de publicar
-const CHAVE_PIX = "sua-chave-pix@exemplo.com";
+const CHAVE_PIX = "99b75511-8f86-46c7-b635-582c93c4208a";
 
 export default function DoacaoPage() {
   const [copiado, setCopiado] = useState(false);
