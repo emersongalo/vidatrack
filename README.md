@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 114: Print Gigante Corrigido + Efeitos de Rolagem
+# VidaTrack — Etapa 115: Desafios Financeiros (tipo o dos quadradinhos)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,42 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (115) — Desafios financeiros**, em Finanças →
+Mais → "Desafios financeiros".
+
+**Como funciona:**
+1. Cria um desafio: nome, quantos quadrados, valor base, e de qual
+   conta sai o dinheiro. Dois tipos — **fixo** (mesmo valor sempre) ou
+   **crescente** (quadrado 1 = valor base, quadrado 2 = 2x, e assim
+   por diante, igual o desafio das 52 semanas)
+2. O app já gera todos os quadrados sozinho
+3. Você clica num quadrado pra marcar como feito — isso **cria um
+   lançamento de despesa de verdade** na conta escolhida (sai do
+   saldo disponível, igual você pediu)
+4. Vê quantos já fez, quantos faltam, e o total guardado até agora
+
+**O ponto que você destacou** — não perder esse dinheiro de vista:
+o valor guardado nos desafios agora **entra na conta do Patrimônio
+líquido**, junto com contas e investimentos. Não é saldo disponível
+pra gastar, mas continua contando como seu.
+
+**Bug que encontrei e corrigi antes de entregar:** na lógica de
+"desafio concluído", eu tinha somado +1 a mais na contagem — isso
+faria o desafio ser marcado como concluído um quadrado antes da hora
+de verdade. Testei com um cenário concreto (4 de 5 quadrados) antes
+de perceber e corrigir.
+
+Não precisa rodar SQL — já apliquei as 2 tabelas novas direto no
+banco (`desafios_financeiros` e `desafio_quadrados`).
+
+## Uma limitação que quero deixar clara
+
+O gráfico de Patrimônio líquido mostra o valor guardado em desafios
+só no **mês atual** — os meses passados do gráfico não são
+recalculados retroativamente (não guardamos histórico de "quanto
+tinha guardado em cada desafio em cada mês"). Se isso for importante
+pra você, dá pra evoluir depois.
 
 **Novo nesta etapa (114) — 2 ajustes na página de apresentação.**
 
@@ -2788,7 +2824,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 111. Correção real do link (middleware bloqueava) + botão em destaque
 112. Entrar na demonstração com um clique
 113. Página de apresentação reformulada, com prints reais
-114. Print gigante corrigido + efeitos de rolagem — **você está aqui**
+114. Print gigante corrigido + efeitos de rolagem
+115. Desafios financeiros (tipo o dos quadradinhos) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
