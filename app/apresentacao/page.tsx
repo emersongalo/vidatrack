@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { entrarComoDemonstracao } from "./actions";
+import { AoRolar } from "@/components/AoRolar";
 
 export const metadata = {
   title: "VidaTrack — Hábitos e finanças, num único lugar",
@@ -75,6 +76,7 @@ export default function ApresentacaoPage() {
       {/* HÁBITOS — visão geral */}
       <section className="border-t border-base-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
+          <AoRolar>
           <div className="flex items-center gap-3 mb-4">
             <span className="w-3 h-3 rounded-full bg-habito shrink-0" />
             <span className="text-xs uppercase tracking-widest text-habito font-medium">Módulo Hábitos</span>
@@ -87,8 +89,10 @@ export default function ApresentacaoPage() {
             comparação entre hábitos e um mapa do ano inteiro — sem
             precisar calcular nada na cabeça.
           </p>
+          </AoRolar>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <AoRolar>
             <div>
               <Print src="/apresentacao/hoje.jpg" alt="Tela Hoje com hábitos e tarefas do dia" />
               <p className="font-medium mt-4 mb-1">Tudo num lugar só</p>
@@ -96,6 +100,8 @@ export default function ApresentacaoPage() {
                 Hábitos e tarefas do dia, lado a lado. Marca com um toque.
               </p>
             </div>
+            </AoRolar>
+            <AoRolar atraso={150}>
             <div>
               <Print src="/apresentacao/estatisticas.jpg" alt="Resumo semanal e mapa de contribuições" />
               <p className="font-medium mt-4 mb-1">Mapa do ano inteiro</p>
@@ -103,6 +109,8 @@ export default function ApresentacaoPage() {
                 Igual o de contribuições do GitHub — só que da sua constância.
               </p>
             </div>
+            </AoRolar>
+            <AoRolar atraso={300}>
             <div>
               <Print src="/apresentacao/comparacao.jpg" alt="Comparação entre hábitos" />
               <p className="font-medium mt-4 mb-1">Comparação entre hábitos</p>
@@ -110,8 +118,10 @@ export default function ApresentacaoPage() {
                 Vê de cara qual hábito está indo bem, e qual precisa de atenção.
               </p>
             </div>
+            </AoRolar>
           </div>
 
+          <AoRolar>
           <ul className="grid sm:grid-cols-2 gap-3 mt-12 text-sm">
             {[
               "Sequência atual e recorde em cada hábito",
@@ -125,12 +135,14 @@ export default function ApresentacaoPage() {
               </li>
             ))}
           </ul>
+          </AoRolar>
         </div>
       </section>
 
       {/* FINANÇAS — visão geral */}
       <section className="border-t border-base-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
+          <AoRolar>
           <div className="flex items-center gap-3 mb-4">
             <span className="w-3 h-3 rounded-full bg-financa shrink-0" />
             <span className="text-xs uppercase tracking-widest text-financa font-medium">Módulo Finanças</span>
@@ -143,8 +155,10 @@ export default function ApresentacaoPage() {
             dia a dia, e deixa o app apontar sozinho onde o dinheiro
             está indo.
           </p>
+          </AoRolar>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <AoRolar>
             <div>
               <Print src="/apresentacao/painel-financas.jpg" alt="Saldo em contas e investido" />
               <p className="font-medium mt-4 mb-1">Saldo, num golpe de vista</p>
@@ -152,6 +166,8 @@ export default function ApresentacaoPage() {
                 Contas e investido separados — sabe sempre quanto pode gastar.
               </p>
             </div>
+            </AoRolar>
+            <AoRolar atraso={150}>
             <div>
               <Print src="/apresentacao/analise.jpg" alt="Dicas automáticas sobre os gastos" />
               <p className="font-medium mt-4 mb-1">Dicas automáticas</p>
@@ -159,6 +175,8 @@ export default function ApresentacaoPage() {
                 O app aponta sozinho onde seu dinheiro está concentrado.
               </p>
             </div>
+            </AoRolar>
+            <AoRolar atraso={300}>
             <div>
               <Print src="/apresentacao/despesas-categoria.jpg" alt="Despesas por categoria" />
               <p className="font-medium mt-4 mb-1">Gastos por categoria</p>
@@ -166,10 +184,15 @@ export default function ApresentacaoPage() {
                 Alimentação, moradia, lazer — visual, sem planilha nenhuma.
               </p>
             </div>
+            </AoRolar>
           </div>
 
-          <div className="mt-14">
+          <AoRolar>
+          <div className="mt-14 max-w-xs mx-auto">
             <Print src="/apresentacao/recursos.jpg" alt="Recursos avançados de Finanças" />
+            <p className="text-center text-sm text-ink-400 mt-4">
+              E ainda mais: metas de economia, importar extrato, dividir despesas, patrimônio líquido...
+            </p>
           </div>
 
           <ul className="grid sm:grid-cols-2 gap-3 mt-8 text-sm">
@@ -187,12 +210,14 @@ export default function ApresentacaoPage() {
               </li>
             ))}
           </ul>
+          </AoRolar>
         </div>
       </section>
 
       {/* CTA final */}
       <section className="border-t border-base-700">
         <div className="max-w-2xl mx-auto px-6 py-20 text-center">
+          <AoRolar>
           <h2 className="font-display text-3xl font-semibold mb-4">
             Só entrar e mexer
           </h2>
@@ -202,6 +227,7 @@ export default function ApresentacaoPage() {
             já está dentro.
           </p>
           <BotaoDemonstracao />
+          </AoRolar>
         </div>
       </section>
 

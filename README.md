@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 113: Página de Apresentação Reformulada, com Prints Reais
+# VidaTrack — Etapa 114: Print Gigante Corrigido + Efeitos de Rolagem
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,20 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (114) — 2 ajustes na página de apresentação.**
+
+**1. Print gigante corrigido** — o print do menu "Mais" (Finanças)
+tinha ficado esticado na largura inteira da seção, em vez de manter o
+tamanho de celular como os outros. Agora fica contido, do mesmo jeito.
+
+**2. Efeitos de rolagem** — criei um componente (`AoRolar`) que
+detecta quando um bloco entra na tela e revela ele com um fade +
+movimento suave de baixo pra cima. Cada seção (títulos, os 3 prints
+de cada módulo, a lista de recursos) entra em cascata, com um
+pequeno atraso entre um e outro — não é tudo de uma vez.
+
+Não precisa rodar SQL — é ajuste de código e imagens só.
 
 **Novo nesta etapa (113) — reformulação completa da página de
 apresentação, com os prints reais que você mandou** (da conta de
@@ -2773,7 +2787,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 110. Link pra apresentação na tela de login
 111. Correção real do link (middleware bloqueava) + botão em destaque
 112. Entrar na demonstração com um clique
-113. Página de apresentação reformulada, com prints reais — **você está aqui**
+113. Página de apresentação reformulada, com prints reais
+114. Print gigante corrigido + efeitos de rolagem — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
