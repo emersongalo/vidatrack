@@ -19,9 +19,15 @@ export default function LoginPage({
               VidaTrack
             </p>
           </div>
-          <p className="text-ink-400 mt-1 text-sm">
+          <p className="text-ink-400 mt-1 text-sm mb-4">
             hábitos · finanças, num único trilho
           </p>
+          <Link
+            href="/apresentacao"
+            className="inline-block text-sm bg-habito/15 text-habito border border-habito/30 rounded-full px-4 py-1.5 hover:bg-habito/25 transition"
+          >
+            Ver como funciona, sem criar conta
+          </Link>
         </div>
 
         <div className="relative flex-1 flex items-center my-10">
@@ -44,10 +50,6 @@ export default function LoginPage({
           <p className="text-ink-400 text-xs">
             Gratuito. Feito para ser usado todos os dias.
           </p>
-          <Link href="/apresentacao" className="text-ink-400 text-xs hover:text-ink-100 transition underline">
-            Ver como funciona
-          </Link>
-          {" · "}
           <Link href="/privacidade" className="text-ink-400 text-xs hover:text-ink-100 transition underline">
             Como cuidamos da sua privacidade
           </Link>

@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 110: Link pra Apresentação na Tela de Login
+# VidaTrack — Etapa 111: Correção Real do Link (middleware bloqueava) + Botão em Destaque
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,32 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (111) — achei a causa real do link não ir a lugar
+nenhum, e deixei ele em destaque como você pediu.**
+
+**A causa:** o middleware do site (o "segurança" que decide quem pode
+ver cada página sem estar logado) não conhecia `/apresentacao` nem
+`/doacao` como páginas públicas — qualquer visitante sem sessão que
+tentasse entrar nelas era jogado de volta pro login na hora, mesmo
+clicando no link certo. Corrigido.
+
+**Achado extra, mais sério:** a própria **raiz do site** (`vidatrack.online`)
+tinha o mesmo problema — quer dizer que, desde a Etapa 107, nenhum
+visitante sem conta estava vendo a página de apresentação de
+verdade, só sendo jogado direto pro login sem eu perceber. Corrigi
+com cuidado (usando comparação exata pra "/", não um prefixo — senão
+toda rota do site viraria pública sem querer).
+
+**Testei antes de aplicar:** simulei 7 rotas diferentes contra a
+lógica corrigida, conferindo que a raiz e as 2 novas ficaram públicas
+e todo o resto continua exigindo login.
+
+**Sobre o link ficar mais visível:** boa observação — troquei o
+texto discreto embaixo por um botão de verdade, logo abaixo do nome
+do app, no topo da tela.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (110) — link "Ver como funciona" na tela de
 login**, do lado do link de privacidade já existente. Leva direto pra
@@ -2704,7 +2730,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 107. Página de apresentação pública (+ demo pendente)
 108. Reset automático da conta de demonstração 🎉
 109. Correção de build (import errado na Tela de Boas-vindas)
-110. Link pra apresentação na tela de login — **você está aqui**
+110. Link pra apresentação na tela de login
+111. Correção real do link (middleware bloqueava) + botão em destaque — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

@@ -11,6 +11,8 @@ const ROTAS_PUBLICAS = [
   "/auth/callback",
   "/privacidade",
   "/conta-excluida",
+  "/apresentacao",
+  "/doacao",
 ];
 
 // Dessas rotas públicas, só ESSAS não fazem sentido pra quem já está
@@ -65,9 +67,9 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const rotaPublica = ROTAS_PUBLICAS.some((rota) =>
-    request.nextUrl.pathname.startsWith(rota)
-  );
+  const rotaPublica =
+    request.nextUrl.pathname === "/" ||
+    ROTAS_PUBLICAS.some((rota) => request.nextUrl.pathname.startsWith(rota));
 
   if (!user && !rotaPublica) {
     const url = request.nextUrl.clone();
