@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 115: Desafios Financeiros (tipo o dos quadradinhos)
+# VidaTrack — Etapa 116: Desafios com Prescrição Automática (você diz quanto e quando)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,30 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (116) — mudei o jeito de criar um desafio, como
+você pediu.**
+
+Antes você tinha que calcular sozinho quantos quadrados e qual valor
+por quadrado. Agora é o contrário: você diz **quanto quer guardar no
+total** (ex: R$2.000) e **em quanto tempo** (ex: 1 ano — 52
+quadrados), e o app calcula sozinho o valor certo de cada quadrado
+pra bater exatamente nesse total.
+
+**Bug que achei e corrigi durante o teste:** ao arredondar cada
+quadrado pra 2 casas decimais, a soma de todos ficava com uma
+diferença de até uns 2 reais do valor pedido (mais perceptível no
+tipo "crescente", com muitos quadrados). Corrigido: o **último
+quadrado absorve essa sobra**, garantindo que o total bate exato —
+testei com o cenário R$2.000 em 52 semanas antes e depois da
+correção pra confirmar.
+
+**Outro bug que achei sozinho, sem precisar de teste:** as opções do
+menu "Em quanto tempo" tinham dois valores repetidos (12) — o que
+quebraria a escolha entre eles. Corrigido antes de entregar.
+
+Não precisa rodar SQL — mesmas tabelas da Etapa 115, só muda a
+lógica de código.
 
 **Novo nesta etapa (115) — Desafios financeiros**, em Finanças →
 Mais → "Desafios financeiros".
@@ -2825,7 +2849,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 112. Entrar na demonstração com um clique
 113. Página de apresentação reformulada, com prints reais
 114. Print gigante corrigido + efeitos de rolagem
-115. Desafios financeiros (tipo o dos quadradinhos) — **você está aqui**
+115. Desafios financeiros (tipo o dos quadradinhos)
+116. Desafios com prescrição automática (você diz quanto e quando) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

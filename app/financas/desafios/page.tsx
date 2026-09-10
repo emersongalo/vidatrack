@@ -77,44 +77,45 @@ export default async function DesafiosPage({
             <input
               name="nome"
               type="text"
-              placeholder="Nome (ex: Desafio 52 semanas)"
+              placeholder="Nome (ex: Viagem de fim de ano)"
               required
               className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-ink-400 mb-1.5">Quantos quadrados</label>
-                <input
-                  name="quantidadeQuadrados"
-                  type="number"
-                  min={2}
-                  max={365}
-                  defaultValue={52}
-                  required
-                  className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-ink-400 mb-1.5">Tipo</label>
-                <select
-                  name="tipoProgressao"
-                  className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
-                >
-                  <option value="crescente">Crescente (1º R$X, 2º R$2X...)</option>
-                  <option value="fixo">Fixo (mesmo valor sempre)</option>
-                </select>
-              </div>
-            </div>
             <div>
-              <label className="block text-xs text-ink-400 mb-1.5">
-                Valor base (o valor do 1º quadrado, ou de todos se for fixo)
-              </label>
+              <label className="block text-xs text-ink-400 mb-1.5">Quanto quer guardar no total</label>
               <CampoValorMonetario
-                name="valorBase"
-                placeholder="0,00"
+                name="valorTotal"
+                placeholder="Ex: 2.000,00"
                 required
                 className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 font-mono focus:border-ink-100 outline-none transition"
               />
+            </div>
+            <div>
+              <label className="block text-xs text-ink-400 mb-1.5">Em quanto tempo</label>
+              <select
+                name="prazoQuantidade"
+                defaultValue="52"
+                className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              >
+                <option value="30">1 mês (30 quadrados, 1 por dia)</option>
+                <option value="12">3 meses (12 quadrados, 1 por semana)</option>
+                <option value="26">6 meses (26 quadrados, 1 por semana)</option>
+                <option value="52">1 ano (52 quadrados, 1 por semana)</option>
+                <option value="6">6 meses (6 quadrados, 1 por mês)</option>
+              </select>
+              <p className="text-xs text-ink-400 mt-1.5">
+                O app calcula sozinho quanto cada quadrado vale pra bater esse total nesse prazo.
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs text-ink-400 mb-1.5">Como distribuir</label>
+              <select
+                name="tipoProgressao"
+                className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              >
+                <option value="crescente">Crescente (começa pequeno, cresce a cada quadrado)</option>
+                <option value="fixo">Fixo (mesmo valor sempre)</option>
+              </select>
             </div>
             <div>
               <label className="block text-xs text-ink-400 mb-1.5">De qual conta sai o dinheiro</label>

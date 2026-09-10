@@ -4,12 +4,23 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-function gerarQuadrados(quantidade: number, tipoProgressao: string, valorBase: number) {
+function gerarQuadrados(quantidade: number, tipoProgressao: string, valorTotal: number) {
+  const valorBase =
+    tipoProgressao === "fixo" ? valorTotal / quantidade : valorTotal / ((quantidade * (quantidade + 1)) / 2);
+
   const quadrados = [];
   for (let i = 1; i <= quantidade; i++) {
-    const valor = tipoProgressao === "crescente" ? valorBase * i : valorBase;
-    quadrados.push({ numero: i, valor: Math.round(valor * 100) / 100 });
+    const valorBruto = tipoProgressao === "crescente" ? valorBase * i : valorBase;
+    quadrados.push({ numero: i, valor: Math.round(valorBruto * 100) / 100 });
   }
+
+  // Arredondar cada quadrado individualmente acumula uma diferença
+  // pequena no total — o último quadrado absorve essa sobra, pra
+  // bater exatamente no valor que a pessoa disse que queria guardar.
+  const somaAtual = quadrados.reduce((soma, q) => soma + q.valor, 0);
+  const diferenca = Math.round((valorTotal - somaAtual) * 100) / 100;
+  quadrados[quadrados.length - 1].valor = Math.round((quadrados[quadrados.length - 1].valor + diferenca) * 100) / 100;
+
   return quadrados;
 }
 
@@ -21,24 +32,28 @@ export async function criarDesafio(formData: FormData) {
   if (!user) redirect("/login");
 
   const nome = String(formData.get("nome") ?? "").trim();
-  const quantidadeQuadrados = Number(formData.get("quantidadeQuadrados") ?? "0");
+  const valorTotal = Number(String(formData.get("valorTotal") ?? "").replace(/\./g, "").replace(",", "."));
+  const prazoQuantidade = Number(formData.get("prazoQuantidade") ?? "0");
   const tipoProgressao = String(formData.get("tipoProgressao") ?? "fixo");
-  const valorBase = Number(String(formData.get("valorBase") ?? "").replace(/\./g, "").replace(",", "."));
   const contaOrigemId = String(formData.get("contaOrigemId") ?? "");
 
-  if (!nome || !quantidadeQuadrados || quantidadeQuadrados < 2 || !valorBase || valorBase <= 0 || !contaOrigemId) {
+  if (!nome || !valorTotal || valorTotal <= 0 || !prazoQuantidade || prazoQuantidade < 2 || !contaOrigemId) {
     redirect(`/financas/desafios?erro=${encodeURIComponent("Preenche todos os campos certinho")}`);
   }
 
-  const quadrados = gerarQuadrados(quantidadeQuadrados, tipoProgressao, valorBase);
+  // A pessoa diz quanto quer guardar e em quanto tempo — o app
+  // calcula sozinho quanto cada quadrado vale, pra somar certinho
+  // nesse total dentro desse prazo.
+  const quadrados = gerarQuadrados(prazoQuantidade, tipoProgressao, valorTotal);
   const valorAlvo = quadrados.reduce((soma, q) => soma + q.valor, 0);
+  const valorBase = quadrados[0].valor;
 
   const { data: desafio, error } = await supabase
     .from("desafios_financeiros")
     .insert({
       dono_id: user.id,
       nome,
-      quantidade_quadrados: quantidadeQuadrados,
+      quantidade_quadrados: prazoQuantidade,
       tipo_progressao: tipoProgressao,
       valor_base: valorBase,
       valor_alvo: valorAlvo,
