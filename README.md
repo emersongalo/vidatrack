@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 112: Entrar na Demonstração com Um Clique (sem digitar nada)
+# VidaTrack — Etapa 113: Página de Apresentação Reformulada, com Prints Reais
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,29 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (113) — reformulação completa da página de
+apresentação, com os prints reais que você mandou** (da conta de
+demonstração já funcionando, com dados de verdade — muito melhor que
+os prints antigos que eu tinha extraído do vídeo).
+
+**Mudanças:**
+- Página bem mais longa, com seções separadas por Hábitos e
+  Finanças, cada uma com 3-4 prints reais + lista dos recursos
+- **Removida a caixa de e-mail/senha** da seção de demonstração —
+  como o botão já loga direto, mostrar a senha ali não fazia mais
+  sentido, só um botão grande e claro
+- Cabeçalho simplificado ("Já tenho conta" no lugar de "Entrar")
+- CTA de demonstração repetido no fim da página também
+
+Não precisa rodar SQL — é ajuste de código e imagens só.
+
+## Um cuidado que tomei
+
+Os 12 prints que você mandou vieram numerados só pela ordem de
+upload — conferi visualmente qual print correspondia a qual tela
+antes de usar (cheguei a copiar o mesmo arquivo duas vezes por
+engano na primeira tentativa, e corrigi antes de finalizar).
 
 **Novo nesta etapa (112) — o botão "Entrar na demonstração agora"
 loga automaticamente**, sem precisar digitar e-mail/senha na tela de
@@ -2749,7 +2772,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 109. Correção de build (import errado na Tela de Boas-vindas)
 110. Link pra apresentação na tela de login
 111. Correção real do link (middleware bloqueava) + botão em destaque
-112. Entrar na demonstração com um clique — **você está aqui**
+112. Entrar na demonstração com um clique
+113. Página de apresentação reformulada, com prints reais — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
