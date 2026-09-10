@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { sair } from "../login/actions";
 import { AlternadorTema } from "@/components/AlternadorTema";
@@ -17,9 +18,16 @@ export default async function DashboardPage() {
 
   const { data: perfil } = await supabase
     .from("perfis")
-    .select("nome, foto_url")
+    .select("nome, foto_url, onboarding_concluido")
     .eq("id", user?.id ?? "")
     .maybeSingle();
+
+  // Manda pra tela de boas-vindas quem ainda não passou por ela —
+  // pega todo mundo de uma vez só (login por e-mail, Google, ou
+  // verificação de e-mail), já que todos caem aqui no final.
+  if (perfil && !perfil.onboarding_concluido) {
+    redirect("/bem-vindo");
+  }
 
   const urlFoto = await resolverUrlFoto(perfil?.foto_url ?? null);
 

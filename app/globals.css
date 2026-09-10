@@ -103,3 +103,9 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Página de apresentação: o trilho "nasce" uma vez, ao carregar a página */
+@keyframes crescer {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}

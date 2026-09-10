@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 103: Painel do Celular Corrigido (regressão do desktop)
+# VidaTrack — Etapa 108: Reset Automático da Conta de Demonstração 🎉
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,115 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**A conta de demonstração já existe e está povoada** — criei ela
+direto no banco (email `demo@vidatrack.online`, senha
+`VidaTrack2026`), com 5 hábitos, 2 tarefas, 3 contas e 7 lançamentos
+de exemplo.
+
+**Novo nesta etapa (108) — reset automático + nova rota
+`/api/resetar-demo`.**
+
+Essa rota apaga tudo que existe na conta demo e recria os dados de
+exemplo do zero — mesma proteção por segredo que já usamos em
+`/api/lembretes`.
+
+**Sobre moderação de conteúdo:** como é uma conta pública
+compartilhada, alguém mal-intencionado pode digitar algo ofensivo
+num nome de hábito, tarefa ou lançamento. Resolvo isso com reset
+**frequente** (algumas vezes por dia, não só 1x) — limita bastante o
+tempo que qualquer coisa ruim fica visível. Não construí uma lista de
+palavras proibidas — não é algo que devo gerar; se quiser um filtro
+de moderação de verdade, o caminho certo é integrar um serviço
+próprio pra isso (ex: API de moderação da OpenAI), que fica pra uma
+etapa futura, se topar.
+
+## Configurar o agendador (novo passo, no cron-job.org)
+
+1. Cria um **segundo** cronjob (além do de lembretes já existente)
+2. URL: `https://www.vidatrack.online/api/resetar-demo?secret=SEU_CRON_SECRET`
+   (mesmo `CRON_SECRET` de sempre, já configurado no Vercel)
+3. Frequência sugerida: a cada 4 ou 6 horas (não precisa ser a cada
+   poucos minutos, como o de lembretes)
+
+Não precisa rodar SQL — os dados já foram criados manualmente, e a
+rota nova só reproduz o mesmo resultado.
+
+**Novo nesta etapa (107) — página pública de apresentação, em
+`/apresentacao`.**
+
+Usei o próprio "trilho" (a linha com os dois pontos coloridos, que já
+é a identidade visual do app) como fio condutor da página inteira —
+em vez de um herói genérico, a página abre com o trilho ampliado
+"nascendo" na tela, e cada seção (Hábitos, Finanças, Demonstração)
+segue marcada pelo mesmo traço vertical.
+
+**Estrutura:**
+1. Abertura com o trilho e as duas chamadas ("Testar agora" / "Criar
+   conta grátis")
+2. Seção Hábitos — recursos + print real da tela
+3. Seção Finanças — recursos + print real da Análise
+4. Seção Demonstração — credenciais da conta de teste
+5. Rodapé com Privacidade e Apoiar o projeto
+
+**A raiz do site (`/`) agora mostra essa página** pra quem não está
+logado, e continua indo direto pro Painel pra quem já está — não
+afeta o app instalado (ele já abre direto em `/dashboard`, nunca
+passa pela raiz).
+
+## ⚠️ Pendente — a conta de demonstração ainda não existe
+
+A página já mostra as credenciais (`demo@vidatrack.online` /
+`VidaTrack2026`), mas **a conta em si ainda precisa ser criada** pelo
+cadastro normal do app. Assim que você confirmar que criou e entrou
+nela pelo menos uma vez, eu povoo com hábitos e lançamentos de
+exemplo direto no banco.
+
+Não precisa rodar SQL por enquanto — só quando a conta existir.
+
+**Novo nesta etapa (106) — tela de boas-vindas pra quem usa o app
+pela primeira vez.**
+
+3 passos rápidos (Bem-vindo → Hábitos → Finanças), com bolinhas de
+progresso e botão "Pular" a qualquer momento. Aparece automaticamente
+na primeira vez que a pessoa entra — depois disso, nunca mais.
+
+**Cuidado importante que tomei:** ao adicionar a coluna nova no
+banco, ela vem com valor padrão "não viu ainda" pra qualquer
+registro — o que faria TODOS os usuários que já usam o app (você e a
+Suelyen) caírem na tela de boas-vindas de novo. Corrigi isso na hora:
+marquei todos os perfis já existentes como "já viu", então só quem
+se cadastrar dali pra frente passa pela tela nova.
+
+Não precisa rodar SQL — já apliquei a coluna nova e a correção pros
+usuários existentes direto no banco.
+
+**Novo nesta etapa (105) — revisão de qualidade, antes de continuar
+adicionando recursos:**
+
+Depois de mais de 100 etapas incrementais, conferi a base de código
+inteira (143 arquivos) atrás de código sem uso.
+
+**Removidos 4 componentes mortos** (nenhum lugar do app usava):
+`DefinirLocalizacao`, `MiniCalendario`, `TiraHistorico`,
+`WidgetClima` — junto com `lib/clima/` (que só existia pra servir o
+WidgetClima, ficou órfã também).
+
+**Também conferi:**
+- Todas as rotas do app (`/financas/*`, `/habitos/*`, etc.) — todas
+  têm pelo menos um link de acesso de verdade, incluindo `/offline`
+  (usada pelo Service Worker, não por um link clicável — comportamento
+  esperado)
+- `console.log` esquecidos — nenhum encontrado
+- Funções em `lib/` sem nenhum uso — nenhuma encontrada
+
+**Cuidado que tomei:** dois componentes (`BlocoTempo`,
+`BotaoRemoverCompartilhamento`) pareciam sem uso numa busca mais
+simples, mas na verdade são importados com caminho relativo
+(`./Nome`) em vez do padrão `@/components/Nome` — confirmei isso
+antes de decidir não mexer neles.
+
+Não precisa rodar SQL — é remoção de arquivo só.
 
 **Novo nesta etapa (103) — corrige o painel subindo e sobrando
 espaço em branco no celular.**
@@ -2563,7 +2672,12 @@ versão Android via Capacitor está descrita na seção específica acima.
 100. Correção de build (componente morto removido)
 101. Hábitos negativos + insight + desktop (Hoje, atalhos, painel) 🎉
 102. Correção de build (constante em arquivo "use server")
-103. Painel do celular corrigido (regressão do desktop) — **você está aqui**
+103. Painel do celular corrigido (regressão do desktop)
+104. (sem mudanças de código — vídeos de Instagram e tela de doação)
+105. Revisão de qualidade (código morto removido)
+106. Tela de boas-vindas (primeiro acesso)
+107. Página de apresentação pública (+ demo pendente)
+108. Reset automático da conta de demonstração 🎉 — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
