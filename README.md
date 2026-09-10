@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 108: Reset Automático da Conta de Demonstração 🎉
+# VidaTrack — Etapa 109: Correção de Build (import errado na Tela de Boas-vindas)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,19 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (109) — corrige o erro de build da Etapa 106.**
+
+`TelaBoasVindas.tsx` mora em `/components/`, mas a action que ele usa
+está em `/app/bem-vindo/actions.ts` — eu tinha importado com caminho
+relativo (`./actions`), que só funciona se os dois arquivos
+estivessem na mesma pasta. Corrigido pro caminho certo
+(`@/app/bem-vindo/actions`).
+
+**Fiz uma varredura em todos os imports relativos do projeto** atrás
+do mesmo tipo de erro — não achei mais nenhum quebrado.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **A conta de demonstração já existe e está povoada** — criei ela
 direto no banco (email `demo@vidatrack.online`, senha
@@ -2677,7 +2690,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 105. Revisão de qualidade (código morto removido)
 106. Tela de boas-vindas (primeiro acesso)
 107. Página de apresentação pública (+ demo pendente)
-108. Reset automático da conta de demonstração 🎉 — **você está aqui**
+108. Reset automático da conta de demonstração 🎉
+109. Correção de build (import errado na Tela de Boas-vindas) — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

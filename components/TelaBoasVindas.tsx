@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { concluirOnboarding } from "./actions";
+import { concluirOnboarding } from "@/app/bem-vindo/actions";
 
 const PASSOS = [
   {
