@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { entrarComoDemonstracao } from "./actions";
 
 export const metadata = {
   title: "VidaTrack — Hábitos e finanças, num único lugar",
@@ -179,12 +180,14 @@ export default function ApresentacaoPage() {
                 <span className="font-mono text-sm">VidaTrack2026</span>
               </div>
             </div>
-            <Link
-              href="/login"
-              className="inline-block bg-ink-100 text-base-900 font-medium rounded-lg px-6 py-3 hover:opacity-90 transition"
-            >
-              Ir pro login
-            </Link>
+            <form action={entrarComoDemonstracao}>
+              <button
+                type="submit"
+                className="inline-block bg-ink-100 text-base-900 font-medium rounded-lg px-6 py-3 hover:opacity-90 transition"
+              >
+                Entrar na demonstração agora
+              </button>
+            </form>
           </div>
         </div>
       </section>

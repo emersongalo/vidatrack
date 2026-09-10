@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 111: Correção Real do Link (middleware bloqueava) + Botão em Destaque
+# VidaTrack — Etapa 112: Entrar na Demonstração com Um Clique (sem digitar nada)
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,23 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (112) — o botão "Entrar na demonstração agora"
+loga automaticamente**, sem precisar digitar e-mail/senha na tela de
+login. Como a senha já é pública ali mesmo na página (não é segredo
+nenhum), automatizar isso não abre brecha nova nenhuma — só tira uma
+etapa manual de quem só quer bisbilhotar rapidinho.
+
+As credenciais continuam visíveis na tela (mantém a transparência de
+"não tem nada escondido"), só que agora tem um botão de entrada
+direta do lado.
+
+Não precisa rodar SQL — é ajuste de código só.
+
+## Aguardando
+
+Você mencionou que vai mandar mais prints pra continuarmos ajustando
+o site — pode mandar quando quiser, sigo revisando.
 
 **Novo nesta etapa (111) — achei a causa real do link não ir a lugar
 nenhum, e deixei ele em destaque como você pediu.**
@@ -2731,7 +2748,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 108. Reset automático da conta de demonstração 🎉
 109. Correção de build (import errado na Tela de Boas-vindas)
 110. Link pra apresentação na tela de login
-111. Correção real do link (middleware bloqueava) + botão em destaque — **você está aqui**
+111. Correção real do link (middleware bloqueava) + botão em destaque
+112. Entrar na demonstração com um clique — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
