@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 109: Correção de Build (import errado na Tela de Boas-vindas)
+# VidaTrack — Etapa 110: Link pra Apresentação na Tela de Login
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,18 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Novo nesta etapa (110) — link "Ver como funciona" na tela de
+login**, do lado do link de privacidade já existente. Leva direto pra
+`/apresentacao`, pra quem cai direto no login sem nunca ter visto
+a página de apresentação.
+
+**Detalhe:** esse link (e o de privacidade também) só aparece na
+versão desktop da tela de login — a versão mobile já não mostrava
+nem o de privacidade antes, então mantive consistente. Se quiser
+que apareça no celular também, é só pedir.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (109) — corrige o erro de build da Etapa 106.**
 
@@ -2691,7 +2703,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 106. Tela de boas-vindas (primeiro acesso)
 107. Página de apresentação pública (+ demo pendente)
 108. Reset automático da conta de demonstração 🎉
-109. Correção de build (import errado na Tela de Boas-vindas) — **você está aqui**
+109. Correção de build (import errado na Tela de Boas-vindas)
+110. Link pra apresentação na tela de login — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no

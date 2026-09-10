@@ -44,6 +44,10 @@ export default function LoginPage({
           <p className="text-ink-400 text-xs">
             Gratuito. Feito para ser usado todos os dias.
           </p>
+          <Link href="/apresentacao" className="text-ink-400 text-xs hover:text-ink-100 transition underline">
+            Ver como funciona
+          </Link>
+          {" · "}
           <Link href="/privacidade" className="text-ink-400 text-xs hover:text-ink-100 transition underline">
             Como cuidamos da sua privacidade
           </Link>
