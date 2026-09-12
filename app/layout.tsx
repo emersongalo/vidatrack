@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Outfit, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { RegistradorPWA } from "@/components/RegistradorPWA";
+import { RecuperadorDeSegundoPlano } from "@/components/RecuperadorDeSegundoPlano";
 import { RegistradorPushNativo } from "@/components/RegistradorPushNativo";
 import { GerenciadorSincronizacaoOffline } from "@/components/GerenciadorSincronizacaoOffline";
 import { BaixadorOfflineAutomatico } from "@/components/BaixadorOfflineAutomatico";
@@ -72,6 +73,7 @@ export default function RootLayout({
         />
         {children}
         <RegistradorPWA />
+        <RecuperadorDeSegundoPlano />
         <RegistradorPushNativo />
         <GerenciadorSincronizacaoOffline />
         <BaixadorOfflineAutomatico />

@@ -1,4 +1,4 @@
-# VidaTrack — Etapa 116: Desafios com Prescrição Automática (você diz quanto e quando)
+# VidaTrack — Etapa 117: Recuperação Automática ao Voltar do Segundo Plano
 
 App único de **hábitos** e **finanças**, com telas próprias por
 módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
@@ -6,6 +6,36 @@ módulo e compartilhamento entre usuários. Stack: **Next.js** (Vercel),
 perfil).
 
 ## O que já está pronto
+
+**Sobre os desafios financeiros "não fazerem nada":** revisei o
+código com cuidado (formulário, nomes de campo, action, o link no
+menu, o middleware) e não achei nada quebrado ali — os nomes batem
+certinho dos dois lados. Sua descrição do problema real acabou sendo
+outra coisa, mais importante: o app "travando" depois de ficar em
+segundo plano no celular.
+
+**Novo nesta etapa (117) — recuperação automática ao voltar de
+segundo plano.**
+
+Adicionei um componente que fica de olho em quando você minimiza o
+app e quando volta pra ele:
+- Se ficou escondido **pouco tempo**, atualiza os dados da tela
+  sozinho (sem recarregar a página inteira)
+- Se ficou escondido **mais de 2 minutos**, recarrega a página por
+  completo — garante um estado limpo, sem arriscar alguma conexão ou
+  timer que o navegador pode ter pausado enquanto o app estava em
+  segundo plano
+
+**Sendo honesto sobre isso:** esse tipo de "congelamento ao voltar
+de segundo plano" é uma categoria de bug conhecida em apps web/PWA,
+mas genuinamente difícil de diagnosticar a causa exata sem conseguir
+reproduzir ao vivo no seu celular. Essa correção ataca as causas mais
+comuns (conexões e timers pausados pelo navegador) e deve resolver a
+maioria dos casos — mas se acontecer de novo depois dessa etapa, me
+avisa com o máximo de detalhe possível (quanto tempo o app ficou
+minimizado, se estava com internet, etc.) que eu sigo investigando.
+
+Não precisa rodar SQL — é ajuste de código só.
 
 **Novo nesta etapa (116) — mudei o jeito de criar um desafio, como
 você pediu.**
@@ -2850,7 +2880,8 @@ versão Android via Capacitor está descrita na seção específica acima.
 113. Página de apresentação reformulada, com prints reais
 114. Print gigante corrigido + efeitos de rolagem
 115. Desafios financeiros (tipo o dos quadradinhos)
-116. Desafios com prescrição automática (você diz quanto e quando) — **você está aqui**
+116. Desafios com prescrição automática (você diz quanto e quando)
+117. Recuperação automática ao voltar do segundo plano — **você está aqui**
 
 **Importante:** a partir da Etapa 11, convidar alguém pra compartilhar
 um item exige que `SUPABASE_SERVICE_ROLE_KEY` esteja configurada no
