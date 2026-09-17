@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { hojeISO } from "@/lib/habitos/streak";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { hexDaCor } from "@/lib/agenda/estilo";
 import { IconeHabito } from "@/components/IconeHabito";
-import { GraficoConsistencia } from "@/components/GraficoConsistencia";
+import { GraficoConsistenciaLazy as GraficoConsistencia } from "@/components/GraficoConsistenciaLazy";
 import { MapaContribuicoes } from "@/components/MapaContribuicoes";
 import { calcularMapaContribuicoes } from "@/lib/habitos/mapa-contribuicoes";
 
@@ -21,9 +22,7 @@ function ultimosNDias(n: number): string[] {
 
 export default async function EstatisticasHabitosPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUsuarioAtual();
 
   const { data: habitos } = await supabase
     .from("habitos")

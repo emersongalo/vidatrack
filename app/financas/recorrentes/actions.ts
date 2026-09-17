@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { esquemaRecorrencia, primeiroErro } from "@/lib/validacao/financas";
 
 export async function criarRecorrencia(formData: FormData) {
@@ -79,9 +80,7 @@ export async function removerRecorrencia(recorrenciaId: string) {
  */
 export async function garantirLancamentosRecorrentes() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUsuarioAtual();
   if (!user) return;
 
   const hoje = new Date();

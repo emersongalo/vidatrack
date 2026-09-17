@@ -4,10 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { buscarInsightsFinanceiros } from "@/lib/financas/insights";
-import { TreemapGastos } from "@/components/TreemapGastos";
-import { GraficoComparacaoMensal } from "@/components/GraficoComparacaoMensal";
-import { GraficoAcumulado } from "@/components/GraficoAcumulado";
-import { RadarOrcamento } from "@/components/RadarOrcamento";
+import { TreemapGastosLazy as TreemapGastos } from "@/components/TreemapGastosLazy";
+import { GraficoComparacaoMensalLazy as GraficoComparacaoMensal } from "@/components/GraficoComparacaoMensalLazy";
+import { GraficoAcumuladoLazy as GraficoAcumulado } from "@/components/GraficoAcumuladoLazy";
+import { RadarOrcamentoLazy as RadarOrcamento } from "@/components/RadarOrcamentoLazy";
 
 export default async function AnaliseFinanceiraPage({
   searchParams,
