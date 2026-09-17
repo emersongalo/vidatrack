@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { hojeISO } from "@/lib/habitos/streak";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { hexDaCor } from "@/lib/agenda/estilo";
@@ -21,9 +22,7 @@ function ultimosNDias(n: number): string[] {
 
 export default async function EstatisticasHabitosPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUsuarioAtual();
 
   const { data: habitos } = await supabase
     .from("habitos")
