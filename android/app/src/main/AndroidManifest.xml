@@ -22,6 +22,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Etapa 121: link de volta do login com Google. Sem isso,
+                 depois de fazer login no navegador do Google, o Android
+                 não sabe que é pra voltar pro nosso app — esse esquema
+                 (vidatrack://) é só nosso, então o sistema sabe abrir o
+                 VidaTrack de novo em vez de deixar parado no navegador. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="vidatrack" android:host="auth-callback" />
+            </intent-filter>
+
         </activity>
 
         <provider

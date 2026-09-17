@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { sair } from "../login/actions";
 import { AlternadorTema } from "@/components/AlternadorTema";
 import { resolverUrlFoto } from "@/lib/perfil/foto";
@@ -12,9 +13,7 @@ import { Bell } from "lucide-react";
 
 export default async function DashboardPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUsuarioAtual();
 
   const { data: perfil } = await supabase
     .from("perfis")

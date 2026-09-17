@@ -3,12 +3,17 @@ const CHAVE_SNAPSHOT = "vidatrack-snapshot-offline";
 export type SnapshotOffline = {
   baixadoEm: string;
   habitos: any[];
+  habitoCheckins: { habito_id: string; data: string }[];
   tarefas: any[];
+  conclusoesTarefas: { tarefa_id: string; data: string }[];
   categoriasProdutividade: any[];
   financas: {
     contas: any[];
     categorias: any[];
-    transacoesRecentes: any[];
+    transacoes: any[];
+    metas: any[];
+    desafios: any[];
+    patrimonio: { mes: string; patrimonio: number }[];
   };
 };
 

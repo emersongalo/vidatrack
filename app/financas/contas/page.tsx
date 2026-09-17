@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Pencil, Share2, Archive, Trash2, Receipt } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { criarConta, arquivarConta, excluirContaDefinitivamente } from "../actions";
 import { SeletorTipoConta } from "@/components/SeletorTipoConta";
@@ -26,14 +27,12 @@ export default async function ContasPage({
   const supabase = createClient();
 
   // auth.getUser() e a busca de contas não dependem uma da outra —
-  // rodam juntas em vez de uma esperando a outra terminar.
-  const [
-    {
-      data: { user },
-    },
-    { data: contas },
-  ] = await Promise.all([
-    supabase.auth.getUser(),
+  // rodam juntas em vez de uma esperando a outra terminar. E como
+  // getUsuarioAtual() é memorizado por requisição, se essa mesma
+  // checagem já tiver rodado em outro ponto desta navegação (ex: no
+  // layout), essa chamada não bate no Supabase de novo.
+  const [user, { data: contas }] = await Promise.all([
+    getUsuarioAtual(),
     supabase
       .from("financa_contas")
       .select("id, nome, tipo, banco, saldo_inicial, dono_id, dia_fechamento")
