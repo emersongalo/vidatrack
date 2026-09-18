@@ -1,19 +1,29 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { hojeISO } from "@/lib/habitos/streak";
 import { FormularioTarefa } from "@/components/FormularioTarefa";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function NovaTarefaPage({
-  searchParams,
-}: {
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
-  const { data: categorias } = await supabase
-    .from("categorias_produtividade")
-    .select("id, nome")
-    .order("nome");
+// Etapa 132
+export default function NovaTarefaPage() {
+  return (
+    <Suspense fallback={null}>
+      <NovaTarefaConteudo />
+    </Suspense>
+  );
+}
+
+function NovaTarefaConteudo() {
+  const searchParams = useSearchParams();
+  const { snapshot } = useSnapshotOffline();
 
   return (
-    <FormularioTarefa categorias={categorias ?? []} erro={searchParams.erro} hoje={hojeISO()} />
+    <FormularioTarefa
+      categorias={(snapshot?.categoriasProdutividade ?? []) as any}
+      erro={searchParams.get("erro") ?? undefined}
+      hoje={hojeISO()}
+    />
   );
 }

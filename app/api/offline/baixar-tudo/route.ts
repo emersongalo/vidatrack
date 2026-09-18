@@ -34,7 +34,7 @@ export async function GET() {
       .eq("arquivado", false),
     supabase
       .from("tarefas")
-      .select("id, titulo, icone, repetir, dias_semana, data, concluida, ordem, subtarefas")
+      .select("id, titulo, icone, repetir, dias_semana, data, concluida, ordem, subtarefas, categoria_id, horario_lembrete, observacoes")
       .eq("arquivada", false),
     supabase.from("categorias_produtividade").select("id, nome, cor"),
     supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),
@@ -42,10 +42,19 @@ export async function GET() {
     supabase.from("metas_financeiras").select("id, nome, valor_atual, valor_alvo, concluida, data_alvo"),
     supabase
       .from("desafios_financeiros")
-      .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido")
+      .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido, conta_origem_id")
       .eq("arquivado", false),
     supabase.from("financa_recorrencias").select("id, tipo, valor, dia_mes, data_fim, ativo, descricao, conta_id"),
   ]);
+
+  const idsDesafios = (desafios ?? []).map((d) => d.id);
+  const { data: quadrados } = idsDesafios.length
+    ? await supabase
+        .from("desafio_quadrados")
+        .select("id, desafio_id, numero, valor, completado")
+        .in("desafio_id", idsDesafios)
+        .order("numero", { ascending: true })
+    : { data: [] as any[] };
 
   const idsContas = (contas ?? []).map((c) => c.id);
   const idsHabitos = (habitos ?? []).map((h) => h.id);
@@ -113,6 +122,7 @@ export async function GET() {
       transacoes: todasTransacoes,
       metas: metas ?? [],
       desafios: desafios ?? [],
+      desafioQuadrados: quadrados ?? [],
       patrimonio,
       recorrencias: recorrencias ?? [],
     },

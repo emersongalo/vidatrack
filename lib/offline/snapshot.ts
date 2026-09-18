@@ -26,6 +26,7 @@ export type SnapshotOffline = {
     transacoes: any[];
     metas: any[];
     desafios: any[];
+    desafioQuadrados: { id: string; desafio_id: string; numero: number; valor: number; completado: boolean }[];
     patrimonio: { mes: string; patrimonio: number }[];
     recorrencias: { id: string; tipo: string; valor: number; dia_mes: number; data_fim: string | null; ativo: boolean; descricao: string | null; conta_id: string }[];
   };
@@ -70,6 +71,7 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
         transacoes: dados.financas?.transacoes ?? [],
         metas: dados.financas?.metas ?? [],
         desafios: dados.financas?.desafios ?? [],
+        desafioQuadrados: dados.financas?.desafioQuadrados ?? [],
         patrimonio: dados.financas?.patrimonio ?? [],
         recorrencias: dados.financas?.recorrencias ?? [],
       },

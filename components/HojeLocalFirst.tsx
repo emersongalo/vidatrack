@@ -1,111 +1,112 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { hojeISO } from "@/lib/habitos/streak";
-import { buscarItensDoDiaCliente, buscarCategoriasProdutividadeCliente } from "@/lib/agenda/consultaCliente";
-import { lerCacheHoje, salvarCacheHoje } from "@/lib/offline/fila";
+import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { TiraDeDiasAgenda } from "@/components/TiraDeDiasAgenda";
 import { SugestoesHabito } from "@/components/SugestoesHabito";
 import { ListaHojeComOffline } from "@/components/ListaHojeComOffline";
 import type { ItemAgenda } from "@/components/ItemLinhaAgenda";
-
-const CHAVE_CATEGORIAS = "categorias-produtividade";
-
-function chaveCache(data: string, categoria: string) {
-  return `hoje:${data}:${categoria || "tudo"}`;
-}
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
 /**
- * Etapa 126 — primeira tela convertida pra "local-first" de verdade:
- * em vez de a página do servidor buscar tudo antes de existir (o que
- * falha por completo sem internet), ESSE componente roda inteiramente
- * no navegador. Ele mostra o que tiver guardado localmente na hora —
- * mesmo com zero conexão, mesmo na primeira renderização — e só
- * depois tenta buscar dado fresco do Supabase pra atualizar,
- * silenciosamente, se houver internet.
+ * Etapa 132 — antes essa tela guardava um cache separado "por dia
+ * exato" (hoje:2026-09-17:tudo, hoje:2026-09-18:tudo...). Isso só
+ * ajudava se você tivesse aberto o app com internet NAQUELE dia
+ * específico — abrir offline num dia novo, sem ter aberto com
+ * internet ainda hoje, mostrava "Vamos começar?" como se não
+ * tivesse nenhum hábito, mesmo com tudo salvo no aparelho.
  *
- * A troca de dia e o filtro de categoria não navegam mais pra uma URL
- * nova (isso exigiria o servidor) — viram só estado local.
+ * Agora usa o mesmo retrato completo (useSnapshotOffline) que todas
+ * as outras telas já usam — hábitos e tarefas não mudam de um dia
+ * pro outro, só o que já foi marcado é que muda, então dá pra
+ * calcular "o que aparece hoje" na hora, pra qualquer dia, sem
+ * precisar ter visitado esse dia exato antes.
  */
 export function HojeLocalFirst() {
+  return (
+    <Suspense fallback={null}>
+      <HojeConteudo />
+    </Suspense>
+  );
+}
+
+function HojeConteudo() {
   const hoje = hojeISO();
   const searchParams = useSearchParams();
-  // Só usado pra honrar um link direto (ex: MiniCalendario) que aponte
-  // pra um dia específico — depois disso, a navegação entre dias é
-  // toda local (TiraDeDiasAgenda via aoSelecionarData), sem depender
-  // do servidor de novo.
   const [dataSelecionada, setDataSelecionada] = useState(searchParams.get("data") || hoje);
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
-  const [categorias, setCategorias] = useState<{ id: string; nome: string; cor: string }[]>([]);
-  const [itens, setItens] = useState<ItemAgenda[] | null>(null);
-  const [temAlgumItemCadastrado, setTemAlgumItemCadastrado] = useState(true);
-  const [usandoCache, setUsandoCache] = useState(false);
+  const { snapshot, recarregar } = useSnapshotOffline();
 
-  // Categorias: mesma ideia, cache local + atualização em segundo plano.
-  useEffect(() => {
-    const cache = lerCacheHoje(CHAVE_CATEGORIAS) as { id: string; nome: string; cor: string }[] | null;
-    if (cache) setCategorias(cache);
+  const categorias = snapshot?.categoriasProdutividade ?? [];
 
-    buscarCategoriasProdutividadeCliente()
-      .then((dados) => {
-        setCategorias(dados);
-        salvarCacheHoje(CHAVE_CATEGORIAS, dados);
-      })
-      .catch(() => {
-        // Sem internet — fica só com o que já tinha em cache (se tinha).
+  const { itens, temAlgumItemCadastrado } = useMemo(() => {
+    if (!snapshot) return { itens: null as ItemAgenda[] | null, temAlgumItemCadastrado: true };
+
+    const checkinsPorHabito = new Map<string, number>();
+    for (const c of snapshot.habitoCheckins) {
+      if (c.data === dataSelecionada) checkinsPorHabito.set(c.habito_id, c.quantidade ?? 1);
+    }
+    const tarefasFeitasHoje = new Set(
+      snapshot.conclusoesTarefas.filter((c) => c.data === dataSelecionada).map((c) => c.tarefa_id)
+    );
+
+    const lista: ItemAgenda[] = [];
+
+    for (const h of snapshot.habitos as any[]) {
+      if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], dataSelecionada)) continue;
+      if (categoriaFiltro && h.categoria_id !== categoriaFiltro) continue;
+      const quantidadeAtual = checkinsPorHabito.get(h.id) ?? 0;
+      const meta = h.meta_diaria ?? 1;
+      lista.push({
+        id: h.id,
+        tipo: "habito",
+        titulo: h.nome,
+        icone: h.icone,
+        cor: h.cor,
+        feito: quantidadeAtual >= meta,
+        repete: true,
+        horarioLembrete: h.horario_lembrete,
+        meta: meta > 1 ? { atual: quantidadeAtual, alvo: meta, unidade: h.unidade } : null,
+        ordem: h.ordem ?? 0,
       });
-  }, []);
-
-  useEffect(() => {
-    const chave = chaveCache(dataSelecionada, categoriaFiltro);
-    const cache = lerCacheHoje(chave) as { itens: ItemAgenda[]; temAlgumItemCadastrado: boolean } | null;
-
-    if (cache) {
-      setItens(cache.itens);
-      setTemAlgumItemCadastrado(cache.temAlgumItemCadastrado);
-      setUsandoCache(true);
-    } else {
-      setItens(null); // ainda não sabemos — evita mostrar "nada aqui" errado antes da hora
     }
 
-    let cancelado = false;
-    buscarItensDoDiaCliente(dataSelecionada, categoriaFiltro)
-      .then((resultado) => {
-        if (cancelado) return;
-        setItens(resultado.itens);
-        setTemAlgumItemCadastrado(resultado.temAlgumItemCadastrado);
-        setUsandoCache(false);
-        salvarCacheHoje(chave, resultado);
-      })
-      .catch(() => {
-        // Sem internet: se não tinha cache nenhum pra essa combinação
-        // de dia+categoria, fica mesmo sem nada pra mostrar — não tem
-        // como inventar dado que nunca chegou a ser baixado.
-        if (!cancelado && !cache) {
-          setItens([]);
-          setTemAlgumItemCadastrado(false);
-        }
+    for (const t of snapshot.tarefas as any[]) {
+      const apareceHoje =
+        t.repetir === "nenhuma"
+          ? t.data === dataSelecionada
+          : diaBateComFrequencia(t.repetir, t.dias_semana ?? [], dataSelecionada);
+      if (!apareceHoje) continue;
+      if (categoriaFiltro && t.categoria_id !== categoriaFiltro) continue;
+
+      const subtarefas = (t.subtarefas as { feita: boolean }[]) ?? [];
+      lista.push({
+        id: t.id,
+        tipo: "tarefa",
+        titulo: t.titulo,
+        icone: t.icone,
+        cor: "nota",
+        feito: t.repetir === "nenhuma" ? t.concluida : tarefasFeitasHoje.has(t.id),
+        repete: t.repetir !== "nenhuma",
+        horarioLembrete: t.horario_lembrete,
+        progressoSubtarefas:
+          subtarefas.length > 0
+            ? { feitas: subtarefas.filter((s) => s.feita).length, total: subtarefas.length }
+            : null,
+        ordem: t.ordem ?? 0,
       });
+    }
 
-    return () => {
-      cancelado = true;
+    lista.sort((a, b) => (a.feito !== b.feito ? (a.feito ? 1 : -1) : a.ordem - b.ordem));
+
+    return {
+      itens: lista,
+      temAlgumItemCadastrado: snapshot.habitos.length > 0 || snapshot.tarefas.length > 0,
     };
-  }, [dataSelecionada, categoriaFiltro]);
-
-  // Usado depois de criar um hábito pela sugestão (Etapa 126) — sem
-  // isso, a lista ficaria congelada mostrando "Vamos começar?" mesmo
-  // depois de criar o primeiro hábito, já que não existe mais um
-  // servidor revalidando essa página sozinho por trás.
-  function recarregar() {
-    buscarItensDoDiaCliente(dataSelecionada, categoriaFiltro).then((resultado) => {
-      setItens(resultado.itens);
-      setTemAlgumItemCadastrado(resultado.temAlgumItemCadastrado);
-      setUsandoCache(false);
-      salvarCacheHoje(chaveCache(dataSelecionada, categoriaFiltro), resultado);
-    });
-  }
+  }, [snapshot, dataSelecionada, categoriaFiltro]);
 
   const carregando = itens === null;
   const feitos = itens?.filter((i) => i.feito).length ?? 0;
@@ -138,7 +139,7 @@ export function HojeLocalFirst() {
             >
               Tudo
             </button>
-            {categorias.map((cat) => (
+            {categorias.map((cat: any) => (
               <button
                 key={cat.id}
                 onClick={() => setCategoriaFiltro(cat.id)}
@@ -158,12 +159,6 @@ export function HojeLocalFirst() {
               + Nova lista
             </Link>
           </div>
-
-          {usandoCache && (
-            <p className="mb-3 text-xs bg-financa-soft text-financa border border-financa/30 rounded-lg px-3 py-2">
-              Mostrando dados salvos no aparelho — atualizando...
-            </p>
-          )}
 
           {carregando ? (
             <div className="space-y-2 animate-pulse">
