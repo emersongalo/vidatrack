@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { salvarSnapshotOffline } from "@/lib/offline/snapshot";
 
 // A cada quantas horas tenta atualizar o retrato offline de novo,
@@ -9,6 +10,19 @@ const INTERVALO_ATUALIZACAO_HORAS = 6;
 const CHAVE_ULTIMA_TENTATIVA = "vidatrack-ultima-tentativa-snapshot";
 
 export function BaixadorOfflineAutomatico() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // A tela /offline só é visitada de verdade quando a navegação
+    // falha (sem internet) — ou seja, com internet, ninguém nunca
+    // passa por ela, e o JavaScript dela nunca é baixado. Isso faz
+    // com que, na primeira vez que o app precisar dela de verdade
+    // (sem conexão nenhuma), a página não tenha como carregar. Pedindo
+    // pro Next "pré-buscar" essa rota aqui, o arquivo já fica pronto
+    // no cache (via o Service Worker, Etapa 120) antes de precisar.
+    router.prefetch("/offline");
+  }, [router]);
+
   useEffect(() => {
     async function baixar() {
       if (!navigator.onLine) return;

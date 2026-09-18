@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import type { ItemAgenda } from "@/components/ItemLinhaAgenda";
 
@@ -7,9 +8,7 @@ export async function buscarItensDoDia(
   categoriaFiltro: string
 ): Promise<{ itens: ItemAgenda[]; temAlgumItemCadastrado: boolean }> {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUsuarioAtual();
 
   const [{ data: habitos }, { data: tarefas }] = await Promise.all([
     supabase

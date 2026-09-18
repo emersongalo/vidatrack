@@ -7,10 +7,16 @@ export function TiraDeDiasAgenda({
   dataSelecionada,
   hojeISO,
   caminhoBase = "/habitos",
+  aoSelecionarData,
 }: {
   dataSelecionada: string;
   hojeISO: string;
   caminhoBase?: string;
+  /** Etapa 126: quando informado, troca de dia sem navegação de
+   *  página nenhuma (usado pela versão local-first de Hoje, que
+   *  precisa continuar funcionando sem rede). Sem isso, cai no
+   *  comportamento de sempre (router.push). */
+  aoSelecionarData?: (dataISO: string) => void;
 }) {
   const router = useRouter();
   const dias = tiraDeDias(dataSelecionada);
@@ -23,7 +29,7 @@ export function TiraDeDiasAgenda({
         return (
           <button
             key={dia.iso}
-            onClick={() => router.push(`${caminhoBase}?data=${dia.iso}`)}
+            onClick={() => (aoSelecionarData ? aoSelecionarData(dia.iso) : router.push(`${caminhoBase}?data=${dia.iso}`))}
             className={`flex flex-col items-center gap-1 rounded-xl2 px-3.5 py-2.5 shrink-0 transition ${
               selecionado
                 ? "bg-habito text-base-900"

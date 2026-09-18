@@ -1,23 +1,38 @@
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { criarDivisao } from "../divisoes/actions";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 
-export default async function DividirDespesaPage({
-  searchParams,
-}: {
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
+// Etapa 129 — dinheiro entre pessoas diferentes merece vir sempre
+// fresco do servidor, então busca direto (não entra no retrato).
+export default function DividirDespesaPage() {
+  return (
+    <Suspense fallback={null}>
+      <DividirConteudo />
+    </Suspense>
+  );
+}
 
-  const { data: transacoes } = await supabase
-    .from("financa_transacoes")
-    .select("id, descricao, valor, data, financa_contas(nome)")
-    .eq("tipo", "despesa")
-    .order("data", { ascending: false })
-    .limit(30);
+function DividirConteudo() {
+  const searchParams = useSearchParams();
+  const erro = searchParams.get("erro");
+  const [transacoes, setTransacoes] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    createClient()
+      .from("financa_transacoes")
+      .select("id, descricao, valor, data, financa_contas(nome)")
+      .eq("tipo", "despesa")
+      .order("data", { ascending: false })
+      .limit(30)
+      .then(({ data }) => setTransacoes(data ?? []));
+  }, []);
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-xl mx-auto">
@@ -29,14 +44,16 @@ export default async function DividirDespesaPage({
         Escolhe um lançamento já existente e quanto a outra pessoa deve te pagar dessa despesa.
       </p>
 
-      {searchParams.erro && (
+      {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(searchParams.erro)}
+          {decodeURIComponent(erro)}
         </p>
       )}
 
       {!transacoes || transacoes.length === 0 ? (
-        <p className="text-sm text-ink-400">Nenhuma despesa lançada ainda pra dividir.</p>
+        <p className="text-sm text-ink-400">
+          {transacoes === null ? "Carregando..." : "Nenhuma despesa lançada ainda pra dividir."}
+        </p>
       ) : (
         <form action={criarDivisao} className="space-y-4">
           <div>
@@ -49,7 +66,7 @@ export default async function DividirDespesaPage({
               {transacoes.map((t) => (
                 <option key={t.id} value={t.id}>
                   {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
-                  {t.descricao || (t as any).financa_contas?.nome || "Sem descrição"} · {formatarMoeda(t.valor)}
+                  {t.descricao || t.financa_contas?.nome || "Sem descrição"} · {formatarMoeda(t.valor)}
                 </option>
               ))}
             </select>

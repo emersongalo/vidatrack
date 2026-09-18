@@ -1,25 +1,22 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { criarDesafio } from "./actions";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { formatarMoeda } from "@/lib/financas/formatacao";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function DesafiosPage({
-  searchParams,
-}: {
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
-
-  const [{ data: desafios }, { data: contas }] = await Promise.all([
-    supabase
-      .from("desafios_financeiros")
-      .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido")
-      .eq("arquivado", false)
-      .order("criado_em", { ascending: false }),
-    supabase.from("financa_contas").select("id, nome").eq("arquivado", false).neq("tipo", "investimento"),
-  ]);
+// Etapa 127: lista abre com o retrato local. A tela de detalhe de
+// cada desafio (o grid de quadradinhos, /financas/desafios/[id]) e
+// marcar um quadrado continuam precisando de internet — como
+// mencionado antes, essa ação mexe em conta + progresso ao mesmo
+// tempo, e prefiro fazer essa sincronização com cuidado numa etapa
+// própria em vez de arriscar agora.
+export default function DesafiosPage() {
+  const { snapshot } = useSnapshotOffline();
+  const desafios = snapshot?.financas.desafios ?? [];
+  const contas = (snapshot?.financas.contas ?? []).filter((c: any) => c.tipo !== "investimento");
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-3xl mx-auto">
@@ -32,15 +29,9 @@ export default async function DesafiosPage({
         tira o dinheiro certinho do seu saldo quando você marca.
       </p>
 
-      {searchParams.erro && (
-        <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(searchParams.erro)}
-        </p>
-      )}
-
-      {desafios && desafios.length > 0 && (
+      {desafios.length > 0 && (
         <ul className="space-y-2 mb-8 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-          {desafios.map((d) => {
+          {desafios.map((d: any) => {
             const percentual = Math.min(100, Math.round((Number(d.valor_guardado) / Number(d.valor_alvo)) * 100));
             return (
               <li key={d.id}>
@@ -68,7 +59,7 @@ export default async function DesafiosPage({
         </ul>
       )}
 
-      {!contas || contas.length === 0 ? (
+      {contas.length === 0 ? (
         <p className="text-sm text-ink-400">Crie uma conta (não-investimento) antes de montar um desafio.</p>
       ) : (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
@@ -124,7 +115,7 @@ export default async function DesafiosPage({
                 required
                 className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
               >
-                {contas.map((c) => (
+                {contas.map((c: any) => (
                   <option key={c.id} value={c.id}>
                     {c.nome}
                   </option>

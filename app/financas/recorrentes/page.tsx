@@ -1,25 +1,40 @@
+"use client";
+
+import { Suspense, useTransition } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { useSearchParams } from "next/navigation";
 import { criarRecorrencia, alternarAtivaRecorrencia, removerRecorrencia } from "./actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function RecorrentesPage({
-  searchParams,
-}: {
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
+// Etapa 129
+export default function RecorrentesPage() {
+  return (
+    <Suspense fallback={null}>
+      <RecorrentesConteudo />
+    </Suspense>
+  );
+}
 
-  const [{ data: recorrencias }, { data: contas }, { data: categorias }] = await Promise.all([
-    supabase
-      .from("financa_recorrencias")
-      .select("id, tipo, valor, descricao, dia_mes, data_fim, ativo, financa_contas(nome)")
-      .order("dia_mes"),
-    supabase.from("financa_contas").select("id, nome").eq("arquivado", false),
-    supabase.from("financa_categorias").select("id, nome, tipo, icone"),
-  ]);
+function RecorrentesConteudo() {
+  const searchParams = useSearchParams();
+  const erro = searchParams.get("erro");
+  const { snapshot, recarregar } = useSnapshotOffline();
+  const [, iniciarTransicao] = useTransition();
+
+  const recorrencias = [...(snapshot?.financas.recorrencias ?? [])].sort((a: any, b: any) => a.dia_mes - b.dia_mes);
+  const contas = snapshot?.financas.contas ?? [];
+  const categorias = snapshot?.financas.categorias ?? [];
+  const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
+
+  function alternarAtiva(id: string) {
+    iniciarTransicao(async () => {
+      await alternarAtivaRecorrencia(id);
+      recarregar();
+    });
+  }
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-3xl mx-auto">
@@ -27,56 +42,44 @@ export default async function RecorrentesPage({
         ← Finanças
       </Link>
       <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Recorrentes</h1>
-      <p className="text-ink-400 text-sm mb-6">
-        Lançamentos que se repetem todo mês, como aluguel ou salário.
-      </p>
+      <p className="text-ink-400 text-sm mb-6">Lançamentos que se repetem todo mês, como aluguel ou salário.</p>
 
-      {searchParams.erro && (
+      {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(searchParams.erro)}
+          {decodeURIComponent(erro)}
         </p>
       )}
 
-      {recorrencias && recorrencias.length > 0 && (
+      {recorrencias.length > 0 && (
         <ul className="space-y-2 mb-8 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {recorrencias.map((r: any) => (
             <li
               key={r.id}
-              className={`flex items-center justify-between bg-base-800 border border-base-600 rounded-lg p-3 ${
-                !r.ativo ? "opacity-50" : ""
-              }`}
+              className={`flex items-center justify-between bg-base-800 border border-base-600 rounded-lg p-3 ${!r.ativo ? "opacity-50" : ""}`}
             >
               <div className="min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {r.descricao || r.financa_contas?.nome}
-                </p>
+                <p className="text-sm font-medium truncate">{r.descricao || mapaContas.get(r.conta_id)}</p>
                 <p className="text-xs text-ink-400">
-                  Todo dia {r.dia_mes} · {r.financa_contas?.nome}
-                  {r.data_fim && (
-                    <> · até {new Date(r.data_fim + "T00:00:00").toLocaleDateString("pt-BR")}</>
-                  )}
+                  Todo dia {r.dia_mes} · {mapaContas.get(r.conta_id)}
+                  {r.data_fim && <> · até {new Date(r.data_fim + "T00:00:00").toLocaleDateString("pt-BR")}</>}
                 </p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
-                <span
-                  className={`font-mono text-sm ${r.tipo === "receita" ? "text-habito" : "text-red-400"}`}
-                >
+                <span className={`font-mono text-sm ${r.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
                   {r.tipo === "receita" ? "+" : "-"}
                   {formatarMoeda(r.valor)}
                 </span>
-                <form action={alternarAtivaRecorrencia.bind(null, r.id)}>
-                  <button type="submit" className="text-ink-400 hover:text-ink-100 transition text-xs">
-                    {r.ativo ? "Pausar" : "Ativar"}
-                  </button>
-                </form>
-                <BotaoComConfirmacao acao={removerRecorrencia.bind(null, r.id)} textoBotao="Remover" />
+                <button onClick={() => alternarAtiva(r.id)} className="text-ink-400 hover:text-ink-100 transition text-xs">
+                  {r.ativo ? "Pausar" : "Ativar"}
+                </button>
+                <BotaoComConfirmacao acao={removerRecorrencia.bind(null, r.id)} textoBotao="Remover" aoConcluir={recarregar} />
               </div>
             </li>
           ))}
         </ul>
       )}
 
-      {!contas || contas.length === 0 ? (
+      {snapshot !== undefined && contas.length === 0 ? (
         <p className="text-ink-400 text-sm">Crie uma conta primeiro para adicionar recorrências.</p>
       ) : (
         <>
@@ -102,7 +105,7 @@ export default async function RecorrentesPage({
               required
               className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
-              {contas.map((c) => (
+              {contas.map((c: any) => (
                 <option key={c.id} value={c.id}>
                   {c.nome}
                 </option>
@@ -113,7 +116,7 @@ export default async function RecorrentesPage({
               className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
               <option value="">Sem categoria</option>
-              {(categorias ?? []).map((c: any) => (
+              {categorias.map((c: any) => (
                 <option key={c.id} value={c.id}>
                   {c.icone ? `${c.icone} ` : ""}
                   {c.nome}
@@ -154,9 +157,8 @@ export default async function RecorrentesPage({
             <BotaoSalvarFormulario>Criar recorrência</BotaoSalvarFormulario>
           </form>
           <p className="text-xs text-ink-400 mt-3">
-            O lançamento do mês é criado automaticamente na primeira vez
-            que você abrir o app naquele mês, a partir do dia escolhido —
-            não é um agendador rodando sozinho no fundo.
+            O lançamento do mês é criado automaticamente na primeira vez que você abrir o app naquele mês, a
+            partir do dia escolhido — não é um agendador rodando sozinho no fundo.
           </p>
         </>
       )}

@@ -32,11 +32,20 @@ export function ItemLinhaAgenda({
   dataISO,
   aoClicarOffline,
   aoAjustarOffline,
+  aoAlternarLocal,
+  aoAjustarLocal,
 }: {
   item: ItemAgenda;
   dataISO: string;
   aoClicarOffline?: () => void;
   aoAjustarOffline?: (delta: number) => void;
+  /** Etapa 126: chamado sempre, online ou offline — é o que mantém a
+   *  lista da tela sincronizada visualmente quando a página não tem
+   *  mais um servidor revalidando ela por trás (caso da tela "Hoje"
+   *  local-first). Só atualiza a aparência; quem decide se grava
+   *  local ou manda pro servidor continua sendo a lógica abaixo. */
+  aoAlternarLocal?: () => void;
+  aoAjustarLocal?: (delta: number) => void;
 }) {
   const [pendente, iniciarTransicao] = useTransition();
   const [marcoAtingido, setMarcoAtingido] = useState<number | null>(null);
@@ -45,6 +54,8 @@ export function ItemLinhaAgenda({
   const ehNumerico = item.tipo === "habito" && item.meta && item.meta.alvo > 1;
 
   function alternar() {
+    aoAlternarLocal?.();
+
     if (typeof navigator !== "undefined" && !navigator.onLine && aoClicarOffline) {
       aoClicarOffline();
       return;
@@ -73,6 +84,8 @@ export function ItemLinhaAgenda({
   }
 
   function ajustar(delta: number) {
+    aoAjustarLocal?.(delta);
+
     if (typeof navigator !== "undefined" && !navigator.onLine && aoAjustarOffline) {
       aoAjustarOffline(delta);
       return;

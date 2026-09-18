@@ -12,7 +12,7 @@ const SUGESTOES = [
   { nome: "Dormir cedo", icone: "Moon" },
 ];
 
-export function SugestoesHabito() {
+export function SugestoesHabito({ aoCriar }: { aoCriar?: () => void }) {
   const [pendente, iniciarTransicao] = useTransition();
 
   return (
@@ -21,7 +21,12 @@ export function SugestoesHabito() {
         <button
           key={s.nome}
           disabled={pendente}
-          onClick={() => iniciarTransicao(() => criarHabitoRapido(s.nome))}
+          onClick={() =>
+            iniciarTransicao(async () => {
+              await criarHabitoRapido(s.nome);
+              aoCriar?.();
+            })
+          }
           className="flex items-center gap-1.5 text-sm border border-base-600 rounded-full px-3 py-1.5 hover:border-habito hover:text-habito transition disabled:opacity-50"
         >
           <IconeHabito icone={s.icone} tamanho={15} /> {s.nome}

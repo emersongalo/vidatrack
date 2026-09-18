@@ -1,37 +1,54 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { PackageCheck, PieChart, TrendingUp, TrendingDown } from "lucide-react";
+import { PieChart, TrendingUp, TrendingDown } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
-import { createClient } from "@/lib/supabase/server";
 import { primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
+import { calcularSaldoPrevisto } from "@/lib/financas/consulta";
+import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
-import { GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoria";
+import { GraficoDespesasCategoriaLazy as GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoriaLazy";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { HeroFinancas } from "@/components/HeroFinancas";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
-import { resolverUrlFoto } from "@/lib/perfil/foto";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
-import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
-import { buscarCalendarioGastos, calcularSaldoPorConta, calcularSaldoPrevisto } from "@/lib/financas/consulta";
-import { CalendarioGastos } from "@/components/CalendarioGastos";
-import { normalizarOrdemBlocos } from "@/lib/financas/blocos";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function FinancasPage({
-  searchParams,
-}: {
-  searchParams: { mes?: string; offline?: string; investido?: string };
-}) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+// Etapa 127: versão local-first da tela de Início. Escopo reduzido de
+// propósito em relação à versão anterior — o calendário de gastos, a
+// ordem personalizável dos blocos, e os avatares de quem compartilha
+// uma conta (isso precisa de foto vinda do servidor) ficam de fora
+// por enquanto. O que continua: saldo, previsão, contas, orçamento,
+// gráfico de despesas e lançamentos do mês — o essencial da tela.
+export default function FinancasPage() {
+  const { snapshot } = useSnapshotOffline();
   const hoje = new Date();
   const mesAtualISO = hoje.toLocaleDateString("sv-SE").slice(0, 7);
-  const mesSelecionado = searchParams.mes ?? mesAtualISO;
+  const [mesSelecionado, setMesSelecionado] = useState(mesAtualISO);
   const ehMesAtual = mesSelecionado === mesAtualISO;
+
+  useEffect(() => {
+    garantirLancamentosRecorrentes().catch(() => {
+      // Sem internet, sem problema — tenta de novo na próxima visita.
+    });
+  }, []);
+
+  if (snapshot === undefined) {
+    return (
+      <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-5xl mx-auto animate-pulse">
+        <div className="h-64 bg-base-800 border border-base-600 rounded-xl2" />
+      </main>
+    );
+  }
+
+  const contas = snapshot?.financas.contas ?? [];
+  const transacoes = snapshot?.financas.transacoes ?? [];
+  const categoriasFinancas = snapshot?.financas.categorias ?? [];
+  const recorrencias = snapshot?.financas.recorrencias ?? [];
+  const categoriasComMeta = categoriasFinancas.filter((c) => c.tipo === "despesa" && c.meta_mensal !== null);
 
   const [anoSel, mesSelNum] = mesSelecionado.split("-").map(Number);
   const dataMesAnterior = new Date(anoSel, mesSelNum - 2, 1);
@@ -43,302 +60,49 @@ export default async function FinancasPage({
     year: "numeric",
   });
 
-  // Grupo 1: nada aqui depende do resultado de outra consulta, então
-  // tudo roda ao mesmo tempo em vez de uma coisa esperando a outra.
-  // O gerador de recorrências roda em paralelo também — não bloqueia
-  // mais o resto da tela (se criar algo novo hoje, pode não aparecer
-  // nesta visita específica, mas aparece na próxima).
-  const [
-    { data: perfilOrdem },
-    { data: contas },
-    { data: todasCategoriasDespesa },
-    { data: recorrenciasAtivas },
-  ] = await Promise.all([
-    supabase.from("perfis").select("ordem_blocos_financas").eq("id", user?.id ?? "").maybeSingle(),
-    supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial").eq("arquivado", false),
-    supabase.from("financa_categorias").select("id, nome, tipo, meta_mensal").eq("tipo", "despesa"),
-    ehMesAtual
-      ? supabase.from("financa_recorrencias").select("tipo, valor, dia_mes, data_fim").eq("ativo", true)
-      : Promise.resolve({ data: [] as any[] }),
-    garantirLancamentosRecorrentes(),
-  ]);
+  const saldoTotal = contas
+    .filter((c: any) => c.tipo !== "investimento")
+    .reduce((total: number, c: any) => total + Number(c.saldo), 0);
 
-  const ordemBlocos = normalizarOrdemBlocos(perfilOrdem?.ordem_blocos_financas ?? null);
-  const categorias = (todasCategoriasDespesa ?? []).filter((c) => c.meta_mensal !== null);
-  const idsContas = (contas ?? []).map((c) => c.id);
-
-  // Grupo 2: tudo que só precisa saber quais são as contas (já temos
-  // a resposta do grupo 1), roda em paralelo de novo.
-  const [
-    { data: todasTransacoes },
-    { data: compartilhamentosContas },
-    { gastosPorDia, diasComContaAPagar },
-  ] = await Promise.all([
-    idsContas.length
-      ? supabase
-          .from("financa_transacoes")
-          .select("id, conta_id, categoria_id, tipo, valor, descricao, data, dono_id, financa_categorias(icone, cor)")
-          .in("conta_id", idsContas)
-          .order("data", { ascending: false })
-      : Promise.resolve({ data: [] as any[] }),
-    idsContas.length
-      ? supabase
-          .from("compartilhamentos")
-          .select("usuario_convidado_id")
-          .eq("tipo_item", "financa")
-          .in("item_id", idsContas)
-          .not("usuario_convidado_id", "is", null)
-      : Promise.resolve({ data: [] as any[] }),
-    buscarCalendarioGastos(supabase, mesSelecionado, idsContas),
-  ]);
-
-  const transacoes = todasTransacoes ?? [];
-
-  // Calculado em cima dos dados já carregados acima — nenhuma busca
-  // nova ao banco pra isso (antes, essa lista fazia 2 buscas próprias
-  // e redundantes; ver Etapa 61).
-  const contasComSaldo = calcularSaldoPorConta(contas ?? [], transacoes);
-
-  // Grupo 3: junta todo mundo cuja foto/nome precisamos exibir (quem
-  // compartilha uma conta + quem lançou cada transação) numa única
-  // consulta de perfis, em vez de uma pra cada finalidade.
-  const idsConvidados = Array.from(
-    new Set((compartilhamentosContas ?? []).map((c) => c.usuario_convidado_id as string))
-  );
-  const idsDonosUnicos = Array.from(new Set(transacoes.map((t: any) => t.dono_id)));
-  const precisaNomesDeLancamento = idsDonosUnicos.length > 1;
-
-  const idsPerfisNecessarios = Array.from(
-    new Set([
-      ...(idsConvidados.length > 0 && user?.id ? [user.id] : []),
-      ...idsConvidados,
-      ...(precisaNomesDeLancamento ? idsDonosUnicos : []),
-    ])
-  );
-
-  const { data: perfisNecessarios } = idsPerfisNecessarios.length
-    ? await supabase.from("perfis").select("id, nome, foto_url").in("id", idsPerfisNecessarios)
-    : { data: [] as any[] };
-
-  const mapaPerfis = new Map((perfisNecessarios ?? []).map((p) => [p.id, p]));
-
-  // As URLs de foto (algumas exigem gerar um link assinado no R2) são
-  // resolvidas todas ao mesmo tempo, não uma de cada vez.
-  const idsParaResolverFoto = (perfisNecessarios ?? []).map((p) => p.id);
-  const urlsResolvidas = await Promise.all(
-    idsParaResolverFoto.map((id) => resolverUrlFoto(mapaPerfis.get(id)?.foto_url ?? null))
-  );
-  const mapaUrlFoto = new Map(idsParaResolverFoto.map((id, i) => [id, urlsResolvidas[i]]));
-
-  let pessoasCompartilhadas: { nome: string; urlFoto: string | null }[] = [];
-  if (idsConvidados.length > 0) {
-    pessoasCompartilhadas = [
-      { nome: "Você", urlFoto: user?.id ? mapaUrlFoto.get(user.id) ?? null : null },
-      ...idsConvidados.map((id) => ({
-        nome: mapaPerfis.get(id)?.nome ?? "Alguém",
-        urlFoto: mapaUrlFoto.get(id) ?? null,
-      })),
-    ];
-  }
-
-  let mapaNomes = new Map<string, string>();
-  if (precisaNomesDeLancamento) {
-    mapaNomes = new Map(idsDonosUnicos.map((id) => [id, mapaPerfis.get(id)?.nome ?? "Alguém"]));
-  }
-
-  // Saldo atual: saldo inicial de cada conta + receitas - despesas dela,
-  // sempre "agora" — não muda navegando entre meses (seu saldo de hoje
-  // é o mesmo, esteja você olhando o extrato de março ou de setembro).
-  // Contas de investimento ficam de fora de propósito — esse dinheiro
-  // já foi "separado", não é mais considerado disponível pra gastar.
-  const saldoTotal = (contas ?? [])
-    .filter((conta) => conta.tipo !== "investimento")
-    .reduce((total, conta) => {
-      const doTransacoes = transacoes
-        .filter((t) => t.conta_id === conta.id)
-        .reduce((acc, t) => acc + (t.tipo === "receita" ? t.valor : -t.valor), 0);
-      return total + Number(conta.saldo_inicial) + doTransacoes;
-    }, 0);
-
-  // Total investido — a soma de tudo que está guardado nas contas de
-  // investimento, separado do saldo "pra gastar" de propósito.
-  const saldoInvestido = (contas ?? [])
-    .filter((conta) => conta.tipo === "investimento")
-    .reduce((total, conta) => {
-      const doTransacoes = transacoes
-        .filter((t) => t.conta_id === conta.id)
-        .reduce((acc, t) => acc + (t.tipo === "receita" ? t.valor : -t.valor), 0);
-      return total + Number(conta.saldo_inicial) + doTransacoes;
-    }, 0);
-
-  // Previsto pro fim do mês: só faz sentido "prever o futuro" pro mês
-  // atual — pra um mês passado, já sabemos exatamente como terminou
-  // (é só olhar o extrato), não tem nada a prever.
   const saldoPrevisto = ehMesAtual
     ? calcularSaldoPrevisto(
         saldoTotal,
-        (recorrenciasAtivas ?? [])
-          .filter((r) => !r.data_fim || r.data_fim >= mesAtualISO + "-31")
-          .map((r) => ({ tipo: r.tipo, valor: r.valor, diaMes: r.dia_mes })),
+        recorrencias
+          .filter((r) => r.ativo && (!r.data_fim || r.data_fim >= mesAtualISO + "-31"))
+          .map((r) => ({ tipo: r.tipo, valor: Number(r.valor), diaMes: r.dia_mes })),
         hoje.getDate()
       )
     : null;
 
   const inicioMesSelecionado = primeiroDiaDoMes(mesSelecionado + "-01");
   const fimMesSelecionado = ultimoDiaDoMes(mesSelecionado + "-01");
-  const transacoesDoMes = transacoes.filter(
-    (t) => t.data >= inicioMesSelecionado && t.data <= fimMesSelecionado
-  );
-  const receitasDoMes = transacoesDoMes
-    .filter((t) => t.tipo === "receita")
-    .reduce((acc, t) => acc + t.valor, 0);
-  const despesasDoMes = transacoesDoMes
-    .filter((t) => t.tipo === "despesa")
-    .reduce((acc, t) => acc + t.valor, 0);
-
-  // Orçamento por categoria (só categorias de despesa com meta definida)
-  // e o gráfico de pizza usam a mesma consulta já feita lá em cima
-  // (`todasCategoriasDespesa` / `categorias`) — nada novo aqui.
+  const transacoesDoMes = transacoes.filter((t: any) => t.data >= inicioMesSelecionado && t.data <= fimMesSelecionado);
+  const receitasDoMes = transacoesDoMes.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
+  const despesasDoMes = transacoesDoMes.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
 
   const gastoPorCategoria = new Map<string, number>();
   for (const t of transacoesDoMes) {
     if (t.tipo !== "despesa" || !t.categoria_id) continue;
-    gastoPorCategoria.set(t.categoria_id, (gastoPorCategoria.get(t.categoria_id) ?? 0) + t.valor);
+    gastoPorCategoria.set(t.categoria_id, (gastoPorCategoria.get(t.categoria_id) ?? 0) + Number(t.valor));
   }
 
-  const nomeCategoria = new Map((todasCategoriasDespesa ?? []).map((c) => [c.id, c.nome]));
+  const mapaCategoriaInfo = new Map(categoriasFinancas.map((c: any) => [c.id, c]));
   const dadosGrafico = Array.from(gastoPorCategoria.entries())
-    .map(([id, valor]) => ({ nome: nomeCategoria.get(id) ?? "Sem categoria", valor }))
+    .map(([id, valor]) => ({ nome: (mapaCategoriaInfo.get(id) as any)?.nome ?? "Sem categoria", valor }))
     .sort((a, b) => b.valor - a.valor);
 
-  const mapaContas = new Map((contas ?? []).map((c) => [c.id, c.nome]));
+  const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
   const ultimasTransacoes = transacoesDoMes.slice(0, 10);
-
-  const blocosFinancas: Record<string, ReactNode> = {
-    calendario: (
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm text-ink-400">Calendário de gastos</p>
-          <Link
-            href="/financas/personalizar"
-            className="text-xs text-ink-400 hover:text-ink-100 transition"
-          >
-            ↕ Personalizar ordem
-          </Link>
-        </div>
-        <CalendarioGastos
-          anoMesISO={mesSelecionado}
-          gastosPorDia={gastosPorDia}
-          diasComContaAPagar={diasComContaAPagar}
-        />
-      </div>
-    ),
-    grafico:
-      dadosGrafico.length > 0 ? (
-        <div className="mb-6">
-          <p className="text-sm text-ink-400 mb-3 capitalize">Despesas por categoria · {nomeDoMesSelecionado}</p>
-          <GraficoDespesasCategoria dados={dadosGrafico} />
-        </div>
-      ) : null,
-    lancamentos: (
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm text-ink-400">Lançamentos do mês</p>
-          <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
-            Ver extrato completo →
-          </Link>
-        </div>
-        {ultimasTransacoes.length === 0 ? (
-          <p className="text-ink-400 text-sm">Nenhum lançamento nesse mês.</p>
-        ) : (
-          <ul className="space-y-2">
-            {ultimasTransacoes.map((t: any) => (
-              <li key={t.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
-                <div className="flex items-center gap-3">
-                  <span className="relative shrink-0">
-                    <span
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm ${classeFundoSuave(
-                        t.financa_categorias?.cor ?? "financa"
-                      )}`}
-                    >
-                      {t.financa_categorias?.icone ? (
-                        <IconeCategoria icone={t.financa_categorias.icone} />
-                      ) : t.tipo === "receita" ? (
-                        <TrendingUp size={16} strokeWidth={2} />
-                      ) : (
-                        <TrendingDown size={16} strokeWidth={2} />
-                      )}
-                    </span>
-                    {mapaNomes.has(t.dono_id) && (
-                      <span
-                        title={t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
-                        className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-semibold border-2 border-base-800 ${
-                          t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
-                        }`}
-                      >
-                        {(t.dono_id === user?.id ? "V" : (mapaNomes.get(t.dono_id) ?? "?")).charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </span>
-                  <p className="text-sm truncate flex-1 min-w-0">
-                    {t.descricao || mapaContas.get(t.conta_id)}
-                  </p>
-                  <span
-                    className={`font-mono text-sm shrink-0 ${
-                      t.tipo === "receita" ? "text-habito" : "text-red-400"
-                    }`}
-                  >
-                    {t.tipo === "receita" ? "+" : "-"}
-                    <ValorMonetario valor={t.valor} />
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
-                  <p className="text-xs text-ink-400 truncate min-w-0">
-                    {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
-                    {mapaContas.get(t.conta_id)}
-                  </p>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Link
-                      href={`/financas/${t.id}/editar`}
-                      className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0"
-                    >
-                      Editar
-                    </Link>
-                    <BotaoRemoverTransacao transacaoId={t.id} />
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    ),
-  };
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-5xl mx-auto">
       <LinkVoltar href="/dashboard" texto="Painel" />
       <h1 className="text-2xl font-display font-semibold mt-2 mb-6">Finanças</h1>
 
-      {searchParams.offline && (
-        <p className="mb-4 text-sm text-financa bg-financa-soft border border-financa/30 rounded-lg px-3 py-2 flex items-center gap-2">
-          <PackageCheck size={16} strokeWidth={2} className="shrink-0" />
-          Lançamento guardado — vai ser criado automaticamente assim que a internet voltar.
-        </p>
-      )}
-
-      {searchParams.investido && (
-        <p className="mb-4 text-sm text-financa bg-financa-soft border border-financa/30 rounded-lg px-3 py-2">
-          Dinheiro guardado com sucesso — já aparece separado na seção "Investido" abaixo.
-        </p>
-      )}
-
-      {!contas || contas.length === 0 ? (
+      {!contas.length ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
           <p className="font-display font-semibold mb-1">Nenhuma conta ainda</p>
-          <p className="text-ink-400 text-sm mb-4">
-            Crie sua primeira conta (carteira, banco ou cartão) para começar.
-          </p>
+          <p className="text-ink-400 text-sm mb-4">Crie sua primeira conta (carteira, banco ou cartão) para começar.</p>
           <Link
             href="/financas/contas"
             className="inline-block bg-ink-100 text-base-900 text-sm font-medium rounded-lg px-4 py-2 hover:opacity-90 transition"
@@ -348,63 +112,115 @@ export default async function FinancasPage({
         </div>
       ) : (
         <>
-          {/* Saldo atual + previsto, navegação por mês, receitas/despesas —
-              fica full-width em cima, é o número mais importante da tela */}
           <HeroFinancas
             saldo={saldoTotal}
             saldoPrevisto={saldoPrevisto}
             receitas={receitasDoMes}
             despesas={despesasDoMes}
             nomeMes={nomeDoMesSelecionado}
-            pessoas={pessoasCompartilhadas}
             hrefMesAnterior={`/financas?mes=${mesAnteriorISO}`}
             hrefMesProximo={`/financas?mes=${mesProximoISO}`}
             hrefHoje="/financas"
             ehMesAtual={ehMesAtual}
+            aoMesAnterior={() => setMesSelecionado(mesAnteriorISO)}
+            aoMesProximo={() => setMesSelecionado(mesProximoISO)}
+            aoHoje={() => setMesSelecionado(mesAtualISO)}
           />
 
-          {/* No desktop, o resto flui em 2 colunas — usa a largura extra
-              da tela em vez de ficar tudo empilhado numa coluna só */}
           <div className="lg:columns-2 lg:gap-6">
-          <div className="lg:break-inside-avoid">
-          <ListaContasComSaldo contas={contasComSaldo} />
-          </div>
+            <div className="lg:break-inside-avoid">
+              <ListaContasComSaldo contas={contas as any} />
+            </div>
 
-          {/* Orçamento por categoria */}
-          {categorias && categorias.length > 0 && (
-            <div className="mb-6 lg:break-inside-avoid">
-              <p className="text-sm text-ink-400 mb-3">Orçamento do mês</p>
-              <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 space-y-4">
-                {categorias.map((cat) => (
-                  <BarraOrcamento
-                    key={cat.id}
-                    nome={cat.nome}
-                    gasto={gastoPorCategoria.get(cat.id) ?? 0}
-                    meta={Number(cat.meta_mensal)}
-                  />
-                ))}
+            {categoriasComMeta.length > 0 && (
+              <div className="mb-6 lg:break-inside-avoid">
+                <p className="text-sm text-ink-400 mb-3">Orçamento do mês</p>
+                <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 space-y-4">
+                  {categoriasComMeta.map((cat: any) => (
+                    <BarraOrcamento
+                      key={cat.id}
+                      nome={cat.nome}
+                      gasto={gastoPorCategoria.get(cat.id) ?? 0}
+                      meta={Number(cat.meta_mensal)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Link de destaque pra análise avançada */}
-          <Link
-            href="/financas/analise"
-            className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-6 hover:border-financa transition lg:break-inside-avoid"
-          >
-            <span className="w-9 h-9 rounded-lg bg-financa/15 flex items-center justify-center text-financa shrink-0">
-              <PieChart size={18} strokeWidth={2} />
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium">Para onde vai seu dinheiro</p>
-              <p className="text-xs text-ink-400 mt-0.5">Mapa de gastos, comparação com o mês passado e dicas automáticas</p>
-            </div>
-            <span className="text-ink-400 text-sm shrink-0">Ver →</span>
-          </Link>
+            <Link
+              href="/financas/analise"
+              className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-6 hover:border-financa transition lg:break-inside-avoid"
+            >
+              <span className="w-9 h-9 rounded-lg bg-financa/15 flex items-center justify-center text-financa shrink-0">
+                <PieChart size={18} strokeWidth={2} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium">Para onde vai seu dinheiro</p>
+                <p className="text-xs text-ink-400 mt-0.5">Mapa de gastos, comparação com o mês passado e dicas automáticas</p>
+              </div>
+              <span className="text-ink-400 text-sm shrink-0">Ver →</span>
+            </Link>
 
-          {ordemBlocos.map((blocoId) => (
-            <div key={blocoId} className="lg:break-inside-avoid">{blocosFinancas[blocoId]}</div>
-          ))}
+            {dadosGrafico.length > 0 && (
+              <div className="mb-6 lg:break-inside-avoid">
+                <p className="text-sm text-ink-400 mb-3 capitalize">Despesas por categoria · {nomeDoMesSelecionado}</p>
+                <GraficoDespesasCategoria dados={dadosGrafico} />
+              </div>
+            )}
+
+            <div className="mb-6 lg:break-inside-avoid">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm text-ink-400">Lançamentos do mês</p>
+                <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
+                  Ver extrato completo →
+                </Link>
+              </div>
+              {ultimasTransacoes.length === 0 ? (
+                <p className="text-ink-400 text-sm">Nenhum lançamento nesse mês.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {ultimasTransacoes.map((t: any) => {
+                    const catInfo = mapaCategoriaInfo.get(t.categoria_id) as any;
+                    return (
+                      <li key={t.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
+                              catInfo?.cor ?? "financa"
+                            )}`}
+                          >
+                            {catInfo?.icone ? (
+                              <IconeCategoria icone={catInfo.icone} />
+                            ) : t.tipo === "receita" ? (
+                              <TrendingUp size={16} strokeWidth={2} />
+                            ) : (
+                              <TrendingDown size={16} strokeWidth={2} />
+                            )}
+                          </span>
+                          <p className="text-sm truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
+                          <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
+                            {t.tipo === "receita" ? "+" : "-"}
+                            <ValorMonetario valor={t.valor} />
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
+                          <p className="text-xs text-ink-400 truncate min-w-0">
+                            {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
+                          </p>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
+                              Editar
+                            </Link>
+                            <BotaoRemoverTransacao transacaoId={t.id} />
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </div>
         </>
       )}

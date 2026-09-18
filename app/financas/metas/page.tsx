@@ -1,24 +1,21 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { criarMeta, adicionarProgressoMeta, arquivarMeta, excluirMetaDefinitivamente } from "./actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { Trash2, Archive } from "lucide-react";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function MetasPage({
-  searchParams,
-}: {
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
-
-  const { data: metas } = await supabase
-    .from("metas_financeiras")
-    .select("id, nome, valor_alvo, valor_atual, data_alvo, concluida")
-    .eq("arquivada", false)
-    .order("criado_em", { ascending: false });
+// Etapa 127: a lista abre com o que já tinha salvo. Guardar progresso
+// numa meta, criar, arquivar ou excluir continuam precisando de
+// internet — mexer em dinheiro de verdade merece confirmação síncrona
+// com o servidor, não uma fila que pode dar errado.
+export default function MetasPage() {
+  const { snapshot, recarregar } = useSnapshotOffline();
+  const metas = snapshot?.financas.metas ?? [];
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-3xl mx-auto">
@@ -30,15 +27,9 @@ export default async function MetasPage({
         Separe um valor pra alcançar, tipo "Viagem" ou "Reserva de emergência", e vá guardando aos poucos.
       </p>
 
-      {searchParams.erro && (
-        <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(searchParams.erro)}
-        </p>
-      )}
-
-      {metas && metas.length > 0 && (
+      {metas.length > 0 && (
         <ul className="space-y-3 mb-8 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-          {metas.map((meta) => {
+          {metas.map((meta: any) => {
             const percentual = Math.min(100, Math.round((Number(meta.valor_atual) / Number(meta.valor_alvo)) * 100));
             return (
               <li key={meta.id} className="bg-base-800 border border-base-600 rounded-xl2 p-4">
@@ -71,10 +62,7 @@ export default async function MetasPage({
                       placeholder="Guardar mais..."
                       className="flex-1 bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 font-mono focus:border-ink-100 outline-none transition"
                     />
-                    <button
-                      type="submit"
-                      className="bg-financa text-base-900 text-sm font-medium rounded-lg px-3 hover:opacity-90 transition"
-                    >
+                    <button type="submit" className="bg-financa text-base-900 text-sm font-medium rounded-lg px-3 hover:opacity-90 transition">
                       +
                     </button>
                   </form>
@@ -86,12 +74,14 @@ export default async function MetasPage({
                     textoBotao={<Archive size={14} strokeWidth={2} />}
                     textoConfirmacao={`Arquivar "${meta.nome}"?`}
                     classeBotao="text-ink-400 hover:text-ink-100 transition"
+                    aoConcluir={recarregar}
                   />
                   <BotaoComConfirmacao
                     acao={excluirMetaDefinitivamente.bind(null, meta.id)}
                     textoBotao={<Trash2 size={14} strokeWidth={2} />}
                     textoConfirmacao={`Excluir "${meta.nome}" de vez?`}
                     classeBotao="text-ink-400 hover:text-red-400 transition"
+                    aoConcluir={recarregar}
                   />
                 </div>
               </li>

@@ -1,15 +1,13 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { ListaTarefasArrastavel } from "@/components/ListaTarefasArrastavel";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function TarefasPage() {
-  const supabase = createClient();
-
-  const { data: tarefas } = await supabase
-    .from("tarefas")
-    .select("id, titulo, icone, repetir, data, concluida, subtarefas")
-    .eq("arquivada", false)
-    .order("ordem", { ascending: true });
+// Etapa 127
+export default function TarefasPage() {
+  const { snapshot } = useSnapshotOffline();
+  const tarefas = [...(snapshot?.tarefas ?? [])].sort((a: any, b: any) => (a.ordem ?? 0) - (b.ordem ?? 0));
 
   return (
     <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2">
@@ -26,7 +24,7 @@ export default async function TarefasPage() {
         Lixeira
       </Link>
 
-      {!tarefas || tarefas.length === 0 ? (
+      {snapshot !== undefined && tarefas.length === 0 ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
           <p className="font-display font-semibold mb-1">Nenhuma tarefa ainda</p>
           <p className="text-ink-400 text-sm">Tarefas podem ser únicas ou repetir como um hábito.</p>

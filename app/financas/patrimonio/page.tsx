@@ -1,32 +1,18 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { calcularPatrimonioPorMes } from "@/lib/financas/patrimonio";
-import { GraficoPatrimonio } from "@/components/GraficoPatrimonio";
+import { GraficoPatrimonioLazy as GraficoPatrimonio } from "@/components/GraficoPatrimonioLazy";
 import { formatarMoeda } from "@/lib/financas/formatacao";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function PatrimonioPage() {
-  const supabase = createClient();
+// Etapa 127: o cálculo (12 meses, incluindo o que está guardado em
+// desafios) já vem pronto do retrato local — não precisa de nenhuma
+// conta nova aqui, só exibir.
+export default function PatrimonioPage() {
+  const { snapshot } = useSnapshotOffline();
+  const pontos = snapshot?.financas.patrimonio ?? [];
 
-  const [{ data: contas }, { data: transacoes }, { data: desafios }] = await Promise.all([
-    supabase.from("financa_contas").select("id, saldo_inicial").eq("arquivado", false),
-    supabase.from("financa_transacoes").select("conta_id, tipo, valor, data"),
-    supabase.from("desafios_financeiros").select("valor_guardado").eq("arquivado", false),
-  ]);
-
-  const hoje = new Date().toLocaleDateString("sv-SE");
-  const pontos = calcularPatrimonioPorMes(contas ?? [], (transacoes ?? []) as any, 12, hoje);
-
-  // O dinheiro que já saiu da conta pra dentro de um desafio continua
-  // sendo seu — soma no total atual pra não "sumir" do patrimônio.
-  // (só ajusta o valor de agora; o gráfico histórico dos meses
-  // passados não é retroagido, já que não guardamos quanto tinha
-  // guardado em cada desafio em cada mês anterior)
-  const totalEmDesafios = (desafios ?? []).reduce((soma, d) => soma + Number(d.valor_guardado), 0);
-  if (pontos.length > 0) {
-    pontos[pontos.length - 1].patrimonio += totalEmDesafios;
-  }
-
-  const atual = pontos[pontos.length - 1]?.patrimonio ?? 0;
+  const atual = pontos.at(-1)?.patrimonio ?? 0;
   const inicial = pontos[0]?.patrimonio ?? 0;
   const variacao = atual - inicial;
 
@@ -43,18 +29,15 @@ export default async function PatrimonioPage() {
       <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-6">
         <p className="text-xs text-ink-400 mb-1">Patrimônio atual</p>
         <p className="text-3xl font-mono font-bold mb-2">{formatarMoeda(atual)}</p>
-        <p className={`text-sm ${variacao >= 0 ? "text-habito" : "text-red-400"}`}>
-          {variacao >= 0 ? "+" : ""}
-          {formatarMoeda(variacao)} nos últimos 12 meses
-        </p>
-        {totalEmDesafios > 0 && (
-          <p className="text-xs text-ink-400 mt-2">
-            Inclui {formatarMoeda(totalEmDesafios)} guardado em desafios financeiros.
+        {pontos.length > 0 && (
+          <p className={`text-sm ${variacao >= 0 ? "text-habito" : "text-red-400"}`}>
+            {variacao >= 0 ? "+" : ""}
+            {formatarMoeda(variacao)} nos últimos 12 meses
           </p>
         )}
       </div>
 
-      <GraficoPatrimonio dados={pontos} />
+      {pontos.length > 0 && <GraficoPatrimonio dados={pontos} />}
     </main>
   );
 }

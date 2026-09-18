@@ -14,6 +14,9 @@ export function HeroFinancas({
   hrefMesProximo,
   hrefHoje,
   ehMesAtual,
+  aoMesAnterior,
+  aoMesProximo,
+  aoHoje,
 }: {
   saldo: number;
   saldoPrevisto: number | null;
@@ -25,6 +28,12 @@ export function HeroFinancas({
   hrefMesProximo: string;
   hrefHoje: string;
   ehMesAtual: boolean;
+  /** Etapa 127: quando informados, a navegação de mês fica só no
+   *  navegador (sem trocar de rota) — usado pela versão local-first
+   *  de Finanças. Sem isso, continua indo pelos hrefs de sempre. */
+  aoMesAnterior?: () => void;
+  aoMesProximo?: () => void;
+  aoHoje?: () => void;
 }) {
   return (
     <div className="bg-base-800 border border-base-600 rounded-xl2 p-5 mb-6">
@@ -37,28 +46,53 @@ export function HeroFinancas({
 
       {/* Navegação por mês */}
       <div className="flex items-center justify-center gap-4 mb-4">
-        <Link
-          href={hrefMesAnterior}
-          aria-label="Mês anterior"
-          className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
-        >
-          ‹
-        </Link>
+        {aoMesAnterior ? (
+          <button
+            onClick={aoMesAnterior}
+            aria-label="Mês anterior"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+          >
+            ‹
+          </button>
+        ) : (
+          <Link
+            href={hrefMesAnterior}
+            aria-label="Mês anterior"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+          >
+            ‹
+          </Link>
+        )}
         <div className="text-center">
           <p className="text-sm font-medium capitalize">{nomeMes}</p>
-          {!ehMesAtual && (
-            <Link href={hrefHoje} className="text-[11px] text-financa hover:underline">
-              Voltar pra hoje
-            </Link>
-          )}
+          {!ehMesAtual &&
+            (aoHoje ? (
+              <button onClick={aoHoje} className="text-[11px] text-financa hover:underline">
+                Voltar pra hoje
+              </button>
+            ) : (
+              <Link href={hrefHoje} className="text-[11px] text-financa hover:underline">
+                Voltar pra hoje
+              </Link>
+            ))}
         </div>
-        <Link
-          href={hrefMesProximo}
-          aria-label="Próximo mês"
-          className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
-        >
-          ›
-        </Link>
+        {aoMesProximo ? (
+          <button
+            onClick={aoMesProximo}
+            aria-label="Próximo mês"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+          >
+            ›
+          </button>
+        ) : (
+          <Link
+            href={hrefMesProximo}
+            aria-label="Próximo mês"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+          >
+            ›
+          </Link>
+        )}
       </div>
 
       {/* Saldo atual — sozinho, com espaço de sobra pro número */}

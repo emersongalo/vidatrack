@@ -1,34 +1,52 @@
-// Evita que o Next.js guarde essa página em cache por muito tempo pra
-// um "id" específico — sem isso, uma tela editada corrigia no código
-// mas continuava mostrando dado antigo pra quem já tinha visitado
-// aquele id específico antes da correção.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+"use client";
 
-import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { atualizarConta } from "@/app/financas/actions";
 import { BANCOS } from "@/lib/financas/bancos";
 import { SeletorTipoConta } from "@/components/SeletorTipoConta";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function EditarContaPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
+// Etapa 128
+export default function EditarContaPage() {
+  return (
+    <Suspense fallback={null}>
+      <EditarContaConteudo />
+    </Suspense>
+  );
+}
 
-  const { data: conta } = await supabase
-    .from("financa_contas")
-    .select("id, nome, tipo, banco, saldo_inicial, dia_fechamento, dia_vencimento")
-    .eq("id", params.id)
-    .single();
+function EditarContaConteudo() {
+  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const erro = searchParams.get("erro");
+  const { snapshot } = useSnapshotOffline();
 
-  if (!conta) notFound();
+  if (snapshot === undefined) {
+    return (
+      <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto animate-pulse">
+        <div className="h-64 bg-base-800 border border-base-600 rounded-xl2 mt-6" />
+      </main>
+    );
+  }
+
+  const conta = (snapshot?.financas.contas ?? []).find((c: any) => c.id === params.id);
+
+  if (!conta) {
+    return (
+      <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+        <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+          ← Contas
+        </Link>
+        <p className="text-ink-400 text-sm mt-6">
+          Não encontrei essa conta no que está salvo no aparelho. Se você criou ela há pouco tempo, conecte à
+          internet uma vez pra atualizar.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
@@ -37,9 +55,9 @@ export default async function EditarContaPage({
       </Link>
       <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Editar conta</h1>
 
-      {searchParams.erro && (
+      {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(searchParams.erro)}
+          {decodeURIComponent(erro)}
         </p>
       )}
 

@@ -1,15 +1,15 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
-import { createClient } from "@/lib/supabase/server";
-import {
-  calcularPeriodo,
-  type PresetPeriodo,
-} from "@/lib/financas/formatacao";
+import { calcularPeriodo, type PresetPeriodo } from "@/lib/financas/formatacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
 import { ValorMonetario } from "@/components/ValorMonetario";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
 const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "este_mes", rotulo: "Este mês" },
@@ -19,68 +19,31 @@ const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "tudo", rotulo: "Tudo" },
 ];
 
-export default async function ExtratoPage({
-  searchParams,
-}: {
-  searchParams: { tipo?: string; inicio?: string; fim?: string; preset?: string; contaId?: string };
-}) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+// Etapa 127: filtros viram estado local (sem navegação de URL), dados
+// vêm do retrato local — os avatares de "quem lançou" (multi-usuário)
+// ficam de fora por enquanto (mesma razão das outras telas: depende
+// de foto resolvida no servidor).
+export default function ExtratoPage() {
+  const { snapshot } = useSnapshotOffline();
+  const [tipo, setTipo] = useState<"todos" | "receita" | "despesa">("todos");
+  const [preset, setPreset] = useState<PresetPeriodo>("este_mes");
 
-  const presetAtivo = (searchParams.preset as PresetPeriodo) ?? (searchParams.inicio ? "" : "este_mes");
-  const periodoPreset = presetAtivo ? calcularPeriodo(presetAtivo as PresetPeriodo) : null;
-  const inicio = searchParams.inicio ?? periodoPreset?.inicio ?? calcularPeriodo("este_mes").inicio;
-  const fim = searchParams.fim ?? periodoPreset?.fim ?? calcularPeriodo("este_mes").fim;
-  const tipo = searchParams.tipo ?? "todos";
+  const contas = snapshot?.financas.contas ?? [];
+  const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
+  const mapaCategorias = new Map((snapshot?.financas.categorias ?? []).map((c: any) => [c.id, c]));
 
-  const { data: contas } = await supabase
-    .from("financa_contas")
-    .select("id, nome")
-    .eq("arquivado", false);
-  const idsContas = (contas ?? []).map((c) => c.id);
-  const mapaContas = new Map((contas ?? []).map((c) => [c.id, c.nome]));
+  const { inicio, fim } = calcularPeriodo(preset);
 
-  let consulta = supabase
-    .from("financa_transacoes")
-    .select("id, conta_id, categoria_id, tipo, valor, descricao, data, dono_id, financa_categorias(icone, cor)")
-    .in("conta_id", idsContas.length ? idsContas : ["00000000-0000-0000-0000-000000000000"])
-    .gte("data", inicio)
-    .lte("data", fim)
-    .order("data", { ascending: false });
-
-  if (searchParams.contaId) consulta = consulta.eq("conta_id", searchParams.contaId);
-  if (tipo !== "todos") consulta = consulta.eq("tipo", tipo);
-
-  const { data: transacoes } = await consulta;
-  const lista = transacoes ?? [];
-
-  const idsDonosUnicos = Array.from(new Set(lista.map((t: any) => t.dono_id)));
-  let mapaNomes = new Map<string, string>();
-  if (idsDonosUnicos.length > 1) {
-    const { data: perfis } = await supabase.from("perfis").select("id, nome").in("id", idsDonosUnicos);
-    mapaNomes = new Map((perfis ?? []).map((p) => [p.id, p.nome ?? "Alguém"]));
-  }
-
-  const totalReceitas = lista.filter((t) => t.tipo === "receita").reduce((a, t) => a + t.valor, 0);
-  const totalDespesas = lista.filter((t) => t.tipo === "despesa").reduce((a, t) => a + t.valor, 0);
-
-  function linkComFiltro(mudancas: Record<string, string | undefined>) {
-    const params = new URLSearchParams();
-    const atual = {
-      tipo,
-      preset: presetAtivo || undefined,
-      inicio: searchParams.inicio,
-      fim: searchParams.fim,
-      contaId: searchParams.contaId,
-    };
-    const combinado = { ...atual, ...mudancas };
-    Object.entries(combinado).forEach(([k, v]) => {
-      if (v) params.set(k, v);
+  const lista = useMemo(() => {
+    return (snapshot?.financas.transacoes ?? []).filter((t: any) => {
+      if (t.data < inicio || t.data > fim) return false;
+      if (tipo !== "todos" && t.tipo !== tipo) return false;
+      return true;
     });
-    return `/financas/extrato?${params.toString()}`;
-  }
+  }, [snapshot, inicio, fim, tipo]);
+
+  const totalReceitas = lista.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
+  const totalDespesas = lista.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-4xl mx-auto">
@@ -92,74 +55,34 @@ export default async function ExtratoPage({
         <BotaoOcultarValores />
       </div>
 
-      {/* Filtro de tipo */}
       <div className="flex gap-2 mb-3">
-        {[
-          { valor: "todos", rotulo: "Todos" },
-          { valor: "receita", rotulo: "Receitas" },
-          { valor: "despesa", rotulo: "Despesas" },
-        ].map((opcao) => (
-          <Link
-            key={opcao.valor}
-            href={linkComFiltro({ tipo: opcao.valor })}
+        {(["todos", "receita", "despesa"] as const).map((opcao) => (
+          <button
+            key={opcao}
+            onClick={() => setTipo(opcao)}
             className={`text-sm rounded-full px-3.5 py-1.5 border transition ${
-              tipo === opcao.valor
-                ? "bg-ink-100 text-base-900 border-ink-100"
-                : "border-base-600 text-ink-400 hover:text-ink-100"
+              tipo === opcao ? "bg-ink-100 text-base-900 border-ink-100" : "border-base-600 text-ink-400 hover:text-ink-100"
             }`}
           >
-            {opcao.rotulo}
-          </Link>
+            {opcao === "todos" ? "Todos" : opcao === "receita" ? "Receitas" : "Despesas"}
+          </button>
         ))}
       </div>
 
-      {/* Presets de período */}
-      <div className="flex gap-2 overflow-x-auto pb-1 mb-4 scrollbar-none">
+      <div className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-none">
         {PRESETS.map((p) => (
-          <Link
+          <button
             key={p.valor}
-            href={linkComFiltro({ preset: p.valor, inicio: undefined, fim: undefined })}
+            onClick={() => setPreset(p.valor)}
             className={`shrink-0 text-xs rounded-full px-3 py-1.5 border transition ${
-              presetAtivo === p.valor
-                ? "bg-financa/20 border-financa text-financa"
-                : "border-base-600 text-ink-400 hover:text-ink-100"
+              preset === p.valor ? "bg-financa/20 border-financa text-financa" : "border-base-600 text-ink-400 hover:text-ink-100"
             }`}
           >
             {p.rotulo}
-          </Link>
+          </button>
         ))}
       </div>
 
-      {/* Período customizado */}
-      <form method="get" className="flex items-end gap-2 mb-6">
-        <input type="hidden" name="tipo" value={tipo} />
-        <div className="flex-1">
-          <label className="block text-[11px] text-ink-400 mb-1">De</label>
-          <input
-            type="date"
-            name="inicio"
-            defaultValue={inicio}
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-2.5 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
-          />
-        </div>
-        <div className="flex-1">
-          <label className="block text-[11px] text-ink-400 mb-1">Até</label>
-          <input
-            type="date"
-            name="fim"
-            defaultValue={fim}
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-2.5 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
-          />
-        </div>
-        <button
-          type="submit"
-          className="text-sm border border-base-600 rounded-lg px-3 py-2 hover:bg-base-800 transition shrink-0"
-        >
-          Filtrar
-        </button>
-      </form>
-
-      {/* Resumo do período filtrado */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
           <p className="text-ink-400 text-xs mb-1">Receitas no período</p>
@@ -171,72 +94,58 @@ export default async function ExtratoPage({
         </div>
       </div>
 
-      {/* Lista */}
-      {lista.length === 0 ? (
+      {snapshot === undefined ? (
+        <div className="space-y-2 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-16 bg-base-800 border border-base-600 rounded-lg" />
+          ))}
+        </div>
+      ) : lista.length === 0 ? (
         <p className="text-ink-400 text-sm">Nenhum lançamento nesse período.</p>
       ) : (
         <ul className="space-y-2">
-          {lista.map((t: any) => (
-            <li
-              key={t.id}
-              className="bg-base-800 border border-base-600 rounded-lg p-3"
-            >
-              <div className="flex items-center gap-3">
-                <span className="relative shrink-0">
+          {lista.map((t: any) => {
+            const catInfo = mapaCategorias.get(t.categoria_id) as any;
+            return (
+              <li key={t.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
+                <div className="flex items-center gap-3">
                   <span
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm ${classeFundoSuave(
-                      t.financa_categorias?.cor ?? "financa"
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
+                      catInfo?.cor ?? "financa"
                     )}`}
                   >
-                    {t.financa_categorias?.icone ? (
-                      <IconeCategoria icone={t.financa_categorias.icone} />
+                    {catInfo?.icone ? (
+                      <IconeCategoria icone={catInfo.icone} />
                     ) : t.tipo === "receita" ? (
                       <TrendingUp size={16} strokeWidth={2} />
                     ) : (
                       <TrendingDown size={16} strokeWidth={2} />
                     )}
                   </span>
-                  {mapaNomes.has(t.dono_id) && (
-                    <span
-                      title={t.dono_id === user?.id ? "Você" : mapaNomes.get(t.dono_id) ?? "Alguém"}
-                      className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-semibold border-2 border-base-800 ${
-                        t.dono_id === user?.id ? "bg-base-600 text-ink-400" : "bg-nota-soft text-nota"
-                      }`}
-                    >
-                      {(t.dono_id === user?.id ? "V" : (mapaNomes.get(t.dono_id) ?? "?")).charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </span>
-                <p className="text-sm truncate flex-1 min-w-0">
-                  {t.descricao || mapaContas.get(t.conta_id)}
-                </p>
-                <span
-                  className={`font-mono text-sm shrink-0 ${
-                    t.tipo === "receita" ? "text-habito" : "text-red-400"
-                  }`}
-                >
-                  {t.tipo === "receita" ? "+" : "-"}
-                  <ValorMonetario valor={t.valor} />
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
-                <p className="text-xs text-ink-400 truncate min-w-0">
-                  {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} ·{" "}
-                  {mapaContas.get(t.conta_id)}
-                </p>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Link
-                    href={`/financas/${t.id}/editar`}
-                    className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0"
-                  >
-                    Editar
-                  </Link>
-                  <BotaoRemoverTransacao transacaoId={t.id} />
+                  <p className="text-sm truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
+                  <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
+                    {t.tipo === "receita" ? "+" : "-"}
+                    <ValorMonetario valor={t.valor} />
+                  </span>
                 </div>
-              </div>
-            </li>
-          ))}
+                <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
+                  <p className="text-xs text-ink-400 truncate min-w-0">
+                    {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
+                  </p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
+                      Editar
+                    </Link>
+                    <BotaoRemoverTransacao transacaoId={t.id} />
+                  </div>
+                </div>
+              </li>
+            );
+          })}
         </ul>
+      )}
+      {(snapshot?.financas.transacoes.length ?? 0) >= 3000 && (
+        <p className="text-xs text-ink-400 mt-4">Mostrando as 3.000 transações mais recentes guardadas offline.</p>
       )}
     </main>
   );

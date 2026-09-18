@@ -1,45 +1,15 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { ListaHabitosArrastavel } from "@/components/ListaHabitosArrastavel";
 import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
 import { calcularStreak, calcularMelhorStreak, calcularStreakNegativo } from "@/lib/habitos/streak";
 
-export default async function ListaHabitosPage() {
-  const supabase = createClient();
-
-  const { data: habitos } = await supabase
-    .from("habitos")
-    .select("id, nome, cor, icone, frequencia, eh_negativo, criado_em, categorias_produtividade(nome)")
-    .eq("arquivado", false)
-    .order("ordem", { ascending: true });
-
-  const idsHabitos = (habitos ?? []).map((h) => h.id);
-  const { data: checkins } =
-    idsHabitos.length > 0
-      ? await supabase.from("habito_checkins").select("habito_id, data").in("habito_id", idsHabitos)
-      : { data: [] as { habito_id: string; data: string }[] };
-
-  const datasPorHabito = new Map<string, string[]>();
-  for (const c of checkins ?? []) {
-    if (!datasPorHabito.has(c.habito_id)) datasPorHabito.set(c.habito_id, []);
-    datasPorHabito.get(c.habito_id)!.push(c.data);
-  }
-
-  const habitosComStreak = (habitos ?? []).map((h) => {
-    const datas = datasPorHabito.get(h.id) ?? [];
-    if (h.eh_negativo) {
-      return {
-        ...h,
-        streakAtual: calcularStreakNegativo(datas, (h.criado_em as string).slice(0, 10)),
-        melhorStreak: 0, // "recorde" não faz muito sentido pra hábito negativo — o que importa é o streak atual
-      };
-    }
-    return {
-      ...h,
-      streakAtual: calcularStreak(datas),
-      melhorStreak: calcularMelhorStreak(datas),
-    };
-  });
+// Etapa 127: lê do mesmo retrato local usado pelas outras telas —
+// abre com o que já tinha salvo, atualiza sozinha se houver internet.
+export default function ListaHabitosPage() {
+  const { snapshot, recarregar } = useSnapshotOffline();
 
   return (
     <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2">
@@ -56,17 +26,66 @@ export default async function ListaHabitosPage() {
         </div>
       </div>
 
-      {!habitos || habitos.length === 0 ? (
+      {snapshot === undefined ? (
+        <div className="space-y-2 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-16 bg-base-800 border border-base-600 rounded-xl2" />
+          ))}
+        </div>
+      ) : !snapshot || snapshot.habitos.length === 0 ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
           <p className="font-display font-semibold mb-1">Nenhum hábito ainda</p>
           <p className="text-ink-400 text-sm">Crie o primeiro na aba "Hoje" ou aqui mesmo.</p>
         </div>
       ) : (
-        <>
-          <p className="text-xs text-ink-400 mb-3">Arraste ⠿ para reordenar</p>
-          <ListaHabitosArrastavel habitos={habitosComStreak as any} />
-        </>
+        <ListaComStreak snapshot={snapshot} aoMudar={recarregar} />
       )}
     </main>
+  );
+}
+
+function ListaComStreak({
+  snapshot,
+  aoMudar,
+}: {
+  snapshot: NonNullable<ReturnType<typeof useSnapshotOffline>["snapshot"]>;
+  aoMudar?: () => void;
+}) {
+  const mapaCategorias = new Map(snapshot.categoriasProdutividade.map((c) => [c.id, c.nome]));
+
+  const datasPorHabito = new Map<string, string[]>();
+  for (const c of snapshot.habitoCheckins) {
+    if (!datasPorHabito.has(c.habito_id)) datasPorHabito.set(c.habito_id, []);
+    datasPorHabito.get(c.habito_id)!.push(c.data);
+  }
+
+  const habitosOrdenados = [...snapshot.habitos].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+
+  const habitosComStreak = habitosOrdenados.map((h) => {
+    const datas = datasPorHabito.get(h.id) ?? [];
+    const nomeCategoria = h.categoria_id ? mapaCategorias.get(h.categoria_id) : undefined;
+    const base = {
+      ...h,
+      categorias_produtividade: nomeCategoria ? { nome: nomeCategoria } : null,
+    };
+    if (h.eh_negativo) {
+      return {
+        ...base,
+        streakAtual: calcularStreakNegativo(datas, (h.criado_em as string).slice(0, 10)),
+        melhorStreak: 0,
+      };
+    }
+    return {
+      ...base,
+      streakAtual: calcularStreak(datas),
+      melhorStreak: calcularMelhorStreak(datas),
+    };
+  });
+
+  return (
+    <>
+      <p className="text-xs text-ink-400 mb-3">Arraste ⠿ para reordenar</p>
+      <ListaHabitosArrastavel habitos={habitosComStreak as any} aoMudar={aoMudar} />
+    </>
   );
 }

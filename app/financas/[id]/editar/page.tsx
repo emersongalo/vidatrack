@@ -1,45 +1,48 @@
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { Suspense } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { atualizarTransacao } from "../../actions";
 import { FormularioTransacao } from "@/components/FormularioTransacao";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-// Sem isso, o Next.js pode guardar em cache a resposta da consulta
-// pra um "id" específico (a URL dessa página muda por lançamento) —
-// se alguém visitou essa tela ANTES de uma correção no código, ela
-// podia ficar "presa" numa versão antiga pra sempre, mesmo com o
-// código já corrigido (foi exatamente isso que intermitentemente
-// quebrava o campo de valor: uns funcionavam, outros não, dependendo
-// de quando cada um foi visitado pela última vez).
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Etapa 128
+export default function EditarTransacaoPage() {
+  return (
+    <Suspense fallback={null}>
+      <EditarTransacaoConteudo />
+    </Suspense>
+  );
+}
 
+function EditarTransacaoConteudo() {
+  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const erro = searchParams.get("erro") ?? undefined;
+  const { snapshot } = useSnapshotOffline();
 
-export default async function EditarTransacaoPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
+  if (snapshot === undefined) return null;
 
-  const [{ data: transacao }, { data: contas }, { data: categorias }] = await Promise.all([
-    supabase
-      .from("financa_transacoes")
-      .select("id, tipo, valor, conta_id, categoria_id, descricao, data")
-      .eq("id", params.id)
-      .single(),
-    supabase.from("financa_contas").select("id, nome").eq("arquivado", false).order("criado_em"),
-    supabase.from("financa_categorias").select("id, nome, tipo, icone").order("nome"),
-  ]);
+  const transacao = (snapshot?.financas.transacoes ?? []).find((t: any) => t.id === params.id);
+  const contas = snapshot?.financas.contas ?? [];
+  const categorias = snapshot?.financas.categorias ?? [];
 
-  if (!transacao) notFound();
+  if (!transacao) {
+    return (
+      <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+        <p className="text-ink-400 text-sm">
+          Não encontrei esse lançamento no que está salvo no aparelho. Se ele foi feito há pouco tempo, conecte à
+          internet uma vez pra atualizar.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <FormularioTransacao
-      contas={contas ?? []}
-      categorias={categorias ?? []}
-      erro={searchParams.erro}
+      contas={contas as any}
+      categorias={categorias as any}
+      erro={erro}
       action={atualizarTransacao.bind(null, transacao.id)}
       titulo="Editar lançamento"
       textoBotao="Salvar alterações"

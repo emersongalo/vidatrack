@@ -7,11 +7,18 @@ export function BotaoComConfirmacao({
   textoBotao,
   textoConfirmacao = "Tem certeza?",
   classeBotao = "text-ink-400 hover:text-red-400 transition text-xs",
+  aoConcluir,
 }: {
   acao: () => void | Promise<void>;
   textoBotao: React.ReactNode;
   textoConfirmacao?: string;
   classeBotao?: string;
+  /** Etapa 128: chamado depois que a ação termina com sucesso. Ações
+   *  como arquivar/excluir não redirecionam pra lugar nenhum — sem
+   *  isso, telas que leem de um retrato local (em vez de buscar do
+   *  servidor a cada render) ficam mostrando o item removido até a
+   *  pessoa sair e voltar na tela. */
+  aoConcluir?: () => void;
 }) {
   const [aberto, setAberto] = useState(false);
   const [pendente, iniciarTransicao] = useTransition();
@@ -20,6 +27,7 @@ export function BotaoComConfirmacao({
     iniciarTransicao(async () => {
       await acao();
       setAberto(false);
+      aoConcluir?.();
     });
   }
 

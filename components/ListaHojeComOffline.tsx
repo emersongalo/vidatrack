@@ -72,21 +72,11 @@ export function ListaHojeComOffline({
     return () => window.removeEventListener("keydown", aoTeclar);
   }, []);
 
-  function alternarOtimista(item: ItemAgenda) {
-    if (navigator.onLine) return; // deixa o ItemLinhaAgenda chamar a action normalmente
-
-    if (item.tipo === "habito") {
-      adicionarNaFila({ tipo: "checkin_habito", habitoId: item.id, data: dataISO });
-    } else {
-      adicionarNaFila({ tipo: "conclusao_tarefa", tarefaId: item.id, data: dataISO });
-    }
+  function atualizarVisualmente(item: ItemAgenda) {
     setItens((atual) => atual.map((it) => (it.id === item.id ? { ...it, feito: !it.feito } : it)));
   }
 
-  function ajustarOtimista(item: ItemAgenda, delta: number) {
-    if (navigator.onLine) return;
-
-    adicionarNaFila({ tipo: "ajuste_habito", habitoId: item.id, data: dataISO, delta });
+  function ajustarVisualmente(item: ItemAgenda, delta: number) {
     setItens((atual) =>
       atual.map((it) => {
         if (it.id !== item.id || !it.meta) return it;
@@ -94,6 +84,18 @@ export function ListaHojeComOffline({
         return { ...it, meta: { ...it.meta, atual: novoAtual }, feito: novoAtual >= it.meta.alvo };
       })
     );
+  }
+
+  function enfileirarOffline(item: ItemAgenda) {
+    if (item.tipo === "habito") {
+      adicionarNaFila({ tipo: "checkin_habito", habitoId: item.id, data: dataISO });
+    } else {
+      adicionarNaFila({ tipo: "conclusao_tarefa", tarefaId: item.id, data: dataISO });
+    }
+  }
+
+  function enfileirarAjusteOffline(item: ItemAgenda, delta: number) {
+    adicionarNaFila({ tipo: "ajuste_habito", habitoId: item.id, data: dataISO, delta });
   }
 
   return (
@@ -113,8 +115,10 @@ export function ListaHojeComOffline({
             key={`${item.tipo}-${item.id}`}
             item={item}
             dataISO={dataISO}
-            aoClicarOffline={() => alternarOtimista(item)}
-            aoAjustarOffline={(delta) => ajustarOtimista(item, delta)}
+            aoAlternarLocal={() => atualizarVisualmente(item)}
+            aoAjustarLocal={(delta) => ajustarVisualmente(item, delta)}
+            aoClicarOffline={() => enfileirarOffline(item)}
+            aoAjustarOffline={(delta) => enfileirarAjusteOffline(item, delta)}
           />
         ))}
       </ul>

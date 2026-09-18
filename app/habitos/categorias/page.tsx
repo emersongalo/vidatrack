@@ -1,16 +1,15 @@
+"use client";
+
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { removerCategoriaProdutividade } from "./actions";
 import { classeCor } from "@/lib/agenda/estilo";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function CategoriasProdutividadePage() {
-  const supabase = createClient();
-
-  const { data: categorias } = await supabase
-    .from("categorias_produtividade")
-    .select("id, nome, cor")
-    .order("nome");
+// Etapa 127
+export default function CategoriasProdutividadePage() {
+  const { snapshot, recarregar } = useSnapshotOffline();
+  const categorias = [...(snapshot?.categoriasProdutividade ?? [])].sort((a: any, b: any) => a.nome.localeCompare(b.nome));
 
   return (
     <main className="max-w-md lg:max-w-3xl mx-auto px-6 md:px-12 pt-2">
@@ -24,26 +23,22 @@ export default async function CategoriasProdutividadePage() {
         </Link>
       </div>
 
-      {!categorias || categorias.length === 0 ? (
+      {snapshot !== undefined && categorias.length === 0 ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
           <p className="font-display font-semibold mb-1">Nenhuma categoria ainda</p>
-          <p className="text-ink-400 text-sm">
-            Categorias funcionam como listas — ex: "Trabalho", "Saúde", "Casa".
-          </p>
+          <p className="text-ink-400 text-sm">Categorias funcionam como listas — ex: "Trabalho", "Saúde", "Casa".</p>
         </div>
       ) : (
         <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2 lg:space-y-0">
-          {categorias.map((cat) => (
-            <li
-              key={cat.id}
-              className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5"
-            >
+          {categorias.map((cat: any) => (
+            <li key={cat.id} className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5">
               <span className={`w-3 h-3 rounded-full shrink-0 ${classeCor(cat.cor)}`} />
               <span className="flex-1 text-sm">{cat.nome}</span>
               <BotaoComConfirmacao
                 acao={removerCategoriaProdutividade.bind(null, cat.id)}
                 textoBotao="Remover"
                 textoConfirmacao="Remove de hábitos/tarefas vinculados:"
+                aoConcluir={recarregar}
               />
             </li>
           ))}

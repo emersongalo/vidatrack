@@ -25,7 +25,7 @@ type Habito = {
   eh_negativo?: boolean;
 };
 
-export function ListaHabitosArrastavel({ habitos }: { habitos: Habito[] }) {
+export function ListaHabitosArrastavel({ habitos, aoMudar }: { habitos: Habito[]; aoMudar?: () => void }) {
   return (
     <ListaArrastavel
       itens={habitos}
@@ -85,6 +85,7 @@ export function ListaHabitosArrastavel({ habitos }: { habitos: Habito[] }) {
               textoBotao={<Archive size={15} strokeWidth={2} />}
               textoConfirmacao={`Arquivar "${habito.nome}"?`}
               classeBotao="text-ink-400 hover:text-red-400 transition"
+              aoConcluir={aoMudar}
             />
           </div>
         </div>

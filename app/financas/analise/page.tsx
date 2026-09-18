@@ -1,36 +1,55 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Lightbulb } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
-import { buscarInsightsFinanceiros } from "@/lib/financas/insights";
-import { TreemapGastos } from "@/components/TreemapGastos";
-import { GraficoComparacaoMensal } from "@/components/GraficoComparacaoMensal";
-import { GraficoAcumulado } from "@/components/GraficoAcumulado";
-import { RadarOrcamento } from "@/components/RadarOrcamento";
+import { calcularInsightsFinanceiros } from "@/lib/financas/insights-calculo";
+import { TreemapGastosLazy as TreemapGastos } from "@/components/TreemapGastosLazy";
+import { GraficoComparacaoMensalLazy as GraficoComparacaoMensal } from "@/components/GraficoComparacaoMensalLazy";
+import { GraficoAcumuladoLazy as GraficoAcumulado } from "@/components/GraficoAcumuladoLazy";
+import { RadarOrcamentoLazy as RadarOrcamento } from "@/components/RadarOrcamentoLazy";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function AnaliseFinanceiraPage({
-  searchParams,
-}: {
-  searchParams: { mes?: string };
-}) {
-  const supabase = createClient();
-  const mesReferencia = searchParams.mes ?? hojeISO();
+// Etapa 128 — o cálculo pesado (lib/financas/insights-calculo.ts) já
+// era puro; só precisava alimentar com as transações certas vindas
+// do retrato local em vez de uma consulta nova.
+export default function AnaliseFinanceiraPage() {
+  const { snapshot } = useSnapshotOffline();
+  const [mesReferencia, setMesReferencia] = useState(hojeISO());
 
-  const insights = await buscarInsightsFinanceiros(supabase, mesReferencia);
-  const {
-    categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto, acumulado, dicas, orcamentoComparado,
-  } = insights;
+  if (snapshot === undefined) {
+    return (
+      <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-4xl mx-auto animate-pulse">
+        <div className="h-40 bg-base-800 border border-base-600 rounded-xl2" />
+      </main>
+    );
+  }
 
-  const nomeMes = new Date(mesReferencia + "T00:00:00").toLocaleDateString("pt-BR", {
-    month: "long",
-    year: "numeric",
-  });
+  const mapaCategorias = new Map((snapshot?.financas.categorias ?? []).map((c: any) => [c.id, c.nome]));
+  const transacoesDespesa = (snapshot?.financas.transacoes ?? [])
+    .filter((t: any) => t.tipo === "despesa")
+    .map((t: any) => ({
+      valor: Number(t.valor),
+      descricao: t.descricao,
+      data: t.data,
+      nomeCategoria: (t.categoria_id && mapaCategorias.get(t.categoria_id)) || "Sem categoria",
+    }));
 
-  function linkMes(deslocamento: number) {
+  const categoriasComMeta = (snapshot?.financas.categorias ?? [])
+    .filter((c: any) => c.tipo === "despesa" && c.meta_mensal !== null)
+    .map((c: any) => ({ nome: c.nome, meta_mensal: Number(c.meta_mensal) }));
+
+  const insights = calcularInsightsFinanceiros(transacoesDespesa, categoriasComMeta, mesReferencia, hojeISO());
+  const { categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto, acumulado, dicas, orcamentoComparado } = insights;
+
+  const nomeMes = new Date(mesReferencia + "T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+  function mudarMes(deslocamento: number) {
     const d = new Date(mesReferencia + "T00:00:00");
     d.setMonth(d.getMonth() + deslocamento);
-    return `/financas/analise?mes=${d.toLocaleDateString("sv-SE")}`;
+    setMesReferencia(d.toLocaleDateString("sv-SE"));
   }
 
   return (
@@ -44,9 +63,9 @@ export default async function AnaliseFinanceiraPage({
       </div>
 
       <div className="flex items-center justify-center gap-4 mb-6">
-        <Link href={linkMes(-1)} className="text-ink-400 hover:text-ink-100 transition px-2">‹</Link>
+        <button onClick={() => mudarMes(-1)} className="text-ink-400 hover:text-ink-100 transition px-2">‹</button>
         <p className="text-sm font-medium capitalize w-40 text-center">{nomeMes}</p>
-        <Link href={linkMes(1)} className="text-ink-400 hover:text-ink-100 transition px-2">›</Link>
+        <button onClick={() => mudarMes(1)} className="text-ink-400 hover:text-ink-100 transition px-2">›</button>
       </div>
 
       {categorias.length === 0 ? (
@@ -56,13 +75,9 @@ export default async function AnaliseFinanceiraPage({
         </div>
       ) : (
         <>
-          {/* Dicas automáticas */}
           <div className="space-y-2 mb-6">
             {dicas.map((dica, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 bg-financa-soft border border-financa/30 rounded-xl2 p-4"
-              >
+              <div key={i} className="flex items-start gap-3 bg-financa-soft border border-financa/30 rounded-xl2 p-4">
                 <span className="text-financa shrink-0">
                   <Lightbulb size={18} strokeWidth={2} />
                 </span>
@@ -71,30 +86,23 @@ export default async function AnaliseFinanceiraPage({
             ))}
           </div>
 
-          {/* Total do mês + comparação */}
           <div className="bg-base-800 border border-base-600 rounded-xl2 p-5 mb-6">
             <p className="text-ink-400 text-sm mb-1">Total gasto em {nomeMes}</p>
-            <p className="text-3xl font-display font-semibold font-mono mb-1">
-              {formatarMoeda(totalDespesasMes)}
-            </p>
+            <p className="text-3xl font-display font-semibold font-mono mb-1">{formatarMoeda(totalDespesasMes)}</p>
             {totalDespesasMesAnterior > 0 && (
               <p className={`text-sm ${totalDespesasMes <= totalDespesasMesAnterior ? "text-habito" : "text-red-400"}`}>
                 {totalDespesasMes <= totalDespesasMesAnterior ? "↓" : "↑"}{" "}
-                {Math.abs(
-                  ((totalDespesasMes - totalDespesasMesAnterior) / totalDespesasMesAnterior) * 100
-                ).toFixed(0)}
-                % em relação ao mês anterior ({formatarMoeda(totalDespesasMesAnterior)})
+                {Math.abs(((totalDespesasMes - totalDespesasMesAnterior) / totalDespesasMesAnterior) * 100).toFixed(0)}%
+                em relação ao mês anterior ({formatarMoeda(totalDespesasMesAnterior)})
               </p>
             )}
             {maiorGasto && (
               <p className="text-xs text-ink-400 mt-2">
-                Maior gasto individual: <span className="text-ink-100">{maiorGasto.descricao}</span> —{" "}
-                {formatarMoeda(maiorGasto.valor)}
+                Maior gasto individual: <span className="text-ink-100">{maiorGasto.descricao}</span> — {formatarMoeda(maiorGasto.valor)}
               </p>
             )}
           </div>
 
-          {/* Treemap */}
           <div className="mb-6">
             <p className="text-sm text-ink-400 mb-3">Mapa de gastos — quanto maior o bloco, mais você gastou</p>
             <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
@@ -102,15 +110,11 @@ export default async function AnaliseFinanceiraPage({
             </div>
           </div>
 
-          {/* Comparação com o mês passado */}
           <div className="mb-6">
             <p className="text-sm text-ink-400 mb-3">Este mês x mês passado, por categoria</p>
-            <GraficoComparacaoMensal
-              dados={categorias.map((c) => ({ nome: c.nome, valor: c.valor, valorMesAnterior: c.valorMesAnterior }))}
-            />
+            <GraficoComparacaoMensal dados={categorias.map((c) => ({ nome: c.nome, valor: c.valor, valorMesAnterior: c.valorMesAnterior }))} />
           </div>
 
-          {/* Acumulado do mês */}
           <div className="mb-6">
             <p className="text-sm text-ink-400 mb-3">Acumulado ao longo do mês</p>
             <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
@@ -118,7 +122,6 @@ export default async function AnaliseFinanceiraPage({
             </div>
           </div>
 
-          {/* Radar orçamento */}
           {orcamentoComparado.length >= 3 && (
             <div className="mb-6">
               <p className="text-sm text-ink-400 mb-3">Orçamento planejado x realizado</p>
@@ -128,7 +131,6 @@ export default async function AnaliseFinanceiraPage({
             </div>
           )}
 
-          {/* Ranking de categorias */}
           <div className="mb-6">
             <p className="text-sm text-ink-400 mb-3">Ranking do mês</p>
             <div className="bg-base-800 border border-base-600 rounded-xl2 divide-y divide-base-600">
@@ -143,11 +145,7 @@ export default async function AnaliseFinanceiraPage({
                       </div>
                       <div className="flex items-center gap-2">
                         {c.variacaoPercentual !== null && (
-                          <span
-                            className={`text-xs font-mono ${
-                              c.variacaoPercentual > 0 ? "text-red-400" : "text-habito"
-                            }`}
-                          >
+                          <span className={`text-xs font-mono ${c.variacaoPercentual > 0 ? "text-red-400" : "text-habito"}`}>
                             {c.variacaoPercentual > 0 ? "↑" : "↓"} {Math.abs(c.variacaoPercentual * 100).toFixed(0)}%
                           </span>
                         )}
@@ -155,10 +153,7 @@ export default async function AnaliseFinanceiraPage({
                       </div>
                     </div>
                     <div className="h-1.5 bg-base-600 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-financa rounded-full"
-                        style={{ width: `${Math.max(2, percentual)}%` }}
-                      />
+                      <div className="h-full bg-financa rounded-full" style={{ width: `${Math.max(2, percentual)}%` }} />
                     </div>
                   </div>
                 );

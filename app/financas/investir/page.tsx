@@ -1,24 +1,30 @@
+"use client";
+
+import { Suspense } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { useSearchParams } from "next/navigation";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { transferirParaInvestimento } from "../actions";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function InvestirPage({
-  searchParams,
-}: {
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
-  const { data: contas } = await supabase
-    .from("financa_contas")
-    .select("id, nome, tipo")
-    .eq("arquivado", false)
-    .order("criado_em", { ascending: true });
+// Etapa 129
+export default function InvestirPage() {
+  return (
+    <Suspense fallback={null}>
+      <InvestirConteudo />
+    </Suspense>
+  );
+}
 
-  const contasOrigem = (contas ?? []).filter((c) => c.tipo !== "investimento");
-  const contasInvestimento = (contas ?? []).filter((c) => c.tipo === "investimento");
+function InvestirConteudo() {
+  const searchParams = useSearchParams();
+  const erro = searchParams.get("erro");
+  const { snapshot } = useSnapshotOffline();
 
+  const contas = snapshot?.financas.contas ?? [];
+  const contasOrigem = contas.filter((c: any) => c.tipo !== "investimento");
+  const contasInvestimento = contas.filter((c: any) => c.tipo === "investimento");
   const hoje = new Date().toLocaleDateString("sv-SE");
 
   return (
@@ -26,22 +32,21 @@ export default async function InvestirPage({
       <LinkVoltar href="/financas" texto="Finanças" />
       <h1 className="text-2xl font-display font-semibold mt-4 mb-2">Guardar em investimento</h1>
       <p className="text-ink-400 text-sm mb-6">
-        Move o dinheiro de uma conta comum pra uma conta de investimento.
-        Esse valor sai do seu saldo disponível e passa a contar no total
-        guardado, separado.
+        Move o dinheiro de uma conta comum pra uma conta de investimento. Esse valor sai do seu saldo disponível
+        e passa a contar no total guardado, separado.
       </p>
 
-      {searchParams.erro && (
+      {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(searchParams.erro)}
+          {decodeURIComponent(erro)}
         </p>
       )}
 
-      {contasInvestimento.length === 0 ? (
+      {snapshot !== undefined && contasInvestimento.length === 0 ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-6 text-center">
           <p className="text-sm text-ink-400 mb-4">
-            Você ainda não tem nenhuma conta do tipo "Investimento". Cria uma
-            primeiro pra poder guardar dinheiro nela.
+            Você ainda não tem nenhuma conta do tipo "Investimento". Cria uma primeiro pra poder guardar
+            dinheiro nela.
           </p>
           <Link
             href="/financas/contas"
@@ -59,7 +64,7 @@ export default async function InvestirPage({
               required
               className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
-              {contasOrigem.map((c) => (
+              {contasOrigem.map((c: any) => (
                 <option key={c.id} value={c.id}>
                   {c.nome}
                 </option>
@@ -74,7 +79,7 @@ export default async function InvestirPage({
               required
               className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
-              {contasInvestimento.map((c) => (
+              {contasInvestimento.map((c: any) => (
                 <option key={c.id} value={c.id}>
                   {c.nome}
                 </option>

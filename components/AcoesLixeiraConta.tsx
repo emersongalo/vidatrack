@@ -4,13 +4,16 @@ import { useTransition } from "react";
 import { restaurarConta, excluirContaDefinitivamente } from "@/app/financas/actions";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 
-export function AcoesLixeiraConta({ contaId }: { contaId: string }) {
+export function AcoesLixeiraConta({ contaId, aoConcluir }: { contaId: string; aoConcluir?: () => void }) {
   const [, iniciarTransicao] = useTransition();
 
   return (
     <div className="flex items-center gap-3 shrink-0">
       <button
-        onClick={() => iniciarTransicao(() => restaurarConta(contaId))}
+        onClick={() => iniciarTransicao(async () => {
+          await restaurarConta(contaId);
+          aoConcluir?.();
+        })}
         className="text-xs text-financa hover:underline"
       >
         Restaurar
@@ -19,6 +22,7 @@ export function AcoesLixeiraConta({ contaId }: { contaId: string }) {
         acao={() => excluirContaDefinitivamente(contaId)}
         textoBotao="Excluir de vez"
         textoConfirmacao="Apaga todos os lançamentos dela:"
+        aoConcluir={aoConcluir}
       />
     </div>
   );

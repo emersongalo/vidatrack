@@ -1,28 +1,53 @@
+"use client";
+
+import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 import { marcarDivisaoComoPaga, excluirDivisao } from "./actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { Check, Trash2, Plus } from "lucide-react";
 
-export default async function DivisoesPage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+// Etapa 129 — dinheiro entre pessoas diferentes merece vir sempre
+// fresco do servidor, então busca direto (não entra no retrato).
+export default function DivisoesPage() {
+  const [devemPraMim, setDevemPraMim] = useState<any[] | null>(null);
+  const [euDevo, setEuDevo] = useState<any[] | null>(null);
+  const [, iniciarTransicao] = useTransition();
 
-  const [{ data: devemPraMim }, { data: euDevo }] = await Promise.all([
-    supabase
-      .from("divisoes_despesa")
-      .select("id, participante_email, valor, pago, financa_transacoes(descricao, data)")
-      .eq("dono_id", user!.id)
-      .order("criado_em", { ascending: false }),
-    supabase
-      .from("divisoes_despesa")
-      .select("id, valor, pago, dono_id, financa_transacoes(descricao, data)")
-      .eq("participante_id", user!.id)
-      .order("criado_em", { ascending: false }),
-  ]);
+  const buscar = useCallback(async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const [{ data: a }, { data: b }] = await Promise.all([
+      supabase
+        .from("divisoes_despesa")
+        .select("id, participante_email, valor, pago, financa_transacoes(descricao, data)")
+        .eq("dono_id", user.id)
+        .order("criado_em", { ascending: false }),
+      supabase
+        .from("divisoes_despesa")
+        .select("id, valor, pago, dono_id, financa_transacoes(descricao, data)")
+        .eq("participante_id", user.id)
+        .order("criado_em", { ascending: false }),
+    ]);
+    setDevemPraMim(a ?? []);
+    setEuDevo(b ?? []);
+  }, []);
+
+  useEffect(() => {
+    buscar();
+  }, [buscar]);
+
+  function marcarPago(id: string) {
+    iniciarTransicao(async () => {
+      await marcarDivisaoComoPaga(id);
+      buscar();
+    });
+  }
 
   const totalDevemPraMim = (devemPraMim ?? []).filter((d) => !d.pago).reduce((s, d) => s + Number(d.valor), 0);
   const totalEuDevo = (euDevo ?? []).filter((d) => !d.pago).reduce((s, d) => s + Number(d.valor), 0);
@@ -63,29 +88,26 @@ export default async function DivisoesPage() {
             <div className="flex-1 min-w-0">
               <p className="text-sm truncate">{d.participante_email}</p>
               <p className="text-xs text-ink-400 truncate">
-                {(d as any).financa_transacoes?.descricao || "Despesa"} ·{" "}
-                {(d as any).financa_transacoes?.data
-                  ? new Date((d as any).financa_transacoes.data + "T00:00:00").toLocaleDateString("pt-BR")
-                  : ""}
+                {d.financa_transacoes?.descricao || "Despesa"} ·{" "}
+                {d.financa_transacoes?.data ? new Date(d.financa_transacoes.data + "T00:00:00").toLocaleDateString("pt-BR") : ""}
               </p>
             </div>
             <span className="font-mono text-sm shrink-0">{formatarMoeda(d.valor)}</span>
             {!d.pago && (
-              <form action={marcarDivisaoComoPaga.bind(null, d.id)}>
-                <button type="submit" aria-label="Marcar como pago" className="text-ink-400 hover:text-habito transition">
-                  <Check size={16} strokeWidth={2.5} />
-                </button>
-              </form>
+              <button onClick={() => marcarPago(d.id)} aria-label="Marcar como pago" className="text-ink-400 hover:text-habito transition">
+                <Check size={16} strokeWidth={2.5} />
+              </button>
             )}
             <BotaoComConfirmacao
               acao={excluirDivisao.bind(null, d.id)}
               textoBotao={<Trash2 size={14} strokeWidth={2} />}
               textoConfirmacao="Excluir essa divisão?"
               classeBotao="text-ink-400 hover:text-red-400 transition"
+              aoConcluir={buscar}
             />
           </li>
         ))}
-        {(!devemPraMim || devemPraMim.length === 0) && (
+        {devemPraMim !== null && devemPraMim.length === 0 && (
           <p className="text-sm text-ink-400">Ninguém te deve nada por enquanto.</p>
         )}
       </ul>
@@ -93,23 +115,18 @@ export default async function DivisoesPage() {
       <p className="text-sm text-ink-400 mb-3">Você deve</p>
       <ul className="space-y-2">
         {(euDevo ?? []).map((d) => (
-          <li
-            key={d.id}
-            className={`flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 ${d.pago ? "opacity-50" : ""}`}
-          >
+          <li key={d.id} className={`flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 ${d.pago ? "opacity-50" : ""}`}>
             <div className="flex-1 min-w-0">
               <p className="text-sm truncate">
-                {(d as any).financa_transacoes?.descricao || "Despesa"} ·{" "}
-                {(d as any).financa_transacoes?.data
-                  ? new Date((d as any).financa_transacoes.data + "T00:00:00").toLocaleDateString("pt-BR")
-                  : ""}
+                {d.financa_transacoes?.descricao || "Despesa"} ·{" "}
+                {d.financa_transacoes?.data ? new Date(d.financa_transacoes.data + "T00:00:00").toLocaleDateString("pt-BR") : ""}
               </p>
               <p className="text-xs text-ink-400">{d.pago ? "Já pago" : "Pendente"}</p>
             </div>
             <span className="font-mono text-sm shrink-0">{formatarMoeda(d.valor)}</span>
           </li>
         ))}
-        {(!euDevo || euDevo.length === 0) && <p className="text-sm text-ink-400">Você não deve nada por enquanto.</p>}
+        {euDevo !== null && euDevo.length === 0 && <p className="text-sm text-ink-400">Você não deve nada por enquanto.</p>}
       </ul>
     </main>
   );

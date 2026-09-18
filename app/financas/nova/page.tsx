@@ -1,24 +1,34 @@
+"use client";
+
+import { Suspense } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { useSearchParams } from "next/navigation";
 import { FormularioTransacao } from "@/components/FormularioTransacao";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function NovaTransacaoPage({
-  searchParams,
-}: {
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
+// Etapa 128 — essa é provavelmente a tela mais importante de deixar
+// funcionando offline (lançar uma despesa/receita no meio do dia).
+// O formulário em si (FormularioTransacao) já sabia enfileirar
+// offline desde a Etapa 44; só faltava essa página conseguir abrir
+// (mostrar as contas/categorias) sem internet — agora lê do retrato.
+export default function NovaTransacaoPage() {
+  return (
+    <Suspense fallback={null}>
+      <NovaTransacaoConteudo />
+    </Suspense>
+  );
+}
 
-  const [{ data: contas }, { data: categorias }] = await Promise.all([
-    supabase
-      .from("financa_contas")
-      .select("id, nome")
-      .eq("arquivado", false)
-      .order("criado_em", { ascending: true }),
-    supabase.from("financa_categorias").select("id, nome, tipo, icone").order("nome", { ascending: true }),
-  ]);
+function NovaTransacaoConteudo() {
+  const searchParams = useSearchParams();
+  const { snapshot } = useSnapshotOffline();
 
-  if (!contas || contas.length === 0) {
+  if (snapshot === undefined) return null;
+
+  const contas = snapshot?.financas.contas ?? [];
+  const categorias = snapshot?.financas.categorias ?? [];
+
+  if (contas.length === 0) {
     return (
       <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
         <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
@@ -42,9 +52,9 @@ export default async function NovaTransacaoPage({
 
   return (
     <FormularioTransacao
-      contas={contas}
-      categorias={categorias ?? []}
-      erro={searchParams.erro}
+      contas={contas as any}
+      categorias={categorias as any}
+      erro={searchParams.get("erro") ?? undefined}
     />
   );
 }
