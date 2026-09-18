@@ -10,10 +10,16 @@
 // mas não reagia a toque nenhum sem internet. Agora esse cache de
 // arquivos estáticos é próprio nosso e não depende do navegador.
 
-const VERSAO_CACHE = "v2";
+const VERSAO_CACHE = "v3";
 const CACHE_PAGINAS = `vidatrack-paginas-${VERSAO_CACHE}`;
 const CACHE_ESTATICOS = `vidatrack-estaticos-${VERSAO_CACHE}`;
 const PAGINA_OFFLINE = "/offline";
+// Etapa 131: agora que /habitos (Hoje) é uma tela real que já lê do
+// retrato local sozinha (Etapas 126+), ela é a que abre por padrão
+// quando não há internet nem para redirecionar da página inicial —
+// a tela simplificada em /offline vira só o último recurso, se essa
+// nem sequer tiver sido visitada uma vez ainda.
+const PAGINA_PADRAO_OFFLINE = "/habitos";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -63,8 +69,16 @@ async function responderComRedeOuCache(request) {
     return resposta;
   } catch {
     const cache = await caches.open(CACHE_PAGINAS);
-    const cacheada = await cache.match(request);
-    return cacheada || cache.match(PAGINA_OFFLINE);
+    // 1) essa URL exata, de uma visita anterior
+    // 2) a tela real de Hoje — funciona sozinha offline, é a MESMA
+    //    tela de sempre, sem versão simplificada nenhuma
+    // 3) só se nem isso existir ainda: a tela avisando que precisa
+    //    abrir com internet pelo menos uma vez
+    return (
+      (await cache.match(request)) ||
+      (await cache.match(PAGINA_PADRAO_OFFLINE)) ||
+      cache.match(PAGINA_OFFLINE)
+    );
   }
 }
 
