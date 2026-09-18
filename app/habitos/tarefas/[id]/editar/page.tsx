@@ -1,41 +1,47 @@
-// Evita que o Next.js guarde essa página em cache por muito tempo pra
-// um "id" específico — sem isso, uma tela editada corrigia no código
-// mas continuava mostrando dado antigo pra quem já tinha visitado
-// aquele id específico antes da correção.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+"use client";
 
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { Suspense } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { hojeISO } from "@/lib/habitos/streak";
 import { atualizarTarefa } from "../../actions";
 import { FormularioTarefa } from "@/components/FormularioTarefa";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function EditarTarefaPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
+// Etapa 134
+export default function EditarTarefaPage() {
+  return (
+    <Suspense fallback={null}>
+      <EditarTarefaConteudo />
+    </Suspense>
+  );
+}
 
-  const [{ data: tarefa }, { data: categorias }] = await Promise.all([
-    supabase
-      .from("tarefas")
-      .select("id, titulo, icone, categoria_id, repetir, dias_semana, data, horario_lembrete, observacoes")
-      .eq("id", params.id)
-      .single(),
-    supabase.from("categorias_produtividade").select("id, nome").order("nome"),
-  ]);
+function EditarTarefaConteudo() {
+  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const { snapshot } = useSnapshotOffline();
 
-  if (!tarefa) notFound();
+  if (snapshot === undefined) return null;
+
+  const tarefa = (snapshot?.tarefas ?? []).find((t: any) => t.id === params.id);
+  const categorias = snapshot?.categoriasProdutividade ?? [];
+
+  if (!tarefa) {
+    return (
+      <main className="max-w-md mx-auto px-6 md:px-12 pt-6">
+        <p className="text-ink-400 text-sm">
+          Não encontrei essa tarefa no que está salvo no aparelho. Se ela foi criada há pouco tempo, conecte à
+          internet uma vez pra atualizar.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <FormularioTarefa
       action={atualizarTarefa.bind(null, tarefa.id)}
-      categorias={categorias ?? []}
-      erro={searchParams.erro}
+      categorias={categorias as any}
+      erro={searchParams.get("erro") ?? undefined}
       hoje={hojeISO()}
       voltarHref={`/habitos/tarefas/${tarefa.id}`}
       titulo="Editar tarefa"

@@ -1,37 +1,66 @@
-// Evita que o Next.js guarde essa página em cache por muito tempo pra
-// um "id" específico — sem isso, uma tela editada corrigia no código
-// mas continuava mostrando dado antigo pra quem já tinha visitado
-// aquele id específico antes da correção.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+"use client";
 
+import { Suspense, useState, useTransition } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { IconeHabito } from "@/components/IconeHabito";
 import { arquivarTarefa, alternarConclusaoTarefaUnica } from "../actions";
 import { CheckboxSubtarefa } from "@/components/CheckboxSubtarefa";
-import { PainelCompartilhamento } from "@/components/PainelCompartilhamento";
+import { PainelCompartilhamentoCliente } from "@/components/PainelCompartilhamentoCliente";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function DetalheTarefaPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
+// Etapa 134
+export default function DetalheTarefaPage() {
+  return (
+    <Suspense fallback={null}>
+      <DetalheTarefaConteudo />
+    </Suspense>
+  );
+}
 
-  const { data: tarefa } = await supabase
-    .from("tarefas")
-    .select("id, titulo, icone, repetir, data, concluida, subtarefas, observacoes")
-    .eq("id", params.id)
-    .single();
+function DetalheTarefaConteudo() {
+  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const { snapshot, recarregar } = useSnapshotOffline();
+  const [, iniciarTransicao] = useTransition();
+  // Precisa vir antes de qualquer "return" condicional (regra dos hooks
+  // do React) — por isso o valor de partida é um objeto vazio, não os
+  // dados da tarefa (que a essa altura ainda não sabemos se existe).
+  const [subtarefasSobrepostas, setSubtarefasSobrepostas] = useState<Record<string, boolean>>({});
 
-  if (!tarefa) notFound();
+  if (snapshot === undefined) return null;
 
-  const subtarefas = (tarefa.subtarefas as { id: string; texto: string; feita: boolean }[]) ?? [];
+  const tarefa = (snapshot?.tarefas ?? []).find((t: any) => t.id === params.id);
+
+  if (!tarefa) {
+    return (
+      <main className="max-w-md mx-auto px-6 md:px-12 pt-6">
+        <Link href="/habitos/tarefas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+          ← Tarefas
+        </Link>
+        <p className="text-ink-400 text-sm mt-6">
+          Não encontrei essa tarefa no que está salvo no aparelho. Se ela foi criada há pouco tempo, conecte à
+          internet uma vez pra atualizar.
+        </p>
+      </main>
+    );
+  }
+
+  const subtarefas = ((tarefa.subtarefas as { id: string; texto: string; feita: boolean }[]) ?? []).map((s) =>
+    s.id in subtarefasSobrepostas ? { ...s, feita: subtarefasSobrepostas[s.id] } : s
+  );
+
+  function alternarSubtarefaLocal(id: string, feitaAtual: boolean) {
+    setSubtarefasSobrepostas((atual) => ({ ...atual, [id]: !feitaAtual }));
+  }
+
+  function alternarConcluida() {
+    iniciarTransicao(async () => {
+      await alternarConclusaoTarefaUnica(tarefa.id);
+      recarregar();
+    });
+  }
 
   return (
     <main className="max-w-md mx-auto px-6 md:px-12 pt-2">
@@ -68,18 +97,14 @@ export default async function DetalheTarefaPage({
       </div>
 
       {tarefa.repetir === "nenhuma" && (
-        <form action={alternarConclusaoTarefaUnica.bind(null, tarefa.id)} className="mb-6">
-          <button
-            type="submit"
-            className={`w-full rounded-lg py-2.5 text-sm font-medium border transition ${
-              tarefa.concluida
-                ? "border-nota text-nota bg-nota-soft"
-                : "bg-ink-100 text-base-900 border-ink-100"
-            }`}
-          >
-            {tarefa.concluida ? "Marcada como concluída ✓" : "Marcar como concluída"}
-          </button>
-        </form>
+        <button
+          onClick={alternarConcluida}
+          className={`w-full rounded-lg py-2.5 text-sm font-medium border transition mb-6 ${
+            tarefa.concluida ? "border-nota text-nota bg-nota-soft" : "bg-ink-100 text-base-900 border-ink-100"
+          }`}
+        >
+          {tarefa.concluida ? "Marcada como concluída ✓" : "Marcar como concluída"}
+        </button>
       )}
 
       {tarefa.observacoes && (
@@ -104,6 +129,7 @@ export default async function DetalheTarefaPage({
                 subtarefaId={s.id}
                 texto={s.texto}
                 feita={s.feita}
+                aoAlternarLocal={() => alternarSubtarefaLocal(s.id, s.feita)}
               />
             ))}
           </div>
@@ -112,11 +138,11 @@ export default async function DetalheTarefaPage({
 
       <div className="pt-6 border-t border-base-600">
         <p className="text-sm text-ink-400 mb-3">Compartilhar</p>
-        <PainelCompartilhamento
+        <PainelCompartilhamentoCliente
           tipoItem="tarefa"
           itemId={tarefa.id}
           caminhoRetorno={`/habitos/tarefas/${tarefa.id}`}
-          erro={searchParams.erro}
+          erroInicial={searchParams.get("erro")}
         />
       </div>
     </main>

@@ -8,17 +8,27 @@ export function CheckboxSubtarefa({
   subtarefaId,
   texto,
   feita,
+  aoAlternarLocal,
 }: {
   tarefaId: string;
   subtarefaId: string;
   texto: string;
   feita: boolean;
+  /** Etapa 134 — mesma ideia do aoAlternarLocal de ItemLinhaAgenda:
+   *  chamado na hora do clique, pra tela atualizar visualmente sem
+   *  depender do servidor revalidar a página sozinho por trás. */
+  aoAlternarLocal?: () => void;
 }) {
   const [pendente, iniciarTransicao] = useTransition();
 
+  function alternar() {
+    aoAlternarLocal?.();
+    iniciarTransicao(() => alternarSubtarefa(tarefaId, subtarefaId));
+  }
+
   return (
     <button
-      onClick={() => iniciarTransicao(() => alternarSubtarefa(tarefaId, subtarefaId))}
+      onClick={alternar}
       disabled={pendente}
       className={`w-full flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-left transition ${
         pendente ? "opacity-60" : ""

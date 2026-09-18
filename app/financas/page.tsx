@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { PieChart, TrendingUp, TrendingDown } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
@@ -94,6 +94,77 @@ export default function FinancasPage() {
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
   const ultimasTransacoes = transacoesDoMes.slice(0, 10);
 
+  const ordemBlocos = (snapshot?.financas.ordemBlocosFinancas ?? ["grafico", "lancamentos"]).filter(
+    (id) => id === "grafico" || id === "lancamentos"
+  );
+  if (!ordemBlocos.includes("grafico")) ordemBlocos.push("grafico");
+  if (!ordemBlocos.includes("lancamentos")) ordemBlocos.push("lancamentos");
+
+  const blocoGrafico =
+    dadosGrafico.length > 0 ? (
+      <div key="grafico" className="mb-6 lg:break-inside-avoid">
+        <p className="text-sm text-ink-400 mb-3 capitalize">Despesas por categoria · {nomeDoMesSelecionado}</p>
+        <GraficoDespesasCategoria dados={dadosGrafico} />
+      </div>
+    ) : null;
+
+  const blocoLancamentos = (
+    <div key="lancamentos" className="mb-6 lg:break-inside-avoid">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-ink-400">Lançamentos do mês</p>
+        <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
+          Ver extrato completo →
+        </Link>
+      </div>
+      {ultimasTransacoes.length === 0 ? (
+        <p className="text-ink-400 text-sm">Nenhum lançamento nesse mês.</p>
+      ) : (
+        <ul className="space-y-2">
+          {ultimasTransacoes.map((t: any) => {
+            const catInfo = mapaCategoriaInfo.get(t.categoria_id) as any;
+            return (
+              <li key={t.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
+                      catInfo?.cor ?? "financa"
+                    )}`}
+                  >
+                    {catInfo?.icone ? (
+                      <IconeCategoria icone={catInfo.icone} />
+                    ) : t.tipo === "receita" ? (
+                      <TrendingUp size={16} strokeWidth={2} />
+                    ) : (
+                      <TrendingDown size={16} strokeWidth={2} />
+                    )}
+                  </span>
+                  <p className="text-sm truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
+                  <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
+                    {t.tipo === "receita" ? "+" : "-"}
+                    <ValorMonetario valor={t.valor} />
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
+                  <p className="text-xs text-ink-400 truncate min-w-0">
+                    {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
+                  </p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
+                      Editar
+                    </Link>
+                    <BotaoRemoverTransacao transacaoId={t.id} />
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+
+  const blocosPorId: Record<string, ReactNode> = { grafico: blocoGrafico, lancamentos: blocoLancamentos };
+
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-5xl mx-auto">
       <LinkVoltar href="/dashboard" texto="Painel" />
@@ -162,65 +233,8 @@ export default function FinancasPage() {
               <span className="text-ink-400 text-sm shrink-0">Ver →</span>
             </Link>
 
-            {dadosGrafico.length > 0 && (
-              <div className="mb-6 lg:break-inside-avoid">
-                <p className="text-sm text-ink-400 mb-3 capitalize">Despesas por categoria · {nomeDoMesSelecionado}</p>
-                <GraficoDespesasCategoria dados={dadosGrafico} />
-              </div>
-            )}
-
-            <div className="mb-6 lg:break-inside-avoid">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm text-ink-400">Lançamentos do mês</p>
-                <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
-                  Ver extrato completo →
-                </Link>
-              </div>
-              {ultimasTransacoes.length === 0 ? (
-                <p className="text-ink-400 text-sm">Nenhum lançamento nesse mês.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {ultimasTransacoes.map((t: any) => {
-                    const catInfo = mapaCategoriaInfo.get(t.categoria_id) as any;
-                    return (
-                      <li key={t.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
-                              catInfo?.cor ?? "financa"
-                            )}`}
-                          >
-                            {catInfo?.icone ? (
-                              <IconeCategoria icone={catInfo.icone} />
-                            ) : t.tipo === "receita" ? (
-                              <TrendingUp size={16} strokeWidth={2} />
-                            ) : (
-                              <TrendingDown size={16} strokeWidth={2} />
-                            )}
-                          </span>
-                          <p className="text-sm truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
-                          <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
-                            {t.tipo === "receita" ? "+" : "-"}
-                            <ValorMonetario valor={t.valor} />
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
-                          <p className="text-xs text-ink-400 truncate min-w-0">
-                            {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
-                          </p>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
-                              Editar
-                            </Link>
-                            <BotaoRemoverTransacao transacaoId={t.id} />
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+            {/* Etapa 133: respeita a ordem salva em /financas/personalizar. */}
+            {ordemBlocos.map((id) => blocosPorId[id])}
           </div>
         </>
       )}

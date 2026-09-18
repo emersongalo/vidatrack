@@ -1,25 +1,37 @@
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { resolverUrlFoto } from "@/lib/perfil/foto";
+import { useSearchParams } from "next/navigation";
 import { atualizarPerfil } from "./actions";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function PerfilPage({
-  searchParams,
-}: {
-  searchParams: { erro?: string; sucesso?: string };
-}) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+// Etapa 134
+export default function PerfilPage() {
+  return (
+    <Suspense fallback={null}>
+      <PerfilConteudo />
+    </Suspense>
+  );
+}
 
-  const { data: perfil } = await supabase
-    .from("perfis")
-    .select("nome, foto_url")
-    .eq("id", user?.id ?? "")
-    .maybeSingle();
+function PerfilConteudo() {
+  const searchParams = useSearchParams();
+  const { snapshot } = useSnapshotOffline();
+  const [urlFoto, setUrlFoto] = useState<string | null>(null);
 
-  const urlFoto = await resolverUrlFoto(perfil?.foto_url ?? null);
+  useEffect(() => {
+    if (!navigator.onLine) return;
+    fetch("/api/perfil/foto")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.url && setUrlFoto(d.url))
+      .catch(() => {});
+  }, []);
+
+  const nome = snapshot?.perfil.nome ?? "";
+  const email = snapshot?.perfil.email ?? "";
+  const erro = searchParams.get("erro");
+  const sucesso = searchParams.get("sucesso");
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-sm mx-auto">
@@ -28,12 +40,12 @@ export default async function PerfilPage({
       </Link>
       <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Seu perfil</h1>
 
-      {searchParams.erro && (
+      {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(searchParams.erro)}
+          {decodeURIComponent(erro)}
         </p>
       )}
-      {searchParams.sucesso && (
+      {sucesso && (
         <p className="mb-4 text-sm text-habito bg-habito-soft border border-habito/30 rounded-lg px-3 py-2">
           Perfil atualizado!
         </p>
@@ -52,7 +64,7 @@ export default async function PerfilPage({
             />
           ) : (
             <div className="w-[88px] h-[88px] rounded-full bg-base-800 border border-base-600 flex items-center justify-center text-2xl text-ink-400">
-              {(perfil?.nome || user?.email || "?").charAt(0).toUpperCase()}
+              {(nome || email || "?").charAt(0).toUpperCase()}
             </div>
           )}
           <label className="text-xs text-financa cursor-pointer hover:underline">
@@ -70,26 +82,18 @@ export default async function PerfilPage({
             name="nome"
             type="text"
             required
-            defaultValue={perfil?.nome ?? ""}
+            defaultValue={nome}
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
-          <p className="text-xs text-ink-400 mt-1.5">
-            Esse é o nome que aparece pra quem você compartilha hábitos
-            ou contas.
-          </p>
+          <p className="text-xs text-ink-400 mt-1.5">Esse é o nome que aparece pra quem você compartilha hábitos ou contas.</p>
         </div>
 
         <div>
           <label className="block text-sm text-ink-400 mb-1">E-mail</label>
-          <p className="text-sm text-ink-100 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5">
-            {user?.email}
-          </p>
+          <p className="text-sm text-ink-100 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5">{email}</p>
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
-        >
+        <button type="submit" className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition">
           Salvar
         </button>
       </form>

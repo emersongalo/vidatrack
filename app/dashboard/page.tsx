@@ -1,57 +1,45 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getUsuarioAtual } from "@/lib/supabase/auth";
-import { sair } from "../login/actions";
+import { useRouter } from "next/navigation";
 import { AlternadorTema } from "@/components/AlternadorTema";
-import { resolverUrlFoto } from "@/lib/perfil/foto";
 import { TrilhoMenu } from "@/components/TrilhoMenu";
 import { ConfirmarSaidaApp } from "@/components/ConfirmarSaidaApp";
 import { formatarMoeda } from "@/lib/financas/formatacao";
+import { sair } from "../login/actions";
 import { Bell } from "lucide-react";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function DashboardPage() {
-  const supabase = createClient();
-  const user = await getUsuarioAtual();
+// Etapa 133 — o Painel é pra onde todo botão "← Painel" do app aponta,
+// então precisa abrir sem internet igual ao resto. A foto de perfil
+// customizada e a checagem de "primeira vez" continuam vindo só
+// quando há conexão (a foto usa uma chave que só pode ficar no
+// servidor) — offline, mostra o ícone padrão e pula essa checagem,
+// já que quem está usando offline já passou pela recepção antes.
+export default function DashboardPage() {
+  const router = useRouter();
+  const { snapshot } = useSnapshotOffline();
+  const [urlFoto, setUrlFoto] = useState<string | null>(null);
 
-  const { data: perfil } = await supabase
-    .from("perfis")
-    .select("nome, foto_url, onboarding_concluido")
-    .eq("id", user?.id ?? "")
-    .maybeSingle();
+  useEffect(() => {
+    if (!navigator.onLine) return;
+    fetch("/api/perfil/foto")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        if (d.url) setUrlFoto(d.url);
+        if (d.onboardingConcluido === false) router.replace("/bem-vindo");
+      })
+      .catch(() => {});
+  }, [router]);
 
-  // Manda pra tela de boas-vindas quem ainda não passou por ela —
-  // pega todo mundo de uma vez só (login por e-mail, Google, ou
-  // verificação de e-mail), já que todos caem aqui no final.
-  if (perfil && !perfil.onboarding_concluido) {
-    redirect("/bem-vindo");
-  }
+  const nome = snapshot?.perfil.nome || snapshot?.perfil.email || "";
 
-  const urlFoto = await resolverUrlFoto(perfil?.foto_url ?? null);
-
-  // Prioriza o nome salvo em `perfis` (funciona tanto pra quem se
-  // cadastrou por e-mail quanto por Google, desde a Etapa 31) — antes
-  // isso só olhava um campo que o login com Google nunca preenchia.
-  const nome = perfil?.nome || user?.email || "";
-
-  // Resumo rápido, só pra quem tem tela larga (desktop) — no celular
-  // continua igual, essa tela é de propósito só o trilho, sem rolar.
-  const [{ data: contas }, { data: transacoesMes }] = await Promise.all([
-    supabase.from("financa_contas").select("id, saldo_inicial, tipo").eq("arquivado", false),
-    supabase
-      .from("financa_transacoes")
-      .select("conta_id, tipo, valor")
-      .gte("data", new Date().toLocaleDateString("sv-SE").slice(0, 8) + "01"),
-  ]);
-
-  const contasComuns = (contas ?? []).filter((c) => c.tipo !== "investimento");
-  const saldoAtual = contasComuns.reduce((total, conta) => {
-    const doTransacoes = (transacoesMes ?? [])
-      .filter((t) => t.conta_id === conta.id)
-      .reduce((acc, t) => acc + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)), 0);
-    return total + Number(conta.saldo_inicial) + doTransacoes;
-  }, 0);
+  const contas = snapshot?.financas.contas ?? [];
+  const contasComuns = contas.filter((c: any) => c.tipo !== "investimento");
+  const saldoAtual = contasComuns.reduce((total: number, c: any) => total + Number(c.saldo), 0);
 
   return (
     <main className="h-screen h-[100dvh] overflow-hidden p-6 md:p-12 max-w-lg lg:max-w-3xl mx-auto flex flex-col">
@@ -60,13 +48,7 @@ export default async function DashboardPage() {
           <Link href="/perfil" className="shrink-0">
             {urlFoto ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={urlFoto}
-                alt=""
-                width={36}
-                height={36}
-                className="rounded-lg w-9 h-9 object-cover"
-              />
+              <img src={urlFoto} alt="" width={36} height={36} className="rounded-lg w-9 h-9 object-cover" />
             ) : (
               <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="rounded-lg" />
             )}
@@ -107,40 +89,34 @@ export default async function DashboardPage() {
       </header>
 
       <div className="flex flex-col flex-1 min-h-0 lg:grid lg:grid-cols-[1fr_240px] lg:gap-6">
-      <TrilhoMenu />
-      <ConfirmarSaidaApp />
+        <TrilhoMenu />
+        <ConfirmarSaidaApp />
 
-      <div className="hidden lg:flex lg:flex-col lg:gap-3 lg:pt-2">
-        <Link
-          href="/habitos/estatisticas"
-          className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-habito transition"
-        >
-          <p className="text-xs text-ink-400 mb-1">Hábitos</p>
-          <p className="text-sm">Ver estatísticas →</p>
-        </Link>
-        <Link
-          href="/financas"
-          className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-financa transition"
-        >
-          <p className="text-xs text-ink-400 mb-1">Saldo em contas</p>
-          <p className={`text-xl font-mono font-semibold ${saldoAtual < 0 ? "text-red-400" : ""}`}>
-            {formatarMoeda(saldoAtual)}
-          </p>
-        </Link>
-      </div>
+        <div className="hidden lg:flex lg:flex-col lg:gap-3 lg:pt-2">
+          <Link
+            href="/habitos/estatisticas"
+            className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-habito transition"
+          >
+            <p className="text-xs text-ink-400 mb-1">Hábitos</p>
+            <p className="text-sm">Ver estatísticas →</p>
+          </Link>
+          <Link
+            href="/financas"
+            className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-financa transition"
+          >
+            <p className="text-xs text-ink-400 mb-1">Saldo em contas</p>
+            <p className={`text-xl font-mono font-semibold ${saldoAtual < 0 ? "text-red-400" : ""}`}>
+              {formatarMoeda(saldoAtual)}
+            </p>
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-center justify-center gap-2 mt-2">
-        <Link
-          href="/doacao"
-          className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1"
-        >
+        <Link href="/doacao" className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1">
           💛 Apoiar o projeto
         </Link>
-        <Link
-          href="/privacidade"
-          className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1"
-        >
+        <Link href="/privacidade" className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1">
           Privacidade
         </Link>
       </div>

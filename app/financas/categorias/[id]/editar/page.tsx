@@ -1,38 +1,46 @@
-// Evita que o Next.js guarde essa página em cache por muito tempo pra
-// um "id" específico — sem isso, uma tela editada corrigia no código
-// mas continuava mostrando dado antigo pra quem já tinha visitado
-// aquele id específico antes da correção.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+"use client";
 
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { Suspense } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { atualizarCategoria } from "@/app/financas/actions";
 import { FormularioCategoria } from "@/components/FormularioCategoria";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-export default async function EditarCategoriaPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { erro?: string };
-}) {
-  const supabase = createClient();
+// Etapa 133
+export default function EditarCategoriaPage() {
+  return (
+    <Suspense fallback={null}>
+      <EditarCategoriaConteudo />
+    </Suspense>
+  );
+}
 
-  const { data: categoria } = await supabase
-    .from("financa_categorias")
-    .select("id, nome, tipo, meta_mensal, icone, cor")
-    .eq("id", params.id)
-    .single();
+function EditarCategoriaConteudo() {
+  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const { snapshot } = useSnapshotOffline();
 
-  if (!categoria) notFound();
+  if (snapshot === undefined) return null;
+
+  const categoria = (snapshot?.financas.categorias ?? []).find((c: any) => c.id === params.id);
+
+  if (!categoria) {
+    return (
+      <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+        <p className="text-ink-400 text-sm">
+          Não encontrei essa categoria no que está salvo no aparelho. Se ela foi criada há pouco tempo, conecte
+          à internet uma vez pra atualizar.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <FormularioCategoria
       action={atualizarCategoria.bind(null, categoria.id)}
       titulo="Editar categoria"
       textoBotao="Salvar alterações"
-      erro={searchParams.erro}
+      erro={searchParams.get("erro") ?? undefined}
       valoresIniciais={{
         nome: categoria.nome,
         tipo: categoria.tipo,

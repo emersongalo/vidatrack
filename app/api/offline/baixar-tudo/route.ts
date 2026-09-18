@@ -27,6 +27,7 @@ export async function GET() {
     { data: metas },
     { data: desafios },
     { data: recorrencias },
+    { data: perfil },
   ] = await Promise.all([
     supabase
       .from("habitos")
@@ -45,6 +46,7 @@ export async function GET() {
       .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido, conta_origem_id")
       .eq("arquivado", false),
     supabase.from("financa_recorrencias").select("id, tipo, valor, dia_mes, data_fim, ativo, descricao, conta_id"),
+    supabase.from("perfis").select("nome, foto_url, ordem_blocos_financas").eq("id", user.id).maybeSingle(),
   ]);
 
   const idsDesafios = (desafios ?? []).map((d) => d.id);
@@ -125,6 +127,11 @@ export async function GET() {
       desafioQuadrados: quadrados ?? [],
       patrimonio,
       recorrencias: recorrencias ?? [],
+      ordemBlocosFinancas: perfil?.ordem_blocos_financas ?? null,
+    },
+    perfil: {
+      nome: perfil?.nome ?? null,
+      email: user.email ?? null,
     },
   });
 }

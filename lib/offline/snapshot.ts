@@ -29,7 +29,9 @@ export type SnapshotOffline = {
     desafioQuadrados: { id: string; desafio_id: string; numero: number; valor: number; completado: boolean }[];
     patrimonio: { mes: string; patrimonio: number }[];
     recorrencias: { id: string; tipo: string; valor: number; dia_mes: number; data_fim: string | null; ativo: boolean; descricao: string | null; conta_id: string }[];
+    ordemBlocosFinancas: string[] | null;
   };
+  perfil: { nome: string | null; email: string | null };
 };
 
 export function salvarSnapshotOffline(dados: Omit<SnapshotOffline, "versao">) {
@@ -74,6 +76,11 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
         desafioQuadrados: dados.financas?.desafioQuadrados ?? [],
         patrimonio: dados.financas?.patrimonio ?? [],
         recorrencias: dados.financas?.recorrencias ?? [],
+        ordemBlocosFinancas: dados.financas?.ordemBlocosFinancas ?? null,
+      },
+      perfil: {
+        nome: dados.perfil?.nome ?? null,
+        email: dados.perfil?.email ?? null,
       },
     };
   } catch {
