@@ -11,6 +11,7 @@ import { formatarMoeda } from "@/lib/financas/formatacao";
 import { sair } from "../login/actions";
 import { Bell } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { calcularPendencias } from "@/lib/notificacoes/calculo";
 
 // Etapa 133 — o Painel é pra onde todo botão "← Painel" do app aponta,
 // então precisa abrir sem internet igual ao resto. A foto de perfil
@@ -36,6 +37,8 @@ export default function DashboardPage() {
   }, [router]);
 
   const nome = snapshot?.perfil.nome || snapshot?.perfil.email || "";
+  const { tarefasVencidas, lembretesPassados } = calcularPendencias(snapshot);
+  const temPendencia = tarefasVencidas.length > 0 || lembretesPassados.length > 0;
 
   const contas = snapshot?.financas.contas ?? [];
   const contasComuns = contas.filter((c: any) => c.tipo !== "investimento");
@@ -62,9 +65,12 @@ export default function DashboardPage() {
           <Link
             href="/notificacoes"
             aria-label="Notificações"
-            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
+            className="relative w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
           >
             <Bell size={18} strokeWidth={2} />
+            {temPendencia && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-400" />
+            )}
           </Link>
           <AlternadorTema />
           <form action={sair}>

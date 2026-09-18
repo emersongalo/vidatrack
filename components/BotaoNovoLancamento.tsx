@@ -47,6 +47,7 @@ export function BotaoNovoLancamento() {
             <div className="space-y-2.5">
               <Link
                 href="/financas/nova?tipo=receita"
+                onClick={() => setAberto(false)}
                 className="flex items-center gap-3 border border-habito/40 text-habito rounded-xl2 py-3.5 px-4 hover:bg-habito/10 transition"
               >
                 <TrendingUp size={20} strokeWidth={2} />
@@ -54,6 +55,7 @@ export function BotaoNovoLancamento() {
               </Link>
               <Link
                 href="/financas/nova?tipo=despesa"
+                onClick={() => setAberto(false)}
                 className="flex items-center gap-3 border border-red-400/40 text-red-400 rounded-xl2 py-3.5 px-4 hover:bg-red-400/10 transition"
               >
                 <TrendingDown size={20} strokeWidth={2} />
@@ -61,6 +63,7 @@ export function BotaoNovoLancamento() {
               </Link>
               <Link
                 href="/financas/investir"
+                onClick={() => setAberto(false)}
                 className="flex items-center gap-3 border border-financa/40 text-financa rounded-xl2 py-3.5 px-4 hover:bg-financa/10 transition"
               >
                 <PiggyBank size={20} strokeWidth={2} />

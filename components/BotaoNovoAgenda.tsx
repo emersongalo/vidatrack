@@ -43,6 +43,7 @@ export function BotaoNovoAgenda() {
             <div className="space-y-2.5">
               <Link
                 href="/habitos/novo"
+                onClick={() => setAberto(false)}
                 className="flex items-center gap-3 border border-habito/40 text-habito rounded-xl2 py-3.5 px-4 hover:bg-habito/10 transition"
               >
                 <Repeat size={20} strokeWidth={2} />
@@ -50,6 +51,7 @@ export function BotaoNovoAgenda() {
               </Link>
               <Link
                 href="/habitos/tarefas/nova"
+                onClick={() => setAberto(false)}
                 className="flex items-center gap-3 border border-nota/40 text-nota rounded-xl2 py-3.5 px-4 hover:bg-nota/10 transition"
               >
                 <CheckSquare size={20} strokeWidth={2} />
