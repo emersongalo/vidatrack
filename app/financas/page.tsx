@@ -117,7 +117,7 @@ export default function FinancasPage() {
         </Link>
       </div>
       {ultimasTransacoes.length === 0 ? (
-        <p className="text-ink-400 text-sm">Nenhum lançamento nesse mês.</p>
+        <p className="text-ink-400 text-sm">🧾 Nenhum lançamento nesse mês.</p>
       ) : (
         <ul className="space-y-2">
           {ultimasTransacoes.map((t: any) => {

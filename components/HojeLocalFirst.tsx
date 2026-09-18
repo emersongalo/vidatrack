@@ -190,7 +190,7 @@ function HojeConteudo() {
           ) : itens!.length === 0 ? (
             <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
               <p className="font-display font-semibold mb-1">Nada por aqui</p>
-              <p className="text-ink-400 text-sm">Nenhum hábito ou tarefa cai neste dia.</p>
+              <p className="text-ink-400 text-sm">✅ Nenhum hábito ou tarefa cai neste dia.</p>
             </div>
           ) : (
             <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} />

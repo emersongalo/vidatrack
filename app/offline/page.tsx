@@ -190,7 +190,7 @@ export default function OfflinePage() {
               </li>
             ))}
             {snapshot.financas.contas.length === 0 && (
-              <p className="text-sm text-ink-400">Nenhuma conta cadastrada.</p>
+              <p className="text-sm text-ink-400">🏦 Nenhuma conta cadastrada.</p>
             )}
           </ul>
         </div>
@@ -209,7 +209,7 @@ export default function OfflinePage() {
               alvo: Number(m.valor_alvo),
               concluida: m.concluida,
             }))}
-            vazio="Nenhuma meta cadastrada."
+            vazio="🎯 Nenhuma meta cadastrada."
           />
         </div>
       )}
@@ -228,7 +228,7 @@ export default function OfflinePage() {
               alvo: Number(d.valor_alvo),
               concluida: d.concluido,
             }))}
-            vazio="Nenhum desafio cadastrado."
+            vazio="🏆 Nenhum desafio cadastrado."
           />
         </div>
       )}
@@ -423,7 +423,7 @@ function AbaHabitos({ snapshot }: { snapshot: SnapshotOffline }) {
             </div>
           </li>
         ))}
-        {habitosComStreak.length === 0 && <p className="text-sm text-ink-400">Nenhum hábito ainda.</p>}
+        {habitosComStreak.length === 0 && <p className="text-sm text-ink-400">🌱 Nenhum hábito ainda.</p>}
       </ul>
     </div>
   );

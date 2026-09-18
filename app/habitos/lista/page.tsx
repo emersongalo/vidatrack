@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { ListaHabitosArrastavel } from "@/components/ListaHabitosArrastavel";
 import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
+import { AlternadorHabitosTarefas } from "@/components/AlternadorHabitosTarefas";
 import { calcularStreak, calcularMelhorStreak, calcularStreakNegativo } from "@/lib/habitos/streak";
 
 // Etapa 127: lê do mesmo retrato local usado pelas outras telas —
@@ -13,7 +14,7 @@ export default function ListaHabitosPage() {
 
   return (
     <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-3">
         <h1 className="text-2xl font-display font-semibold">Hábitos</h1>
         <div className="flex items-center gap-3">
           <Link href="/habitos/estatisticas" className="text-ink-400 text-sm hover:text-ink-100 transition">
@@ -25,6 +26,8 @@ export default function ListaHabitosPage() {
           <BotaoNovoHabitoOffline />
         </div>
       </div>
+
+      <AlternadorHabitosTarefas ativo="habitos" />
 
       {snapshot === undefined ? (
         <div className="space-y-2 animate-pulse">

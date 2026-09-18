@@ -101,7 +101,7 @@ export default function ExtratoPage() {
           ))}
         </div>
       ) : lista.length === 0 ? (
-        <p className="text-ink-400 text-sm">Nenhum lançamento nesse período.</p>
+        <p className="text-ink-400 text-sm">🧾 Nenhum lançamento nesse período.</p>
       ) : (
         <ul className="space-y-2">
           {lista.map((t: any) => {

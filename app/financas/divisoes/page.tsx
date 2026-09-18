@@ -108,7 +108,7 @@ export default function DivisoesPage() {
           </li>
         ))}
         {devemPraMim !== null && devemPraMim.length === 0 && (
-          <p className="text-sm text-ink-400">Ninguém te deve nada por enquanto.</p>
+          <p className="text-sm text-ink-400">🤝 Ninguém te deve nada por enquanto.</p>
         )}
       </ul>
 
@@ -126,7 +126,7 @@ export default function DivisoesPage() {
             <span className="font-mono text-sm shrink-0">{formatarMoeda(d.valor)}</span>
           </li>
         ))}
-        {euDevo !== null && euDevo.length === 0 && <p className="text-sm text-ink-400">Você não deve nada por enquanto.</p>}
+        {euDevo !== null && euDevo.length === 0 && <p className="text-sm text-ink-400">🤝 Você não deve nada por enquanto.</p>}
       </ul>
     </main>
   );

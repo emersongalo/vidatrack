@@ -79,7 +79,7 @@ export default function CategoriasPage() {
         )}
       </div>
 
-      {snapshot !== undefined && categorias.length === 0 && <p className="text-ink-400 text-sm">Nenhuma categoria ainda.</p>}
+      {snapshot !== undefined && categorias.length === 0 && <p className="text-ink-400 text-sm">🏷️ Nenhuma categoria ainda.</p>}
     </main>
   );
 }

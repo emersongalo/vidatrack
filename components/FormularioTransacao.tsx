@@ -22,6 +22,7 @@ export function FormularioTransacao({
   textoBotao = "Salvar lançamento",
   voltarHref = "/financas",
   valoresIniciais,
+  tipoInicial,
 }: {
   contas: Conta[];
   categorias: Categoria[];
@@ -38,8 +39,11 @@ export function FormularioTransacao({
     data: string;
     descricao: string | null;
   };
+  /** Etapa 135 — pra pré-marcar Receita/Despesa vindo da folha rápida
+   *  do "+", sem precisar fingir que é uma edição (valoresIniciais). */
+  tipoInicial?: "despesa" | "receita";
 }) {
-  const [tipo, setTipo] = useState<"despesa" | "receita">(valoresIniciais?.tipo ?? "despesa");
+  const [tipo, setTipo] = useState<"despesa" | "receita">(valoresIniciais?.tipo ?? tipoInicial ?? "despesa");
   const [recorrente, setRecorrente] = useState(false);
   const [duracaoRecorrencia, setDuracaoRecorrencia] = useState<"sempre" | "ate_data">("sempre");
   const ehEdicao = !!valoresIniciais;

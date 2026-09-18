@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ListaTarefasArrastavel } from "@/components/ListaTarefasArrastavel";
+import { AlternadorHabitosTarefas } from "@/components/AlternadorHabitosTarefas";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
 // Etapa 127
@@ -11,7 +12,7 @@ export default function TarefasPage() {
 
   return (
     <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-3">
         <h1 className="text-2xl font-display font-semibold">Tarefas</h1>
         <Link
           href="/habitos/tarefas/nova"
@@ -20,9 +21,14 @@ export default function TarefasPage() {
           + Nova
         </Link>
       </div>
-      <Link href="/habitos/tarefas/lixeira" className="text-ink-400 text-xs hover:text-ink-100 transition">
-        Lixeira
-      </Link>
+
+      <AlternadorHabitosTarefas ativo="tarefas" />
+
+      <div className="mb-3">
+        <Link href="/habitos/tarefas/lixeira" className="text-ink-400 text-xs hover:text-ink-100 transition">
+          Lixeira
+        </Link>
+      </div>
 
       {snapshot !== undefined && tarefas.length === 0 ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">

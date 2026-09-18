@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Landmark, Receipt, MoreHorizontal, Plus } from "lucide-react";
+import { Home, Landmark, Receipt, MoreHorizontal } from "lucide-react";
+import { BotaoNovoLancamento } from "@/components/BotaoNovoLancamento";
 
 const ABAS = [
   { href: "/financas", rotulo: "Início", Icone: Home },
@@ -47,13 +48,7 @@ export function BarraNavegacaoFinancas() {
 
   return (
     <>
-      <Link
-        href="/financas/nova"
-        aria-label="Novo lançamento"
-        className="fixed bottom-24 right-5 lg:bottom-8 lg:right-8 z-20 w-14 h-14 rounded-full bg-financa text-base-900 flex items-center justify-center shadow-lg shadow-financa/30 hover:opacity-90 active:scale-95 transition"
-      >
-        <Plus size={26} strokeWidth={2.5} />
-      </Link>
+      <BotaoNovoLancamento />
 
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-base-800 border-t border-base-600 z-10">
         <div className="max-w-2xl mx-auto grid grid-cols-4">

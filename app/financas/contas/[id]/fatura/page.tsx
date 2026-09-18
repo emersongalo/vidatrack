@@ -107,7 +107,7 @@ export default function FaturaCartaoPage() {
             </li>
           );
         })}
-        {transacoes.length === 0 && <p className="text-sm text-ink-400">Nenhum lançamento nessa fatura.</p>}
+        {transacoes.length === 0 && <p className="text-sm text-ink-400">🧾 Nenhum lançamento nessa fatura.</p>}
       </ul>
     </main>
   );

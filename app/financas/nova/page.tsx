@@ -55,6 +55,7 @@ function NovaTransacaoConteudo() {
       contas={contas as any}
       categorias={categorias as any}
       erro={searchParams.get("erro") ?? undefined}
+      tipoInicial={searchParams.get("tipo") === "receita" ? "receita" : "despesa"}
     />
   );
 }
