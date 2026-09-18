@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
-import { GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoria";
+import { GraficoDespesasCategoriaLazy as GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoriaLazy";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { HeroFinancas } from "@/components/HeroFinancas";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
@@ -17,6 +17,7 @@ import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
 import { buscarCalendarioGastos, calcularSaldoPorConta, calcularSaldoPrevisto } from "@/lib/financas/consulta";
 import { CalendarioGastos } from "@/components/CalendarioGastos";
 import { normalizarOrdemBlocos } from "@/lib/financas/blocos";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
 
 export default async function FinancasPage({
   searchParams,
@@ -24,9 +25,18 @@ export default async function FinancasPage({
   searchParams: { mes?: string; offline?: string; investido?: string };
 }) {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUsuarioAtual();
+
+  // Dispara a geração de lançamentos recorrentes em segundo plano, sem
+  // esperar o resultado — a tela não depende dele pra renderizar (se
+  // criar algo novo hoje, pode não aparecer nesta visita específica,
+  // mas aparece na próxima). Antes isso entrava no Promise.all de
+  // baixo e travava a tela inteira esperando 2 consultas extras +
+  // uma verificação de auth que não tinham nada a ver com o que é
+  // mostrado aqui.
+  garantirLancamentosRecorrentes().catch((erro) =>
+    console.error("Falha ao gerar lançamentos recorrentes:", erro)
+  );
 
   const hoje = new Date();
   const mesAtualISO = hoje.toLocaleDateString("sv-SE").slice(0, 7);
@@ -45,9 +55,6 @@ export default async function FinancasPage({
 
   // Grupo 1: nada aqui depende do resultado de outra consulta, então
   // tudo roda ao mesmo tempo em vez de uma coisa esperando a outra.
-  // O gerador de recorrências roda em paralelo também — não bloqueia
-  // mais o resto da tela (se criar algo novo hoje, pode não aparecer
-  // nesta visita específica, mas aparece na próxima).
   const [
     { data: perfilOrdem },
     { data: contas },
@@ -60,7 +67,6 @@ export default async function FinancasPage({
     ehMesAtual
       ? supabase.from("financa_recorrencias").select("tipo, valor, dia_mes, data_fim").eq("ativo", true)
       : Promise.resolve({ data: [] as any[] }),
-    garantirLancamentosRecorrentes(),
   ]);
 
   const ordemBlocos = normalizarOrdemBlocos(perfilOrdem?.ordem_blocos_financas ?? null);

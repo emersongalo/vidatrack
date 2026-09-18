@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { calcularPatrimonioPorMes } from "@/lib/financas/patrimonio";
-import { GraficoPatrimonio } from "@/components/GraficoPatrimonio";
+import { GraficoPatrimonioLazy as GraficoPatrimonio } from "@/components/GraficoPatrimonioLazy";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 
 export default async function PatrimonioPage() {

@@ -1,21 +1,39 @@
 const CHAVE_SNAPSHOT = "vidatrack-snapshot-offline";
 
+// Sobe esse número toda vez que o FORMATO do snapshot mudar (campo
+// novo, campo renomeado/removido). Etapa 125: um retrato salvo antes
+// dessa mudança não tinha "financas.transacoes" (se chamava
+// "transacoesRecentes") nem "eh_negativo"/"criado_em" em cada hábito
+// — o app tentava ler esses campos, não achava, e quebrava a tela
+// inteira offline (ninguém tem como recarregar a página pra "resetar"
+// o erro sem internet!). Com a versão conferida na leitura, um
+// retrato de um formato antigo é tratado como "nunca baixado" em vez
+// de travar — a pessoa só baixa o retrato certo da próxima vez que
+// abrir o app com internet.
+const VERSAO_SNAPSHOT = 2;
+
 export type SnapshotOffline = {
+  versao: number;
   baixadoEm: string;
   habitos: any[];
+  habitoCheckins: { habito_id: string; data: string }[];
   tarefas: any[];
+  conclusoesTarefas: { tarefa_id: string; data: string }[];
   categoriasProdutividade: any[];
   financas: {
     contas: any[];
     categorias: any[];
-    transacoesRecentes: any[];
+    transacoes: any[];
+    metas: any[];
+    desafios: any[];
+    patrimonio: { mes: string; patrimonio: number }[];
   };
 };
 
-export function salvarSnapshotOffline(dados: SnapshotOffline) {
+export function salvarSnapshotOffline(dados: Omit<SnapshotOffline, "versao">) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(CHAVE_SNAPSHOT, JSON.stringify(dados));
+    localStorage.setItem(CHAVE_SNAPSHOT, JSON.stringify({ ...dados, versao: VERSAO_SNAPSHOT }));
   } catch {
     // Se o localStorage estiver cheio, ignora — o app volta a
     // funcionar normal assim que a conexão retornar, só o modo
@@ -27,7 +45,33 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
   if (typeof window === "undefined") return null;
   try {
     const bruto = localStorage.getItem(CHAVE_SNAPSHOT);
-    return bruto ? JSON.parse(bruto) : null;
+    if (!bruto) return null;
+    const dados = JSON.parse(bruto);
+    // Formato antigo (ou corrompido) — trata como se nunca tivesse
+    // baixado, em vez de deixar a tela quebrar tentando ler um campo
+    // que não existe nesse retrato.
+    if (dados?.versao !== VERSAO_SNAPSHOT) return null;
+
+    // Segunda camada de proteção: mesmo na versão certa, garante que
+    // toda lista existe como array (nunca undefined) antes de devolver
+    // — assim uma tela que faz .map/.filter nesses campos nunca quebra.
+    return {
+      versao: dados.versao,
+      baixadoEm: dados.baixadoEm ?? new Date().toISOString(),
+      habitos: dados.habitos ?? [],
+      habitoCheckins: dados.habitoCheckins ?? [],
+      tarefas: dados.tarefas ?? [],
+      conclusoesTarefas: dados.conclusoesTarefas ?? [],
+      categoriasProdutividade: dados.categoriasProdutividade ?? [],
+      financas: {
+        contas: dados.financas?.contas ?? [],
+        categorias: dados.financas?.categorias ?? [],
+        transacoes: dados.financas?.transacoes ?? [],
+        metas: dados.financas?.metas ?? [],
+        desafios: dados.financas?.desafios ?? [],
+        patrimonio: dados.financas?.patrimonio ?? [],
+      },
+    };
   } catch {
     return null;
   }

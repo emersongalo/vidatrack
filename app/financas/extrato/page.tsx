@@ -2,6 +2,7 @@ import Link from "next/link";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
 import {
   calcularPeriodo,
   type PresetPeriodo,
@@ -25,9 +26,7 @@ export default async function ExtratoPage({
   searchParams: { tipo?: string; inicio?: string; fim?: string; preset?: string; contaId?: string };
 }) {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUsuarioAtual();
 
   const presetAtivo = (searchParams.preset as PresetPeriodo) ?? (searchParams.inicio ? "" : "este_mes");
   const periodoPreset = presetAtivo ? calcularPeriodo(presetAtivo as PresetPeriodo) : null;
