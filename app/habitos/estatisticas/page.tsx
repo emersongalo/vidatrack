@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
+<<<<<<< HEAD
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+=======
+import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
 import { hojeISO } from "@/lib/habitos/streak";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { hexDaCor } from "@/lib/agenda/estilo";
@@ -22,12 +27,18 @@ function ultimosNDias(n: number): string[] {
   return dias;
 }
 
+<<<<<<< HEAD
 // Etapa 127: toda a conta aqui já era pura (nenhuma consulta extra
 // no meio do cálculo) — só precisava de habitos+checkins, que já
 // vêm prontos no retrato local. Isso virou uma conversão direta,
 // sem precisar reescrever a lógica.
 export default function EstatisticasHabitosPage() {
   const { snapshot } = useSnapshotOffline();
+=======
+export default async function EstatisticasHabitosPage() {
+  const supabase = createClient();
+  const user = await getUsuarioAtual();
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
 
   if (snapshot === undefined) {
     return (

@@ -15,7 +15,34 @@ import { HeroFinancas } from "@/components/HeroFinancas";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
+<<<<<<< HEAD
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+=======
+import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
+import { buscarCalendarioGastos, calcularSaldoPorConta, calcularSaldoPrevisto } from "@/lib/financas/consulta";
+import { CalendarioGastos } from "@/components/CalendarioGastos";
+import { normalizarOrdemBlocos } from "@/lib/financas/blocos";
+import { getUsuarioAtual } from "@/lib/supabase/auth";
+
+export default async function FinancasPage({
+  searchParams,
+}: {
+  searchParams: { mes?: string; offline?: string; investido?: string };
+}) {
+  const supabase = createClient();
+  const user = await getUsuarioAtual();
+
+  // Dispara a geração de lançamentos recorrentes em segundo plano, sem
+  // esperar o resultado — a tela não depende dele pra renderizar (se
+  // criar algo novo hoje, pode não aparecer nesta visita específica,
+  // mas aparece na próxima). Antes isso entrava no Promise.all de
+  // baixo e travava a tela inteira esperando 2 consultas extras +
+  // uma verificação de auth que não tinham nada a ver com o que é
+  // mostrado aqui.
+  garantirLancamentosRecorrentes().catch((erro) =>
+    console.error("Falha ao gerar lançamentos recorrentes:", erro)
+  );
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -60,9 +87,27 @@ export default function FinancasPage() {
     year: "numeric",
   });
 
+<<<<<<< HEAD
   const saldoTotal = contas
     .filter((c: any) => c.tipo !== "investimento")
     .reduce((total: number, c: any) => total + Number(c.saldo), 0);
+=======
+  // Grupo 1: nada aqui depende do resultado de outra consulta, então
+  // tudo roda ao mesmo tempo em vez de uma coisa esperando a outra.
+  const [
+    { data: perfilOrdem },
+    { data: contas },
+    { data: todasCategoriasDespesa },
+    { data: recorrenciasAtivas },
+  ] = await Promise.all([
+    supabase.from("perfis").select("ordem_blocos_financas").eq("id", user?.id ?? "").maybeSingle(),
+    supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial").eq("arquivado", false),
+    supabase.from("financa_categorias").select("id, nome, tipo, meta_mensal").eq("tipo", "despesa"),
+    ehMesAtual
+      ? supabase.from("financa_recorrencias").select("tipo, valor, dia_mes, data_fim").eq("ativo", true)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
 
   const saldoPrevisto = ehMesAtual
     ? calcularSaldoPrevisto(

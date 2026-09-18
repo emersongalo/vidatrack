@@ -1,6 +1,11 @@
 "use client";
 
 import Link from "next/link";
+<<<<<<< HEAD
+=======
+import { createClient } from "@/lib/supabase/server";
+import { calcularPatrimonioPorMes } from "@/lib/financas/patrimonio";
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
 import { GraficoPatrimonioLazy as GraficoPatrimonio } from "@/components/GraficoPatrimonioLazy";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";

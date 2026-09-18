@@ -26,25 +26,41 @@ export async function GET() {
     { data: categoriasFinancas },
     { data: metas },
     { data: desafios },
+<<<<<<< HEAD
     { data: recorrencias },
   ] = await Promise.all([
     supabase
       .from("habitos")
       .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete")
+=======
+  ] = await Promise.all([
+    supabase
+      .from("habitos")
+      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em")
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
       .eq("arquivado", false),
     supabase
       .from("tarefas")
       .select("id, titulo, icone, repetir, dias_semana, data, concluida, ordem, subtarefas")
       .eq("arquivada", false),
     supabase.from("categorias_produtividade").select("id, nome, cor"),
+<<<<<<< HEAD
     supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),
     supabase.from("financa_categorias").select("id, nome, tipo, icone, cor, meta_mensal"),
     supabase.from("metas_financeiras").select("id, nome, valor_atual, valor_alvo, concluida, data_alvo"),
+=======
+    supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial").eq("arquivado", false),
+    supabase.from("financa_categorias").select("id, nome, tipo, icone, cor"),
+    supabase.from("metas_financeiras").select("id, nome, valor_atual, valor_alvo, concluida"),
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
     supabase
       .from("desafios_financeiros")
       .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido")
       .eq("arquivado", false),
+<<<<<<< HEAD
     supabase.from("financa_recorrencias").select("id, tipo, valor, dia_mes, data_fim, ativo, descricao, conta_id"),
+=======
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
   ]);
 
   const idsContas = (contas ?? []).map((c) => c.id);
@@ -61,7 +77,11 @@ export async function GET() {
     idsHabitos.length
       ? supabase
           .from("habito_checkins")
+<<<<<<< HEAD
           .select("habito_id, data, quantidade")
+=======
+          .select("habito_id, data")
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
           .in("habito_id", idsHabitos)
           .gte("data", dataLimiteISO)
       : Promise.resolve({ data: [] as any[] }),
@@ -114,7 +134,10 @@ export async function GET() {
       metas: metas ?? [],
       desafios: desafios ?? [],
       patrimonio,
+<<<<<<< HEAD
       recorrencias: recorrencias ?? [],
+=======
+>>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
     },
   });
 }
