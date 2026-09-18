@@ -4,16 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
-<<<<<<< HEAD
 import { calcularPeriodo, type PresetPeriodo } from "@/lib/financas/formatacao";
-=======
-import { createClient } from "@/lib/supabase/server";
-import { getUsuarioAtual } from "@/lib/supabase/auth";
-import {
-  calcularPeriodo,
-  type PresetPeriodo,
-} from "@/lib/financas/formatacao";
->>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
@@ -28,7 +19,6 @@ const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "tudo", rotulo: "Tudo" },
 ];
 
-<<<<<<< HEAD
 // Etapa 127: filtros viram estado local (sem navegação de URL), dados
 // vêm do retrato local — os avatares de "quem lançou" (multi-usuário)
 // ficam de fora por enquanto (mesma razão das outras telas: depende
@@ -37,15 +27,6 @@ export default function ExtratoPage() {
   const { snapshot } = useSnapshotOffline();
   const [tipo, setTipo] = useState<"todos" | "receita" | "despesa">("todos");
   const [preset, setPreset] = useState<PresetPeriodo>("este_mes");
-=======
-export default async function ExtratoPage({
-  searchParams,
-}: {
-  searchParams: { tipo?: string; inicio?: string; fim?: string; preset?: string; contaId?: string };
-}) {
-  const supabase = createClient();
-  const user = await getUsuarioAtual();
->>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
 
   const contas = snapshot?.financas.contas ?? [];
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));

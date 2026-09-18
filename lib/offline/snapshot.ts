@@ -16,11 +16,7 @@ export type SnapshotOffline = {
   versao: number;
   baixadoEm: string;
   habitos: any[];
-<<<<<<< HEAD
   habitoCheckins: { habito_id: string; data: string; quantidade: number }[];
-=======
-  habitoCheckins: { habito_id: string; data: string }[];
->>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
   tarefas: any[];
   conclusoesTarefas: { tarefa_id: string; data: string }[];
   categoriasProdutividade: any[];
@@ -31,10 +27,7 @@ export type SnapshotOffline = {
     metas: any[];
     desafios: any[];
     patrimonio: { mes: string; patrimonio: number }[];
-<<<<<<< HEAD
     recorrencias: { id: string; tipo: string; valor: number; dia_mes: number; data_fim: string | null; ativo: boolean; descricao: string | null; conta_id: string }[];
-=======
->>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
   };
 };
 
@@ -78,10 +71,7 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
         metas: dados.financas?.metas ?? [],
         desafios: dados.financas?.desafios ?? [],
         patrimonio: dados.financas?.patrimonio ?? [],
-<<<<<<< HEAD
         recorrencias: dados.financas?.recorrencias ?? [],
-=======
->>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
       },
     };
   } catch {

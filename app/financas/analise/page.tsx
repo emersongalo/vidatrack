@@ -5,19 +5,12 @@ import Link from "next/link";
 import { Lightbulb } from "lucide-react";
 import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
-<<<<<<< HEAD
 import { calcularInsightsFinanceiros } from "@/lib/financas/insights-calculo";
-=======
-import { buscarInsightsFinanceiros } from "@/lib/financas/insights";
->>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
 import { TreemapGastosLazy as TreemapGastos } from "@/components/TreemapGastosLazy";
 import { GraficoComparacaoMensalLazy as GraficoComparacaoMensal } from "@/components/GraficoComparacaoMensalLazy";
 import { GraficoAcumuladoLazy as GraficoAcumulado } from "@/components/GraficoAcumuladoLazy";
 import { RadarOrcamentoLazy as RadarOrcamento } from "@/components/RadarOrcamentoLazy";
-<<<<<<< HEAD
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
-=======
->>>>>>> 663b0203d7e9f7910d0b3535498533049780d40e
 
 // Etapa 128 — o cálculo pesado (lib/financas/insights-calculo.ts) já
 // era puro; só precisava alimentar com as transações certas vindas
