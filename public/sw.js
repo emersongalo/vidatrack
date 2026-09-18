@@ -52,6 +52,22 @@ function ehArquivoEstaticoImutavel(url) {
   );
 }
 
+// Navegação de página (abrir/recarregar uma tela): tenta a rede
+// primeiro (dado mais atual), e se não conseguir, cai pro que foi
+// guardado da última vez que essa mesma página carregou.
+async function responderComRedeOuCache(request) {
+  try {
+    const resposta = await fetch(request);
+    const copia = resposta.clone();
+    caches.open(CACHE_PAGINAS).then((cache) => cache.put(request, copia));
+    return resposta;
+  } catch {
+    const cache = await caches.open(CACHE_PAGINAS);
+    const cacheada = await cache.match(request);
+    return cacheada || cache.match(PAGINA_OFFLINE);
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -76,23 +92,20 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Navegação de página (abrir/recarregar uma tela): tenta a rede
-  // primeiro (dado mais atual), e se não conseguir, cai pro que foi
-  // guardado da última vez que essa mesma página carregou.
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((resposta) => {
-          const copia = resposta.clone();
-          caches.open(CACHE_PAGINAS).then((cache) => cache.put(request, copia));
-          return resposta;
-        })
-        .catch(async () => {
-          const cache = await caches.open(CACHE_PAGINAS);
-          const cacheada = await cache.match(request);
-          return cacheada || cache.match(PAGINA_OFFLINE);
-        })
-    );
+  // Etapa 130 — clicar num link DENTRO do app (Hoje → Estatísticas,
+  // por exemplo) não é uma "navegação" de verdade pro navegador: o
+  // Next busca só o pedaço novo da tela por baixo dos panos, numa
+  // chamada que `request.mode` não marca como "navigate". Antes,
+  // isso caía fora dos dois casos abaixo e falhava direto sem
+  // internet — mesmo a página de destino já tendo tudo de que
+  // precisava salvo localmente. Agora qualquer busca (GET) pro nosso
+  // próprio site — navegação de verdade ou clique por dentro — usa a
+  // mesma estratégia: rede primeiro, cache de uma visita anterior
+  // como saída de emergência. Não entra aqui nada que seja POST
+  // (uma Ação de Servidor, tipo salvar algo, sempre precisa ir pra
+  // rede de verdade) nem pedido pra outro site (Supabase etc.).
+  if (request.method === "GET" && url.origin === self.location.origin) {
+    event.respondWith(responderComRedeOuCache(request));
   }
 });
 
