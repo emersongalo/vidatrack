@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { atualizarPerfil } from "./actions";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { IconeInstagram } from "@/components/IconeInstagram";
+import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
 
 // Etapa 134
 export default function PerfilPage() {
@@ -19,15 +20,7 @@ export default function PerfilPage() {
 function PerfilConteudo() {
   const searchParams = useSearchParams();
   const { snapshot } = useSnapshotOffline();
-  const [urlFoto, setUrlFoto] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!navigator.onLine) return;
-    fetch("/api/perfil/foto")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d?.url && setUrlFoto(d.url))
-      .catch(() => {});
-  }, []);
+  const urlFoto = useFotoPerfilCache();
 
   const nome = snapshot?.perfil.nome ?? "";
   const email = snapshot?.perfil.email ?? "";

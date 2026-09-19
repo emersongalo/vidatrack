@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ import { sair } from "../login/actions";
 import { Bell } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
+import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
 
 // Etapa 133 — o Painel é pra onde todo botão "← Painel" do app aponta,
 // então precisa abrir sem internet igual ao resto. A foto de perfil
@@ -22,16 +23,14 @@ import { calcularPendencias } from "@/lib/notificacoes/calculo";
 export default function DashboardPage() {
   const router = useRouter();
   const { snapshot } = useSnapshotOffline();
-  const [urlFoto, setUrlFoto] = useState<string | null>(null);
+  const urlFoto = useFotoPerfilCache();
 
   useEffect(() => {
     if (!navigator.onLine) return;
     fetch("/api/perfil/foto")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (!d) return;
-        if (d.url) setUrlFoto(d.url);
-        if (d.onboardingConcluido === false) router.replace("/bem-vindo");
+        if (d?.onboardingConcluido === false) router.replace("/bem-vindo");
       })
       .catch(() => {});
   }, [router]);

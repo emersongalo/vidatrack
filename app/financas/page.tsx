@@ -29,11 +29,20 @@ export default function FinancasPage() {
   const mesAtualISO = hoje.toLocaleDateString("sv-SE").slice(0, 7);
   const [mesSelecionado, setMesSelecionado] = useState(mesAtualISO);
   const ehMesAtual = mesSelecionado === mesAtualISO;
+  const [pessoas, setPessoas] = useState<{ nome: string; urlFoto: string | null }[]>([]);
 
   useEffect(() => {
     garantirLancamentosRecorrentes().catch(() => {
       // Sem internet, sem problema — tenta de novo na próxima visita.
     });
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.onLine) return;
+    fetch("/api/financas/participantes")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.pessoas && setPessoas(d.pessoas))
+      .catch(() => {});
   }, []);
 
   if (snapshot === undefined) {
@@ -189,6 +198,7 @@ export default function FinancasPage() {
             receitas={receitasDoMes}
             despesas={despesasDoMes}
             nomeMes={nomeDoMesSelecionado}
+            pessoas={pessoas}
             hrefMesAnterior={`/financas?mes=${mesAnteriorISO}`}
             hrefMesProximo={`/financas?mes=${mesProximoISO}`}
             hrefHoje="/financas"

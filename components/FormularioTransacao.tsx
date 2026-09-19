@@ -169,18 +169,19 @@ export function FormularioTransacao({
         </div>
         <input type="hidden" name="tipo" value={tipo} />
 
-        <BotaoDitarTransacao
-          aoReconhecer={(resultado) => {
-            if (resultado.tipo) setTipo(resultado.tipo);
-            if (resultado.valor) setValorFalado(resultado.valor);
-            if (resultado.descricao) setDescricaoFalada(resultado.descricao);
-          }}
-        />
-
         <div>
-          <label htmlFor="valor" className="block text-sm text-ink-400 mb-1">
-            Valor
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="valor" className="block text-sm text-ink-400">
+              Valor
+            </label>
+            <BotaoDitarTransacao
+              aoReconhecer={(resultado) => {
+                if (resultado.tipo) setTipo(resultado.tipo);
+                if (resultado.valor) setValorFalado(resultado.valor);
+                if (resultado.descricao) setDescricaoFalada(resultado.descricao);
+              }}
+            />
+          </div>
           <CampoValorMonetario
             key={valorFalado ?? "valor-inicial"}
             id="valor"
