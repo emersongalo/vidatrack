@@ -1,8 +1,14 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { interpretarPergunta, type RespostaAssistente } from "@/lib/assistente/interpretar";
+import { adicionarNaFila } from "@/lib/offline/fila";
+import { processarFilaSincronizacao } from "@/lib/offline/processarFila";
 
-type Mensagem = { autor: "usuario" | "assistente"; texto: string };
+type Mensagem =
+  | { autor: "usuario"; texto: string }
+  | { autor: "assistente"; resposta: RespostaAssistente; confirmado?: boolean };
 
 const SUGESTOES = [
   "Como estão meus gastos esse mês?",
@@ -11,42 +17,55 @@ const SUGESTOES = [
   "Tenho hábito ou tarefa pendente hoje?",
 ];
 
+/**
+ * Etapa 142 — antes chamava a API paga da Anthropic (/api/assistente).
+ * Trocado pelo caminho 100% gratuito: um "cérebro" baseado em
+ * palavras-chave (lib/assistente/interpretar.ts) rodando aqui mesmo,
+ * no navegador, usando o retrato local — sem custo de API nenhum, e
+ * funciona offline também.
+ */
 export function ChatAssistente() {
+  const { snapshot } = useSnapshotOffline();
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [entrada, setEntrada] = useState("");
-  const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState("");
   const fimDaLista = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fimDaLista.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensagens, carregando]);
+  }, [mensagens]);
 
-  async function enviar(texto: string) {
-    if (!texto.trim() || carregando) return;
-    setErro("");
-    const novasMensagens: Mensagem[] = [...mensagens, { autor: "usuario", texto }];
-    setMensagens(novasMensagens);
+  function enviar(texto: string) {
+    if (!texto.trim() || !snapshot) return;
+    const resposta = interpretarPergunta(texto, snapshot);
+    setMensagens((atual) => [...atual, { autor: "usuario", texto }, { autor: "assistente", resposta }]);
     setEntrada("");
-    setCarregando(true);
+  }
 
-    try {
-      const resposta = await fetch("/api/assistente", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensagens: novasMensagens }),
-      });
-      const dados = await resposta.json();
+  function confirmarLancamento(indice: number, dados: { tipo: "despesa" | "receita"; valor: string; descricao: string | null }) {
+    const contaPadrao = snapshot?.financas.contas.find((c: any) => c.tipo !== "investimento");
+    if (!contaPadrao) return;
 
-      if (!resposta.ok) {
-        setErro(dados.erro ?? "Algo deu errado.");
-      } else {
-        setMensagens((atual) => [...atual, { autor: "assistente", texto: dados.texto }]);
-      }
-    } catch {
-      setErro("Falha de conexão. Tenta de novo.");
-    }
-    setCarregando(false);
+    adicionarNaFila({
+      id: crypto.randomUUID(),
+      tipo: "criar_transacao",
+      dados: {
+        tipo: dados.tipo,
+        valor: dados.valor,
+        contaId: contaPadrao.id,
+        categoriaId: "",
+        descricao: dados.descricao ?? "",
+        data: new Date().toLocaleDateString("sv-SE"),
+      },
+    } as any);
+    processarFilaSincronizacao().catch(() => {});
+
+    setMensagens((atual) =>
+      atual.map((m, i) => (i === indice && m.autor === "assistente" ? { ...m, confirmado: true } : m))
+    );
+    setMensagens((atual) => [
+      ...atual,
+      { autor: "assistente", resposta: { tipo: "texto", texto: "Lançado! ✅ (sincroniza sozinho quando houver internet, se estiver offline agora)" } },
+    ]);
   }
 
   return (
@@ -55,7 +74,8 @@ export function ChatAssistente() {
         {mensagens.length === 0 && (
           <div>
             <p className="text-sm text-ink-400 mb-3">
-              Pergunte sobre seus gastos, orçamento, contas a pagar ou pendências de hoje.
+              Pergunte sobre seus gastos, orçamento, contas a pagar ou pendências de hoje — ou peça pra eu
+              lançar algo, tipo "gastei 20 reais no mercado".
             </p>
             <div className="flex flex-wrap gap-2">
               {SUGESTOES.map((s) => (
@@ -73,27 +93,29 @@ export function ChatAssistente() {
 
         {mensagens.map((m, i) => (
           <div key={i} className={`flex ${m.autor === "usuario" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[85%] rounded-xl2 px-4 py-2.5 text-sm whitespace-pre-wrap ${
-                m.autor === "usuario"
-                  ? "bg-ink-100 text-base-900"
-                  : "bg-base-800 border border-base-600 text-ink-100"
-              }`}
-            >
-              {m.texto}
-            </div>
+            {m.autor === "usuario" ? (
+              <div className="max-w-[85%] rounded-xl2 px-4 py-2.5 text-sm whitespace-pre-wrap bg-ink-100 text-base-900">
+                {m.texto}
+              </div>
+            ) : (
+              <div className="max-w-[85%] rounded-xl2 px-4 py-2.5 text-sm whitespace-pre-wrap bg-base-800 border border-base-600 text-ink-100">
+                {m.resposta.texto}
+                {m.resposta.tipo === "proposta_lancamento" && !m.confirmado && (() => {
+                  const dadosLancamento = m.resposta.dados;
+                  return (
+                    <button
+                      onClick={() => confirmarLancamento(i, dadosLancamento)}
+                      className="mt-2.5 block bg-financa text-base-900 text-xs font-medium rounded-lg px-3 py-2 hover:opacity-90 transition"
+                    >
+                      Confirmar lançamento
+                    </button>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         ))}
 
-        {carregando && (
-          <div className="flex justify-start">
-            <div className="bg-base-800 border border-base-600 rounded-xl2 px-4 py-2.5 text-sm text-ink-400">
-              Pensando...
-            </div>
-          </div>
-        )}
-
-        {erro && <p className="text-xs text-red-400 text-center">{erro}</p>}
         <div ref={fimDaLista} />
       </div>
 
@@ -108,12 +130,11 @@ export function ChatAssistente() {
           value={entrada}
           onChange={(e) => setEntrada(e.target.value)}
           placeholder="Pergunte algo sobre suas finanças..."
-          disabled={carregando}
-          className="flex-1 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-sm text-ink-100 focus:border-ink-100 outline-none transition disabled:opacity-50"
+          className="flex-1 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
         />
         <button
           type="submit"
-          disabled={carregando || !entrada.trim()}
+          disabled={!entrada.trim()}
           className="bg-financa text-base-900 font-medium rounded-lg px-4 py-2.5 text-sm hover:opacity-90 transition disabled:opacity-40"
         >
           Enviar

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target, Upload, Users, TrendingUp, Grid3x3 } from "lucide-react";
 import { LinkVoltar } from "@/components/LinkVoltar";
+import { IconeInstagram } from "@/components/IconeInstagram";
 
 const ITENS = [
   { href: "/financas/desafios", Icone: Grid3x3, titulo: "Desafios financeiros", texto: "Tipo o desafio dos 52 quadradinhos, dentro do app" },
@@ -42,6 +43,20 @@ export default function MaisFinancasPage() {
           </li>
         ))}
       </ul>
+
+      {/* Etapa 140 */}
+      <div className="flex flex-col items-center gap-3 mt-10 pt-6 border-t border-base-600">
+        <a
+          href="https://instagram.com/vidatrack_"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-11 h-11 rounded-full border border-base-600 flex items-center justify-center text-ink-400 hover:text-financa hover:border-financa transition"
+          aria-label="VidaTrack no Instagram"
+        >
+          <IconeInstagram size={20} />
+        </a>
+        <p className="text-xs text-ink-400">@vidatrack_ no Instagram</p>
+      </div>
     </main>
   );
 }

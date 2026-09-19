@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { atualizarPerfil } from "./actions";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { IconeInstagram } from "@/components/IconeInstagram";
 
 // Etapa 134
 export default function PerfilPage() {
@@ -98,7 +99,20 @@ function PerfilConteudo() {
         </button>
       </form>
 
-      <div className="mt-10 pt-6 border-t border-base-600">
+      <div className="flex flex-col items-center gap-3 mt-10 pt-6 border-t border-base-600">
+        <a
+          href="https://instagram.com/vidatrack_"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-11 h-11 rounded-full border border-base-600 flex items-center justify-center text-ink-400 hover:text-financa hover:border-financa transition"
+          aria-label="VidaTrack no Instagram"
+        >
+          <IconeInstagram size={20} />
+        </a>
+        <p className="text-xs text-ink-400">@vidatrack_ no Instagram</p>
+      </div>
+
+      <div className="mt-6 pt-6 border-t border-base-600 text-center">
         <Link href="/perfil/excluir-conta" className="text-xs text-red-400/70 hover:text-red-400 transition">
           Excluir minha conta permanentemente
         </Link>

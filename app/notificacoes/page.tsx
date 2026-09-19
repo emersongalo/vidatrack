@@ -1,22 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { BotaoAtivarNotificacoes } from "@/components/BotaoAtivarNotificacoes";
-import { Globe, Smartphone, AlertTriangle, BellRing } from "lucide-react";
+import { Globe, Smartphone, AlertTriangle, BellRing, X } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
+import { dispensar } from "@/lib/notificacoes/dispensados";
 
-// Etapa 139 — a "central" que faltava: até agora, uma notificação
+// Etapa 139/140 — a "central" que faltava: até agora, uma notificação
 // push que você não viu (ou nem tinha o celular na mão) sumia pra
 // sempre, sem deixar rastro dentro do app. Isso calcula, na hora, a
 // partir dos mesmos dados de sempre (sem tabela nova no banco):
 // tarefas vencidas + hábitos/tarefas de hoje com horário de lembrete
-// já passado e ainda não marcados.
+// já passado e ainda não marcados. Dá pra dispensar cada uma (some
+// só por hoje — amanhã a conta é refeita do zero).
 export default function NotificacoesPage() {
   const { snapshot } = useSnapshotOffline();
+  const [, forcarAtualizacao] = useState(0);
   const { tarefasVencidas, lembretesPassados } = calcularPendencias(snapshot);
   const temAlgumPendente = tarefasVencidas.length > 0 || lembretesPassados.length > 0;
+
+  function aoDispensar(chave: string) {
+    dispensar(chave);
+    forcarAtualizacao((n) => n + 1);
+  }
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
@@ -25,37 +34,49 @@ export default function NotificacoesPage() {
 
       {temAlgumPendente && (
         <div className="space-y-2 mb-8">
-          {tarefasVencidas.map((t: any) => (
-            <Link
-              key={t.id}
-              href="/habitos/tarefas"
-              className="flex items-start gap-3 bg-red-400/10 border border-red-400/30 rounded-xl2 p-4 hover:bg-red-400/15 transition"
+          {tarefasVencidas.map((t) => (
+            <div
+              key={t.chave}
+              className="flex items-start gap-3 bg-red-400/10 border border-red-400/30 rounded-xl2 p-4"
             >
               <span className="text-red-400 shrink-0 mt-0.5">
                 <AlertTriangle size={18} strokeWidth={2} />
               </span>
-              <div>
+              <Link href="/habitos/tarefas" className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{t.titulo}</p>
                 <p className="text-xs text-ink-400 mt-0.5">
                   Venceu em {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} e ainda não foi concluída
                 </p>
-              </div>
-            </Link>
+              </Link>
+              <button
+                onClick={() => aoDispensar(t.chave)}
+                aria-label="Dispensar"
+                className="text-ink-400 hover:text-ink-100 transition shrink-0 p-1 -m-1"
+              >
+                <X size={16} strokeWidth={2} />
+              </button>
+            </div>
           ))}
           {lembretesPassados.map((l) => (
-            <Link
+            <div
               key={l.chave}
-              href={l.href}
-              className="flex items-start gap-3 bg-financa-soft border border-financa/30 rounded-xl2 p-4 hover:bg-financa/15 transition"
+              className="flex items-start gap-3 bg-financa-soft border border-financa/30 rounded-xl2 p-4"
             >
               <span className="text-financa shrink-0 mt-0.5">
                 <BellRing size={18} strokeWidth={2} />
               </span>
-              <div>
+              <Link href={l.href} className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{l.titulo}</p>
                 <p className="text-xs text-ink-400 mt-0.5">Lembrete era pra {l.horario} — ainda não marcado hoje</p>
-              </div>
-            </Link>
+              </Link>
+              <button
+                onClick={() => aoDispensar(l.chave)}
+                aria-label="Dispensar"
+                className="text-ink-400 hover:text-ink-100 transition shrink-0 p-1 -m-1"
+              >
+                <X size={16} strokeWidth={2} />
+              </button>
+            </div>
           ))}
         </div>
       )}

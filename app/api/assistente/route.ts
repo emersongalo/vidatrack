@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { montarContextoAssistente } from "@/lib/ia/contexto";
 
+// Etapa 142: essa rota (baseada na API paga da Anthropic) não é mais
+// chamada por padrão — o ChatAssistente passou a usar um "cérebro"
+// gratuito, baseado em regras (lib/assistente/interpretar.ts), que
+// roda direto no navegador sem custo nenhum. Deixei esse arquivo
+// aqui, intacto, caso um dia você queira voltar pro caminho com IA
+// de verdade (bastaria configurar a variável ANTHROPIC_API_KEY e
+// trocar o ChatAssistente de volta pra chamar essa rota).
 export async function POST(request: Request) {
   const supabase = createClient();
   const {

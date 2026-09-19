@@ -9,6 +9,7 @@ import { IconeCategoria } from "@/components/IconeCategoria";
 import { adicionarNaFila } from "@/lib/offline/fila";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
+import { BotaoDitarTransacao } from "@/components/BotaoDitarTransacao";
 
 type Conta = { id: string; nome: string };
 type Categoria = { id: string; nome: string; tipo: "receita" | "despesa"; icone?: string };
@@ -44,6 +45,11 @@ export function FormularioTransacao({
   tipoInicial?: "despesa" | "receita";
 }) {
   const [tipo, setTipo] = useState<"despesa" | "receita">(valoresIniciais?.tipo ?? tipoInicial ?? "despesa");
+  // Etapa 141 — o que veio do reconhecimento de voz. Guardado à parte
+  // (em vez de sobrescrever valoresIniciais) só pra ficar claro de
+  // onde veio cada coisa; os campos abaixo usam isso quando existe.
+  const [valorFalado, setValorFalado] = useState<string | null>(null);
+  const [descricaoFalada, setDescricaoFalada] = useState<string | null>(null);
   const [recorrente, setRecorrente] = useState(false);
   const [duracaoRecorrencia, setDuracaoRecorrencia] = useState<"sempre" | "ate_data">("sempre");
   const ehEdicao = !!valoresIniciais;
@@ -163,14 +169,23 @@ export function FormularioTransacao({
         </div>
         <input type="hidden" name="tipo" value={tipo} />
 
+        <BotaoDitarTransacao
+          aoReconhecer={(resultado) => {
+            if (resultado.tipo) setTipo(resultado.tipo);
+            if (resultado.valor) setValorFalado(resultado.valor);
+            if (resultado.descricao) setDescricaoFalada(resultado.descricao);
+          }}
+        />
+
         <div>
           <label htmlFor="valor" className="block text-sm text-ink-400 mb-1">
             Valor
           </label>
           <CampoValorMonetario
+            key={valorFalado ?? "valor-inicial"}
             id="valor"
             name="valor"
-            valorInicial={valoresIniciais?.valor}
+            valorInicial={valorFalado ?? valoresIniciais?.valor}
             required
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
           />
@@ -289,10 +304,11 @@ export function FormularioTransacao({
             Descrição (opcional)
           </label>
           <input
+            key={descricaoFalada ?? "descricao-inicial"}
             id="descricao"
             name="descricao"
             type="text"
-            defaultValue={valoresIniciais?.descricao ?? ""}
+            defaultValue={descricaoFalada ?? valoresIniciais?.descricao ?? ""}
             placeholder="Ex: Supermercado, Uber, Freelance"
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
