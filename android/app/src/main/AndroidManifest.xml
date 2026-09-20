@@ -50,9 +50,4 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Etapa 143: pro reconhecimento de voz nativo (plugin
-         @capacitor-community/speech-recognition) funcionar dentro
-         do app instalado — sem isso, o Android nem deixa o app
-         escutar o microfone. -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 </manifest>
