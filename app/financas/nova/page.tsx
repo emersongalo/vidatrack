@@ -26,7 +26,10 @@ function NovaTransacaoConteudo() {
   if (snapshot === undefined) return null;
 
   const contas = snapshot?.financas.contas ?? [];
-  const categorias = snapshot?.financas.categorias ?? [];
+  // Etapa 151: categorias de quem compartilha uma conta com você
+  // ficaram visíveis (só leitura) — mas aqui, na hora de LANÇAR algo
+  // novo, só faz sentido escolher entre as suas próprias.
+  const categorias = (snapshot?.financas.categorias ?? []).filter((c: any) => c.dono_id === snapshot?.perfil.id);
 
   if (contas.length === 0) {
     return (

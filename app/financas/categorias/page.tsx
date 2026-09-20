@@ -8,14 +8,43 @@ import { IconeCategoria } from "@/components/IconeCategoria";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
-// Etapa 128
+// Etapa 151 — desde que categorias de quem compartilha uma conta com
+// você ficaram visíveis (só leitura), essa tela também passou a
+// receber elas no retrato. Editar/Remover só aparece nas que são
+// suas de verdade — nas dos outros, mostra de quem é no lugar.
 export default function CategoriasPage() {
   const { snapshot, recarregar } = useSnapshotOffline();
+  const meuId = snapshot?.perfil.id;
   const categorias = [...(snapshot?.financas.categorias ?? [])].sort((a: any, b: any) =>
     a.tipo === b.tipo ? a.nome.localeCompare(b.nome) : a.tipo.localeCompare(b.tipo)
   );
   const receitas = categorias.filter((c: any) => c.tipo === "receita");
   const despesas = categorias.filter((c: any) => c.tipo === "despesa");
+
+  function ItemCategoria({ cat }: { cat: any }) {
+    const ehMinha = cat.dono_id === meuId;
+    return (
+      <li className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5">
+        <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(cat.cor)}`}>
+          <IconeCategoria icone={cat.icone} />
+        </span>
+        <span className="flex-1 text-sm truncate">{cat.nome}</span>
+        {cat.meta_mensal && (
+          <span className="text-ink-400 font-mono text-xs shrink-0">até {formatarMoeda(Number(cat.meta_mensal))}</span>
+        )}
+        {ehMinha ? (
+          <>
+            <Link href={`/financas/categorias/${cat.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
+              Editar
+            </Link>
+            <BotaoComConfirmacao acao={removerCategoria.bind(null, cat.id)} textoBotao="Remover" aoConcluir={recarregar} />
+          </>
+        ) : (
+          <span className="text-ink-400 text-xs shrink-0">Compartilhada</span>
+        )}
+      </li>
+    );
+  }
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-3xl mx-auto">
@@ -40,19 +69,7 @@ export default function CategoriasPage() {
             <p className="text-xs text-ink-400 mb-2 uppercase tracking-wide">Despesas</p>
             <ul className="space-y-1.5">
               {despesas.map((cat: any) => (
-                <li key={cat.id} className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5">
-                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(cat.cor)}`}>
-                    <IconeCategoria icone={cat.icone} />
-                  </span>
-                  <span className="flex-1 text-sm truncate">{cat.nome}</span>
-                  {cat.meta_mensal && (
-                    <span className="text-ink-400 font-mono text-xs shrink-0">até {formatarMoeda(Number(cat.meta_mensal))}</span>
-                  )}
-                  <Link href={`/financas/categorias/${cat.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
-                    Editar
-                  </Link>
-                  <BotaoComConfirmacao acao={removerCategoria.bind(null, cat.id)} textoBotao="Remover" aoConcluir={recarregar} />
-                </li>
+                <ItemCategoria key={cat.id} cat={cat} />
               ))}
             </ul>
           </div>
@@ -63,16 +80,7 @@ export default function CategoriasPage() {
             <p className="text-xs text-ink-400 mb-2 uppercase tracking-wide">Receitas</p>
             <ul className="space-y-1.5">
               {receitas.map((cat: any) => (
-                <li key={cat.id} className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5">
-                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(cat.cor)}`}>
-                    <IconeCategoria icone={cat.icone} />
-                  </span>
-                  <span className="flex-1 text-sm truncate">{cat.nome}</span>
-                  <Link href={`/financas/categorias/${cat.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
-                    Editar
-                  </Link>
-                  <BotaoComConfirmacao acao={removerCategoria.bind(null, cat.id)} textoBotao="Remover" aoConcluir={recarregar} />
-                </li>
+                <ItemCategoria key={cat.id} cat={cat} />
               ))}
             </ul>
           </div>

@@ -26,7 +26,7 @@ function RecorrentesConteudo() {
 
   const recorrencias = [...(snapshot?.financas.recorrencias ?? [])].sort((a: any, b: any) => a.dia_mes - b.dia_mes);
   const contas = snapshot?.financas.contas ?? [];
-  const categorias = snapshot?.financas.categorias ?? [];
+  const categorias = (snapshot?.financas.categorias ?? []).filter((c: any) => c.dono_id === snapshot?.perfil.id);
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
 
   function alternarAtiva(id: string) {

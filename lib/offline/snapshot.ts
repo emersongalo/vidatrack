@@ -31,7 +31,7 @@ export type SnapshotOffline = {
     recorrencias: { id: string; tipo: string; valor: number; dia_mes: number; data_fim: string | null; ativo: boolean; descricao: string | null; conta_id: string }[];
     ordemBlocosFinancas: string[] | null;
   };
-  perfil: { nome: string | null; email: string | null };
+  perfil: { nome: string | null; email: string | null; id: string };
 };
 
 export function salvarSnapshotOffline(dados: Omit<SnapshotOffline, "versao">) {
@@ -81,6 +81,7 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
       perfil: {
         nome: dados.perfil?.nome ?? null,
         email: dados.perfil?.email ?? null,
+        id: dados.perfil?.id ?? "",
       },
     };
   } catch {

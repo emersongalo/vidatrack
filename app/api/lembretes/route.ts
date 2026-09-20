@@ -66,7 +66,7 @@ export async function GET(request: Request) {
       "habito",
       h.id,
       h.dono_id,
-      `🔁 ${h.nome}`,
+      `🔔 Hora de: ${h.nome}`,
       "/habitos",
       hoje
     );
@@ -92,7 +92,7 @@ export async function GET(request: Request) {
       "tarefa",
       t.id,
       t.dono_id,
-      `✓ ${t.titulo}`,
+      `📝 Lembrete: ${t.titulo}`,
       `/habitos/tarefas/${t.id}`,
       hoje
     );

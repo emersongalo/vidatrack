@@ -39,7 +39,7 @@ export async function GET() {
       .eq("arquivada", false),
     supabase.from("categorias_produtividade").select("id, nome, cor"),
     supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),
-    supabase.from("financa_categorias").select("id, nome, tipo, icone, cor, meta_mensal"),
+    supabase.from("financa_categorias").select("id, dono_id, nome, tipo, icone, cor, meta_mensal"),
     supabase.from("metas_financeiras").select("id, nome, valor_atual, valor_alvo, concluida, data_alvo"),
     supabase
       .from("desafios_financeiros")
@@ -132,6 +132,7 @@ export async function GET() {
     perfil: {
       nome: perfil?.nome ?? null,
       email: user.email ?? null,
+      id: user.id,
     },
   });
 }

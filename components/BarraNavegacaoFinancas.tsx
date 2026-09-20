@@ -47,10 +47,21 @@ export function SubmenuFinancas() {
 export function BarraNavegacaoFinancas() {
   const pathname = usePathname();
 
+  const naTelaDoAssistente = pathname.startsWith("/financas/assistente");
+
   return (
     <>
-      <BotaoNovoLancamento />
-      <BotaoAssistenteFlutuante />
+      {/* Etapa 150 — escondidos na própria tela do assistente: os
+         botões flutuantes ficavam bem em cima do campo de digitar e
+         do botão "Enviar" do chat, brigando visualmente com ele —
+         e não faria sentido ter um botão pra abrir o assistente
+         dentro do próprio assistente mesmo. */}
+      {!naTelaDoAssistente && (
+        <>
+          <BotaoNovoLancamento />
+          <BotaoAssistenteFlutuante />
+        </>
+      )}
 
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-base-800 border-t border-base-600 z-10">
         <div className="max-w-2xl mx-auto grid grid-cols-4">
