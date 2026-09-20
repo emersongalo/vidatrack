@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target, Upload, Users, TrendingUp, Grid3x3 } from "lucide-react";
+import { Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target, Upload, Users, TrendingUp, Grid3x3, Bot } from "lucide-react";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { IconeInstagram } from "@/components/IconeInstagram";
 
 const ITENS = [
+  { href: "/financas/assistente", Icone: Bot, titulo: "Assistente", texto: "Pergunte sobre seus gastos ou peça pra lançar algo por texto" },
   { href: "/financas/desafios", Icone: Grid3x3, titulo: "Desafios financeiros", texto: "Tipo o desafio dos 52 quadradinhos, dentro do app" },
   { href: "/financas/patrimonio", Icone: TrendingUp, titulo: "Patrimônio líquido", texto: "Evolução de tudo que você tem, mês a mês" },
   { href: "/financas/divisoes", Icone: Users, titulo: "Dividir despesas", texto: "Controle quem te deve e quem você deve" },

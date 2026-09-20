@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { PieChart, TrendingUp, TrendingDown } from "lucide-react";
+import { PieChart, TrendingUp, TrendingDown, Bot } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
 import { calcularSaldoPrevisto } from "@/lib/financas/consulta";
@@ -228,6 +228,20 @@ export default function FinancasPage() {
                 </div>
               </div>
             )}
+
+            <Link
+              href="/financas/assistente"
+              className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-habito rounded-xl2 p-4 mb-4 hover:border-habito transition lg:break-inside-avoid"
+            >
+              <span className="w-9 h-9 rounded-lg bg-habito/15 flex items-center justify-center text-habito shrink-0">
+                <Bot size={18} strokeWidth={2} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium">Assistente</p>
+                <p className="text-xs text-ink-400 mt-0.5">Pergunte sobre seus gastos ou peça pra lançar algo</p>
+              </div>
+              <span className="text-ink-400 text-sm shrink-0">Abrir →</span>
+            </Link>
 
             <Link
               href="/financas/analise"
