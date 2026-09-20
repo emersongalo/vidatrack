@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Landmark, Receipt, MoreHorizontal } from "lucide-react";
 import { BotaoNovoLancamento } from "@/components/BotaoNovoLancamento";
+import { BotaoAssistenteFlutuante } from "@/components/BotaoAssistenteFlutuante";
 
 const ABAS = [
   { href: "/financas", rotulo: "Início", Icone: Home },
@@ -49,6 +50,7 @@ export function BarraNavegacaoFinancas() {
   return (
     <>
       <BotaoNovoLancamento />
+      <BotaoAssistenteFlutuante />
 
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-base-800 border-t border-base-600 z-10">
         <div className="max-w-2xl mx-auto grid grid-cols-4">
