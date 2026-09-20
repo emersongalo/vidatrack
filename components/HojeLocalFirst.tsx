@@ -193,7 +193,7 @@ function HojeConteudo() {
               <p className="text-ink-400 text-sm">✅ Nenhum hábito ou tarefa cai neste dia.</p>
             </div>
           ) : (
-            <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} />
+            <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />
           )}
         </div>
 

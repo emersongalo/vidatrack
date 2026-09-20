@@ -8,9 +8,12 @@ import { EVENTO_SINCRONIZACAO_CONCLUIDA } from "@/components/GerenciadorSincroni
 export function ListaHojeComOffline({
   itensServidor,
   dataISO,
+  aoConcluirMutacao,
 }: {
   itensServidor: ItemAgenda[];
   dataISO: string;
+  /** Etapa 146 — repassado pro ItemLinhaAgenda; ver o comentário lá. */
+  aoConcluirMutacao?: () => void;
 }) {
   const [itens, setItens] = useState(itensServidor);
   const [offline, setOffline] = useState(false);
@@ -119,6 +122,7 @@ export function ListaHojeComOffline({
             aoAjustarLocal={(delta) => ajustarVisualmente(item, delta)}
             aoClicarOffline={() => enfileirarOffline(item)}
             aoAjustarOffline={(delta) => enfileirarAjusteOffline(item, delta)}
+            aoConcluirMutacao={aoConcluirMutacao}
           />
         ))}
       </ul>

@@ -34,6 +34,7 @@ export function ItemLinhaAgenda({
   aoAjustarOffline,
   aoAlternarLocal,
   aoAjustarLocal,
+  aoConcluirMutacao,
 }: {
   item: ItemAgenda;
   dataISO: string;
@@ -46,6 +47,13 @@ export function ItemLinhaAgenda({
    *  local ou manda pro servidor continua sendo a lógica abaixo. */
   aoAlternarLocal?: () => void;
   aoAjustarLocal?: (delta: number) => void;
+  /** Etapa 146 — chamado depois que o SERVIDOR confirma a gravação
+   *  (não na hora do clique, como aoAlternarLocal). Sem isso, o
+   *  retrato local (snapshot) usado pra montar a tela de outros dias
+   *  nunca ficava sabendo do check-in novo — aí ao trocar de dia e
+   *  voltar, a tela recalculava a partir do retrato ANTIGO e parecia
+   *  que a marcação tinha "sumido", mesmo já estando salva no banco. */
+  aoConcluirMutacao?: () => void;
 }) {
   const [pendente, iniciarTransicao] = useTransition();
   const [marcoAtingido, setMarcoAtingido] = useState<number | null>(null);
@@ -72,6 +80,7 @@ export function ItemLinhaAgenda({
       } else {
         await alternarConclusaoTarefa(item.id, dataISO);
       }
+      aoConcluirMutacao?.();
     });
   }
 
@@ -90,8 +99,9 @@ export function ItemLinhaAgenda({
       aoAjustarOffline(delta);
       return;
     }
-    iniciarTransicao(() => {
-      ajustarQuantidadeHabito(item.id, dataISO, delta);
+    iniciarTransicao(async () => {
+      await ajustarQuantidadeHabito(item.id, dataISO, delta);
+      aoConcluirMutacao?.();
     });
   }
 
