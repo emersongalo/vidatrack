@@ -45,8 +45,20 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+        <!-- Etapa 152: widget de tela inicial "Hoje" (contagem de
+             hábitos). Registrado aqui pro Android saber que esse
+             widget existe e como redesenhá-lo. -->
+        <receiver
+            android:name="com.vidatrack.app.widget.HojeWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/hoje_widget_info" />
+        </receiver>
     </application>
-
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
