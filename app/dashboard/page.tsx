@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const saldoAtual = contasComuns.reduce((total: number, c: any) => total + Number(c.saldo), 0);
 
   return (
-    <main className="h-screen h-[100dvh] overflow-hidden p-6 md:p-12 max-w-lg lg:max-w-3xl mx-auto flex flex-col">
+    <main className="min-h-screen min-h-[100dvh] p-6 md:p-12 max-w-lg lg:max-w-3xl mx-auto flex flex-col">
       <header className="flex items-center justify-between mb-2 gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/perfil" className="shrink-0">

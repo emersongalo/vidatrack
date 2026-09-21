@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { registerPlugin } from "@capacitor/core";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { hojeISO } from "@/lib/habitos/streak";
@@ -111,6 +112,26 @@ function HojeConteudo() {
   const carregando = itens === null;
   const feitos = itens?.filter((i) => i.feito).length ?? 0;
   const total = itens?.length ?? 0;
+
+  // Etapa 152 — avisa o widget de tela inicial (só existe no app
+  // instalado) toda vez que a contagem de hoje muda. Só olha o dia
+  // de HOJE de verdade (não outro dia que a pessoa esteja navegando),
+  // senão o widget mostraria a contagem de um dia errado.
+  useEffect(() => {
+    if (dataSelecionada !== hoje) return;
+    if (!(window as any).Capacitor?.isNativePlatform?.()) return;
+    const WidgetHoje = registerPlugin<{ atualizar: (opcoes: { feitos: number; total: number }) => Promise<{ ok: boolean }> }>(
+      "WidgetHoje"
+    );
+    // Etapa 153 — deixado visível de propósito (não é erro silencioso
+    // mais): se algo falhar aqui, dá pra ver exatamente o quê
+    // conectando o celular no computador e abrindo
+    // chrome://inspect#devices no Chrome do PC.
+    console.log("[WidgetHoje] chamando atualizar", { feitos, total });
+    WidgetHoje.atualizar({ feitos, total })
+      .then((r) => console.log("[WidgetHoje] respondeu", r))
+      .catch((erro) => console.error("[WidgetHoje] falhou", erro));
+  }, [feitos, total, dataSelecionada, hoje]);
 
   return (
     <main className="max-w-2xl lg:max-w-5xl mx-auto px-6 md:px-12 pt-2">

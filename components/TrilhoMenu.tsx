@@ -20,6 +20,14 @@ const ESTACOES = [
     titulo: "Finanças",
     texto: "Cada real, com clareza.",
   },
+  {
+    href: "/financas/assistente",
+    cor: "nota",
+    corPonto: "bg-nota",
+    corAnel: "ring-nota/30",
+    titulo: "Assistente",
+    texto: "Pergunte sobre hábitos ou finanças.",
+  },
 ];
 
 export function TrilhoMenu() {
