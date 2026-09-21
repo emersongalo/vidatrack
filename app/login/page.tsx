@@ -10,7 +10,7 @@ export default function LoginPage({
   searchParams: { erro?: string; cadastro?: string };
 }) {
   return (
-    <main className="min-h-screen grid md:grid-cols-2">
+    <main className="min-h-screen min-h-[100dvh] grid md:grid-cols-2">
       {/* Lado esquerdo: o trilho — assinatura visual que une os 3 módulos */}
       <div className="hidden md:flex relative flex-col justify-between p-12 bg-base-800 overflow-hidden">
         <div>

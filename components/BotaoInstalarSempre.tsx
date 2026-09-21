@@ -7,18 +7,30 @@ type EventoInstalacao = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+/**
+ * Etapa 157 — antes isso tentava aparecer em qualquer celular, e
+ * ficava "surgindo e sumindo" logo na entrada (só decidia se tinha
+ * espaço/já tava instalado depois do primeiro render, então piscava
+ * uma vez ao montar — e em alguns casos remontava mais de uma vez).
+ * Simplificado: Android tem o APK de verdade pra baixar, então esse
+ * aviso de "instalar como PWA" não faz sentido pra quem tá nele —
+ * só mostra mesmo pra iPhone, que não tem outro caminho de
+ * instalação. E nunca aparece dentro do app instalado (óbvio, mas
+ * de propósito).
+ */
 export function BotaoInstalarSempre() {
   const [eventoAndroid, setEventoAndroid] = useState<EventoInstalacao | null>(null);
-  const [mostrarInstrucoes, setMostrarInstrucoes] = useState<"android" | "ios" | null>(null);
-  const [jaInstalado, setJaInstalado] = useState(false);
-  const [ehMobile, setEhMobile] = useState(false);
+  const [mostrarInstrucoes, setMostrarInstrucoes] = useState(false);
+  const [podeMostrar, setPodeMostrar] = useState(false);
 
   useEffect(() => {
-    const instalado =
+    const noAppNativo = !!(window as any).Capacitor?.isNativePlatform?.();
+    const jaInstalado =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true;
-    setJaInstalado(instalado);
-    setEhMobile(window.matchMedia("(max-width: 820px)").matches);
+    const ehIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+    setPodeMostrar(!noAppNativo && !jaInstalado && ehIOS);
 
     function aoFicarInstalavel(e: Event) {
       e.preventDefault();
@@ -34,15 +46,10 @@ export function BotaoInstalarSempre() {
       await eventoAndroid.userChoice;
       return;
     }
-
-    // O navegador ainda não liberou o prompt automático (isso depende de
-    // critérios de engajamento do próprio Chrome, fora do nosso controle)
-    // — nesse caso, mostra o caminho manual, que sempre funciona.
-    const ehIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-    setMostrarInstrucoes(ehIOS ? "ios" : "android");
+    setMostrarInstrucoes(true);
   }
 
-  if (jaInstalado || !ehMobile) return null;
+  if (!podeMostrar) return null;
 
   return (
     <div className="mb-6">
@@ -50,17 +57,10 @@ export function BotaoInstalarSempre() {
         onClick={clicar}
         className="w-full flex items-center justify-center gap-2 bg-base-800 border border-base-600 rounded-lg py-2.5 text-sm hover:border-habito transition"
       >
-        📲 Instalar o VidaTrack no celular
+        📲 Instalar o VidaTrack no iPhone
       </button>
 
-      {mostrarInstrucoes === "android" && (
-        <p className="text-xs text-ink-400 mt-2 text-center">
-          Toque nos <strong className="text-ink-100">⋮ três pontinhos</strong> do navegador e
-          escolha <strong className="text-ink-100">"Instalar app"</strong> ou{" "}
-          <strong className="text-ink-100">"Adicionar à tela inicial"</strong>.
-        </p>
-      )}
-      {mostrarInstrucoes === "ios" && (
+      {mostrarInstrucoes && (
         <p className="text-xs text-ink-400 mt-2 text-center">
           Toque em <strong className="text-ink-100">Compartilhar</strong> (ícone com a seta ⬆️) e
           depois em <strong className="text-ink-100">"Adicionar à Tela de Início"</strong>.
