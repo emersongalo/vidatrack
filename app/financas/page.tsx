@@ -46,6 +46,33 @@ export default function FinancasPage() {
       .catch(() => {});
   }, []);
 
+  // Etapa 154/156 — alimenta os widgets de tela inicial "Saldo" e
+  // "Contas a pagar". Precisa vir ANTES do "if (snapshot ===
+  // undefined) return" abaixo — todo hook (use Effect, useState...)
+  // tem que rodar em toda renderização, sempre na mesma ordem; um
+  // hook só depois de um return condicional é chamado às vezes sim,
+  // às vezes não, e foi exatamente isso que quebrou a aba Finanças
+  // (erro #310 do React: "mais hooks numa renderização que na
+  // outra"). Por isso calcula tudo de novo aqui, direto do
+  // snapshot, em vez de reaproveitar saldoTotal/recorrências
+  // (que só existem depois do return).
+  useEffect(() => {
+    if (snapshot === undefined || !ehMesAtual) return;
+    const contasAtuais = snapshot?.financas.contas ?? [];
+    const recorrenciasAtuais = snapshot?.financas.recorrencias ?? [];
+    const saldoAtual = contasAtuais
+      .filter((c: any) => c.tipo !== "investimento")
+      .reduce((total: number, c: any) => total + Number(c.saldo), 0);
+    atualizarWidgetSaldo(formatarMoeda(saldoAtual));
+
+    const diaHoje = hoje.getDate();
+    const linhasContas = recorrenciasAtuais
+      .filter((r) => r.ativo && r.dia_mes - diaHoje >= 0 && r.dia_mes - diaHoje <= 7)
+      .sort((a, b) => a.dia_mes - b.dia_mes)
+      .map((r) => `${r.descricao || "Recorrência"} · ${formatarMoeda(Number(r.valor))}`);
+    atualizarWidgetContasAPagar(linhasContas);
+  }, [snapshot, ehMesAtual]);
+
   if (snapshot === undefined) {
     return (
       <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-5xl mx-auto animate-pulse">
@@ -83,22 +110,6 @@ export default function FinancasPage() {
         hoje.getDate()
       )
     : null;
-
-  // Etapa 154 — alimenta os widgets de tela inicial "Saldo" e
-  // "Contas a pagar". Só faz sentido rodar quando é o mês ATUAL
-  // sendo mostrado (não quando a pessoa está navegando por um mês
-  // passado/futuro dentro do app).
-  useEffect(() => {
-    if (!ehMesAtual) return;
-    atualizarWidgetSaldo(formatarMoeda(saldoTotal));
-
-    const diaHoje = hoje.getDate();
-    const linhasContas = recorrencias
-      .filter((r) => r.ativo && r.dia_mes - diaHoje >= 0 && r.dia_mes - diaHoje <= 7)
-      .sort((a, b) => a.dia_mes - b.dia_mes)
-      .map((r) => `${r.descricao || "Recorrência"} · ${formatarMoeda(Number(r.valor))}`);
-    atualizarWidgetContasAPagar(linhasContas);
-  }, [ehMesAtual, saldoTotal, recorrencias]);
 
   const inicioMesSelecionado = primeiroDiaDoMes(mesSelecionado + "-01");
   const fimMesSelecionado = ultimoDiaDoMes(mesSelecionado + "-01");
