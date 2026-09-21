@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { PieChart, TrendingUp, TrendingDown, Bot } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
-import { primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
+import { primeiroDiaDoMes, ultimoDiaDoMes, formatarMoeda } from "@/lib/financas/formatacao";
 import { calcularSaldoPrevisto } from "@/lib/financas/consulta";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
@@ -16,6 +16,7 @@ import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { atualizarWidgetSaldo, atualizarWidgetContasAPagar } from "@/lib/widgets/atualizar";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -82,6 +83,22 @@ export default function FinancasPage() {
         hoje.getDate()
       )
     : null;
+
+  // Etapa 154 — alimenta os widgets de tela inicial "Saldo" e
+  // "Contas a pagar". Só faz sentido rodar quando é o mês ATUAL
+  // sendo mostrado (não quando a pessoa está navegando por um mês
+  // passado/futuro dentro do app).
+  useEffect(() => {
+    if (!ehMesAtual) return;
+    atualizarWidgetSaldo(formatarMoeda(saldoTotal));
+
+    const diaHoje = hoje.getDate();
+    const linhasContas = recorrencias
+      .filter((r) => r.ativo && r.dia_mes - diaHoje >= 0 && r.dia_mes - diaHoje <= 7)
+      .sort((a, b) => a.dia_mes - b.dia_mes)
+      .map((r) => `${r.descricao || "Recorrência"} · ${formatarMoeda(Number(r.valor))}`);
+    atualizarWidgetContasAPagar(linhasContas);
+  }, [ehMesAtual, saldoTotal, recorrencias]);
 
   const inicioMesSelecionado = primeiroDiaDoMes(mesSelecionado + "-01");
   const fimMesSelecionado = ultimoDiaDoMes(mesSelecionado + "-01");
