@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { entrarComGoogle } from "@/app/login/actions";
@@ -35,6 +35,11 @@ export function BotaoEntrarGoogle() {
   const router = useRouter();
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // Etapa 155 — guarda SÍNCRONA (não é estado do React, que só
+  // atualiza no próximo render) contra clique duplo/rápido demais no
+  // botão, que estava abrindo mais de uma aba do Google ao mesmo
+  // tempo e confundindo o retorno do login.
+  const jaClicouRef = useRef(false);
 
   useEffect(() => {
     if (!estaNoAppNativo()) return;
@@ -56,6 +61,7 @@ export function BotaoEntrarGoogle() {
           if (!codigo) {
             setErro("Não foi possível concluir o login com Google.");
             setCarregando(false);
+            jaClicouRef.current = false;
             return;
           }
 
@@ -64,6 +70,7 @@ export function BotaoEntrarGoogle() {
           if (error) {
             setErro(error.message);
             setCarregando(false);
+            jaClicouRef.current = false;
             return;
           }
           router.replace("/dashboard");
@@ -75,6 +82,8 @@ export function BotaoEntrarGoogle() {
   }, [router]);
 
   async function aoClicar() {
+    if (jaClicouRef.current) return;
+    jaClicouRef.current = true;
     setErro(null);
 
     if (!estaNoAppNativo()) {
@@ -97,6 +106,7 @@ export function BotaoEntrarGoogle() {
       if (error || !data?.url) {
         setErro(error?.message ?? "Não foi possível iniciar o login com Google.");
         setCarregando(false);
+        jaClicouRef.current = false;
         return;
       }
 
@@ -107,6 +117,7 @@ export function BotaoEntrarGoogle() {
     } catch {
       setErro("Não foi possível iniciar o login com Google.");
       setCarregando(false);
+      jaClicouRef.current = false;
     }
   }
 

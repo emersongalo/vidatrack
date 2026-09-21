@@ -53,7 +53,7 @@ export function TrilhoMenu() {
           className="w-full trilho-linha rounded-full transition-all ease-out"
           style={{
             height: linhaVisivel || semAnimacao ? "100%" : "0%",
-            transitionDuration: semAnimacao ? "0ms" : "1100ms",
+            transitionDuration: semAnimacao ? "0ms" : "450ms",
           }}
         />
       </div>
@@ -69,7 +69,7 @@ export function TrilhoMenu() {
               transform: linhaVisivel || semAnimacao ? "translateX(0)" : "translateX(-8px)",
               transition: semAnimacao
                 ? "none"
-                : `opacity 500ms ease-out ${350 + i * 260}ms, transform 500ms ease-out ${350 + i * 260}ms, border-color 150ms, transform 150ms`,
+                : `opacity 250ms ease-out ${120 + i * 90}ms, transform 250ms ease-out ${120 + i * 90}ms, border-color 150ms, transform 150ms`,
             }}
           >
             <span
