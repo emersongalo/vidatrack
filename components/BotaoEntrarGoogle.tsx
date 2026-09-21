@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { entrarComGoogle } from "@/app/login/actions";
 
@@ -32,7 +31,6 @@ function estaNoAppNativo() {
  * antes, chamando a Server Action normal.
  */
 export function BotaoEntrarGoogle() {
-  const router = useRouter();
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   // Etapa 155 — guarda SÍNCRONA (não é estado do React, que só
@@ -73,13 +71,21 @@ export function BotaoEntrarGoogle() {
             jaClicouRef.current = false;
             return;
           }
-          router.replace("/dashboard");
+          // Etapa 158 — troquei de router.replace (navegação "leve" do
+          // Next, sem recarregar a página) por isso: dentro da WebView
+          // do Android, a sessão que acabou de ser gravada em cookie
+          // pelo passo acima às vezes não ia junto a tempo na navegação
+          // leve, e o middleware (que decide se deixa entrar no Painel)
+          // via como se ninguém tivesse logado — voltava pro login sem
+          // erro nenhum. Um recarregamento de verdade sempre manda os
+          // cookies mais atuais que o navegador tem guardados.
+          window.location.href = "/dashboard";
         })
       ) as unknown as { remove: () => void };
     })();
 
     return () => handle?.remove();
-  }, [router]);
+  }, []);
 
   async function aoClicar() {
     if (jaClicouRef.current) return;
