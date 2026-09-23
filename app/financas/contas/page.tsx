@@ -6,6 +6,7 @@ import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { criarConta, arquivarConta, excluirContaDefinitivamente } from "../actions";
 import { SeletorTipoConta } from "@/components/SeletorTipoConta";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
+import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
 import { SeloBanco } from "@/components/SeloBanco";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { BANCOS } from "@/lib/financas/bancos";
@@ -45,44 +46,65 @@ export default function ContasPage() {
         <ul className="space-y-2 mb-8 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {contas.map((conta: any) => (
             <li key={conta.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <SeloBanco bancoId={conta.banco} />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{conta.nome}</p>
-                    <p className="text-xs text-ink-400">
-                      {RÓTULOS_TIPO[conta.tipo]} · saldo <ValorMonetario valor={Number(conta.saldo)} />
-                    </p>
+                    <p className="text-xs text-ink-400">{RÓTULOS_TIPO[conta.tipo]}</p>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4 mt-2.5 pt-2.5 border-t border-base-600">
-                {conta.tipo === "cartao" && conta.dia_fechamento && (
-                  <Link href={`/financas/contas/${conta.id}/fatura`} aria-label="Ver fatura" className="text-ink-400 hover:text-financa transition">
-                    <Receipt size={15} strokeWidth={2} />
-                  </Link>
-                )}
-                <Link href={`/financas/contas/${conta.id}/editar`} aria-label="Editar" className="text-ink-400 hover:text-ink-100 transition">
-                  <Pencil size={15} strokeWidth={2} />
-                </Link>
-                <Link href={`/financas/contas/${conta.id}/compartilhar`} aria-label="Compartilhar" className="text-ink-400 hover:text-ink-100 transition">
-                  <Share2 size={15} strokeWidth={2} />
-                </Link>
-                <span className="flex-1" />
-                <BotaoComConfirmacao
-                  acao={arquivarConta.bind(null, conta.id)}
-                  textoBotao={<Archive size={15} strokeWidth={2} />}
-                  textoConfirmacao={`Arquivar "${conta.nome}"? Ela some das listas, mas os dados continuam guardados — dá pra restaurar depois.`}
-                  classeBotao="text-ink-400 hover:text-ink-100 transition"
-                  aoConcluir={recarregar}
-                />
-                <BotaoComConfirmacao
-                  acao={excluirContaDefinitivamente.bind(null, conta.id)}
-                  textoBotao={<Trash2 size={15} strokeWidth={2} />}
-                  textoConfirmacao={`Excluir "${conta.nome}" de vez? Isso apaga TODOS os lançamentos e recorrências dela, sem volta nenhuma.`}
-                  classeBotao="text-ink-400 hover:text-red-400 transition"
-                  aoConcluir={recarregar}
-                />
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="font-mono text-sm mr-1">
+                    <ValorMonetario valor={Number(conta.saldo)} />
+                  </span>
+                  <MenuAcoes>
+                    {(fecharMenu) => (
+                      <>
+                        {conta.tipo === "cartao" && conta.dia_fechamento && (
+                          <ItemMenuAcoes href={`/financas/contas/${conta.id}/fatura`}>
+                            <Receipt size={15} strokeWidth={2} /> Ver fatura
+                          </ItemMenuAcoes>
+                        )}
+                        <ItemMenuAcoes href={`/financas/contas/${conta.id}/editar`}>
+                          <Pencil size={15} strokeWidth={2} /> Editar
+                        </ItemMenuAcoes>
+                        <ItemMenuAcoes href={`/financas/contas/${conta.id}/compartilhar`}>
+                          <Share2 size={15} strokeWidth={2} /> Compartilhar
+                        </ItemMenuAcoes>
+                        <div className="my-1 border-t border-base-600" />
+                        <BotaoComConfirmacao
+                          acao={arquivarConta.bind(null, conta.id)}
+                          textoBotao={
+                            <span className="flex items-center gap-2.5">
+                              <Archive size={15} strokeWidth={2} /> Arquivar
+                            </span>
+                          }
+                          textoConfirmacao={`Arquivar "${conta.nome}"? Ela some das listas, mas os dados continuam guardados — dá pra restaurar depois.`}
+                          classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-ink-100 hover:bg-base-700 transition"
+                          aoConcluir={() => {
+                            recarregar();
+                            fecharMenu();
+                          }}
+                        />
+                        <BotaoComConfirmacao
+                          acao={excluirContaDefinitivamente.bind(null, conta.id)}
+                          textoBotao={
+                            <span className="flex items-center gap-2.5">
+                              <Trash2 size={15} strokeWidth={2} /> Excluir de vez
+                            </span>
+                          }
+                          textoConfirmacao={`Excluir "${conta.nome}" de vez? Isso apaga TODOS os lançamentos e recorrências dela, sem volta nenhuma.`}
+                          classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-red-400 hover:bg-base-700 transition"
+                          aoConcluir={() => {
+                            recarregar();
+                            fecharMenu();
+                          }}
+                        />
+                      </>
+                    )}
+                  </MenuAcoes>
+                </div>
               </div>
             </li>
           ))}

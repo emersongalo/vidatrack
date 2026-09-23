@@ -6,8 +6,11 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { calcularPeriodo, type PresetPeriodo } from "@/lib/financas/formatacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
-import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
+import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
+import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
+import { removerTransacao } from "../actions";
+import { Pencil, Trash2 } from "lucide-react";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
@@ -24,7 +27,7 @@ const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
 // ficam de fora por enquanto (mesma razão das outras telas: depende
 // de foto resolvida no servidor).
 export default function ExtratoPage() {
-  const { snapshot } = useSnapshotOffline();
+  const { snapshot, recarregar } = useSnapshotOffline();
   const [tipo, setTipo] = useState<"todos" | "receita" | "despesa">("todos");
   const [preset, setPreset] = useState<PresetPeriodo>("este_mes");
 
@@ -132,12 +135,29 @@ export default function ExtratoPage() {
                   <p className="text-xs text-ink-400 truncate min-w-0">
                     {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
                   </p>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
-                      Editar
-                    </Link>
-                    <BotaoRemoverTransacao transacaoId={t.id} />
-                  </div>
+                  <MenuAcoes>
+                    {(fecharMenu) => (
+                      <>
+                        <ItemMenuAcoes href={`/financas/${t.id}/editar`}>
+                          <Pencil size={15} strokeWidth={2} /> Editar
+                        </ItemMenuAcoes>
+                        <BotaoComConfirmacao
+                          acao={removerTransacao.bind(null, t.id)}
+                          textoBotao={
+                            <span className="flex items-center gap-2.5">
+                              <Trash2 size={15} strokeWidth={2} /> Excluir
+                            </span>
+                          }
+                          textoConfirmacao="Excluir esse lançamento? Não tem volta."
+                          classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-red-400 hover:bg-base-700 transition"
+                          aoConcluir={() => {
+                            recarregar();
+                            fecharMenu();
+                          }}
+                        />
+                      </>
+                    )}
+                  </MenuAcoes>
                 </div>
               </li>
             );
