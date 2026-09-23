@@ -33,6 +33,7 @@ export async function buscarInsightsFinanceiros(
       totalDespesasMesAnterior: 0,
       maiorGasto: null,
       acumulado: [],
+      acumuladoMesAnterior: [],
       dicas: ["Crie sua primeira conta e comece a lançar despesas pra ver a análise aqui."],
       orcamentoComparado: [],
       projecaoFimDoMes: null,

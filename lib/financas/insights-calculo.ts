@@ -23,6 +23,10 @@ export type InsightsFinanceiros = {
   totalDespesasMesAnterior: number;
   maiorGasto: MaiorGasto;
   acumulado: PontoAcumulado[];
+  /** Etapa 170 — o mesmo acumulado, mas do mês ANTERIOR inteiro (não
+   *  limitado a "até hoje") — pra sobrepor os dois no gráfico e
+   *  comparar o ritmo, igual ao "Ritmo de gasto" do Despezzas. */
+  acumuladoMesAnterior: PontoAcumulado[];
   dicas: string[];
   orcamentoComparado: OrcamentoComparado[];
   projecaoFimDoMes: number | null;
@@ -111,6 +115,25 @@ export function calcularInsightsFinanceiros(
     acumulado.push({ dia, acumulado: Math.round(corrente * 100) / 100 });
   }
 
+  // Etapa 170 — o mesmo acumulado, mas do mês anterior inteiro (esse
+  // sempre já terminou, então não tem "diaLimite" — vai até o fim).
+  const diasNoMesAnterior = new Date(
+    Number(inicioMesAnterior.slice(0, 4)),
+    Number(inicioMesAnterior.slice(5, 7)),
+    0
+  ).getDate();
+  const gastoPorDiaAnterior = new Map<number, number>();
+  for (const t of doMesAnterior) {
+    const dia = Number(t.data.slice(8, 10));
+    gastoPorDiaAnterior.set(dia, (gastoPorDiaAnterior.get(dia) ?? 0) + Number(t.valor));
+  }
+  const acumuladoMesAnterior: PontoAcumulado[] = [];
+  let correnteAnterior = 0;
+  for (let dia = 1; dia <= diasNoMesAnterior; dia++) {
+    correnteAnterior += gastoPorDiaAnterior.get(dia) ?? 0;
+    acumuladoMesAnterior.push({ dia, acumulado: Math.round(correnteAnterior * 100) / 100 });
+  }
+
   const dicas = gerarDicas({ categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto });
 
   const orcamentoComparado: OrcamentoComparado[] = categoriasComMeta.map((c) => ({
@@ -131,6 +154,7 @@ export function calcularInsightsFinanceiros(
     totalDespesasMesAnterior,
     maiorGasto,
     acumulado,
+    acumuladoMesAnterior,
     dicas,
     orcamentoComparado,
     projecaoFimDoMes,

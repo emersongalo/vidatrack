@@ -42,7 +42,7 @@ export default function AnaliseFinanceiraPage() {
     .map((c: any) => ({ nome: c.nome, meta_mensal: Number(c.meta_mensal) }));
 
   const insights = calcularInsightsFinanceiros(transacoesDespesa, categoriasComMeta, mesReferencia, hojeISO());
-  const { categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto, acumulado, dicas, orcamentoComparado, projecaoFimDoMes } = insights;
+  const { categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto, acumulado, acumuladoMesAnterior, dicas, orcamentoComparado, projecaoFimDoMes } = insights;
   const { gastoSemanaAtual, gastoSemanaAnterior } = calcularComparacaoSemanal(transacoesDespesa, hojeISO());
 
   const nomeMes = new Date(mesReferencia + "T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
@@ -148,9 +148,9 @@ export default function AnaliseFinanceiraPage() {
           </div>
 
           <div className="mb-6">
-            <p className="text-sm text-ink-400 mb-3">Acumulado ao longo do mês</p>
+            <p className="text-sm text-ink-400 mb-3">Ritmo de gasto — este mês x mês passado</p>
             <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
-              <GraficoAcumulado dados={acumulado} />
+              <GraficoAcumulado dados={acumulado} dadosMesAnterior={acumuladoMesAnterior} />
             </div>
           </div>
 
