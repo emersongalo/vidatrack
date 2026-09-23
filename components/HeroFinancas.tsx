@@ -8,6 +8,7 @@ export function HeroFinancas({
   saldoPrevisto,
   receitas,
   despesas,
+  totalInvestido,
   nomeMes,
   pessoas,
   hrefMesAnterior,
@@ -22,6 +23,7 @@ export function HeroFinancas({
   saldoPrevisto: number | null;
   receitas: number;
   despesas: number;
+  totalInvestido?: number;
   nomeMes: string;
   pessoas?: { nome: string; urlFoto: string | null }[];
   hrefMesAnterior: string;
@@ -36,7 +38,7 @@ export function HeroFinancas({
   aoHoje?: () => void;
 }) {
   return (
-    <div className="bg-base-800 border border-base-600 rounded-xl2 p-5 mb-6">
+    <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-5 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {pessoas && pessoas.length > 0 && <AvataresEmpilhados pessoas={pessoas} tamanho={24} />}
@@ -103,34 +105,25 @@ export function HeroFinancas({
         </p>
       </div>
 
-      <div className="space-y-2.5 mb-4">
-        <Link
-          href="/financas/extrato?preset=este_mes"
-          className="flex items-center gap-2.5"
-        >
-          <span className="w-9 h-9 rounded-full bg-habito/15 flex items-center justify-center shrink-0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="#7FB894" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-          <p className="text-[11px] text-ink-400 flex-1">Receitas do mês</p>
-          <p className="text-sm font-mono font-medium text-habito shrink-0">
+      {/* Etapa 159 — resumo de 3 colunas, mais compacto e "maduro"
+         (inspirado no Despezzas) que as linhas com ícone de antes. */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <Link href="/financas/extrato?preset=este_mes" className="text-center">
+          <p className="text-[10px] text-ink-400 uppercase tracking-wide mb-0.5">Receitas</p>
+          <p className="text-sm font-mono font-medium text-habito truncate">
             <ValorMonetario valor={receitas} />
           </p>
         </Link>
-
-        <Link
-          href="/financas/extrato?preset=este_mes"
-          className="flex items-center gap-2.5"
-        >
-          <span className="w-9 h-9 rounded-full bg-red-400/15 flex items-center justify-center shrink-0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="#F87171" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-          <p className="text-[11px] text-ink-400 flex-1">Despesas do mês</p>
-          <p className="text-sm font-mono font-medium text-red-400 shrink-0">
+        <Link href="/financas/extrato?preset=este_mes" className="text-center border-x border-base-600">
+          <p className="text-[10px] text-ink-400 uppercase tracking-wide mb-0.5">Despesas</p>
+          <p className="text-sm font-mono font-medium text-red-400 truncate">
             <ValorMonetario valor={despesas} />
+          </p>
+        </Link>
+        <Link href="/financas/investir" className="text-center">
+          <p className="text-[10px] text-ink-400 uppercase tracking-wide mb-0.5">Investido</p>
+          <p className="text-sm font-mono font-medium text-financa truncate">
+            <ValorMonetario valor={totalInvestido ?? 0} />
           </p>
         </Link>
       </div>

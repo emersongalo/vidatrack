@@ -188,7 +188,7 @@ function HojeConteudo() {
               ))}
             </div>
           ) : itens!.length === 0 && !temAlgumItemCadastrado ? (
-            <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
+            <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-8 text-center">
               <p className="font-display font-semibold mb-1">Vamos começar?</p>
               <p className="text-ink-400 text-sm">Toque em uma sugestão pra criar seu primeiro hábito:</p>
               <SugestoesHabito aoCriar={recarregar} />
@@ -219,7 +219,7 @@ function HojeConteudo() {
         </div>
 
         {total > 0 && (
-          <div className="hidden lg:block bg-base-800 border border-base-600 rounded-xl2 p-4 sticky top-6">
+          <div className="hidden lg:block bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 sticky top-6">
             <p className="text-xs text-ink-400 mb-1">Hoje</p>
             <p className="text-3xl font-display font-bold mb-1">
               {feitos}

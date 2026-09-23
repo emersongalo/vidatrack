@@ -101,6 +101,10 @@ export default function FinancasPage() {
     .filter((c: any) => c.tipo !== "investimento")
     .reduce((total: number, c: any) => total + Number(c.saldo), 0);
 
+  const totalInvestido = contas
+    .filter((c: any) => c.tipo === "investimento")
+    .reduce((total: number, c: any) => total + Number(c.saldo), 0);
+
   const saldoPrevisto = ehMesAtual
     ? calcularSaldoPrevisto(
         saldoTotal,
@@ -141,7 +145,7 @@ export default function FinancasPage() {
     dadosGrafico.length > 0 ? (
       <div key="grafico" className="mb-6 lg:break-inside-avoid">
         <p className="text-sm text-ink-400 mb-3 capitalize">Despesas por categoria · {nomeDoMesSelecionado}</p>
-        <GraficoDespesasCategoria dados={dadosGrafico} />
+        <GraficoDespesasCategoria dados={dadosGrafico} mapaCategoriaInfo={mapaCategoriaInfo} />
       </div>
     ) : null;
 
@@ -208,7 +212,7 @@ export default function FinancasPage() {
       <h1 className="text-2xl font-display font-semibold mt-2 mb-6">Finanças</h1>
 
       {!contas.length ? (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
+        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-8 text-center">
           <p className="font-display font-semibold mb-1">Nenhuma conta ainda</p>
           <p className="text-ink-400 text-sm mb-4">Crie sua primeira conta (carteira, banco ou cartão) para começar.</p>
           <Link
@@ -225,6 +229,7 @@ export default function FinancasPage() {
             saldoPrevisto={saldoPrevisto}
             receitas={receitasDoMes}
             despesas={despesasDoMes}
+            totalInvestido={totalInvestido}
             nomeMes={nomeDoMesSelecionado}
             pessoas={pessoas}
             hrefMesAnterior={`/financas?mes=${mesAnteriorISO}`}
@@ -244,7 +249,7 @@ export default function FinancasPage() {
             {categoriasComMeta.length > 0 && (
               <div className="mb-6 lg:break-inside-avoid">
                 <p className="text-sm text-ink-400 mb-3">Orçamento do mês</p>
-                <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 space-y-4">
+                <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 space-y-4">
                   {categoriasComMeta.map((cat: any) => (
                     <BarraOrcamento
                       key={cat.id}
