@@ -35,6 +35,7 @@ export async function buscarInsightsFinanceiros(
       acumulado: [],
       dicas: ["Crie sua primeira conta e comece a lançar despesas pra ver a análise aqui."],
       orcamentoComparado: [],
+      projecaoFimDoMes: null,
     };
   }
 

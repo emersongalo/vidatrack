@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { BotaoAtivarNotificacoes } from "@/components/BotaoAtivarNotificacoes";
-import { Globe, Smartphone, AlertTriangle, BellRing, X } from "lucide-react";
+import { Globe, Smartphone, AlertTriangle, BellRing, TrendingUp, X } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
 import { dispensar } from "@/lib/notificacoes/dispensados";
+import { formatarMoeda } from "@/lib/financas/formatacao";
 
 // Etapa 139/140 — a "central" que faltava: até agora, uma notificação
 // push que você não viu (ou nem tinha o celular na mão) sumia pra
@@ -19,8 +20,8 @@ import { dispensar } from "@/lib/notificacoes/dispensados";
 export default function NotificacoesPage() {
   const { snapshot } = useSnapshotOffline();
   const [, forcarAtualizacao] = useState(0);
-  const { tarefasVencidas, lembretesPassados } = calcularPendencias(snapshot);
-  const temAlgumPendente = tarefasVencidas.length > 0 || lembretesPassados.length > 0;
+  const { tarefasVencidas, lembretesPassados, alertasCategoria } = calcularPendencias(snapshot);
+  const temAlgumPendente = tarefasVencidas.length > 0 || lembretesPassados.length > 0 || alertasCategoria.length > 0;
 
   function aoDispensar(chave: string) {
     dispensar(chave);
@@ -71,6 +72,29 @@ export default function NotificacoesPage() {
               </Link>
               <button
                 onClick={() => aoDispensar(l.chave)}
+                aria-label="Dispensar"
+                className="text-ink-400 hover:text-ink-100 transition shrink-0 p-1 -m-1"
+              >
+                <X size={16} strokeWidth={2} />
+              </button>
+            </div>
+          ))}
+          {alertasCategoria.map((a) => (
+            <div
+              key={a.chave}
+              className="flex items-start gap-3 bg-red-400/10 border border-red-400/30 rounded-xl2 p-4"
+            >
+              <span className="text-red-400 shrink-0 mt-0.5">
+                <TrendingUp size={18} strokeWidth={2} />
+              </span>
+              <Link href="/financas/analise" className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{a.nome} subiu {a.percentual.toFixed(0)}%</p>
+                <p className="text-xs text-ink-400 mt-0.5">
+                  Já {formatarMoeda(a.valorAtual)} esse mês, comparado ao mesmo período do mês passado
+                </p>
+              </Link>
+              <button
+                onClick={() => aoDispensar(a.chave)}
                 aria-label="Dispensar"
                 className="text-ink-400 hover:text-ink-100 transition shrink-0 p-1 -m-1"
               >

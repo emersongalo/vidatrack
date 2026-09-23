@@ -25,6 +25,7 @@ export type InsightsFinanceiros = {
   acumulado: PontoAcumulado[];
   dicas: string[];
   orcamentoComparado: OrcamentoComparado[];
+  projecaoFimDoMes: number | null;
 };
 
 export function mesAnteriorISO(dataISO: string): string {
@@ -118,7 +119,54 @@ export function calcularInsightsFinanceiros(
     gasto: mapaAtual.get(c.nome) ?? 0,
   }));
 
-  return { categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto, acumulado, dicas, orcamentoComparado };
+  // Projeção simples: no ritmo médio de gasto por dia até agora,
+  // quanto deve fechar o mês. Só faz sentido pro mês ATUAL — pra um
+  // mês já terminado, o total real já é a resposta.
+  const projecaoFimDoMes =
+    ehMesAtual && diaLimite > 0 ? Math.round((totalDespesasMes / diaLimite) * diasNoMes * 100) / 100 : null;
+
+  return {
+    categorias,
+    totalDespesasMes,
+    totalDespesasMesAnterior,
+    maiorGasto,
+    acumulado,
+    dicas,
+    orcamentoComparado,
+    projecaoFimDoMes,
+  };
+}
+
+/**
+ * Etapa 165 — últimos 7 dias x os 7 dias antes desses (janela
+ * corrida a partir de HOJE, não "semana de calendário"), pra
+ * comparar o ritmo recente de gasto — independe de qual mês está
+ * sendo olhado na tela, por isso é uma função separada de
+ * calcularInsightsFinanceiros (que só recebe as transações do mês
+ * em exibição). Recebe a lista INTEIRA de despesas, sem filtro de
+ * mês.
+ */
+export function calcularComparacaoSemanal(
+  todasAsDespesas: { valor: number; data: string }[],
+  hojeISO: string
+): { gastoSemanaAtual: number; gastoSemanaAnterior: number } {
+  function somarEntre(diasAtras_min: number, diasAtras_max: number): number {
+    const hoje = new Date(hojeISO + "T00:00:00");
+    const limite = new Date(hoje);
+    limite.setDate(limite.getDate() - diasAtras_max);
+    const inicioISO = limite.toLocaleDateString("sv-SE");
+    const fimData = new Date(hoje);
+    fimData.setDate(fimData.getDate() - diasAtras_min);
+    const fimISO = fimData.toLocaleDateString("sv-SE");
+    return todasAsDespesas
+      .filter((t) => t.data >= inicioISO && t.data <= fimISO)
+      .reduce((s, t) => s + Number(t.valor), 0);
+  }
+
+  return {
+    gastoSemanaAtual: somarEntre(0, 6),
+    gastoSemanaAnterior: somarEntre(7, 13),
+  };
 }
 
 function gerarDicas(dados: {

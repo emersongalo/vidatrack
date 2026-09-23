@@ -1,6 +1,7 @@
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
 import { formatarMoeda, primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
-import { hojeISO } from "@/lib/habitos/streak";
+import { calcularComparacaoSemanal } from "@/lib/financas/insights-calculo";
+import { hojeISO, calcularStreak } from "@/lib/habitos/streak";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
 import { interpretarFala } from "@/lib/financas/parseFala";
@@ -97,7 +98,7 @@ export function interpretarPergunta(textoOriginal: string, snapshot: SnapshotOff
   }
 
   // --- 5) Hábito/tarefa pendente hoje ---
-  if (contemAlguma(texto, ["habito", "tarefa", "pendente", "hoje"]) && !contemAlguma(texto, ["gastei", "reais"])) {
+  if (contemAlguma(texto, ["habito", "tarefa", "pendente", "hoje"]) && !contemAlguma(texto, ["gastei", "reais", "sequencia", "streak"])) {
     const { tarefasVencidas, lembretesPassados } = calcularPendencias(snapshot);
     const checkinsHoje = new Set(
       snapshot.habitoCheckins.filter((c) => c.data === hoje && c.quantidade > 0).map((c) => c.habito_id)
@@ -127,17 +128,76 @@ export function interpretarPergunta(textoOriginal: string, snapshot: SnapshotOff
   }
 
   // --- 7) Resumo da semana ---
-  if (contemAlguma(texto, ["resumo da semana", "resumo semanal", "essa semana"])) {
-    const seteDiasAtras = new Date();
-    seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
-    const inicioSemana = seteDiasAtras.toLocaleDateString("sv-SE");
-    const daSemana = transacoes.filter((t: any) => t.data >= inicioSemana);
-    const receitas = daSemana.filter((t: any) => t.tipo === "receita").reduce((s: number, t: any) => s + Number(t.valor), 0);
-    const despesas = daSemana.filter((t: any) => t.tipo === "despesa").reduce((s: number, t: any) => s + Number(t.valor), 0);
+  if (contemAlguma(texto, ["resumo da semana", "resumo semanal", "essa semana"]) && !contemAlguma(texto, ["habito", "sequencia"])) {
+    const { gastoSemanaAtual, gastoSemanaAnterior } = calcularComparacaoSemanal(
+      transacoes.filter((t: any) => t.tipo === "despesa"),
+      hoje
+    );
+    const receitas7dias = (() => {
+      const seteDiasAtras = new Date();
+      seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+      const inicioSemana = seteDiasAtras.toLocaleDateString("sv-SE");
+      return transacoes
+        .filter((t: any) => t.tipo === "receita" && t.data >= inicioSemana)
+        .reduce((s: number, t: any) => s + Number(t.valor), 0);
+    })();
+    let comparativo = "";
+    if (gastoSemanaAnterior > 0) {
+      const variacao = ((gastoSemanaAtual - gastoSemanaAnterior) / gastoSemanaAnterior) * 100;
+      comparativo = ` Isso é ${Math.abs(variacao).toFixed(0)}% ${variacao > 0 ? "mais" : "menos"} que os 7 dias anteriores (${formatarMoeda(gastoSemanaAnterior)}).`;
+    }
     return {
       tipo: "texto",
-      texto: `Nos últimos 7 dias: recebeu ${formatarMoeda(receitas)} e gastou ${formatarMoeda(despesas)}.`,
+      texto: `Nos últimos 7 dias: recebeu ${formatarMoeda(receitas7dias)} e gastou ${formatarMoeda(gastoSemanaAtual)}.${comparativo}`,
     };
+  }
+
+  // --- 7b) Previsão de gasto do mês ---
+  if (contemAlguma(texto, ["previsao", "vou gastar", "vou fechar o mes", "projecao"])) {
+    const diaHoje = Number(hoje.slice(8, 10));
+    const diasNoMes = new Date(Number(hoje.slice(0, 4)), Number(hoje.slice(5, 7)), 0).getDate();
+    const totalMes = transacoesDoMes
+      .filter((t: any) => t.tipo === "despesa")
+      .reduce((s: number, t: any) => s + Number(t.valor), 0);
+    if (totalMes === 0) return { tipo: "texto", texto: "Ainda não tem despesa lançada esse mês pra eu calcular uma previsão." };
+    const projecao = (totalMes / diaHoje) * diasNoMes;
+    return {
+      tipo: "texto",
+      texto: `No ritmo de hoje, você deve fechar o mês em ${formatarMoeda(projecao)} (já gastou ${formatarMoeda(totalMes)} até o dia ${diaHoje}).`,
+    };
+  }
+
+  // --- 7c) Categoria que subiu muito ---
+  if (contemAlguma(texto, ["subiu", "aumentou", "disparou", "alerta"]) && !contemAlguma(texto, ["habito", "sequencia"])) {
+    const { alertasCategoria } = calcularPendencias(snapshot);
+    if (alertasCategoria.length === 0) {
+      return { tipo: "texto", texto: "Nenhuma categoria subiu de forma preocupante comparado ao mês passado." };
+    }
+    const linhas = alertasCategoria.map(
+      (a) => `${a.nome}: ${formatarMoeda(a.valorAtual)} (↑ ${a.percentual.toFixed(0)}%)`
+    );
+    return { tipo: "texto", texto: `Subiram bastante comparado ao mês passado:\n${linhas.join("\n")}` };
+  }
+
+  // --- 7d) Melhor sequência de hábito ---
+  if (contemAlguma(texto, ["melhor sequencia", "streak", "sequencia de dias", "quantos dias seguidos"])) {
+    let melhor = { nome: "", dias: 0 };
+    const checkinsPorHabito = new Map<string, Map<string, number>>();
+    for (const c of snapshot.habitoCheckins) {
+      if (!checkinsPorHabito.has(c.habito_id)) checkinsPorHabito.set(c.habito_id, new Map());
+      checkinsPorHabito.get(c.habito_id)!.set(c.data, c.quantidade);
+    }
+    for (const h of snapshot.habitos as any[]) {
+      const mapaDatas = checkinsPorHabito.get(h.id) ?? new Map();
+      const meta = h.meta_diaria ?? 1;
+      const datasFeitas = Array.from(mapaDatas.entries())
+        .filter(([, qtd]) => (qtd as number) >= meta)
+        .map(([data]) => data as string);
+      const streak = calcularStreak(datasFeitas);
+      if (streak > melhor.dias) melhor = { nome: h.nome, dias: streak };
+    }
+    if (melhor.dias === 0) return { tipo: "texto", texto: "Nenhum hábito com sequência ativa agora — comece hoje!" };
+    return { tipo: "texto", texto: `Sua melhor sequência agora é "${melhor.nome}", há ${melhor.dias} ${melhor.dias === 1 ? "dia" : "dias"} seguidos. 🔥` };
   }
 
   // --- 8) Gasto por categoria específica (ex: "quanto gastei em restaurantes") ---
@@ -179,6 +239,6 @@ export function interpretarPergunta(textoOriginal: string, snapshot: SnapshotOff
   return {
     tipo: "texto",
     texto:
-      "Não entendi essa pergunta ainda. Você pode perguntar sobre: gastos do mês (geral ou por categoria), orçamento, contas a pagar, recorrentes/assinaturas, saldo, resumo da semana, hábitos/tarefas de hoje — ou me pedir pra lançar algo (ex: \"gastei 20 reais no mercado\").",
+      "Não entendi essa pergunta ainda. Você pode perguntar sobre: gastos do mês (geral ou por categoria), previsão de fim do mês, orçamento, contas a pagar, recorrentes/assinaturas, saldo, resumo/comparação da semana, categoria que subiu muito, melhor sequência de hábito, hábitos/tarefas de hoje — ou me pedir pra lançar algo (ex: \"gastei 20 reais no mercado\").",
   };
 }

@@ -37,15 +37,15 @@ export default function DashboardPage() {
   }, [router]);
 
   const nome = snapshot?.perfil.nome || snapshot?.perfil.email || "";
-  const { tarefasVencidas, lembretesPassados } = calcularPendencias(snapshot);
-  const temPendencia = tarefasVencidas.length > 0 || lembretesPassados.length > 0;
+  const { tarefasVencidas, lembretesPassados, alertasCategoria } = calcularPendencias(snapshot);
+  const temPendencia = tarefasVencidas.length > 0 || lembretesPassados.length > 0 || alertasCategoria.length > 0;
 
   // Etapa 154 — alimenta o widget de tela inicial "Pendências", a
   // mesma contagem da bolinha vermelha no sininho aqui em cima.
   useEffect(() => {
     if (snapshot === undefined) return;
-    atualizarWidgetPendencias(tarefasVencidas.length + lembretesPassados.length);
-  }, [snapshot, tarefasVencidas.length, lembretesPassados.length]);
+    atualizarWidgetPendencias(tarefasVencidas.length + lembretesPassados.length + alertasCategoria.length);
+  }, [snapshot, tarefasVencidas.length, lembretesPassados.length, alertasCategoria.length]);
 
   const contas = snapshot?.financas.contas ?? [];
   const contasComuns = contas.filter((c: any) => c.tipo !== "investimento");

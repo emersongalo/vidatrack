@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Lightbulb } from "lucide-react";
 import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
-import { calcularInsightsFinanceiros } from "@/lib/financas/insights-calculo";
+import { calcularInsightsFinanceiros, calcularComparacaoSemanal } from "@/lib/financas/insights-calculo";
 import { TreemapGastosLazy as TreemapGastos } from "@/components/TreemapGastosLazy";
 import { GraficoComparacaoMensalLazy as GraficoComparacaoMensal } from "@/components/GraficoComparacaoMensalLazy";
 import { GraficoAcumuladoLazy as GraficoAcumulado } from "@/components/GraficoAcumuladoLazy";
@@ -42,7 +42,8 @@ export default function AnaliseFinanceiraPage() {
     .map((c: any) => ({ nome: c.nome, meta_mensal: Number(c.meta_mensal) }));
 
   const insights = calcularInsightsFinanceiros(transacoesDespesa, categoriasComMeta, mesReferencia, hojeISO());
-  const { categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto, acumulado, dicas, orcamentoComparado } = insights;
+  const { categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto, acumulado, dicas, orcamentoComparado, projecaoFimDoMes } = insights;
+  const { gastoSemanaAtual, gastoSemanaAnterior } = calcularComparacaoSemanal(transacoesDespesa, hojeISO());
 
   const nomeMes = new Date(mesReferencia + "T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
@@ -101,6 +102,37 @@ export default function AnaliseFinanceiraPage() {
                 Maior gasto individual: <span className="text-ink-100">{maiorGasto.descricao}</span> — {formatarMoeda(maiorGasto.valor)}
               </p>
             )}
+            {projecaoFimDoMes !== null && (
+              <div className="mt-3 pt-3 border-t border-base-600 flex items-center justify-between">
+                <p className="text-xs text-ink-400">No ritmo de hoje, deve fechar o mês em</p>
+                <p className="text-sm font-mono font-medium text-financa">{formatarMoeda(projecaoFimDoMes)}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Etapa 165 — ritmo recente, sempre relativo a HOJE (não
+             ao mês sendo navegado na tela) — por isso fica numa
+             comparação separada da "este mês x mês passado" acima. */}
+          <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-5 mb-6">
+            <p className="text-sm text-ink-400 mb-3">Essa semana x semana passada</p>
+            <div className="flex items-end gap-6">
+              <div>
+                <p className="text-2xl font-display font-bold font-mono">{formatarMoeda(gastoSemanaAtual)}</p>
+                <p className="text-xs text-ink-400">Últimos 7 dias</p>
+              </div>
+              <div>
+                <p className="text-base font-mono text-ink-400">{formatarMoeda(gastoSemanaAnterior)}</p>
+                <p className="text-xs text-ink-400">7 dias anteriores</p>
+              </div>
+              {gastoSemanaAnterior > 0 && gastoSemanaAtual !== gastoSemanaAnterior && (
+                <span
+                  className={`text-sm font-medium ${gastoSemanaAtual < gastoSemanaAnterior ? "text-habito" : "text-red-400"}`}
+                >
+                  {gastoSemanaAtual < gastoSemanaAnterior ? "↓" : "↑"}{" "}
+                  {Math.abs(((gastoSemanaAtual - gastoSemanaAnterior) / gastoSemanaAnterior) * 100).toFixed(0)}%
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="mb-6">

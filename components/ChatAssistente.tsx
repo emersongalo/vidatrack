@@ -12,9 +12,9 @@ type Mensagem =
 
 const SUGESTOES = [
   "Como estão meus gastos esse mês?",
-  "Vou estourar algum orçamento?",
-  "Tenho alguma conta pra pagar essa semana?",
-  "Tenho hábito ou tarefa pendente hoje?",
+  "Qual minha previsão pro fim do mês?",
+  "Alguma categoria subiu muito?",
+  "Qual minha melhor sequência de hábito?",
 ];
 
 /**

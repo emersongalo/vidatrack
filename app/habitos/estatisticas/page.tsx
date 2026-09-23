@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
-import { hojeISO } from "@/lib/habitos/streak";
+import { hojeISO, calcularStreak } from "@/lib/habitos/streak";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { hexDaCor } from "@/lib/agenda/estilo";
 import { IconeHabito } from "@/components/IconeHabito";
@@ -88,6 +88,20 @@ export default function EstatisticasHabitosPage() {
   const resumoAtual = calcularResumo(sete7DiasAtuais);
   const resumoAnterior = calcularResumo(sete7DiasAnteriores);
 
+  // Etapa 165 — "placar" geral: qual a maior sequência ativa entre
+  // TODOS os hábitos agora (não é a de um hábito só — é o seu melhor
+  // resultado do momento, pra comemorar o que está indo bem).
+  let melhorSequenciaGeral = { nome: "", dias: 0 };
+  for (const habito of habitos as any[]) {
+    const mapaDatas = checkinsPorHabito.get(habito.id) ?? new Map();
+    const meta = habito.meta_diaria ?? 1;
+    const datasFeitas = Array.from(mapaDatas.entries())
+      .filter(([, qtd]) => (qtd as number) >= meta)
+      .map(([data]) => data as string);
+    const streak = calcularStreak(datasFeitas);
+    if (streak > melhorSequenciaGeral.dias) melhorSequenciaGeral = { nome: habito.nome, dias: streak };
+  }
+
   const comDadosEstaSemana = resumoAtual.porHabito
     .filter((p) => p.aplicaveis > 0)
     .map((p) => ({ ...p, pct: Math.round((p.feitos / p.aplicaveis) * 100) }));
@@ -146,6 +160,12 @@ export default function EstatisticasHabitosPage() {
               </span>
             )}
           </div>
+          {melhorSequenciaGeral.dias > 0 && (
+            <p className="text-xs text-ink-400 mb-3 flex items-center gap-1.5">
+              🔥 Sua melhor sequência agora: <span className="text-ink-100 font-medium">{melhorSequenciaGeral.nome}</span>, há{" "}
+              <span className="text-habito font-medium">{melhorSequenciaGeral.dias} dias</span>
+            </p>
+          )}
           <div className="space-y-1.5">
             {dicas.map((dica, i) => (
               <p key={i} className="text-xs text-ink-400 flex items-start gap-1.5">
