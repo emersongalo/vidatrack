@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Pencil, Share2, Archive } from "lucide-react";
 import { ListaArrastavel } from "@/components/ListaArrastavel";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
+import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { IconeHabito } from "@/components/IconeHabito";
 import { arquivarHabito, reordenarHabitos } from "@/app/habitos/actions";
@@ -66,27 +67,33 @@ export function ListaHabitosArrastavel({ habitos, aoMudar }: { habitos: Habito[]
             </p>
           </div>
           <div className="flex items-center gap-2.5 text-xs shrink-0">
-            <Link
-              href={`/habitos/${habito.id}/editar`}
-              aria-label="Editar"
-              className="text-ink-400 hover:text-ink-100 transition"
-            >
-              <Pencil size={15} strokeWidth={2} />
-            </Link>
-            <Link
-              href={`/habitos/${habito.id}/compartilhar`}
-              aria-label="Compartilhar"
-              className="text-ink-400 hover:text-ink-100 transition"
-            >
-              <Share2 size={15} strokeWidth={2} />
-            </Link>
-            <BotaoComConfirmacao
-              acao={() => arquivarHabito(habito.id)}
-              textoBotao={<Archive size={15} strokeWidth={2} />}
-              textoConfirmacao={`Arquivar "${habito.nome}"?`}
-              classeBotao="text-ink-400 hover:text-red-400 transition"
-              aoConcluir={aoMudar}
-            />
+            <MenuAcoes>
+              {(fecharMenu) => (
+                <>
+                  <ItemMenuAcoes href={`/habitos/${habito.id}/editar`}>
+                    <Pencil size={15} strokeWidth={2} /> Editar
+                  </ItemMenuAcoes>
+                  <ItemMenuAcoes href={`/habitos/${habito.id}/compartilhar`}>
+                    <Share2 size={15} strokeWidth={2} /> Compartilhar
+                  </ItemMenuAcoes>
+                  <div className="my-1 border-t border-base-600" />
+                  <BotaoComConfirmacao
+                    acao={() => arquivarHabito(habito.id)}
+                    textoBotao={
+                      <span className="flex items-center gap-2.5">
+                        <Archive size={15} strokeWidth={2} /> Arquivar
+                      </span>
+                    }
+                    textoConfirmacao={`Arquivar "${habito.nome}"?`}
+                    classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-ink-100 hover:bg-base-700 transition"
+                    aoConcluir={() => {
+                      aoMudar?.();
+                      fecharMenu();
+                    }}
+                  />
+                </>
+              )}
+            </MenuAcoes>
           </div>
         </div>
       )}

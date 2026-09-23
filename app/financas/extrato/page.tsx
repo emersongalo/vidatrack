@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Scale } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { calcularPeriodo, type PresetPeriodo } from "@/lib/financas/formatacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
@@ -47,6 +47,7 @@ export default function ExtratoPage() {
 
   const totalReceitas = lista.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
   const totalDespesas = lista.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
+  const balanco = totalReceitas - totalDespesas;
 
   return (
     <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-4xl mx-auto">
@@ -56,6 +57,40 @@ export default function ExtratoPage() {
       <div className="flex items-center justify-between mt-4 mb-5">
         <h1 className="text-2xl font-display font-semibold">Extrato</h1>
         <BotaoOcultarValores />
+      </div>
+
+      {/* Etapa 169 — resumo com selos coloridos, inspirado no
+         Despezzas (que mostra 5: Receitas/Recebido/Despesas/Pago/
+         Balanço — o VidaTrack não distingue "pago" de "lançado",
+         então fica só com os 3 que têm dado de verdade por trás). */}
+      <div className="grid grid-cols-3 gap-2 mb-5">
+        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
+          <span className="w-7 h-7 rounded-full bg-habito/15 flex items-center justify-center text-habito mb-1.5">
+            <TrendingUp size={14} strokeWidth={2.5} />
+          </span>
+          <p className="text-[11px] text-ink-400">Receitas</p>
+          <p className="text-sm font-mono font-medium text-habito truncate">
+            <ValorMonetario valor={totalReceitas} />
+          </p>
+        </div>
+        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
+          <span className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center text-red-400 mb-1.5">
+            <TrendingDown size={14} strokeWidth={2.5} />
+          </span>
+          <p className="text-[11px] text-ink-400">Despesas</p>
+          <p className="text-sm font-mono font-medium text-red-400 truncate">
+            <ValorMonetario valor={totalDespesas} />
+          </p>
+        </div>
+        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
+          <span className="w-7 h-7 rounded-full bg-financa/15 flex items-center justify-center text-financa mb-1.5">
+            <Scale size={14} strokeWidth={2.5} />
+          </span>
+          <p className="text-[11px] text-ink-400">Balanço</p>
+          <p className={`text-sm font-mono font-medium truncate ${balanco < 0 ? "text-red-400" : "text-financa"}`}>
+            <ValorMonetario valor={balanco} />
+          </p>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-3">
