@@ -26,7 +26,7 @@ import { atualizarWidgetSaldo, atualizarWidgetContasAPagar } from "@/lib/widgets
 // por enquanto. O que continua: saldo, previsão, contas, orçamento,
 // gráfico de despesas e lançamentos do mês — o essencial da tela.
 export default function FinancasPage() {
-  const { snapshot } = useSnapshotOffline();
+  const { snapshot, recarregar } = useSnapshotOffline();
   const hoje = new Date();
   const mesAtualISO = hoje.toLocaleDateString("sv-SE").slice(0, 7);
   const [mesSelecionado, setMesSelecionado] = useState(mesAtualISO);
@@ -209,7 +209,7 @@ export default function FinancasPage() {
                     <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
                       Editar
                     </Link>
-                    <BotaoRemoverTransacao transacaoId={t.id} />
+                    <BotaoRemoverTransacao transacaoId={t.id} aoConcluir={recarregar} />
                   </div>
                 </div>
               </li>
