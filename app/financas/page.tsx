@@ -1,316 +1,79 @@
-"use client";
-
-import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { PieChart, TrendingUp, TrendingDown, Bot } from "lucide-react";
-import { IconeCategoria } from "@/components/IconeCategoria";
-import { primeiroDiaDoMes, ultimoDiaDoMes, formatarMoeda } from "@/lib/financas/formatacao";
-import { calcularSaldoPrevisto } from "@/lib/financas/consulta";
-import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
-import { BarraOrcamento } from "@/components/BarraOrcamento";
-import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
-import { GraficoDespesasCategoriaLazy as GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoriaLazy";
-import { MapaCalorGastos } from "@/components/MapaCalorGastos";
-import { LinkVoltar } from "@/components/LinkVoltar";
-import { HeroFinancas } from "@/components/HeroFinancas";
-import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
-import { ValorMonetario } from "@/components/ValorMonetario";
-import { classeFundoSuave } from "@/lib/agenda/estilo";
-import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
-import { atualizarWidgetSaldo, atualizarWidgetContasAPagar } from "@/lib/widgets/atualizar";
 
-// Etapa 127: versão local-first da tela de Início. Escopo reduzido de
-// propósito em relação à versão anterior — o calendário de gastos, a
-// ordem personalizável dos blocos, e os avatares de quem compartilha
-// uma conta (isso precisa de foto vinda do servidor) ficam de fora
-// por enquanto. O que continua: saldo, previsão, contas, orçamento,
-// gráfico de despesas e lançamentos do mês — o essencial da tela.
-export default function FinancasPage() {
-  const { snapshot, recarregar } = useSnapshotOffline();
-  const hoje = new Date();
-  const mesAtualISO = hoje.toLocaleDateString("sv-SE").slice(0, 7);
-  const [mesSelecionado, setMesSelecionado] = useState(mesAtualISO);
-  const ehMesAtual = mesSelecionado === mesAtualISO;
-  const [pessoas, setPessoas] = useState<{ nome: string; urlFoto: string | null }[]>([]);
+export default function FinancasPrincipalPage() {
+  return (
+    <div className="space-y-6">
+      {/* Topo */}
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="text-[11px] font-mono uppercase tracking-widest text-amber-400">Controle de Capital</span>
+          <h1 className="text-2xl font-bold font-display tracking-tight text-white">Finanças</h1>
+        </div>
+        <span className="text-xs glass-panel px-3 py-1.5 rounded-full text-neutral-300 font-mono">
+          Setembro 2026
+        </span>
+      </div>
 
-  useEffect(() => {
-    garantirLancamentosRecorrentes().catch(() => {
-      // Sem internet, sem problema — tenta de novo na próxima visita.
-    });
-  }, []);
+      {/* Card Principal de Saldo (Estilo Cartão Neon) */}
+      <div className="relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-neutral-900 via-neutral-900/90 to-neutral-950 border border-amber-500/25 shadow-2xl shadow-amber-500/5">
+        <div className="pointer-events-none absolute -top-12 -right-12 w-36 h-36 bg-amber-400/15 blur-3xl rounded-full" />
 
-  useEffect(() => {
-    if (!navigator.onLine) return;
-    fetch("/api/financas/participantes")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d?.pessoas && setPessoas(d.pessoas))
-      .catch(() => {});
-  }, []);
+        <span className="text-xs font-mono uppercase tracking-wider text-neutral-400">Saldo disponível em contas</span>
+        <div className="text-3xl sm:text-4xl font-extrabold text-white font-display tracking-tight mt-1 mb-6">
+          R$ 4.684,76
+        </div>
 
-  // Etapa 154/156 — alimenta os widgets de tela inicial "Saldo" e
-  // "Contas a pagar". Precisa vir ANTES do "if (snapshot ===
-  // undefined) return" abaixo — todo hook (use Effect, useState...)
-  // tem que rodar em toda renderização, sempre na mesma ordem; um
-  // hook só depois de um return condicional é chamado às vezes sim,
-  // às vezes não, e foi exatamente isso que quebrou a aba Finanças
-  // (erro #310 do React: "mais hooks numa renderização que na
-  // outra"). Por isso calcula tudo de novo aqui, direto do
-  // snapshot, em vez de reaproveitar saldoTotal/recorrências
-  // (que só existem depois do return).
-  useEffect(() => {
-    if (snapshot === undefined || !ehMesAtual) return;
-    const contasAtuais = snapshot?.financas.contas ?? [];
-    const recorrenciasAtuais = snapshot?.financas.recorrencias ?? [];
-    const saldoAtual = contasAtuais
-      .filter((c: any) => c.tipo !== "investimento")
-      .reduce((total: number, c: any) => total + Number(c.saldo), 0);
-    atualizarWidgetSaldo(formatarMoeda(saldoAtual));
-
-    const diaHoje = hoje.getDate();
-    const linhasContas = recorrenciasAtuais
-      .filter((r) => r.ativo && r.dia_mes - diaHoje >= 0 && r.dia_mes - diaHoje <= 7)
-      .sort((a, b) => a.dia_mes - b.dia_mes)
-      .map((r) => `${r.descricao || "Recorrência"} · ${formatarMoeda(Number(r.valor))}`);
-    atualizarWidgetContasAPagar(linhasContas);
-  }, [snapshot, ehMesAtual]);
-
-  if (snapshot === undefined) {
-    return (
-      <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-5xl mx-auto animate-pulse">
-        <div className="h-64 bg-base-800 border border-base-600 rounded-xl2" />
-      </main>
-    );
-  }
-
-  const contas = snapshot?.financas.contas ?? [];
-  const transacoes = snapshot?.financas.transacoes ?? [];
-  const categoriasFinancas = snapshot?.financas.categorias ?? [];
-  const recorrencias = snapshot?.financas.recorrencias ?? [];
-  const categoriasComMeta = categoriasFinancas.filter((c) => c.tipo === "despesa" && c.meta_mensal !== null);
-
-  const [anoSel, mesSelNum] = mesSelecionado.split("-").map(Number);
-  const dataMesAnterior = new Date(anoSel, mesSelNum - 2, 1);
-  const dataMesProximo = new Date(anoSel, mesSelNum, 1);
-  const mesAnteriorISO = `${dataMesAnterior.getFullYear()}-${String(dataMesAnterior.getMonth() + 1).padStart(2, "0")}`;
-  const mesProximoISO = `${dataMesProximo.getFullYear()}-${String(dataMesProximo.getMonth() + 1).padStart(2, "0")}`;
-  const nomeDoMesSelecionado = new Date(anoSel, mesSelNum - 1, 1).toLocaleDateString("pt-BR", {
-    month: "long",
-    year: "numeric",
-  });
-
-  const saldoTotal = contas
-    .filter((c: any) => c.tipo !== "investimento")
-    .reduce((total: number, c: any) => total + Number(c.saldo), 0);
-
-  const totalInvestido = contas
-    .filter((c: any) => c.tipo === "investimento")
-    .reduce((total: number, c: any) => total + Number(c.saldo), 0);
-
-  const saldoPrevisto = ehMesAtual
-    ? calcularSaldoPrevisto(
-        saldoTotal,
-        recorrencias
-          .filter((r) => r.ativo && (!r.data_fim || r.data_fim >= mesAtualISO + "-31"))
-          .map((r) => ({ tipo: r.tipo, valor: Number(r.valor), diaMes: r.dia_mes })),
-        hoje.getDate()
-      )
-    : null;
-
-  const inicioMesSelecionado = primeiroDiaDoMes(mesSelecionado + "-01");
-  const fimMesSelecionado = ultimoDiaDoMes(mesSelecionado + "-01");
-  const transacoesDoMes = transacoes.filter((t: any) => t.data >= inicioMesSelecionado && t.data <= fimMesSelecionado);
-  const receitasDoMes = transacoesDoMes.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
-  const despesasDoMes = transacoesDoMes.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
-
-  const gastoPorCategoria = new Map<string, number>();
-  for (const t of transacoesDoMes) {
-    if (t.tipo !== "despesa" || !t.categoria_id) continue;
-    gastoPorCategoria.set(t.categoria_id, (gastoPorCategoria.get(t.categoria_id) ?? 0) + Number(t.valor));
-  }
-
-  const mapaCategoriaInfo = new Map(categoriasFinancas.map((c: any) => [c.id, c]));
-  const dadosGrafico = Array.from(gastoPorCategoria.entries())
-    .map(([id, valor]) => ({ nome: (mapaCategoriaInfo.get(id) as any)?.nome ?? "Sem categoria", valor }))
-    .sort((a, b) => b.valor - a.valor);
-
-  const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
-  const ultimasTransacoes = transacoesDoMes.slice(0, 10);
-
-  const gastoPorDiaMapaInicio = new Map<number, number>();
-  for (const t of transacoesDoMes) {
-    if (t.tipo !== "despesa") continue;
-    const dia = Number(t.data.slice(8, 10));
-    gastoPorDiaMapaInicio.set(dia, (gastoPorDiaMapaInicio.get(dia) ?? 0) + Number(t.valor));
-  }
-
-  const ordemBlocos = (snapshot?.financas.ordemBlocosFinancas ?? ["grafico", "lancamentos"]).filter(
-    (id) => id === "grafico" || id === "lancamentos"
-  );
-  if (!ordemBlocos.includes("grafico")) ordemBlocos.push("grafico");
-  if (!ordemBlocos.includes("lancamentos")) ordemBlocos.push("lancamentos");
-
-  const blocoGrafico =
-    dadosGrafico.length > 0 ? (
-      <div key="grafico" className="mb-6 lg:break-inside-avoid">
-        <p className="text-sm text-ink-400 mb-3 capitalize">Despesas por categoria · {nomeDoMesSelecionado}</p>
-        <GraficoDespesasCategoria dados={dadosGrafico} mapaCategoriaInfo={mapaCategoriaInfo} />
-
-        {/* Etapa 176 — mapa de calor logo abaixo do gráfico de
-           categorias, a pedido: mesma ideia da Análise, só que aqui
-           na Início pra não precisar navegar pra ver. */}
-        <p className="text-sm text-ink-400 mb-3 mt-6">Mapa de calor — gasto por dia</p>
-        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
-          <MapaCalorGastos anoMesISO={mesSelecionado} gastoPorDia={gastoPorDiaMapaInicio} />
+        <div className="grid grid-cols-3 gap-2 pt-4 border-t border-neutral-800/80">
+          <div className="glass-panel rounded-2xl p-2.5 text-center">
+            <span className="text-[10px] text-neutral-400 uppercase font-mono block">Receitas</span>
+            <span className="text-xs sm:text-sm font-bold text-emerald-400 mt-0.5 block">R$ 3.500</span>
+          </div>
+          <div className="glass-panel rounded-2xl p-2.5 text-center">
+            <span className="text-[10px] text-neutral-400 uppercase font-mono block">Despesas</span>
+            <span className="text-xs sm:text-sm font-bold text-rose-400 mt-0.5 block">R$ 915,24</span>
+          </div>
+          <div className="glass-panel rounded-2xl p-2.5 text-center">
+            <span className="text-[10px] text-neutral-400 uppercase font-mono block">Investido</span>
+            <span className="text-xs sm:text-sm font-bold text-amber-400 mt-0.5 block">R$ 5.000</span>
+          </div>
         </div>
       </div>
-    ) : null;
 
-  const blocoLancamentos = (
-    <div key="lancamentos" className="mb-6 lg:break-inside-avoid">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-ink-400">Lançamentos do mês</p>
-        <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
-          Ver extrato completo →
-        </Link>
-      </div>
-      {ultimasTransacoes.length === 0 ? (
-        <p className="text-ink-400 text-sm">🧾 Nenhum lançamento nesse mês.</p>
-      ) : (
-        <ul className="space-y-2">
-          {ultimasTransacoes.map((t: any) => {
-            const catInfo = mapaCategoriaInfo.get(t.categoria_id) as any;
-            return (
-              <li key={t.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
-                      catInfo?.cor ?? "financa"
-                    )}`}
-                  >
-                    {catInfo?.icone ? (
-                      <IconeCategoria icone={catInfo.icone} />
-                    ) : t.tipo === "receita" ? (
-                      <TrendingUp size={16} strokeWidth={2} />
-                    ) : (
-                      <TrendingDown size={16} strokeWidth={2} />
-                    )}
-                  </span>
-                  <p className="text-sm truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
-                  <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
-                    {t.tipo === "receita" ? "+" : "-"}
-                    <ValorMonetario valor={t.valor} />
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
-                  <p className="text-xs text-ink-400 truncate min-w-0">
-                    {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
-                  </p>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
-                      Editar
-                    </Link>
-                    <BotaoRemoverTransacao transacaoId={t.id} aoConcluir={recarregar} />
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-
-  const blocosPorId: Record<string, ReactNode> = { grafico: blocoGrafico, lancamentos: blocoLancamentos };
-
-  return (
-    <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-5xl mx-auto">
-      <LinkVoltar href="/dashboard" texto="Painel" />
-      <h1 className="text-2xl font-display font-semibold mt-2 mb-6">Finanças</h1>
-
-      {!contas.length ? (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-8 text-center">
-          <p className="font-display font-semibold mb-1">Nenhuma conta ainda</p>
-          <p className="text-ink-400 text-sm mb-4">Crie sua primeira conta (carteira, banco ou cartão) para começar.</p>
-          <Link
-            href="/financas/contas"
-            className="inline-block bg-ink-100 text-base-900 text-sm font-medium rounded-lg px-4 py-2 hover:opacity-90 transition"
-          >
-            Criar conta
+      {/* Cartões de Contas Bancárias */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-semibold text-neutral-300">Suas Contas</h2>
+          <Link href="/financas/contas" className="text-xs text-amber-400 hover:underline">
+            Gerenciar →
           </Link>
         </div>
-      ) : (
-        <>
-          <HeroFinancas
-            saldo={saldoTotal}
-            saldoPrevisto={saldoPrevisto}
-            receitas={receitasDoMes}
-            despesas={despesasDoMes}
-            totalInvestido={totalInvestido}
-            nomeMes={nomeDoMesSelecionado}
-            pessoas={pessoas}
-            hrefMesAnterior={`/financas?mes=${mesAnteriorISO}`}
-            hrefMesProximo={`/financas?mes=${mesProximoISO}`}
-            hrefHoje="/financas"
-            ehMesAtual={ehMesAtual}
-            aoMesAnterior={() => setMesSelecionado(mesAnteriorISO)}
-            aoMesProximo={() => setMesSelecionado(mesProximoISO)}
-            aoHoje={() => setMesSelecionado(mesAtualISO)}
-          />
 
-          <div className="lg:columns-2 lg:gap-6">
-            <div className="lg:break-inside-avoid">
-              <ListaContasComSaldo contas={contas as any} />
+        <div className="glass-panel glass-panel-hover rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-bold">
+              Nu
             </div>
-
-            {categoriasComMeta.length > 0 && (
-              <div className="mb-6 lg:break-inside-avoid">
-                <p className="text-sm text-ink-400 mb-3">Orçamento do mês</p>
-                <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 space-y-4">
-                  {categoriasComMeta.map((cat: any) => (
-                    <BarraOrcamento
-                      key={cat.id}
-                      nome={cat.nome}
-                      gasto={gastoPorCategoria.get(cat.id) ?? 0}
-                      meta={Number(cat.meta_mensal)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Link
-              href="/financas/assistente"
-              className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-habito rounded-xl2 p-4 mb-4 hover:border-habito transition lg:break-inside-avoid"
-            >
-              <span className="w-9 h-9 rounded-lg bg-habito/15 flex items-center justify-center text-habito shrink-0">
-                <Bot size={18} strokeWidth={2} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">Assistente</p>
-                <p className="text-xs text-ink-400 mt-0.5">Pergunte sobre seus gastos ou peça pra lançar algo</p>
-              </div>
-              <span className="text-ink-400 text-sm shrink-0">Abrir →</span>
-            </Link>
-
-            <Link
-              href="/financas/analise"
-              className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-6 hover:border-financa transition lg:break-inside-avoid"
-            >
-              <span className="w-9 h-9 rounded-lg bg-financa/15 flex items-center justify-center text-financa shrink-0">
-                <PieChart size={18} strokeWidth={2} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">Para onde vai seu dinheiro</p>
-                <p className="text-xs text-ink-400 mt-0.5">Mapa de gastos, comparação com o mês passado e dicas automáticas</p>
-              </div>
-              <span className="text-ink-400 text-sm shrink-0">Ver →</span>
-            </Link>
-
-            {/* Etapa 133: respeita a ordem salva em /financas/personalizar. */}
-            {ordemBlocos.map((id) => blocosPorId[id])}
+            <div>
+              <p className="font-semibold text-sm text-neutral-100">Nubank</p>
+              <p className="text-xs text-neutral-400 font-mono">Conta Principal</p>
+            </div>
           </div>
-        </>
-      )}
-    </main>
+          <span className="font-mono font-semibold text-sm text-neutral-100">R$ 4.554,76</span>
+        </div>
+
+        <div className="glass-panel glass-panel-hover rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-300">
+              💵
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-neutral-100">Carteira Física</p>
+              <p className="text-xs text-neutral-400 font-mono">Dinheiro Vivo</p>
+            </div>
+          </div>
+          <span className="font-mono font-semibold text-sm text-neutral-100">R$ 130,00</span>
+        </div>
+      </div>
+    </div>
   );
 }
