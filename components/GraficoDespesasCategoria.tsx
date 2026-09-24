@@ -60,9 +60,15 @@ export function GraficoDespesasCategoria({
                 innerRadius={50}
                 outerRadius={80}
                 paddingAngle={2}
+                style={{ filter: "drop-shadow(0 0 8px rgba(0,0,0,0.35))" }}
               >
                 {dados.map((_, i) => (
-                  <Cell key={i} fill={PALETA[i % PALETA.length]} stroke="none" />
+                  <Cell
+                    key={i}
+                    fill={PALETA[i % PALETA.length]}
+                    stroke="none"
+                    style={{ filter: `drop-shadow(0 0 5px ${PALETA[i % PALETA.length]}80)` }}
+                  />
                 ))}
               </Pie>
               <Tooltip

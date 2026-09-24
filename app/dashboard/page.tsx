@@ -108,14 +108,14 @@ export default function DashboardPage() {
         <div className="hidden lg:flex lg:flex-col lg:gap-3 lg:pt-2">
           <Link
             href="/habitos/estatisticas"
-            className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-habito transition"
+            className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 hover:border-habito transition"
           >
             <p className="text-xs text-ink-400 mb-1">Hábitos</p>
             <p className="text-sm">Ver estatísticas →</p>
           </Link>
           <Link
             href="/financas"
-            className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-financa transition"
+            className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 hover:border-financa transition"
           >
             <p className="text-xs text-ink-400 mb-1">Saldo em contas</p>
             <p className={`text-xl font-mono font-semibold ${saldoAtual < 0 ? "text-red-400" : ""}`}>

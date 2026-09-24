@@ -79,6 +79,7 @@ export function GraficoAcumulado({
             fill="url(#gradienteAcumulado)"
             connectNulls
             animationDuration={600}
+            style={{ filter: "drop-shadow(0 0 6px rgba(217,162,76,0.55))" }}
           />
           {dadosMesAnterior && dadosMesAnterior.length > 0 && (
             <Line

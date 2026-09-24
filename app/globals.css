@@ -109,3 +109,12 @@
   from { transform: scaleY(0); }
   to { transform: scaleY(1); }
 }
+
+/* Etapa 181 — entrada suave de cada tela nova (ver TransicaoPagina.tsx) */
+@keyframes entrar-tela {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.entrada-tela {
+  animation: entrar-tela 220ms ease-out;
+}

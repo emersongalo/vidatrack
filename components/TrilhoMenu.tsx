@@ -63,7 +63,7 @@ export function TrilhoMenu() {
           <Link
             key={estacao.href}
             href={estacao.href}
-            className="group relative flex items-center justify-between gap-3 rounded-xl2 border border-base-600 bg-base-800 px-4 py-3.5 outline-none transition hover:border-ink-400 active:scale-[0.98]"
+            className="group relative flex items-center justify-between gap-3 rounded-xl2 border border-base-600 bg-base-800 shadow-lg shadow-black/20 px-4 py-3.5 outline-none transition hover:border-ink-400 active:scale-[0.98]"
             style={{
               opacity: linhaVisivel || semAnimacao ? 1 : 0,
               transform: linhaVisivel || semAnimacao ? "translateX(0)" : "translateX(-8px)",

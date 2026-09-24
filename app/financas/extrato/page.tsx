@@ -8,6 +8,7 @@ import { calcularPeriodo, formatarMoeda, type PresetPeriodo } from "@/lib/financ
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
+import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { removerTransacao } from "../actions";
 import { Pencil, Trash2 } from "lucide-react";
@@ -163,41 +164,47 @@ export default function ExtratoPage() {
           {lista.map((t: any) => {
             const catInfo = mapaCategorias.get(t.categoria_id) as any;
             return (
-              <li key={t.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
-                      catInfo?.cor ?? "financa"
-                    )}`}
-                  >
-                    {catInfo?.icone ? (
-                      <IconeCategoria icone={catInfo.icone} />
-                    ) : t.tipo === "receita" ? (
-                      <TrendingUp size={16} strokeWidth={2} />
-                    ) : (
-                      <TrendingDown size={16} strokeWidth={2} />
-                    )}
-                  </span>
-                  <p className="text-sm truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
-                  <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
-                    {t.tipo === "receita" ? "+" : "-"}
-                    <ValorMonetario valor={t.valor} />
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
-                  <p className="text-xs text-ink-400 truncate min-w-0">
-                    {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
-                  </p>
-                  <MenuAcoes>
-                    {(fecharMenu) => (
-                      <>
-                        <ItemMenuAcoes href={`/financas/${t.id}/editar`}>
-                          <Pencil size={15} strokeWidth={2} /> Editar
-                        </ItemMenuAcoes>
-                        <BotaoComConfirmacao
-                          acao={removerTransacao.bind(null, t.id)}
-                          textoBotao={
-                            <span className="flex items-center gap-2.5">
+              <li key={t.id}>
+                <LinhaComDeslizar
+                  acao={removerTransacao.bind(null, t.id)}
+                  textoConfirmacao="Excluir esse lançamento? Não tem volta."
+                  aoConcluir={recarregar}
+                >
+                  <div className="bg-base-800 border border-base-600 rounded-lg p-3">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
+                          catInfo?.cor ?? "financa"
+                        )}`}
+                      >
+                        {catInfo?.icone ? (
+                          <IconeCategoria icone={catInfo.icone} />
+                        ) : t.tipo === "receita" ? (
+                          <TrendingUp size={16} strokeWidth={2} />
+                        ) : (
+                          <TrendingDown size={16} strokeWidth={2} />
+                        )}
+                      </span>
+                      <p className="text-sm truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
+                      <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
+                        {t.tipo === "receita" ? "+" : "-"}
+                        <ValorMonetario valor={t.valor} />
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
+                      <p className="text-xs text-ink-400 truncate min-w-0">
+                        {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
+                      </p>
+                      <MenuAcoes>
+                        {(fecharMenu) => (
+                          <>
+                            <ItemMenuAcoes href={`/financas/${t.id}/editar`}>
+                              <Pencil size={15} strokeWidth={2} /> Editar
+                            </ItemMenuAcoes>
+                            <BotaoComConfirmacao
+                              acao={removerTransacao.bind(null, t.id)}
+                              textoBotao={
+                                <span className="flex items-center gap-2.5">
                               <Trash2 size={15} strokeWidth={2} /> Excluir
                             </span>
                           }
@@ -212,6 +219,8 @@ export default function ExtratoPage() {
                     )}
                   </MenuAcoes>
                 </div>
+                  </div>
+                </LinhaComDeslizar>
               </li>
             );
           })}
