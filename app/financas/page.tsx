@@ -10,6 +10,7 @@ import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { GraficoDespesasCategoriaLazy as GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoriaLazy";
+import { MapaCalorGastos } from "@/components/MapaCalorGastos";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { HeroFinancas } from "@/components/HeroFinancas";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
@@ -135,6 +136,13 @@ export default function FinancasPage() {
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
   const ultimasTransacoes = transacoesDoMes.slice(0, 10);
 
+  const gastoPorDiaMapaInicio = new Map<number, number>();
+  for (const t of transacoesDoMes) {
+    if (t.tipo !== "despesa") continue;
+    const dia = Number(t.data.slice(8, 10));
+    gastoPorDiaMapaInicio.set(dia, (gastoPorDiaMapaInicio.get(dia) ?? 0) + Number(t.valor));
+  }
+
   const ordemBlocos = (snapshot?.financas.ordemBlocosFinancas ?? ["grafico", "lancamentos"]).filter(
     (id) => id === "grafico" || id === "lancamentos"
   );
@@ -146,6 +154,14 @@ export default function FinancasPage() {
       <div key="grafico" className="mb-6 lg:break-inside-avoid">
         <p className="text-sm text-ink-400 mb-3 capitalize">Despesas por categoria · {nomeDoMesSelecionado}</p>
         <GraficoDespesasCategoria dados={dadosGrafico} mapaCategoriaInfo={mapaCategoriaInfo} />
+
+        {/* Etapa 176 — mapa de calor logo abaixo do gráfico de
+           categorias, a pedido: mesma ideia da Análise, só que aqui
+           na Início pra não precisar navegar pra ver. */}
+        <p className="text-sm text-ink-400 mb-3 mt-6">Mapa de calor — gasto por dia</p>
+        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
+          <MapaCalorGastos anoMesISO={mesSelecionado} gastoPorDia={gastoPorDiaMapaInicio} />
+        </div>
       </div>
     ) : null;
 

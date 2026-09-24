@@ -7,6 +7,13 @@ const LETRAS_DIA = ["D", "S", "T", "Q", "Q", "S", "S"];
 // você mandou de referência, só que nas cores do próprio app.
 const NIVEIS = ["bg-base-700", "bg-financa/25", "bg-financa/50", "bg-financa/75", "bg-red-400/70"];
 
+/** "1234" → "1,2k", "85" → "85", "999" → "999" — os quadradinhos são
+ *  pequenos demais pra "R$ 1.234,56" caber, então mostra arredondado. */
+function formatarValorCompacto(valor: number): string {
+  if (valor >= 1000) return `${(valor / 1000).toFixed(1).replace(".", ",")}k`;
+  return String(Math.round(valor));
+}
+
 /**
  * Etapa 175 — "mapa de calor" de gastos por dia, inspirado num print
  * que você mandou de outro app (TaskLine): cada quadrado é um dia do
@@ -65,11 +72,16 @@ export function MapaCalorGastos({
             <div
               key={i}
               title={valor > 0 ? `Dia ${dia}: ${formatarMoeda(valor)}` : `Dia ${dia}: sem gasto`}
-              className={`aspect-square rounded-md flex flex-col items-center justify-center text-[10px] leading-none ${NIVEIS[nivel]} ${
+              className={`aspect-square rounded-md flex flex-col items-center justify-center gap-0.5 text-[10px] leading-none ${NIVEIS[nivel]} ${
                 ehHoje ? "ring-2 ring-financa" : ""
               } ${nivel >= 3 ? "text-ink-100" : "text-ink-400"}`}
             >
               <span>{dia}</span>
+              {valor > 0 && (
+                <span className={`text-[9px] font-mono ${nivel >= 3 ? "text-ink-100" : "text-ink-300"}`}>
+                  {formatarValorCompacto(valor)}
+                </span>
+              )}
             </div>
           );
         })}
