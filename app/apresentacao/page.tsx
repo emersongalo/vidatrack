@@ -45,11 +45,7 @@ export default function ApresentacaoPage() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-3xl mx-auto px-6 pt-6 pb-24 text-center">
-        <div className="relative w-[3px] h-40 mx-auto mb-10 overflow-hidden rounded-full bg-base-700">
-          <div className="absolute inset-0 trilho-linha origin-top animate-[crescer_1.4s_ease-out_forwards]" />
-        </div>
-
+      <section className="max-w-5xl mx-auto px-6 pt-6 pb-8 text-center">
         <h1 className="font-display text-4xl sm:text-6xl font-semibold leading-[1.05] mb-6">
           Hábitos e finanças,
           <br />
@@ -62,7 +58,7 @@ export default function ApresentacaoPage() {
           numa conta de exemplo, sem criar nada.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
           <BotaoDemonstracao />
           <Link
             href="/login"
@@ -70,6 +66,22 @@ export default function ApresentacaoPage() {
           >
             Criar minha conta
           </Link>
+        </div>
+      </section>
+
+      {/* Etapa 178 — celular na frente com outras telas espiando atrás,
+         inspirado no jeito que o Despezzas mostra o app na home deles. */}
+      <section className="max-w-3xl mx-auto px-6 pb-24">
+        <div className="relative flex items-center justify-center py-6">
+          <div className="hidden sm:block absolute left-1/2 -translate-x-[190px] -rotate-6 w-[220px] opacity-60 blur-[0.5px]">
+            <Print src="/apresentacao/painel-financas.jpg" alt="Saldo em contas e investido" />
+          </div>
+          <div className="hidden sm:block absolute left-1/2 translate-x-[30px] rotate-6 w-[220px] opacity-60 blur-[0.5px]">
+            <Print src="/apresentacao/estatisticas.jpg" alt="Resumo semanal e mapa de contribuições" />
+          </div>
+          <div className="relative w-[260px] sm:w-[280px] z-10">
+            <Print src="/apresentacao/hoje.jpg" alt="Tela Hoje com hábitos e tarefas do dia" />
+          </div>
         </div>
       </section>
 

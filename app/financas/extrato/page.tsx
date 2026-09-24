@@ -60,35 +60,38 @@ export default function ExtratoPage() {
         <BotaoOcultarValores />
       </div>
 
-      {/* Etapa 169 — resumo com selos coloridos, inspirado no
+      {/* Etapa 169/178 — resumo com selos coloridos, inspirado no
          Despezzas (que mostra 5: Receitas/Recebido/Despesas/Pago/
          Balanço — o VidaTrack não distingue "pago" de "lançado",
-         então fica só com os 3 que têm dado de verdade por trás). */}
+         então fica só com os 3 que têm dado de verdade por trás).
+         text-xs + break-words (sem truncate) — mesma correção que já
+         tinha feito na Início, só que aqui na tela do Extrato eu
+         tinha esquecido de aplicar também. */}
       <div className="grid grid-cols-3 gap-2 mb-5">
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
+        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3 min-w-0">
           <span className="w-7 h-7 rounded-full bg-habito/15 flex items-center justify-center text-habito mb-1.5">
             <TrendingUp size={14} strokeWidth={2.5} />
           </span>
           <p className="text-[11px] text-ink-400">Receitas</p>
-          <p className="text-sm font-mono font-medium text-habito truncate">
+          <p className="text-xs font-mono font-medium text-habito leading-tight break-words">
             <ValorMonetario valor={totalReceitas} />
           </p>
         </div>
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
+        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3 min-w-0">
           <span className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center text-red-400 mb-1.5">
             <TrendingDown size={14} strokeWidth={2.5} />
           </span>
           <p className="text-[11px] text-ink-400">Despesas</p>
-          <p className="text-sm font-mono font-medium text-red-400 truncate">
+          <p className="text-xs font-mono font-medium text-red-400 leading-tight break-words">
             <ValorMonetario valor={totalDespesas} />
           </p>
         </div>
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
+        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3 min-w-0">
           <span className="w-7 h-7 rounded-full bg-financa/15 flex items-center justify-center text-financa mb-1.5">
             <Scale size={14} strokeWidth={2.5} />
           </span>
           <p className="text-[11px] text-ink-400">Balanço</p>
-          <p className={`text-sm font-mono font-medium truncate ${balanco < 0 ? "text-red-400" : "text-financa"}`}>
+          <p className={`text-xs font-mono font-medium leading-tight break-words ${balanco < 0 ? "text-red-400" : "text-financa"}`}>
             <ValorMonetario valor={balanco} />
           </p>
         </div>
