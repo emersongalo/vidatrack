@@ -26,7 +26,7 @@ export default function PatrimonioPage() {
         Tudo que você tem somado — contas, investimentos e desafios em andamento — ao longo dos últimos 12 meses.
       </p>
 
-      <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-6">
+      <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
         <p className="text-xs text-ink-400 mb-1">Patrimônio atual</p>
         <p className="text-3xl font-mono font-bold mb-2">{formatarMoeda(atual)}</p>
         {pontos.length > 0 && (

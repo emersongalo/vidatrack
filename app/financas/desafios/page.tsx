@@ -37,7 +37,7 @@ export default function DesafiosPage() {
               <li key={d.id}>
                 <Link
                   href={`/financas/desafios/${d.id}`}
-                  className="block bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-financa transition"
+                  className="block bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 hover:border-financa transition"
                 >
                   <div className="flex items-baseline justify-between mb-2">
                     <span className="font-medium">{d.nome}</span>
@@ -62,7 +62,7 @@ export default function DesafiosPage() {
       {contas.length === 0 ? (
         <p className="text-sm text-ink-400">Crie uma conta (não-investimento) antes de montar um desafio.</p>
       ) : (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
+        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
           <p className="text-sm text-ink-400 mb-3">Novo desafio</p>
           <form action={criarDesafio} className="space-y-3">
             <input

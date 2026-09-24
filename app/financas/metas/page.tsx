@@ -32,7 +32,7 @@ export default function MetasPage() {
           {metas.map((meta: any) => {
             const percentual = Math.min(100, Math.round((Number(meta.valor_atual) / Number(meta.valor_alvo)) * 100));
             return (
-              <li key={meta.id} className="bg-base-800 border border-base-600 rounded-xl2 p-4">
+              <li key={meta.id} className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
                 <div className="flex items-baseline justify-between mb-2">
                   <span className="font-medium">{meta.nome}</span>
                   {meta.concluida && <span className="text-xs text-habito font-medium">Concluída 🎉</span>}
@@ -90,7 +90,7 @@ export default function MetasPage() {
         </ul>
       )}
 
-      <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
+      <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
         <p className="text-sm text-ink-400 mb-3">Nova meta</p>
         <form action={criarMeta} className="space-y-3">
           <input

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { TrendingUp, TrendingDown, Scale } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
-import { calcularPeriodo, type PresetPeriodo } from "@/lib/financas/formatacao";
+import { calcularPeriodo, formatarMoeda, type PresetPeriodo } from "@/lib/financas/formatacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
@@ -30,6 +30,7 @@ export default function ExtratoPage() {
   const { snapshot, recarregar } = useSnapshotOffline();
   const [tipo, setTipo] = useState<"todos" | "receita" | "despesa">("todos");
   const [preset, setPreset] = useState<PresetPeriodo>("este_mes");
+  const [visualizacao, setVisualizacao] = useState<"transacoes" | "categorias">("transacoes");
 
   const contas = snapshot?.financas.contas ?? [];
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
@@ -107,7 +108,7 @@ export default function ExtratoPage() {
         ))}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-none">
+      <div className="flex gap-2 overflow-x-auto pb-1 mb-4 scrollbar-none">
         {PRESETS.map((p) => (
           <button
             key={p.valor}
@@ -121,18 +122,32 @@ export default function ExtratoPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
-          <p className="text-ink-400 text-xs mb-1">Receitas no período</p>
-          <p className="font-mono font-medium text-habito"><ValorMonetario valor={totalReceitas} /></p>
-        </div>
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3">
-          <p className="text-ink-400 text-xs mb-1">Despesas no período</p>
-          <p className="font-mono font-medium text-red-400"><ValorMonetario valor={totalDespesas} /></p>
-        </div>
+      {/* Etapa 174 — alternador Transações/Categorias, inspirado no
+         Despezzas (que mostra os gastos agrupados por categoria, com
+         barra pra quem tem limite, como uma visão alternativa à
+         lista crua de lançamentos). */}
+      <div className="inline-flex bg-base-800 border border-base-600 rounded-full p-1 mb-6">
+        <button
+          onClick={() => setVisualizacao("transacoes")}
+          className={`px-4 py-1.5 rounded-full text-sm transition ${
+            visualizacao === "transacoes" ? "bg-financa text-base-900 font-medium" : "text-ink-400 hover:text-ink-100"
+          }`}
+        >
+          Transações
+        </button>
+        <button
+          onClick={() => setVisualizacao("categorias")}
+          className={`px-4 py-1.5 rounded-full text-sm transition ${
+            visualizacao === "categorias" ? "bg-financa text-base-900 font-medium" : "text-ink-400 hover:text-ink-100"
+          }`}
+        >
+          Categorias
+        </button>
       </div>
 
-      {snapshot === undefined ? (
+      {visualizacao === "categorias" ? (
+        <VisaoPorCategoria lista={lista} mapaCategorias={mapaCategorias} />
+      ) : snapshot === undefined ? (
         <div className="space-y-2 animate-pulse">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-16 bg-base-800 border border-base-600 rounded-lg" />
@@ -203,5 +218,113 @@ export default function ExtratoPage() {
         <p className="text-xs text-ink-400 mt-4">Mostrando as 3.000 transações mais recentes guardadas offline.</p>
       )}
     </main>
+  );
+}
+
+/**
+ * Etapa 174 — gastos/receitas agrupados por categoria, com barra de
+ * progresso pra quem tem limite mensal definido (meta_mensal) —
+ * inspirado na aba "Categorias" do Extrato do Despezzas.
+ */
+function VisaoPorCategoria({
+  lista,
+  mapaCategorias,
+}: {
+  lista: any[];
+  mapaCategorias: Map<string, any>;
+}) {
+  const porCategoria = new Map<string, { nome: string; icone: string | null; cor: string; valor: number; meta: number | null }>();
+  let semCategoria = { valor: 0, count: 0 };
+
+  for (const t of lista) {
+    if (!t.categoria_id) {
+      semCategoria.valor += Number(t.valor);
+      semCategoria.count++;
+      continue;
+    }
+    const info = mapaCategorias.get(t.categoria_id);
+    const chave = `${t.categoria_id}-${t.tipo}`;
+    const atual = porCategoria.get(chave) ?? {
+      nome: info?.nome ?? "Categoria",
+      icone: info?.icone ?? null,
+      cor: info?.cor ?? "financa",
+      valor: 0,
+      meta: info?.meta_mensal ? Number(info.meta_mensal) : null,
+    };
+    atual.valor += Number(t.valor);
+    porCategoria.set(chave, atual);
+  }
+
+  const despesasPorCategoria = Array.from(porCategoria.entries())
+    .filter(([chave]) => chave.endsWith("-despesa"))
+    .map(([, v]) => v)
+    .sort((a, b) => b.valor - a.valor);
+  const receitasPorCategoria = Array.from(porCategoria.entries())
+    .filter(([chave]) => chave.endsWith("-receita"))
+    .map(([, v]) => v)
+    .sort((a, b) => b.valor - a.valor);
+
+  if (despesasPorCategoria.length === 0 && receitasPorCategoria.length === 0) {
+    return <p className="text-ink-400 text-sm">🧾 Nenhum lançamento categorizado nesse período.</p>;
+  }
+
+  function Linha({ item }: { item: { nome: string; icone: string | null; cor: string; valor: number; meta: number | null } }) {
+    const percentual = item.meta ? Math.min(100, Math.round((item.valor / item.meta) * 100)) : null;
+    return (
+      <div className="py-3 border-b border-base-600 last:border-0">
+        <div className="flex items-center gap-3">
+          <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(item.cor)}`}>
+            <IconeCategoria icone={item.icone} />
+          </span>
+          <p className="text-sm flex-1 min-w-0 truncate">{item.nome}</p>
+          <span className="font-mono text-sm shrink-0">
+            <ValorMonetario valor={item.valor} />
+          </span>
+        </div>
+        {percentual !== null && (
+          <div className="pl-11 mt-1.5">
+            <div className="h-1.5 bg-base-600 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full ${percentual >= 100 ? "bg-red-400" : "bg-financa"}`}
+                style={{ width: `${percentual}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-ink-400 mt-1">de {formatarMoeda(item.meta!)}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {despesasPorCategoria.length > 0 && (
+        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 px-4 mb-4">
+          <p className="text-sm text-ink-400 pt-4 pb-1">Saídas por categoria</p>
+          {despesasPorCategoria.map((item) => (
+            <Linha key={item.nome} item={item} />
+          ))}
+          {semCategoria.valor > 0 && (
+            <div className="py-3">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-base-700 flex items-center justify-center text-sm shrink-0 text-ink-400">?</span>
+                <p className="text-sm flex-1 text-ink-400">Sem categoria</p>
+                <span className="font-mono text-sm text-ink-400">
+                  <ValorMonetario valor={semCategoria.valor} />
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {receitasPorCategoria.length > 0 && (
+        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 px-4">
+          <p className="text-sm text-ink-400 pt-4 pb-1">Entradas por categoria</p>
+          {receitasPorCategoria.map((item) => (
+            <Linha key={item.nome} item={item} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

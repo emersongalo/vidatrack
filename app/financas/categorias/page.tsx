@@ -65,9 +65,11 @@ export default function CategoriasPage() {
         >
           <IconeCategoria icone={cat.icone} />
         </span>
-        <p className="text-sm font-medium truncate max-w-full">{cat.nome}</p>
+        <p className="text-sm font-medium truncate max-w-full px-1">{cat.nome}</p>
         {cat.meta_mensal && (
-          <p className="text-[11px] text-ink-400 mt-0.5">até {formatarMoeda(Number(cat.meta_mensal))}</p>
+          <p className="text-[11px] text-ink-400 mt-0.5 break-words max-w-full px-1">
+            até {formatarMoeda(Number(cat.meta_mensal))}
+          </p>
         )}
       </div>
     );

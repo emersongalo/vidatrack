@@ -143,7 +143,7 @@ export default function EstatisticasHabitosPage() {
       <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Estatísticas</h1>
 
       {habitos.length > 0 && (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-6">
+        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
           <p className="text-sm text-ink-400 mb-3">Resumo da semana</p>
           <div className="flex items-end gap-6 mb-4">
             <div>
@@ -177,14 +177,14 @@ export default function EstatisticasHabitosPage() {
       )}
 
       {habitos.length > 0 && (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-6">
+        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
           <p className="text-sm text-ink-400 mb-3">Mapa de contribuições · último ano</p>
           <MapaContribuicoes pontos={mapaContribuicoes} />
         </div>
       )}
 
       {comparacaoOrdenada.length > 1 && (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-6">
+        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
           <p className="text-sm text-ink-400 mb-3">Comparação entre hábitos · essa semana</p>
           <div className="space-y-3">
             {comparacaoOrdenada.map((c) => (

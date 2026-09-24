@@ -74,7 +74,7 @@ export default function ApresentacaoPage() {
       </section>
 
       {/* HÁBITOS — visão geral */}
-      <section className="border-t border-base-700">
+      <section id="hábitos" className="border-t border-base-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <AoRolar>
           <div className="flex items-center gap-3 mb-4">
@@ -140,7 +140,7 @@ export default function ApresentacaoPage() {
       </section>
 
       {/* FINANÇAS — visão geral */}
-      <section className="border-t border-base-700">
+      <section id="finanças" className="border-t border-base-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <AoRolar>
           <div className="flex items-center gap-3 mb-4">
@@ -214,6 +214,54 @@ export default function ApresentacaoPage() {
         </div>
       </section>
 
+      {/* Perguntas Frequentes */}
+      <section id="faq" className="border-t border-base-700">
+        <div className="max-w-2xl mx-auto px-6 py-20">
+          <AoRolar>
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-10 text-center">
+              Perguntas frequentes
+            </h2>
+            <div className="space-y-3">
+              {[
+                {
+                  pergunta: "O VidaTrack é pago?",
+                  resposta:
+                    "Não, e não vai ser. Gratuito pra sempre, sem anúncio, sem versão \"premium\" escondendo recurso.",
+                },
+                {
+                  pergunta: "Funciona sem internet?",
+                  resposta:
+                    "Sim. Hábitos, tarefas, contas, lançamentos — tudo continua funcionando offline, e sincroniza sozinho quando a conexão voltar.",
+                },
+                {
+                  pergunta: "Meus dados são seguros?",
+                  resposta:
+                    "Ficam guardados de forma privada, e só você (ou quem você decidir compartilhar) tem acesso. Nada é vendido ou usado pra anúncio.",
+                },
+                {
+                  pergunta: "Preciso instalar alguma coisa?",
+                  resposta:
+                    "Não é obrigatório — funciona direto no navegador. Mas dá pra instalar como app (Android tem o APK; iPhone instala como PWA, pelo Safari) pra abrir mais rápido e receber notificação.",
+                },
+                {
+                  pergunta: "Dá pra usar com outra pessoa?",
+                  resposta:
+                    "Sim. Você pode compartilhar contas e hábitos com quem quiser — cada um entra com a própria conta.",
+                },
+              ].map((item) => (
+                <details key={item.pergunta} className="group bg-base-800 border border-base-700 rounded-xl2 px-5 py-4">
+                  <summary className="flex items-center justify-between cursor-pointer font-medium list-none">
+                    {item.pergunta}
+                    <span className="text-ink-400 shrink-0 ml-3 transition group-open:rotate-45">＋</span>
+                  </summary>
+                  <p className="text-ink-400 text-sm leading-relaxed mt-3">{item.resposta}</p>
+                </details>
+              ))}
+            </div>
+          </AoRolar>
+        </div>
+      </section>
+
       {/* CTA final */}
       <section className="border-t border-base-700">
         <div className="max-w-2xl mx-auto px-6 py-20 text-center">
@@ -233,15 +281,33 @@ export default function ApresentacaoPage() {
 
       {/* Rodapé */}
       <footer className="border-t border-base-700">
-        <div className="max-w-5xl mx-auto px-6 py-10 flex flex-wrap items-center justify-between gap-4 text-sm text-ink-400">
-          <span>VidaTrack — gratuito, sem anúncio.</span>
-          <div className="flex gap-5">
-            <Link href="/privacidade" className="hover:text-ink-100 transition">
-              Privacidade
-            </Link>
-            <Link href="/doacao" className="hover:text-ink-100 transition">
-              Apoiar o projeto
-            </Link>
+        <div className="max-w-5xl mx-auto px-6 py-10">
+          <div className="flex flex-wrap gap-8 mb-8">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-ink-400/70 mb-3">Produto</p>
+              <div className="flex flex-col gap-2 text-sm text-ink-400">
+                <Link href="#hábitos" className="hover:text-ink-100 transition">Hábitos</Link>
+                <Link href="#finanças" className="hover:text-ink-100 transition">Finanças</Link>
+                <Link href="#faq" className="hover:text-ink-100 transition">Perguntas frequentes</Link>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-widest text-ink-400/70 mb-3">Conta</p>
+              <div className="flex flex-col gap-2 text-sm text-ink-400">
+                <Link href="/login" className="hover:text-ink-100 transition">Entrar</Link>
+                <Link href="/login" className="hover:text-ink-100 transition">Criar conta</Link>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-widest text-ink-400/70 mb-3">Legal</p>
+              <div className="flex flex-col gap-2 text-sm text-ink-400">
+                <Link href="/privacidade" className="hover:text-ink-100 transition">Privacidade</Link>
+                <Link href="/doacao" className="hover:text-ink-100 transition">Apoiar o projeto</Link>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-ink-400 pt-6 border-t border-base-700">
+            <span>VidaTrack — gratuito, sem anúncio.</span>
           </div>
         </div>
       </footer>

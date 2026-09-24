@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
 import { AvataresEmpilhados } from "@/components/AvataresEmpilhados";
@@ -105,24 +106,39 @@ export function HeroFinancas({
         </p>
       </div>
 
-      {/* Etapa 159 — resumo de 3 colunas, mais compacto e "maduro"
-         (inspirado no Despezzas) que as linhas com ícone de antes. */}
+      {/* Etapa 173 — cada estatística no seu próprio cartão (como no
+         app do Despezzas), em vez de 3 colunas apertadas — isso
+         cortava valores maiores tipo "R$ 5.000,00" mesmo já tentando
+         só com fonte menor antes. Cada cartão cresce conforme
+         precisa, sem cortar nada. */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <Link href="/financas/extrato?preset=este_mes" className="text-center">
-          <p className="text-[10px] text-ink-400 uppercase tracking-wide mb-0.5">Receitas</p>
-          <p className="text-sm font-mono font-medium text-habito truncate">
+        <Link
+          href="/financas/extrato?preset=este_mes"
+          className="bg-base-900/60 border border-base-600 rounded-lg px-2 py-2.5 flex flex-col items-center text-center gap-1 min-w-0"
+        >
+          <TrendingUp size={13} strokeWidth={2.5} className="text-habito shrink-0" />
+          <p className="text-[10px] text-ink-400">Receitas</p>
+          <p className="text-xs font-mono font-medium text-habito leading-tight break-words">
             <ValorMonetario valor={receitas} />
           </p>
         </Link>
-        <Link href="/financas/extrato?preset=este_mes" className="text-center border-x border-base-600">
-          <p className="text-[10px] text-ink-400 uppercase tracking-wide mb-0.5">Despesas</p>
-          <p className="text-sm font-mono font-medium text-red-400 truncate">
+        <Link
+          href="/financas/extrato?preset=este_mes"
+          className="bg-base-900/60 border border-base-600 rounded-lg px-2 py-2.5 flex flex-col items-center text-center gap-1 min-w-0"
+        >
+          <TrendingDown size={13} strokeWidth={2.5} className="text-red-400 shrink-0" />
+          <p className="text-[10px] text-ink-400">Despesas</p>
+          <p className="text-xs font-mono font-medium text-red-400 leading-tight break-words">
             <ValorMonetario valor={despesas} />
           </p>
         </Link>
-        <Link href="/financas/investir" className="text-center">
-          <p className="text-[10px] text-ink-400 uppercase tracking-wide mb-0.5">Investido</p>
-          <p className="text-sm font-mono font-medium text-financa truncate">
+        <Link
+          href="/financas/investir"
+          className="bg-base-900/60 border border-base-600 rounded-lg px-2 py-2.5 flex flex-col items-center text-center gap-1 min-w-0"
+        >
+          <PiggyBank size={13} strokeWidth={2.5} className="text-financa shrink-0" />
+          <p className="text-[10px] text-ink-400">Investido</p>
+          <p className="text-xs font-mono font-medium text-financa leading-tight break-words">
             <ValorMonetario valor={totalInvestido ?? 0} />
           </p>
         </Link>

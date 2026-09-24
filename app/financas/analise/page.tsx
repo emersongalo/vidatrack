@@ -4,12 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { Lightbulb } from "lucide-react";
 import { hojeISO } from "@/lib/habitos/streak";
-import { formatarMoeda } from "@/lib/financas/formatacao";
+import { formatarMoeda, primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
 import { calcularInsightsFinanceiros, calcularComparacaoSemanal } from "@/lib/financas/insights-calculo";
 import { TreemapGastosLazy as TreemapGastos } from "@/components/TreemapGastosLazy";
 import { GraficoComparacaoMensalLazy as GraficoComparacaoMensal } from "@/components/GraficoComparacaoMensalLazy";
 import { GraficoAcumuladoLazy as GraficoAcumulado } from "@/components/GraficoAcumuladoLazy";
 import { RadarOrcamentoLazy as RadarOrcamento } from "@/components/RadarOrcamentoLazy";
+import { MapaCalorGastos } from "@/components/MapaCalorGastos";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
 // Etapa 128 — o cálculo pesado (lib/financas/insights-calculo.ts) já
@@ -44,6 +45,16 @@ export default function AnaliseFinanceiraPage() {
   const insights = calcularInsightsFinanceiros(transacoesDespesa, categoriasComMeta, mesReferencia, hojeISO());
   const { categorias, totalDespesasMes, totalDespesasMesAnterior, maiorGasto, acumulado, acumuladoMesAnterior, dicas, orcamentoComparado, projecaoFimDoMes } = insights;
   const { gastoSemanaAtual, gastoSemanaAnterior } = calcularComparacaoSemanal(transacoesDespesa, hojeISO());
+
+  // Etapa 175 — gasto por dia do mês sendo visto, pro mapa de calor.
+  const inicioMesVisto = primeiroDiaDoMes(mesReferencia);
+  const fimMesVisto = ultimoDiaDoMes(mesReferencia);
+  const gastoPorDiaMapa = new Map<number, number>();
+  for (const t of transacoesDespesa) {
+    if (t.data < inicioMesVisto || t.data > fimMesVisto) continue;
+    const dia = Number(t.data.slice(8, 10));
+    gastoPorDiaMapa.set(dia, (gastoPorDiaMapa.get(dia) ?? 0) + t.valor);
+  }
 
   const nomeMes = new Date(mesReferencia + "T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
@@ -149,8 +160,15 @@ export default function AnaliseFinanceiraPage() {
 
           <div className="mb-6">
             <p className="text-sm text-ink-400 mb-3">Ritmo de gasto — este mês x mês passado</p>
-            <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
+            <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
               <GraficoAcumulado dados={acumulado} dadosMesAnterior={acumuladoMesAnterior} />
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <p className="text-sm text-ink-400 mb-3">Mapa de calor — gasto por dia</p>
+            <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
+              <MapaCalorGastos anoMesISO={mesReferencia.slice(0, 7)} gastoPorDia={gastoPorDiaMapa} />
             </div>
           </div>
 
