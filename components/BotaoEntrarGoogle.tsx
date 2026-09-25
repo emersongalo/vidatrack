@@ -129,6 +129,12 @@ export function BotaoEntrarGoogle() {
 
   return (
     <div>
+      {carregando && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-base-900">
+          <div className="w-10 h-10 border-2 border-base-600 border-t-financa rounded-full animate-spin" />
+          <p className="text-ink-400 text-sm">Entrando...</p>
+        </div>
+      )}
       <button
         type="button"
         onClick={aoClicar}

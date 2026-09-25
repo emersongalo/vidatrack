@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { atualizarPerfil } from "./actions";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { FotoPerfil } from "@/components/FotoPerfil";
 import { IconeInstagram } from "@/components/IconeInstagram";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
 
@@ -47,20 +48,16 @@ function PerfilConteudo() {
 
       <form action={atualizarPerfil} className="space-y-5">
         <div className="flex flex-col items-center gap-3">
-          {urlFoto ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={urlFoto}
-              alt=""
-              width={88}
-              height={88}
-              className="rounded-full object-cover w-[88px] h-[88px] border border-base-600"
-            />
-          ) : (
-            <div className="w-[88px] h-[88px] rounded-full bg-base-800 border border-base-600 flex items-center justify-center text-2xl text-ink-400">
-              {(nome || email || "?").charAt(0).toUpperCase()}
-            </div>
-          )}
+          <FotoPerfil
+            url={urlFoto}
+            tamanho={88}
+            className="rounded-full w-[88px] h-[88px] border border-base-600"
+            fallback={
+              <div className="w-[88px] h-[88px] rounded-full bg-base-800 border border-base-600 flex items-center justify-center text-2xl text-ink-400">
+                {(nome || email || "?").charAt(0).toUpperCase()}
+              </div>
+            }
+          />
           <label className="text-xs text-financa cursor-pointer hover:underline">
             Trocar foto
             <input type="file" name="foto" accept="image/png,image/jpeg,image/webp" className="hidden" />

@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AlternadorTema } from "@/components/AlternadorTema";
 import { TrilhoMenu } from "@/components/TrilhoMenu";
 import { ConfirmarSaidaApp } from "@/components/ConfirmarSaidaApp";
+import { FotoPerfil } from "@/components/FotoPerfil";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { sair } from "../login/actions";
 import { Bell } from "lucide-react";
@@ -56,12 +56,7 @@ export default function DashboardPage() {
       <header className="flex items-center justify-between mb-2 gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/perfil" className="shrink-0">
-            {urlFoto ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={urlFoto} alt="" width={36} height={36} className="rounded-lg w-9 h-9 object-cover" />
-            ) : (
-              <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="rounded-lg" />
-            )}
+            <FotoPerfil url={urlFoto} tamanho={36} className="rounded-lg w-9 h-9" />
           </Link>
           <div className="min-w-0">
             <p className="text-ink-400 text-xs">Olá,</p>

@@ -7,6 +7,7 @@ import { criarConta, arquivarConta, excluirContaDefinitivamente } from "../actio
 import { SeletorTipoConta } from "@/components/SeletorTipoConta";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
+import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
 import { SeloBanco } from "@/components/SeloBanco";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { BANCOS } from "@/lib/financas/bancos";
@@ -45,7 +46,15 @@ export default function ContasPage() {
       {contas.length > 0 && (
         <ul className="space-y-2 mb-8 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {contas.map((conta: any) => (
-            <li key={conta.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
+            <li key={conta.id}>
+              <LinhaComDeslizar
+                acao={arquivarConta.bind(null, conta.id)}
+                textoConfirmacao={`Arquivar "${conta.nome}"? Ela some das listas, mas os dados continuam guardados — dá pra restaurar depois.`}
+                aoConcluir={recarregar}
+                icone={<Archive size={18} className="text-base-900" />}
+                corFundo="bg-financa"
+              >
+              <div className="bg-base-800 border border-base-600 rounded-lg p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <SeloBanco bancoId={conta.banco} />
@@ -106,6 +115,8 @@ export default function ContasPage() {
                   </MenuAcoes>
                 </div>
               </div>
+            </div>
+              </LinhaComDeslizar>
             </li>
           ))}
         </ul>

@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { criarRecorrencia, alternarAtivaRecorrencia, removerRecorrencia } from "./actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
+import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
@@ -53,10 +54,15 @@ function RecorrentesConteudo() {
       {recorrencias.length > 0 && (
         <ul className="space-y-2 mb-8 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {recorrencias.map((r: any) => (
-            <li
-              key={r.id}
-              className={`flex items-center justify-between bg-base-800 border border-base-600 rounded-lg p-3 ${!r.ativo ? "opacity-50" : ""}`}
-            >
+            <li key={r.id}>
+              <LinhaComDeslizar
+                acao={removerRecorrencia.bind(null, r.id)}
+                textoConfirmacao={`Remover a recorrência "${r.descricao || mapaContas.get(r.conta_id)}"?`}
+                aoConcluir={recarregar}
+              >
+              <div
+                className={`flex items-center justify-between bg-base-800 border border-base-600 rounded-lg p-3 ${!r.ativo ? "opacity-50" : ""}`}
+              >
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">{r.descricao || mapaContas.get(r.conta_id)}</p>
                 <p className="text-xs text-ink-400">
@@ -74,6 +80,8 @@ function RecorrentesConteudo() {
                 </button>
                 <BotaoComConfirmacao acao={removerRecorrencia.bind(null, r.id)} textoBotao="Remover" aoConcluir={recarregar} />
               </div>
+              </div>
+              </LinhaComDeslizar>
             </li>
           ))}
         </ul>

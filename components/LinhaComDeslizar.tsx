@@ -19,11 +19,20 @@ export function LinhaComDeslizar({
   textoConfirmacao = "Tem certeza?",
   aoConcluir,
   children,
+  icone,
+  corFundo = "bg-red-400",
 }: {
   acao: () => void | Promise<void>;
   textoConfirmacao?: string;
   aoConcluir?: () => void;
   children: ReactNode;
+  /** Etapa 183 — por padrão é a lixeira (ação de excluir), mas dá
+   *  pra trocar (ex: uma caixa/Archive pra "arquivar", que é uma
+   *  ação reversível, diferente de excluir de vez). */
+  icone?: ReactNode;
+  /** Cor de fundo revelada ao arrastar — vermelho pra excluir (ação
+   *  sem volta), âmbar pra arquivar (reversível). */
+  corFundo?: string;
 }) {
   const [arrastoX, setArrastoX] = useState(0);
   const [confirmando, setConfirmando] = useState(false);
@@ -73,13 +82,14 @@ export function LinhaComDeslizar({
 
   return (
     <div className="relative overflow-hidden rounded-lg">
-      <div className="absolute inset-0 bg-red-400 flex items-center justify-end pr-5 rounded-lg">
-        <Trash2 size={18} className="text-base-900" />
+      <div className={`absolute inset-0 ${corFundo} flex items-center justify-end pr-5 rounded-lg`}>
+        {icone ?? <Trash2 size={18} className="text-base-900" />}
       </div>
       <div
         onTouchStart={aoTocar}
         onTouchMove={aoMover}
         onTouchEnd={aoSoltar}
+        data-gesto-proprio="true"
         style={{
           transform: `translateX(${arrastoX}px)`,
           transition: arrastoX === 0 ? "transform 200ms ease-out" : "none",
@@ -112,9 +122,9 @@ export function LinhaComDeslizar({
                 type="button"
                 onClick={confirmar}
                 disabled={pendente}
-                className="flex-1 bg-red-400 text-base-900 font-medium rounded-lg py-2 text-sm hover:opacity-90 transition disabled:opacity-50"
+                className={`flex-1 ${corFundo} text-base-900 font-medium rounded-lg py-2 text-sm hover:opacity-90 transition disabled:opacity-50`}
               >
-                {pendente ? "..." : "Sim, excluir"}
+                {pendente ? "..." : "Sim, confirmar"}
               </button>
             </div>
           </div>

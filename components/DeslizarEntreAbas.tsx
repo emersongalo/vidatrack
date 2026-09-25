@@ -27,13 +27,16 @@ export function DeslizarEntreAbas({
   const indiceAtual = abas.findIndex((a) => a.href === pathname);
 
   function aoTocar(e: React.TouchEvent) {
-    // Etapa 180 — se o toque começou dentro de algo que já rola na
+    // Etapa 180/182 — se o toque começou dentro de algo que já rola na
     // horizontal sozinho (o seletor de dias da tela Hoje, os filtros
-    // de período do Extrato...), não interfere: deixa aquele elemento
-    // cuidar do próprio gesto, sem competir com a troca de aba.
+    // de período do Extrato...) OU dentro de uma linha com o próprio
+    // gesto de arrastar (o "deslizar pra excluir" do Extrato), não
+    // interfere: deixa aquele elemento cuidar do próprio gesto, sem
+    // competir com a troca de aba. Sem isso, arrastar uma transação
+    // pra excluir também trocava de aba ao mesmo tempo.
     let el = e.target as HTMLElement | null;
     while (el && el !== e.currentTarget) {
-      if (el.scrollWidth > el.clientWidth + 4) {
+      if (el.dataset.gestoProprio || el.scrollWidth > el.clientWidth + 4) {
         inicio.current = null;
         return;
       }
