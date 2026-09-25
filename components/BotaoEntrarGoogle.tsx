@@ -5,12 +5,37 @@ import { createClient } from "@/lib/supabase/client";
 import { entrarComGoogle } from "@/app/login/actions";
 
 const ESQUEMA_RETORNO = "vidatrack://auth-callback";
+const CHAVE_ENTRANDO = "vidatrack-entrando-google";
+const VALIDADE_MS = 25000; // depois disso, considera que travou e não confia mais na marca
 
 function estaNoAppNativo() {
   // Mesmo truque usado no RegistradorPushNativo: no navegador comum
   // `Capacitor` nem existe no window, então isso vira `false` sozinho
   // e o app se comporta exatamente como antes pra quem usa pelo site.
   return !!(window as any).Capacitor?.isNativePlatform?.();
+}
+
+// Etapa 187 — na WebView do Android, às vezes a troca pra aba do
+// Google e a volta dela recriam a página por baixo (perdendo o
+// estado do React em memória), e por um instante aparece o
+// formulário de login "cru" de novo antes de finalmente entrar.
+// Guardando "estou no meio do login" numa marca que sobrevive a
+// isso (sessionStorage, com hora pra não confiar numa marca velha
+// se o processo travar de verdade), o componente já nasce sabendo
+// que deve mostrar a tela de "Entrando..." em vez do formulário.
+function estavaEntrando(): boolean {
+  if (typeof window === "undefined") return false;
+  const marca = sessionStorage.getItem(CHAVE_ENTRANDO);
+  if (!marca) return false;
+  return Date.now() - Number(marca) < VALIDADE_MS;
+}
+
+function marcarEntrando() {
+  sessionStorage.setItem(CHAVE_ENTRANDO, String(Date.now()));
+}
+
+function desmarcarEntrando() {
+  sessionStorage.removeItem(CHAVE_ENTRANDO);
 }
 
 /**
@@ -31,13 +56,33 @@ function estaNoAppNativo() {
  * antes, chamando a Server Action normal.
  */
 export function BotaoEntrarGoogle() {
-  const [carregando, setCarregando] = useState(false);
+  // Etapa 187 — o estado inicial já nasce "true" se a marca disser
+  // que o login estava rolando (ver estavaEntrando acima), em vez de
+  // sempre começar em false e só descobrir depois.
+  const [carregando, setCarregando] = useState(estavaEntrando);
   const [erro, setErro] = useState<string | null>(null);
   // Etapa 155 — guarda SÍNCRONA (não é estado do React, que só
   // atualiza no próximo render) contra clique duplo/rápido demais no
   // botão, que estava abrindo mais de uma aba do Google ao mesmo
   // tempo e confundindo o retorno do login.
   const jaClicouRef = useRef(false);
+
+  // Etapa 187 — se "Entrando..." ficar preso por muito tempo (a
+  // pessoa desistiu no meio, voltou sem completar o Google...),
+  // libera o formulário de novo sozinho, sem precisar fechar e abrir
+  // o app pra sair dessa tela. Separado do efeito do listener acima
+  // de propósito — juntar os dois faria o listener ser removido e
+  // recriado toda vez que "carregando" mudasse, com risco de perder
+  // o retorno do Google bem no meio do processo.
+  useEffect(() => {
+    if (!carregando) return;
+    const temporizador = setTimeout(() => {
+      setCarregando(false);
+      desmarcarEntrando();
+      jaClicouRef.current = false;
+    }, VALIDADE_MS);
+    return () => clearTimeout(temporizador);
+  }, [carregando]);
 
   useEffect(() => {
     if (!estaNoAppNativo()) return;
@@ -59,6 +104,7 @@ export function BotaoEntrarGoogle() {
           if (!codigo) {
             setErro("Não foi possível concluir o login com Google.");
             setCarregando(false);
+            desmarcarEntrando();
             jaClicouRef.current = false;
             return;
           }
@@ -68,6 +114,7 @@ export function BotaoEntrarGoogle() {
           if (error) {
             setErro(error.message);
             setCarregando(false);
+            desmarcarEntrando();
             jaClicouRef.current = false;
             return;
           }
@@ -79,6 +126,7 @@ export function BotaoEntrarGoogle() {
           // via como se ninguém tivesse logado — voltava pro login sem
           // erro nenhum. Um recarregamento de verdade sempre manda os
           // cookies mais atuais que o navegador tem guardados.
+          desmarcarEntrando();
           window.location.href = "/dashboard";
         })
       ) as unknown as { remove: () => void };
@@ -99,6 +147,7 @@ export function BotaoEntrarGoogle() {
     }
 
     setCarregando(true);
+    marcarEntrando();
     try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -112,6 +161,7 @@ export function BotaoEntrarGoogle() {
       if (error || !data?.url) {
         setErro(error?.message ?? "Não foi possível iniciar o login com Google.");
         setCarregando(false);
+        desmarcarEntrando();
         jaClicouRef.current = false;
         return;
       }
@@ -123,6 +173,7 @@ export function BotaoEntrarGoogle() {
     } catch {
       setErro("Não foi possível iniciar o login com Google.");
       setCarregando(false);
+      desmarcarEntrando();
       jaClicouRef.current = false;
     }
   }
