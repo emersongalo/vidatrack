@@ -84,12 +84,18 @@ export default function PrivacidadePage() {
           </ul>
         </section>
 
-        <section>
+        <section id="exclusao-de-dados">
           <h2 className="font-display font-semibold text-lg mb-2">Seus dados são só seus</h2>
+          <p className="text-sm text-ink-100 leading-relaxed mb-2">
+            Você pode excluir qualquer item (hábito, tarefa, conta, lançamento) a qualquer
+            momento dentro do app, com uma lixeira de segurança pros principais.
+          </p>
           <p className="text-sm text-ink-100 leading-relaxed">
-            Você pode excluir qualquer item a qualquer momento (com uma lixeira de segurança
-            pros principais). Se quiser encerrar sua conta e apagar tudo permanentemente, é só
-            entrar em contato — não existe letra miúda pra dificultar isso.
+            Para excluir sua conta e apagar todos os seus dados permanentemente, entre no app e
+            acesse <strong className="text-ink-100">Perfil → Excluir conta</strong>. Isso remove
+            para sempre seus hábitos, tarefas, categorias, contas, cartões, lançamentos,
+            recorrências, metas, desafios e seu perfil — sem precisar entrar em contato com
+            ninguém, e sem prazo de espera.
           </p>
         </section>
       </div>
