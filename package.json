@@ -17,7 +17,6 @@
     "@capacitor/browser": "^8.0.4",
     "@capacitor/core": "^8.5.1",
     "@capacitor/push-notifications": "^8.1.2",
-    "@capgo/capacitor-social-login": "^8.5.11",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
     "firebase-admin": "^12.6.0",

@@ -19,13 +19,13 @@ function estaNoAppNativo() {
 // ainda está com um app mais antigo instalado continua usando o fluxo
 // pela aba do navegador (abaixo), sem quebrar nada.
 function pluginNativoDisponivel() {
-  // Etapa 189 — chave liga/desliga pelo site (sem precisar gerar AAB):
-  // só usa o login nativo se NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO=1 na Vercel.
-  // Desligado (padrão), volta pro fluxo pela aba do navegador, que é o
-  // que está funcionando de ponta a ponta.
-  if (process.env.NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO !== "1") return false;
+  // Etapa 190 — login nativo com plugin PRÓPRIO (GoogleIdToken), que só
+  // existe no AAB 1.0.4+. Versões antigas instaladas continuam no fluxo
+  // pela aba do navegador. Chave de emergência: NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO=0
+  // na Vercel desliga o nativo pra todo mundo sem precisar de AAB novo.
+  if (process.env.NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO === "0") return false;
   const cap = (window as any).Capacitor;
-  return !!(cap?.isNativePlatform?.() && cap?.isPluginAvailable?.("SocialLogin"));
+  return !!(cap?.isNativePlatform?.() && cap?.isPluginAvailable?.("GoogleIdToken"));
 }
 
 // Etapa 187 — na WebView do Android, às vezes a troca pra aba do
@@ -162,37 +162,57 @@ export function BotaoEntrarGoogle() {
     setCarregando(true);
     marcarEntrando();
 
-    // Etapa 188 — login NATIVO do Google (seletor de contas do próprio
+    // Etapa 190 — login NATIVO do Google (seletor de contas do próprio
     // Android, sem abrir navegador nem passar pela página do Supabase).
-    // Mais rápido e sem o vai-e-volta Google → Supabase → Google que os
-    // testadores relataram. Só funciona no AAB que já tem o plugin
-    // (1.0.2+); em versões antigas instaladas, cai no fluxo antigo abaixo.
+    // Só no AAB 1.0.4+ (plugin GoogleIdToken). Se falhar, cai no fluxo
+    // antigo pela aba do navegador logo abaixo, em vez de travar.
     if (pluginNativoDisponivel()) {
       try {
-        const { SocialLogin } = await import("@capgo/capacitor-social-login");
-        await SocialLogin.initialize({
-          google: { webClientId: process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID! },
+        const { registerPlugin } = await import("@capacitor/core");
+        const GoogleIdToken = registerPlugin<{
+          entrar(o: { webClientId: string; nonce: string }): Promise<{ idToken: string }>;
+        }>("GoogleIdToken");
+
+        // nonce: o Google recebe o hash, o Supabase recebe o valor puro
+        const nonceBruto = crypto.randomUUID();
+        const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(nonceBruto));
+        const nonceHash = Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+        const { idToken } = await GoogleIdToken.entrar({
+          webClientId: process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID!,
+          nonce: nonceHash,
         });
-        const resposta: any = await SocialLogin.login({ provider: "google", options: {} });
-        const idToken: string | undefined = resposta?.result?.idToken;
-        if (!idToken) throw new Error("sem idToken");
 
         const supabase = createClient();
-        const { error } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken });
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: idToken,
+          nonce: nonceBruto,
+        });
         if (error) throw error;
 
         desmarcarEntrando();
         window.location.href = "/dashboard";
         return;
       } catch (e: any) {
-        const msg = String(e?.message ?? e ?? "");
-        // pessoa fechou o seletor de contas: não é erro, só volta pro formulário
-        const cancelou = /cancel/i.test(msg);
-        setErro(cancelou ? null : "Não foi possível entrar com Google. Tente de novo ou use e-mail e senha.");
-        setCarregando(false);
-        desmarcarEntrando();
-        jaClicouRef.current = false;
-        return;
+        if (e?.code === "CANCELADO") {
+          // pessoa fechou o seletor de contas: só volta pro formulário
+          setCarregando(false);
+          desmarcarEntrando();
+          jaClicouRef.current = false;
+          return;
+        }
+        // Qualquer outra falha: registra o motivo (pra diagnóstico) e cai
+        // no fluxo antigo pela aba do navegador, em vez de travar.
+        console.error("[login-google-nativo]", e?.code, e?.message ?? e);
+        try {
+          fetch("/api/analytics", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            // vai pra tabela analytics_eventos — dá pra consultar depois o motivo exato
+            body: JSON.stringify({ pagina: `erro-login-google-nativo: ${e?.code ?? ""} ${e?.message ?? e}`.slice(0, 200) }),
+          }).catch(() => {});
+        } catch {}
       }
     }
 
