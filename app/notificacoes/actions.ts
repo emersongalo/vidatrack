@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export async function salvarInscricaoPush(inscricao: {
@@ -12,7 +11,9 @@ export async function salvarInscricaoPush(inscricao: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // Etapa 192 — mesmo motivo do salvarTokenFCM abaixo: action chamada
+  // em segundo plano não pode redirecionar.
+  if (!user) return;
 
   await supabase.from("push_inscricoes").upsert(
     {
@@ -44,7 +45,15 @@ export async function salvarTokenFCM(token: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // Etapa 192 — NUNCA redirecionar aqui. Essa action é chamada
+  // sozinha, em segundo plano, toda vez que o app nativo abre uma
+  // página (inclusive /apresentacao e /login, sem ninguém logado).
+  // O redirect("/login") que existia fazia a página recarregar,
+  // o que registrava o push de novo, que chamava isso de novo... —
+  // um loop de ~5 recargas por segundo que deixava a tela piscando
+  // e impedia o login com Google de terminar. Sem usuário: só ignora
+  // (o token é salvo na próxima abertura, já logado).
+  if (!user) return;
 
   await supabase.from("fcm_tokens").upsert(
     { usuario_id: user.id, token },
