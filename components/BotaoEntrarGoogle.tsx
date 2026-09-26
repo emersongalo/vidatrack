@@ -67,7 +67,11 @@ function pluginNativoDisponivel() {
   // existe no AAB 1.0.4+. Versões antigas instaladas continuam no fluxo
   // pela aba do navegador. Chave de emergência: NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO=0
   // na Vercel desliga o nativo pra todo mundo sem precisar de AAB novo.
-  if (process.env.NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO === "0") return false;
+  // Etapa 193 — DESLIGADO por padrão até o nativo estar 100%: só liga
+  // com NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO=1 na Vercel. Sem o loop de
+  // recarregamento (corrigido na Etapa 192), o fluxo pela aba do
+  // navegador volta a funcionar normalmente.
+  if (process.env.NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO !== "1") return false;
   const cap = (window as any).Capacitor;
   return !!(cap?.isNativePlatform?.() && cap?.isPluginAvailable?.("GoogleIdToken"));
 }
@@ -248,7 +252,7 @@ export function BotaoEntrarGoogle() {
         return;
       } catch (e: any) {
         if (e?.code === "CANCELADO") {
-          registrarPasso("x-cancelado");
+          registrarPasso(`x-cancelado: ${e?.message ?? ""}`);
           // pessoa fechou o seletor de contas: só volta pro formulário
           setCarregando(false);
           desmarcarEntrando();
