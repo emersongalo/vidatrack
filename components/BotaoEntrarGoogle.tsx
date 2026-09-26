@@ -17,6 +17,25 @@ function estaNoAppNativo() {
 
 // Etapa 188 — o plugin nativo só existe no AAB 1.0.2 em diante. Quem
 // ainda está com um app mais antigo instalado continua usando o fluxo
+
+// Etapa 191 — nonce compatível com WebViews antigas: usa só
+// crypto.getRandomValues (existe em todas). Se a WebView não tiver
+// crypto.subtle pra calcular o hash, segue sem nonce (o Supabase
+// aceita — o nonce é uma proteção extra, não obrigatória).
+async function gerarNonce(): Promise<{ nonceBruto: string; nonceHash: string | null }> {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const nonceBruto = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  try {
+    if (!crypto.subtle) return { nonceBruto, nonceHash: null };
+    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(nonceBruto));
+    const nonceHash = Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    return { nonceBruto, nonceHash };
+  } catch {
+    return { nonceBruto, nonceHash: null };
+  }
+}
+
 // pela aba do navegador (abaixo), sem quebrar nada.
 function pluginNativoDisponivel() {
   // Etapa 190 — login nativo com plugin PRÓPRIO (GoogleIdToken), que só
@@ -173,21 +192,21 @@ export function BotaoEntrarGoogle() {
           entrar(o: { webClientId: string; nonce: string }): Promise<{ idToken: string }>;
         }>("GoogleIdToken");
 
-        // nonce: o Google recebe o hash, o Supabase recebe o valor puro
-        const nonceBruto = crypto.randomUUID();
-        const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(nonceBruto));
-        const nonceHash = Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+        // nonce: o Google recebe o hash, o Supabase recebe o valor puro.
+        // Etapa 191 — sem crypto.randomUUID (não existe na WebView de
+        // alguns Androids — era isso que derrubava o login nativo).
+        const { nonceBruto, nonceHash } = await gerarNonce();
 
         const { idToken } = await GoogleIdToken.entrar({
           webClientId: process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID!,
-          nonce: nonceHash,
+          nonce: nonceHash ?? "",
         });
 
         const supabase = createClient();
         const { error } = await supabase.auth.signInWithIdToken({
           provider: "google",
           token: idToken,
-          nonce: nonceBruto,
+          ...(nonceHash ? { nonce: nonceBruto } : {}),
         });
         if (error) throw error;
 
