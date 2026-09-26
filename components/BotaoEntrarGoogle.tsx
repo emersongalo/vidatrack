@@ -18,6 +18,31 @@ function estaNoAppNativo() {
 // Etapa 188 — o plugin nativo só existe no AAB 1.0.2 em diante. Quem
 // ainda está com um app mais antigo instalado continua usando o fluxo
 
+
+// Etapa 192 — registra cada passo do login nativo na tabela
+// analytics_eventos (campo "pagina"), pra diagnosticar sem precisar
+// de cabo/logcat. Nunca manda token nem e-mail, só o nome do passo.
+function registrarPasso(passo: string) {
+  try {
+    fetch("/api/analytics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pagina: `login-google: ${passo}`.slice(0, 200) }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {}
+}
+
+function comLimiteDeTempo<T>(promessa: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject({ code: "TIMEOUT", message: `sem resposta em ${ms / 1000}s` }), ms);
+    promessa.then(
+      (v) => { clearTimeout(t); resolve(v); },
+      (e) => { clearTimeout(t); reject(e); }
+    );
+  });
+}
+
 // Etapa 191 — nonce compatível com WebViews antigas: usa só
 // crypto.getRandomValues (existe em todas). Se a WebView não tiver
 // crypto.subtle pra calcular o hash, segue sem nonce (o Supabase
@@ -185,7 +210,9 @@ export function BotaoEntrarGoogle() {
     // Android, sem abrir navegador nem passar pela página do Supabase).
     // Só no AAB 1.0.4+ (plugin GoogleIdToken). Se falhar, cai no fluxo
     // antigo pela aba do navegador logo abaixo, em vez de travar.
-    if (pluginNativoDisponivel()) {
+    const nativo = pluginNativoDisponivel();
+    registrarPasso(nativo ? "1-inicio-nativo" : "1-inicio-navegador");
+    if (nativo) {
       try {
         const { registerPlugin } = await import("@capacitor/core");
         const GoogleIdToken = registerPlugin<{
@@ -197,10 +224,15 @@ export function BotaoEntrarGoogle() {
         // alguns Androids — era isso que derrubava o login nativo).
         const { nonceBruto, nonceHash } = await gerarNonce();
 
-        const { idToken } = await GoogleIdToken.entrar({
-          webClientId: process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID!,
-          nonce: nonceHash ?? "",
-        });
+        registrarPasso(`2-abrindo-seletor (nonce=${nonceHash ? "sim" : "nao"})`);
+        const { idToken } = await comLimiteDeTempo(
+          GoogleIdToken.entrar({
+            webClientId: process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID!,
+            nonce: nonceHash ?? "",
+          }),
+          60000
+        );
+        registrarPasso("3-token-recebido");
 
         const supabase = createClient();
         const { error } = await supabase.auth.signInWithIdToken({
@@ -208,13 +240,15 @@ export function BotaoEntrarGoogle() {
           token: idToken,
           ...(nonceHash ? { nonce: nonceBruto } : {}),
         });
-        if (error) throw error;
+        if (error) throw { code: "SUPABASE", message: error.message };
+        registrarPasso("4-sessao-ok");
 
         desmarcarEntrando();
         window.location.href = "/dashboard";
         return;
       } catch (e: any) {
         if (e?.code === "CANCELADO") {
+          registrarPasso("x-cancelado");
           // pessoa fechou o seletor de contas: só volta pro formulário
           setCarregando(false);
           desmarcarEntrando();
