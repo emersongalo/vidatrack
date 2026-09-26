@@ -19,6 +19,11 @@ function estaNoAppNativo() {
 // ainda está com um app mais antigo instalado continua usando o fluxo
 // pela aba do navegador (abaixo), sem quebrar nada.
 function pluginNativoDisponivel() {
+  // Etapa 189 — chave liga/desliga pelo site (sem precisar gerar AAB):
+  // só usa o login nativo se NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO=1 na Vercel.
+  // Desligado (padrão), volta pro fluxo pela aba do navegador, que é o
+  // que está funcionando de ponta a ponta.
+  if (process.env.NEXT_PUBLIC_LOGIN_GOOGLE_NATIVO !== "1") return false;
   const cap = (window as any).Capacitor;
   return !!(cap?.isNativePlatform?.() && cap?.isPluginAvailable?.("SocialLogin"));
 }
