@@ -15,6 +15,14 @@ function estaNoAppNativo() {
   return !!(window as any).Capacitor?.isNativePlatform?.();
 }
 
+// Etapa 188 — o plugin nativo só existe no AAB 1.0.2 em diante. Quem
+// ainda está com um app mais antigo instalado continua usando o fluxo
+// pela aba do navegador (abaixo), sem quebrar nada.
+function pluginNativoDisponivel() {
+  const cap = (window as any).Capacitor;
+  return !!(cap?.isNativePlatform?.() && cap?.isPluginAvailable?.("SocialLogin"));
+}
+
 // Etapa 187 — na WebView do Android, às vezes a troca pra aba do
 // Google e a volta dela recriam a página por baixo (perdendo o
 // estado do React em memória), e por um instante aparece o
@@ -148,6 +156,41 @@ export function BotaoEntrarGoogle() {
 
     setCarregando(true);
     marcarEntrando();
+
+    // Etapa 188 — login NATIVO do Google (seletor de contas do próprio
+    // Android, sem abrir navegador nem passar pela página do Supabase).
+    // Mais rápido e sem o vai-e-volta Google → Supabase → Google que os
+    // testadores relataram. Só funciona no AAB que já tem o plugin
+    // (1.0.2+); em versões antigas instaladas, cai no fluxo antigo abaixo.
+    if (pluginNativoDisponivel()) {
+      try {
+        const { SocialLogin } = await import("@capgo/capacitor-social-login");
+        await SocialLogin.initialize({
+          google: { webClientId: process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID! },
+        });
+        const resposta: any = await SocialLogin.login({ provider: "google", options: {} });
+        const idToken: string | undefined = resposta?.result?.idToken;
+        if (!idToken) throw new Error("sem idToken");
+
+        const supabase = createClient();
+        const { error } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken });
+        if (error) throw error;
+
+        desmarcarEntrando();
+        window.location.href = "/dashboard";
+        return;
+      } catch (e: any) {
+        const msg = String(e?.message ?? e ?? "");
+        // pessoa fechou o seletor de contas: não é erro, só volta pro formulário
+        const cancelou = /cancel/i.test(msg);
+        setErro(cancelou ? null : "Não foi possível entrar com Google. Tente de novo ou use e-mail e senha.");
+        setCarregando(false);
+        desmarcarEntrando();
+        jaClicouRef.current = false;
+        return;
+      }
+    }
+
     try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithOAuth({

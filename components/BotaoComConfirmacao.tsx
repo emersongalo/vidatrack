@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 
 export function BotaoComConfirmacao({
   acao,
@@ -31,43 +32,51 @@ export function BotaoComConfirmacao({
     });
   }
 
+  // Etapa 186 — o modal vai num portal no <body>. Sem isso, quando o
+  // botão está dentro de algo com `transform` (ex: LinhaComDeslizar),
+  // o `position: fixed` passa a ser relativo a esse elemento e o modal
+  // fica preso/cortado dentro do card. `data-manter-menu` avisa o
+  // MenuAcoes que tocar aqui NÃO é "clicar fora" do menu.
+  const modal = (
+    <div
+      data-manter-menu
+      className="fixed inset-0 z-[70] flex items-center justify-center p-6 bg-black/60"
+      onClick={() => !pendente && setAberto(false)}
+    >
+      <div
+        className="bg-base-800 border border-base-600 rounded-xl2 p-5 max-w-xs w-full shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-sm text-ink-100 mb-4">{textoConfirmacao}</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setAberto(false)}
+            disabled={pendente}
+            className="flex-1 border border-base-600 rounded-lg py-2 text-sm hover:bg-base-700 transition disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={confirmar}
+            disabled={pendente}
+            className="flex-1 bg-red-400 text-base-900 font-medium rounded-lg py-2 text-sm hover:opacity-90 transition disabled:opacity-50"
+          >
+            {pendente ? "..." : "Sim, confirmar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <button type="button" onClick={() => setAberto(true)} className={classeBotao}>
         {textoBotao}
       </button>
 
-      {aberto && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60"
-          onClick={() => !pendente && setAberto(false)}
-        >
-          <div
-            className="bg-base-800 border border-base-600 rounded-xl2 p-5 max-w-xs w-full shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-sm text-ink-100 mb-4">{textoConfirmacao}</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setAberto(false)}
-                disabled={pendente}
-                className="flex-1 border border-base-600 rounded-lg py-2 text-sm hover:bg-base-700 transition disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={confirmar}
-                disabled={pendente}
-                className="flex-1 bg-red-400 text-base-900 font-medium rounded-lg py-2 text-sm hover:opacity-90 transition disabled:opacity-50"
-              >
-                {pendente ? "..." : "Sim, confirmar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {aberto && typeof document !== "undefined" && createPortal(modal, document.body)}
     </>
   );
 }
