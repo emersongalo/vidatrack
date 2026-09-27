@@ -6,12 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { esquemaRecorrencia, primeiroErro } from "@/lib/validacao/financas";
 
-export async function criarRecorrencia(formData: FormData) {
+export async function criarRecorrencia(formData: FormData): Promise<{ erro?: string }> {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) return { erro: "Sua sessão expirou. Saia e entre de novo." };
 
   const resultado = esquemaRecorrencia.safeParse({
     tipo: formData.get("tipo"),
@@ -22,13 +22,10 @@ export async function criarRecorrencia(formData: FormData) {
     diaMes: formData.get("diaMes"),
     dataFim: formData.get("dataFim"),
   });
-
-  if (!resultado.success) {
-    redirect(`/financas/recorrentes?erro=${encodeURIComponent(primeiroErro(resultado))}`);
-  }
+  if (!resultado.success) return { erro: primeiroErro(resultado) };
 
   const { error } = await supabase.from("financa_recorrencias").insert({
-    dono_id: user!.id,
+    dono_id: user.id,
     conta_id: resultado.data.contaId,
     categoria_id: resultado.data.categoriaId,
     tipo: resultado.data.tipo,
@@ -37,14 +34,11 @@ export async function criarRecorrencia(formData: FormData) {
     dia_mes: resultado.data.diaMes,
     data_fim: resultado.data.dataFim,
   });
-
-  if (error) {
-    redirect(`/financas/recorrentes?erro=${encodeURIComponent(error.message)}`);
-  }
+  if (error) return { erro: error.message };
 
   revalidatePath("/financas");
   revalidatePath("/financas/recorrentes");
-  redirect("/financas/recorrentes");
+  return {};
 }
 
 export async function alternarAtivaRecorrencia(recorrenciaId: string) {

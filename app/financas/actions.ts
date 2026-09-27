@@ -226,7 +226,7 @@ export async function criarCategoria(formData: FormData) {
   });
 
   if (!resultado.success) {
-    redirect(`/financas/categorias?erro=${encodeURIComponent(primeiroErro(resultado))}`);
+    redirect(`/financas/categorias/nova?erro=${encodeURIComponent(primeiroErro(resultado))}`);
   }
 
   const { error } = await supabase.from("financa_categorias").insert({
@@ -239,7 +239,7 @@ export async function criarCategoria(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/financas/categorias?erro=${encodeURIComponent(error.message)}`);
+    redirect(`/financas/categorias/nova?erro=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/financas/categorias");

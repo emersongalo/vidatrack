@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FormularioAcao } from "@/components/FormularioAcao";
 import { criarMeta, adicionarProgressoMeta, arquivarMeta, excluirMetaDefinitivamente } from "./actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
@@ -56,7 +57,7 @@ export default function MetasPage() {
                 )}
 
                 {!meta.concluida && (
-                  <form action={adicionarProgressoMeta.bind(null, meta.id)} className="flex gap-2 mb-3">
+                  <FormularioAcao acao={adicionarProgressoMeta.bind(null, meta.id)} aoSucesso={recarregar} className="flex gap-2 mb-3">
                     <CampoValorMonetario
                       name="valorAdicionar"
                       placeholder="Guardar mais..."
@@ -65,7 +66,7 @@ export default function MetasPage() {
                     <button type="submit" className="bg-financa text-base-900 text-sm font-medium rounded-lg px-3 hover:opacity-90 transition">
                       +
                     </button>
-                  </form>
+                  </FormularioAcao>
                 )}
 
                 <div className="flex items-center gap-3">
@@ -92,7 +93,7 @@ export default function MetasPage() {
 
       <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
         <p className="text-sm text-ink-400 mb-3">Nova meta</p>
-        <form action={criarMeta} className="space-y-3">
+        <FormularioAcao acao={criarMeta} aoSucesso={recarregar} mensagemSucesso="Meta criada!" className="space-y-3">
           <input
             name="nome"
             type="text"
@@ -115,7 +116,7 @@ export default function MetasPage() {
             />
           </div>
           <BotaoSalvarFormulario>Criar meta</BotaoSalvarFormulario>
-        </form>
+        </FormularioAcao>
       </div>
     </main>
   );

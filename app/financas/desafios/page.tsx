@@ -1,6 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { criarDesafio } from "./actions";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
@@ -14,6 +16,15 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 // tempo, e prefiro fazer essa sincronização com cuidado numa etapa
 // própria em vez de arriscar agora.
 export default function DesafiosPage() {
+  return (
+    <Suspense fallback={null}>
+      <DesafiosConteudo />
+    </Suspense>
+  );
+}
+
+function DesafiosConteudo() {
+  const erro = useSearchParams().get("erro");
   const { snapshot } = useSnapshotOffline();
   const desafios = snapshot?.financas.desafios ?? [];
   const contas = (snapshot?.financas.contas ?? []).filter((c: any) => c.tipo !== "investimento");
@@ -64,6 +75,11 @@ export default function DesafiosPage() {
       ) : (
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
           <p className="text-sm text-ink-400 mb-3">Novo desafio</p>
+          {erro && (
+            <p className="mb-3 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
+              {decodeURIComponent(erro)}
+            </p>
+          )}
           <form action={criarDesafio} className="space-y-3">
             <input
               name="nome"

@@ -3,6 +3,7 @@
 import { Suspense, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { FormularioAcao } from "@/components/FormularioAcao";
 import { criarRecorrencia, alternarAtivaRecorrencia, removerRecorrencia } from "./actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
@@ -92,7 +93,7 @@ function RecorrentesConteudo() {
       ) : (
         <>
           <p className="text-sm text-ink-400 mb-3">Nova recorrência</p>
-          <form action={criarRecorrencia} className="space-y-3">
+          <FormularioAcao acao={criarRecorrencia} aoSucesso={recarregar} mensagemSucesso="Recorrência criada!" className="space-y-3">
             <select
               name="tipo"
               className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
@@ -163,7 +164,7 @@ function RecorrentesConteudo() {
               className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
             <BotaoSalvarFormulario>Criar recorrência</BotaoSalvarFormulario>
-          </form>
+          </FormularioAcao>
           <p className="text-xs text-ink-400 mt-3">
             O lançamento do mês é criado automaticamente na primeira vez que você abrir o app naquele mês, a
             partir do dia escolhido — não é um agendador rodando sozinho no fundo.
