@@ -10,7 +10,7 @@
 // mas não reagia a toque nenhum sem internet. Agora esse cache de
 // arquivos estáticos é próprio nosso e não depende do navegador.
 
-const VERSAO_CACHE = "v3";
+const VERSAO_CACHE = "v4"; // Etapa 198 — ícone novo
 const CACHE_PAGINAS = `vidatrack-paginas-${VERSAO_CACHE}`;
 const CACHE_ESTATICOS = `vidatrack-estaticos-${VERSAO_CACHE}`;
 const PAGINA_OFFLINE = "/offline";
