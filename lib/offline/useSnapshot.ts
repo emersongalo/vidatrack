@@ -14,6 +14,19 @@ import { lerSnapshotOffline, salvarSnapshotOffline, type SnapshotOffline } from 
  * `undefined` = ainda não sabemos (primeiro instante).
  * `null` = nunca baixou nada ainda (nem tinha internet uma vez).
  */
+export const EVENTO_SNAPSHOT = "vidatrack-snapshot-atualizado";
+
+/** Baixa o retrato de novo e avisa todas as telas abertas. */
+export async function atualizarSnapshotEmTodasAsTelas() {
+  if (typeof navigator !== "undefined" && !navigator.onLine) return;
+  try {
+    const resposta = await fetch("/api/offline/baixar-tudo");
+    if (!resposta.ok) return;
+    salvarSnapshotOffline(await resposta.json());
+    window.dispatchEvent(new Event(EVENTO_SNAPSHOT));
+  } catch {}
+}
+
 export function useSnapshotOffline() {
   const [snapshot, setSnapshot] = useState<SnapshotOffline | null | undefined>(undefined);
   const [atualizando, setAtualizando] = useState(false);
@@ -27,11 +40,20 @@ export function useSnapshotOffline() {
       const dados = await resposta.json();
       salvarSnapshotOffline(dados);
       setSnapshot(lerSnapshotOffline());
+      // Etapa 204 — avisa as outras telas abertas (ex: lançou um gasto
+      // rápido pelo "+" e a tela Início por trás atualiza na hora)
+      window.dispatchEvent(new Event(EVENTO_SNAPSHOT));
     } catch {
       // Sem internet de verdade (ou servidor fora) — fica com o que já tinha.
     } finally {
       setAtualizando(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const aoAtualizar = () => setSnapshot(lerSnapshotOffline());
+    window.addEventListener(EVENTO_SNAPSHOT, aoAtualizar);
+    return () => window.removeEventListener(EVENTO_SNAPSHOT, aoAtualizar);
   }, []);
 
   useEffect(() => {
