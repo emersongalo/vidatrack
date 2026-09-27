@@ -17,7 +17,6 @@ import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
-import { atualizarWidgetSaldo, atualizarWidgetContasAPagar } from "@/lib/widgets/atualizar";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -57,22 +56,8 @@ export default function FinancasPage() {
   // outra"). Por isso calcula tudo de novo aqui, direto do
   // snapshot, em vez de reaproveitar saldoTotal/recorrências
   // (que só existem depois do return).
-  useEffect(() => {
-    if (snapshot === undefined || !ehMesAtual) return;
-    const contasAtuais = snapshot?.financas.contas ?? [];
-    const recorrenciasAtuais = snapshot?.financas.recorrencias ?? [];
-    const saldoAtual = contasAtuais
-      .filter((c: any) => c.tipo !== "investimento")
-      .reduce((total: number, c: any) => total + Number(c.saldo), 0);
-    atualizarWidgetSaldo(formatarMoeda(saldoAtual));
-
-    const diaHoje = hoje.getDate();
-    const linhasContas = recorrenciasAtuais
-      .filter((r) => r.ativo && r.dia_mes - diaHoje >= 0 && r.dia_mes - diaHoje <= 7)
-      .sort((a, b) => a.dia_mes - b.dia_mes)
-      .map((r) => `${r.descricao || "Recorrência"} · ${formatarMoeda(Number(r.valor))}`);
-    atualizarWidgetContasAPagar(linhasContas);
-  }, [snapshot, ehMesAtual]);
+  // Etapa 195 — Saldo e Contas a pagar dos widgets agora vêm do
+  // SincronizadorWidgets (layout), junto com todos os outros widgets.
 
   if (snapshot === undefined) {
     return (

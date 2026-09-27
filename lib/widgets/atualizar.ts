@@ -1,20 +1,18 @@
 import { registerPlugin } from "@capacitor/core";
+import type { DadosWidgets } from "@/lib/widgets/dados";
 
 type WidgetHojeAPI = {
-  atualizar: (opcoes: { feitos: number; total: number }) => Promise<{ ok: boolean }>;
-  atualizarSaldo: (opcoes: { saldoTexto: string }) => Promise<{ ok: boolean }>;
-  atualizarContasAPagar: (opcoes: { linhas: string }) => Promise<{ ok: boolean }>;
-  atualizarPendencias: (opcoes: { quantidade: number }) => Promise<{ ok: boolean }>;
+  // Etapa 195 — um pacote só com os dados de TODOS os widgets
+  salvarDados: (opcoes: { json: string }) => Promise<{ ok: boolean }>;
+  // Etapa 195 — só existe no app 1.0.5+; serve pra saber se o aparelho
+  // tem os widgets novos e a notificação com botões.
+  versaoNativa: () => Promise<{ versao: number }>;
 };
 
 // Etapa 155 — o plugin só é registrado na hora em que alguma das
 // funções abaixo é REALMENTE chamada (e só depois de confirmar que
 // está no app nativo), nunca no carregamento do módulo. Registrar
-// (ou até importar de um jeito que toque em `window`) assim que o
-// arquivo é importado quebra a renderização no SERVIDOR — lá não
-// existe `window` nenhum, e o Next.js roda uma passada no servidor
-// mesmo em telas marcadas "use client". Foi exatamente isso que
-// derrubou a aba Finanças na Etapa 154.
+// assim que o arquivo é importado quebra a renderização no SERVIDOR.
 let pluginCache: WidgetHojeAPI | null = null;
 function obterPlugin(): WidgetHojeAPI | null {
   if (typeof window === "undefined") return null;
@@ -22,33 +20,34 @@ function obterPlugin(): WidgetHojeAPI | null {
   return pluginCache;
 }
 
-function estaNoAppNativo() {
+export function estaNoAppNativo() {
   return typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
 }
 
-/**
- * Etapa 154/155 — mesmo plugin usado pelo widget "Hoje", agora com
- * mais 3 métodos. Cada função aqui já checa sozinha se está rodando
- * no app instalado — chamar isso rodando no navegador não faz nada
- * (sem erro, só não tem widget pra atualizar mesmo).
- */
-export function atualizarWidgetSaldo(saldoTexto: string) {
-  if (!estaNoAppNativo()) return;
-  obterPlugin()
-    ?.atualizarSaldo({ saldoTexto })
-    .catch((erro) => console.error("[WidgetSaldo] falhou", erro));
+/** Versão da parte nativa (0 = app antigo, sem widgets novos). */
+export async function versaoNativa(): Promise<number> {
+  if (!estaNoAppNativo()) return 0;
+  try {
+    const r = await obterPlugin()!.versaoNativa();
+    return r?.versao ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
-export function atualizarWidgetContasAPagar(linhas: string[]) {
+export function salvarDadosWidgets(dados: DadosWidgets) {
   if (!estaNoAppNativo()) return;
   obterPlugin()
-    ?.atualizarContasAPagar({ linhas: linhas.slice(0, 3).join("\n") })
-    .catch((erro) => console.error("[WidgetContas] falhou", erro));
+    ?.salvarDados({ json: JSON.stringify(dados) })
+    .catch((erro) => console.error("[Widgets] falhou", erro));
 }
 
-export function atualizarWidgetPendencias(quantidade: number) {
-  if (!estaNoAppNativo()) return;
-  obterPlugin()
-    ?.atualizarPendencias({ quantidade })
-    .catch((erro) => console.error("[WidgetPendencias] falhou", erro));
-}
+// Etapa 195 — as funções antigas (um widget por vez) viraram "não faz
+// nada": quem manda os dados agora é o SincronizadorWidgets, tudo de uma
+// vez. Ficam aqui só pra nenhum import antigo quebrar o build.
+/** @deprecated use SincronizadorWidgets */
+export function atualizarWidgetSaldo(_saldoTexto: string) {}
+/** @deprecated use SincronizadorWidgets */
+export function atualizarWidgetContasAPagar(_linhas: string[]) {}
+/** @deprecated use SincronizadorWidgets */
+export function atualizarWidgetPendencias(_quantidade: number) {}

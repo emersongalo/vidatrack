@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -92,6 +93,72 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/pendencias_widget_info" />
         </receiver>
+        <!-- Etapa 195: mais 4 widgets (hábitos de hoje com marcar, próximas
+             tarefas, sequência e progresso da semana). -->
+        <receiver
+            android:name="com.vidatrack.app.widget.HabitosHojeWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.vidatrack.app.widget.MARCAR_HABITO" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/habitos_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.vidatrack.app.widget.TarefasWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/tarefas_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.vidatrack.app.widget.SequenciaWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/sequencia_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.vidatrack.app.widget.SemanaWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/semana_widget_info" />
+        </receiver>
+
+        <!-- Etapa 195: botões da notificação de hábito ("✓ Feito" e
+             "Lembrar em 30 min"). -->
+        <receiver
+            android:name=".AcaoNotificacaoReceiver"
+            android:exported="false" />
+
+        <!-- Etapa 195: nosso serviço de push no lugar do padrão do
+             Capacitor — monta o lembrete de hábito com botões e repassa
+             todo o resto pro Capacitor como antes. -->
+        <service
+            android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
+            tools:node="remove" />
+        <service
+            android:name=".VidaTrackMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
     <!-- Permissions -->
 

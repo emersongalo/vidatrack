@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { salvarTokenFCM } from "@/app/notificacoes/actions";
+import { versaoNativa } from "@/lib/widgets/atualizar";
 
 export function RegistradorPushNativo() {
   useEffect(() => {
@@ -29,11 +30,15 @@ export function RegistradorPushNativo() {
         }
         if (status !== "granted" || cancelado) return;
 
-        await PushNotifications.register();
+        // Etapa 195 — app 1.0.5+ sabe mostrar lembrete de hábito com botões.
+        // Listener ANTES do register(), senão o token pode chegar antes
+        // de alguém estar ouvindo.
+        const suportaAcoes = (await versaoNativa()) >= 2;
 
         PushNotifications.addListener("registration", (token) => {
-          salvarTokenFCM(token.value).catch(() => {});
+          salvarTokenFCM(token.value, suportaAcoes).catch(() => {});
         });
+        await PushNotifications.register();
 
         PushNotifications.addListener("registrationError", (erro) => {
           console.error("Erro ao registrar push nativo:", erro);

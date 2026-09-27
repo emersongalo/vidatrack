@@ -40,7 +40,7 @@ export async function removerInscricaoPush(endpoint: string) {
  * num navegador comum — o componente que chama isso já checa isso
  * antes de tentar.
  */
-export async function salvarTokenFCM(token: string) {
+export async function salvarTokenFCM(token: string, suportaAcoes = false) {
   const supabase = createClient();
   const {
     data: { user },
@@ -56,7 +56,8 @@ export async function salvarTokenFCM(token: string) {
   if (!user) return;
 
   await supabase.from("fcm_tokens").upsert(
-    { usuario_id: user.id, token },
+    // Etapa 195 — suporta_acoes: app 1.0.5+ (notificação com botões)
+    { usuario_id: user.id, token, suporta_acoes: suportaAcoes },
     { onConflict: "token" }
   );
 }

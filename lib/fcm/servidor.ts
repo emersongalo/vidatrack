@@ -69,3 +69,34 @@ export async function enviarNotificacaoFCM(
     return { sucesso: false, tokenInvalido, erro: erro?.message ?? codigo ?? String(erro) };
   }
 }
+
+/**
+ * Etapa 195 — lembrete de hábito com botões ("✓ Feito" / "Lembrar em
+ * 30 min"). Vai como mensagem SÓ DE DADOS (sem bloco "notification"):
+ * assim quem monta a notificação é o app (VidaTrackMessagingService),
+ * que é o único jeito de ter botões. Só é usado pra aparelhos com o app
+ * 1.0.5+ (fcm_tokens.suporta_acoes) — app antigo não saberia mostrar.
+ */
+export async function enviarLembreteHabitoFCM(
+  token: string,
+  dados: { habitoId: string; titulo: string; corpo: string; data: string }
+): Promise<{ sucesso: boolean; tokenInvalido?: boolean; erro?: string }> {
+  const app = obterAppFirebase();
+  if (!app) return { sucesso: false, erro: "Firebase não configurado (FIREBASE_SERVICE_ACCOUNT_BASE64 ausente ou inválida)" };
+
+  try {
+    await getMessaging(app).send({
+      token,
+      data: { tipo: "lembrete_habito", ...dados },
+      android: { priority: "high", ttl: 3 * 60 * 60 * 1000 },
+    });
+    return { sucesso: true };
+  } catch (erro: any) {
+    const codigo = erro?.errorInfo?.code ?? "";
+    const tokenInvalido =
+      codigo === "messaging/registration-token-not-registered" ||
+      codigo === "messaging/invalid-registration-token";
+    if (!tokenInvalido) console.error("Erro ao enviar lembrete de hábito FCM:", erro);
+    return { sucesso: false, tokenInvalido, erro: erro?.message ?? codigo ?? String(erro) };
+  }
+}

@@ -6,7 +6,7 @@ import { enviarPush } from "@/lib/push/servidor";
 import { segredosIguais } from "@/lib/seguranca";
 import { horaAtualNoFuso, dataAtualNoFuso, horaMinutosAtrasNoFuso } from "@/lib/tempo/fuso";
 import { formatarMoeda } from "@/lib/financas/formatacao";
-import { enviarNotificacaoFCM } from "@/lib/fcm/servidor";
+import { enviarNotificacaoFCM, enviarLembreteHabitoFCM } from "@/lib/fcm/servidor";
 
 // Sem cookie nem sessão, o Next.js não tem como saber sozinho que essa
 // rota precisa rodar de novo a cada chamada — sem isso aqui, o Vercel
@@ -69,7 +69,9 @@ export async function GET(request: Request) {
       h.dono_id,
       `🔔 Hora de: ${h.nome}`,
       "/habitos",
-      hoje
+      hoje,
+      // Etapa 195 — app novo mostra com botões "✓ Feito" / "Lembrar em 30 min"
+      { habitoId: h.id, titulo: `🔔 Hora de: ${h.nome}`, corpo: "Toque em ✓ Feito se já fez.", data: hoje }
     );
   }
 
@@ -148,7 +150,8 @@ async function notificarUsuariosDoItem(
   donoId: string,
   texto: string,
   url: string,
-  hoje: string
+  hoje: string,
+  lembreteHabito?: { habitoId: string; titulo: string; corpo: string; data: string }
 ): Promise<number> {
   // Dono + convidados com acesso (só se aplica a hábito/tarefa/nota —
   // contas a pagar notificam só o dono, ver notificarContasAPagar)
@@ -182,7 +185,7 @@ async function notificarUsuariosDoItem(
     // o Web Push do navegador se não tiver nenhum token de app.
     const { data: tokensFcm } = await supabase
       .from("fcm_tokens")
-      .select("id, token")
+      .select("id, token, suporta_acoes")
       .eq("usuario_id", usuarioId);
 
     const temAppInstalado = (tokensFcm ?? []).length > 0;
@@ -236,7 +239,10 @@ async function notificarUsuariosDoItem(
     }
 
     for (const registroFcm of tokensFcm ?? []) {
-      const resultado = await enviarNotificacaoFCM(registroFcm.token, "VidaTrack", texto, url);
+      const resultado =
+        lembreteHabito && (registroFcm as any).suporta_acoes
+          ? await enviarLembreteHabitoFCM(registroFcm.token, lembreteHabito)
+          : await enviarNotificacaoFCM(registroFcm.token, "VidaTrack", texto, url);
       if (resultado.sucesso) {
         enviados++;
         await supabase.from("log_notificacoes").insert({

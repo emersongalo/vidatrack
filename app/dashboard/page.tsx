@@ -12,7 +12,6 @@ import { sair } from "../login/actions";
 import { Bell } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
-import { atualizarWidgetPendencias } from "@/lib/widgets/atualizar";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
 
 // Etapa 133 — o Painel é pra onde todo botão "← Painel" do app aponta,
@@ -40,12 +39,7 @@ export default function DashboardPage() {
   const { tarefasVencidas, lembretesPassados, alertasCategoria } = calcularPendencias(snapshot);
   const temPendencia = tarefasVencidas.length > 0 || lembretesPassados.length > 0 || alertasCategoria.length > 0;
 
-  // Etapa 154 — alimenta o widget de tela inicial "Pendências", a
-  // mesma contagem da bolinha vermelha no sininho aqui em cima.
-  useEffect(() => {
-    if (snapshot === undefined) return;
-    atualizarWidgetPendencias(tarefasVencidas.length + lembretesPassados.length + alertasCategoria.length);
-  }, [snapshot, tarefasVencidas.length, lembretesPassados.length, alertasCategoria.length]);
+  // Etapa 195 — o widget "Pendências" agora é alimentado pelo SincronizadorWidgets (layout).
 
   const contas = snapshot?.financas.contas ?? [];
   const contasComuns = contas.filter((c: any) => c.tipo !== "investimento");

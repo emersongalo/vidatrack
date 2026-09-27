@@ -4,4 +4,8 @@
     <string name="title_activity_main">VidaTrack</string>
     <string name="package_name">com.vidatrack.app</string>
     <string name="custom_url_scheme">com.vidatrack.app</string>
+    <string name="widget_habitos_descricao">Hábitos de hoje: marque direto na tela inicial</string>
+    <string name="widget_tarefas_descricao">Suas próximas tarefas</string>
+    <string name="widget_sequencia_descricao">Sua maior sequência de hábitos</string>
+    <string name="widget_semana_descricao">Progresso dos hábitos na semana</string>
 </resources>

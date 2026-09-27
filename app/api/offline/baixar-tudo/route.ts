@@ -72,7 +72,7 @@ export async function GET() {
     idsHabitos.length
       ? supabase
           .from("habito_checkins")
-          .select("habito_id, data, quantidade")
+          .select("habito_id, usuario_id, data, quantidade")
           .in("habito_id", idsHabitos)
           .gte("data", dataLimiteISO)
       : Promise.resolve({ data: [] as any[] }),
