@@ -22,6 +22,8 @@ function NovaTarefaConteudo() {
   return (
     <FormularioTarefa
       categorias={(snapshot?.categoriasProdutividade ?? []) as any}
+      contasFinancas={((snapshot?.financas.contas ?? []) as any[]).filter((c) => c.dono_id === undefined || c.dono_id === snapshot?.perfil.id)}
+      categoriasFinancas={((snapshot?.financas.categorias ?? []) as any[]).filter((c) => c.dono_id === snapshot?.perfil.id)}
       erro={searchParams.get("erro") ?? undefined}
       hoje={hojeISO()}
     />

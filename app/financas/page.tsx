@@ -91,7 +91,18 @@ export default function FinancasPage() {
     .filter((c: any) => c.tipo === "investimento")
     .reduce((total: number, c: any) => total + Number(c.saldo), 0);
 
-  const saldoPrevisto = ehMesAtual
+  // Etapa 203 — lançamentos com data futura (ex: conta agendada pro
+  // dia 5 do mês que vem) não saem do saldo de hoje, mas entram no
+  // "previsto" do mês em que vencem.
+  const hojeISOBr = hoje.toLocaleDateString("sv-SE");
+  const idsContasComuns = new Set(contas.filter((c: any) => c.tipo !== "investimento").map((c: any) => c.id));
+  const futurosAte = (limiteISO: string) =>
+    transacoes
+      .filter((t: any) => idsContasComuns.has(t.conta_id) && t.data > hojeISOBr && t.data <= limiteISO)
+      .reduce((s: number, t: any) => s + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)), 0);
+  const ehMesFuturo = mesSelecionado > mesAtualISO;
+
+  const saldoPrevistoBase = ehMesAtual
     ? calcularSaldoPrevisto(
         saldoTotal,
         recorrencias
@@ -100,6 +111,12 @@ export default function FinancasPage() {
         hoje.getDate()
       )
     : null;
+  const saldoPrevisto =
+    saldoPrevistoBase !== null
+      ? saldoPrevistoBase + futurosAte(ultimoDiaDoMes(mesAtualISO + "-01"))
+      : ehMesFuturo
+        ? saldoTotal + futurosAte(ultimoDiaDoMes(mesSelecionado + "-01"))
+        : null;
 
   const inicioMesSelecionado = primeiroDiaDoMes(mesSelecionado + "-01");
   const fimMesSelecionado = ultimoDiaDoMes(mesSelecionado + "-01");

@@ -34,6 +34,27 @@ function camposRepeticao(formData: FormData) {
   };
 }
 
+// Etapa 194 — tarefa ligada a finanças. Ao concluir, o banco (trigger
+// lancar_transacao_da_tarefa) cria o lançamento sozinho; desmarcar remove.
+function camposFinanca(formData: FormData): { erro?: string; campos: Record<string, unknown> } {
+  const vazio = { financa_tipo: null, financa_valor: null, financa_conta_id: null, financa_categoria_id: null };
+  if (formData.get("financaVinculado") !== "on") return { campos: vazio };
+  const tipo = formData.get("financaTipo") === "receita" ? "receita" : "despesa";
+  const valor = Number(String(formData.get("financaValor") ?? "").replace(/\./g, "").replace(",", "."));
+  const contaId = String(formData.get("financaContaId") ?? "");
+  const categoriaId = String(formData.get("financaCategoriaId") ?? "");
+  if (!valor || valor <= 0) return { erro: "Informe o valor que será lançado ao concluir a tarefa", campos: vazio };
+  if (!contaId) return { erro: "Escolha a conta do lançamento", campos: vazio };
+  return {
+    campos: {
+      financa_tipo: tipo,
+      financa_valor: Math.round(valor * 100) / 100,
+      financa_conta_id: contaId,
+      financa_categoria_id: categoriaId || null,
+    },
+  };
+}
+
 export async function criarTarefa(formData: FormData) {
   const supabase = createClient();
   const {
@@ -56,6 +77,8 @@ export async function criarTarefa(formData: FormData) {
   if (!titulo) {
     redirect(`/habitos/tarefas/nova?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
   }
+  const financa = camposFinanca(formData);
+  if (financa.erro) redirect(`/habitos/tarefas/nova?erro=${encodeURIComponent(financa.erro)}`);
 
   const subtarefas = subtarefasTexto.map((texto) => ({
     id: randomUUID(),
@@ -73,6 +96,7 @@ export async function criarTarefa(formData: FormData) {
     subtarefas,
     observacoes: observacoes || null,
     ordem: count ?? 0,
+    ...financa.campos,
   });
 
   if (error) {
@@ -96,6 +120,8 @@ export async function atualizarTarefa(tarefaId: string, formData: FormData) {
   if (!titulo) {
     redirect(`/habitos/tarefas/${tarefaId}/editar?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
   }
+  const financa = camposFinanca(formData);
+  if (financa.erro) redirect(`/habitos/tarefas/${tarefaId}/editar?erro=${encodeURIComponent(financa.erro)}`);
 
   const { error } = await supabase
     .from("tarefas")
@@ -106,6 +132,7 @@ export async function atualizarTarefa(tarefaId: string, formData: FormData) {
       ...camposRepeticao(formData),
       horario_lembrete: horarioLembreteRaw || null,
       observacoes: observacoes || null,
+      ...financa.campos,
     })
     .eq("id", tarefaId);
 
@@ -134,6 +161,7 @@ export async function alternarConclusaoTarefaUnica(tarefaId: string) {
     .update({ concluida: !(tarefa?.concluida ?? false) })
     .eq("id", tarefaId);
 
+  revalidatePath("/financas");
   revalidatePath("/habitos");
   revalidatePath("/habitos/tarefas");
 }

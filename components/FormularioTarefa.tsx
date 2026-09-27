@@ -6,6 +6,7 @@ import { criarTarefa } from "@/app/habitos/tarefas/actions";
 import { ICONES_HABITO } from "@/lib/agenda/icones-habito";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { PRIORIDADES, descreverRepeticao } from "@/lib/agenda/recorrencia";
+import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 
 type Categoria = { id: string; nome: string };
 
@@ -54,7 +55,12 @@ export function FormularioTarefa({
   textoBotao = "Criar tarefa",
   mostrarChecklist = true,
   valoresIniciais,
+  contasFinancas = [],
+  categoriasFinancas = [],
 }: {
+  /** Etapa 194 — pra vincular a tarefa a um lançamento */
+  contasFinancas?: { id: string; nome: string }[];
+  categoriasFinancas?: { id: string; nome: string; tipo: string }[];
   action?: (formData: FormData) => void;
   categorias: Categoria[];
   erro?: string;
@@ -76,6 +82,10 @@ export function FormularioTarefa({
     mes?: number | null;
     intervaloDias?: number | null;
     prioridade?: number | null;
+    financaTipo?: string | null;
+    financaValor?: number | null;
+    financaContaId?: string | null;
+    financaCategoriaId?: string | null;
   };
 }) {
   const diaHoje = Number(hoje.slice(8, 10));
@@ -97,6 +107,10 @@ export function FormularioTarefa({
   );
   const [prioridade, setPrioridade] = useState<number>(valoresIniciais?.prioridade ?? 0);
   const [subtarefas, setSubtarefas] = useState<string[]>([]);
+  const [vinculado, setVinculado] = useState<boolean>(!!valoresIniciais?.financaValor);
+  const [tipoFinanca, setTipoFinanca] = useState<"despesa" | "receita">(
+    valoresIniciais?.financaTipo === "receita" ? "receita" : "despesa"
+  );
 
   const intervaloDias = Math.max(1, Math.min(365, quantidadeIntervalo * (unidadeIntervalo === "semanas" ? 7 : 1)));
 
@@ -342,6 +356,84 @@ export function FormularioTarefa({
                 defaultValue={valoresIniciais?.horarioLembrete ?? ""}
                 className={classeCampo}
               />
+            </div>
+
+            {/* Etapa 194 — vincular a finanças */}
+            <div className="bg-base-800 border border-base-600 rounded-lg p-3">
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="financaVinculado"
+                  checked={vinculado}
+                  onChange={(e) => setVinculado(e.target.checked)}
+                  className="w-4 h-4 accent-financa"
+                />
+                <span className="text-sm">💰 Lançar em Finanças ao concluir</span>
+              </label>
+              {vinculado &&
+                (contasFinancas.length === 0 ? (
+                  <p className="text-xs text-ink-400 mt-2">
+                    Crie uma conta em Finanças → Contas primeiro pra poder vincular.
+                  </p>
+                ) : (
+                  <div className="mt-3 space-y-2.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["despesa", "receita"] as const).map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setTipoFinanca(t)}
+                          className={`rounded-lg py-1.5 text-sm border transition ${
+                            tipoFinanca === t
+                              ? t === "despesa"
+                                ? "bg-red-400/15 border-red-400 text-red-400"
+                                : "bg-habito/15 border-habito text-habito"
+                              : "border-base-600 text-ink-400"
+                          }`}
+                        >
+                          {t === "despesa" ? "Despesa" : "Receita"}
+                        </button>
+                      ))}
+                    </div>
+                    <input type="hidden" name="financaTipo" value={tipoFinanca} />
+                    <CampoValorMonetario
+                      name="financaValor"
+                      placeholder="Valor (ex: 150,00)"
+                      valorInicial={valoresIniciais?.financaValor ?? undefined}
+                      className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 font-mono focus:border-ink-100 outline-none transition"
+                    />
+                    <select
+                      name="financaContaId"
+                      defaultValue={valoresIniciais?.financaContaId ?? contasFinancas[0]?.id}
+                      className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
+                    >
+                      {contasFinancas.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nome}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      key={tipoFinanca}
+                      name="financaCategoriaId"
+                      defaultValue={valoresIniciais?.financaCategoriaId ?? ""}
+                      className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
+                    >
+                      <option value="">Sem categoria</option>
+                      {categoriasFinancas
+                        .filter((c) => c.tipo === tipoFinanca)
+                        .map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nome}
+                          </option>
+                        ))}
+                    </select>
+                    <p className="text-[11px] text-ink-400">
+                      Quando você marcar a tarefa como feita, o lançamento é criado sozinho (na data em que marcar
+                      {repetir !== "nenhuma" ? ", a cada vez que ela repetir" : ""}). Desmarcou? O lançamento some.
+                    </p>
+                  </div>
+                ))}
             </div>
 
             {mostrarChecklist && (

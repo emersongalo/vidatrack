@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { BotaoAtivarNotificacoes } from "@/components/BotaoAtivarNotificacoes";
+import { PreferenciasAvisos } from "@/components/PreferenciasAvisos";
 import { Globe, Smartphone, AlertTriangle, BellRing, TrendingUp, X } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
@@ -107,11 +108,14 @@ export default function NotificacoesPage() {
 
       <p className="text-ink-400 text-sm mb-6">
         Receba um aviso, com som, no horário que você definiu pra cada
-        hábito ou tarefa — e também quando tiver uma conta a pagar
-        vencendo hoje ou amanhã.
+        hábito ou tarefa, quando tiver uma conta a pagar vencendo hoje
+        ou amanhã, à noite se faltar algum hábito e um resumo da sua
+        semana todo domingo.
       </p>
 
       <BotaoAtivarNotificacoes />
+
+      <PreferenciasAvisos />
 
       <div className="mt-6 space-y-3">
         <div className="flex items-start gap-3 bg-base-800 border border-base-600 rounded-xl2 p-4">

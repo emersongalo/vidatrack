@@ -7,6 +7,7 @@ import { segredosIguais } from "@/lib/seguranca";
 import { horaAtualNoFuso, dataAtualNoFuso, horaMinutosAtrasNoFuso } from "@/lib/tempo/fuso";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { enviarNotificacaoFCM, enviarLembreteHabitoFCM } from "@/lib/fcm/servidor";
+import { somarDias } from "@/lib/widgets/dados";
 
 // Sem cookie nem sessão, o Next.js não tem como saber sozinho que essa
 // rota precisa rodar de novo a cada chamada — sem isso aqui, o Vercel
@@ -112,6 +113,16 @@ export async function GET(request: Request) {
   // ponto de precisar checar a cada poucos minutos.
   if (horaAtual >= "08:05" && horaAtual <= "08:10") {
     enviados += await notificarOrcamentosEstourados(supabase, hoje);
+  }
+
+  // --- Etapa 202: avisos que trazem a pessoa de volta ---
+  // 20:30 — "faltam X hábitos hoje" (só pra quem ainda tem pendente)
+  if (horaAtual >= "20:30" && horaAtual <= "20:35") {
+    enviados += await notificarHabitosPendentesDaNoite(supabase, hoje);
+  }
+  // Domingo 19:00 — resumo da semana
+  if (diaDaSemana(hoje) === 0 && horaAtual >= "19:00" && horaAtual <= "19:05") {
+    enviados += await notificarResumoSemanal(supabase, hoje);
   }
 
   // Modo de depuração (?debug=1) — mostra exatamente o que o servidor
@@ -372,5 +383,150 @@ async function notificarOrcamentosEstourados(
     );
   }
 
+  return enviados;
+}
+
+function diaDaSemana(iso: string) {
+  return new Date(iso + "T12:00:00Z").getUTCDay();
+}
+
+function listarNomes(nomes: string[]) {
+  const aspas = nomes.map((n) => `“${n}”`);
+  if (aspas.length <= 1) return aspas.join("");
+  if (aspas.length <= 3) return aspas.slice(0, -1).join(", ") + " e " + aspas.at(-1);
+  return aspas.slice(0, 2).join(", ") + ` e mais ${aspas.length - 2}`;
+}
+
+/**
+ * Etapa 202 — às 20:30, quem ainda tem hábito do dia sem marcar recebe
+ * um empurrãozinho. Não manda nada pra quem já fez tudo (ou não tem
+ * hábito pro dia) e respeita quem desligou em Notificações.
+ */
+async function notificarHabitosPendentesDaNoite(
+  supabase: ReturnType<typeof criarClienteAdmin>,
+  hoje: string
+): Promise<number> {
+  const { data: perfis } = await supabase.from("perfis").select("id").eq("aviso_noite", true);
+  const ids = (perfis ?? []).map((p) => p.id as string);
+  if (!ids.length) return 0;
+
+  const [{ data: habitos }, { data: checkins }] = await Promise.all([
+    supabase
+      .from("habitos")
+      .select("id, nome, dono_id, frequencia, dias_semana, meta_diaria")
+      .eq("arquivado", false)
+      .eq("eh_negativo", false)
+      .in("dono_id", ids),
+    supabase.from("habito_checkins").select("habito_id, usuario_id, quantidade").eq("data", hoje).in("usuario_id", ids),
+  ]);
+
+  const feito = new Map<string, number>();
+  for (const c of checkins ?? []) {
+    const k = `${c.usuario_id}|${c.habito_id}`;
+    feito.set(k, (feito.get(k) ?? 0) + Number(c.quantidade ?? 1));
+  }
+
+  const porUsuario = new Map<string, { total: number; pendentes: string[] }>();
+  for (const h of habitos ?? []) {
+    if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], hoje)) continue;
+    const r = porUsuario.get(h.dono_id) ?? { total: 0, pendentes: [] };
+    r.total++;
+    if ((feito.get(`${h.dono_id}|${h.id}`) ?? 0) < (h.meta_diaria ?? 1)) r.pendentes.push(h.nome);
+    porUsuario.set(h.dono_id, r);
+  }
+
+  let enviados = 0;
+  for (const [usuarioId, r] of porUsuario) {
+    if (!r.pendentes.length) continue;
+    const feitos = r.total - r.pendentes.length;
+    const texto =
+      r.pendentes.length === 1
+        ? `🌙 Falta só ${listarNomes(r.pendentes)} hoje${feitos ? ` — você já fez ${feitos} de ${r.total}` : ""}. Ainda dá tempo!`
+        : `🌙 Faltam ${r.pendentes.length} hábitos hoje: ${listarNomes(r.pendentes)}. Ainda dá tempo de manter a sequência!`;
+    enviados += await notificarUsuariosDoItem(supabase, "resumo_noite", usuarioId, usuarioId, texto, "/habitos", hoje);
+  }
+  return enviados;
+}
+
+/**
+ * Etapa 202 — domingo às 19:00: resumo dos últimos 7 dias (hábitos,
+ * tarefas concluídas e gastos). Só vai pra quem teve algum movimento.
+ */
+async function notificarResumoSemanal(
+  supabase: ReturnType<typeof criarClienteAdmin>,
+  hoje: string
+): Promise<number> {
+  const { data: perfis } = await supabase.from("perfis").select("id").eq("resumo_semanal", true);
+  const ids = (perfis ?? []).map((p) => p.id as string);
+  if (!ids.length) return 0;
+
+  const inicio = somarDias(hoje, -6);
+  const [{ data: habitos }, { data: checkins }, { data: conclusoes }, { data: gastos }] = await Promise.all([
+    supabase
+      .from("habitos")
+      .select("id, dono_id, frequencia, dias_semana, meta_diaria")
+      .eq("arquivado", false)
+      .eq("eh_negativo", false)
+      .in("dono_id", ids),
+    supabase
+      .from("habito_checkins")
+      .select("habito_id, usuario_id, data, quantidade")
+      .gte("data", inicio)
+      .lte("data", hoje)
+      .in("usuario_id", ids),
+    supabase.from("tarefa_conclusoes").select("usuario_id").gte("data", inicio).lte("data", hoje).in("usuario_id", ids),
+    supabase
+      .from("financa_transacoes")
+      .select("dono_id, valor")
+      .eq("tipo", "despesa")
+      .gte("data", inicio)
+      .lte("data", hoje)
+      .in("dono_id", ids),
+  ]);
+
+  const qtd = new Map<string, number>();
+  for (const c of checkins ?? []) {
+    const k = `${c.usuario_id}|${c.habito_id}|${c.data}`;
+    qtd.set(k, (qtd.get(k) ?? 0) + Number(c.quantidade ?? 1));
+  }
+
+  type Resumo = { devidos: number; feitos: number; tarefas: number; gasto: number };
+  const resumo = new Map<string, Resumo>();
+  const pegar = (id: string) => {
+    let r = resumo.get(id);
+    if (!r) resumo.set(id, (r = { devidos: 0, feitos: 0, tarefas: 0, gasto: 0 }));
+    return r;
+  };
+
+  for (let i = 0; i < 7; i++) {
+    const dia = somarDias(inicio, i);
+    for (const h of habitos ?? []) {
+      if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], dia)) continue;
+      const r = pegar(h.dono_id);
+      r.devidos++;
+      if ((qtd.get(`${h.dono_id}|${h.id}|${dia}`) ?? 0) >= (h.meta_diaria ?? 1)) r.feitos++;
+    }
+  }
+  for (const c of conclusoes ?? []) pegar(c.usuario_id).tarefas++;
+  for (const g of gastos ?? []) pegar(g.dono_id).gasto += Number(g.valor);
+
+  let enviados = 0;
+  for (const [usuarioId, r] of resumo) {
+    const partes: string[] = [];
+    if (r.devidos > 0) partes.push(`${Math.round((r.feitos / r.devidos) * 100)}% dos hábitos feitos`);
+    if (r.tarefas > 0) partes.push(`${r.tarefas} ${r.tarefas === 1 ? "tarefa concluída" : "tarefas concluídas"}`);
+    if (r.gasto > 0) partes.push(`${formatarMoeda(r.gasto)} em gastos`);
+    if (!partes.length || (r.feitos === 0 && r.tarefas === 0 && r.gasto === 0)) continue;
+    const texto = `📊 Sua semana: ${partes.join(" · ")}. Toque pra ver os detalhes.`;
+    enviados += await notificarUsuariosDoItem(
+      supabase,
+      "resumo_semana",
+      usuarioId,
+      usuarioId,
+      texto,
+      "/habitos/estatisticas",
+      hoje
+    );
+  }
   return enviados;
 }

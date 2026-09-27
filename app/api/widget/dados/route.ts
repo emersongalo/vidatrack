@@ -52,7 +52,7 @@ export async function GET() {
       : Promise.resolve({ data: [] as any[] }),
     supabase.from("tarefa_conclusoes").select("tarefa_id, data").eq("usuario_id", user.id).eq("data", hoje),
     idsContas.length
-      ? supabase.from("financa_transacoes").select("conta_id, tipo, valor").in("conta_id", idsContas).limit(5000)
+      ? supabase.from("financa_transacoes").select("conta_id, tipo, valor, data").in("conta_id", idsContas).limit(5000)
       : Promise.resolve({ data: [] as any[] }),
   ]);
 
@@ -62,7 +62,7 @@ export async function GET() {
     checkins: checkins ?? [],
     tarefas: tarefas ?? [],
     conclusoesTarefas: conclusoes ?? [],
-    contas: calcularSaldoPorConta((contas ?? []) as any, transacoes ?? []),
+    contas: calcularSaldoPorConta((contas ?? []) as any, transacoes ?? [], hoje),
     recorrencias: (recorrencias ?? []) as any,
     pendencias: null,
   });

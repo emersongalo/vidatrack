@@ -1,0 +1,6 @@
+-- Etapa 194 — tarefa ligada a finanças (JÁ APLICADO no Supabase via migração
+-- "etapa194_tarefa_vinculada_financas"; guardado aqui só como registro).
+-- Colunas novas em tarefas: financa_tipo, financa_valor, financa_conta_id, financa_categoria_id
+-- Colunas novas em financa_transacoes: tarefa_id, tarefa_data (+ índice único)
+-- Triggers: conclusao_tarefa_financa (tarefa_conclusoes) e tarefa_unica_financa (tarefas.concluida)
+-- Função: lancar_transacao_da_tarefa(uuid, date) — SECURITY DEFINER, só lança se a conta for do dono da tarefa.

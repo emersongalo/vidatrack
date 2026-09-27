@@ -90,6 +90,25 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* Etapa 201 — quem ainda não tem hábito ou conta ganha um atalho
+         pro primeiro uso guiado (metade dos cadastros parou aqui). */}
+      {snapshot && ((snapshot.habitos?.length ?? 0) === 0 || contas.length === 0) && (
+        <Link
+          href="/bem-vindo"
+          className="flex items-center gap-3 mt-3 mb-1 rounded-xl2 p-4 border border-habito/40 bg-gradient-to-r from-habito/15 to-financa/10 hover:border-habito transition"
+        >
+          <span className="text-2xl">✨</span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-medium">Deixe seu app pronto em 1 minuto</span>
+            <span className="block text-xs text-ink-400">
+              {(snapshot.habitos?.length ?? 0) === 0 ? "Escolha seus hábitos" : "Adicione seus bancos"}
+              {(snapshot.habitos?.length ?? 0) === 0 && contas.length === 0 ? ", seus bancos" : ""} e um horário de lembrete
+            </span>
+          </span>
+          <span className="text-ink-400">→</span>
+        </Link>
+      )}
+
       <div className="flex flex-col flex-1 min-h-0 lg:grid lg:grid-cols-[1fr_300px] lg:gap-8">
         <TrilhoMenu />
         <ConfirmarSaidaApp />

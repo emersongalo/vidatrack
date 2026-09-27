@@ -21,10 +21,15 @@ export type ContaComSaldo = {
  */
 export function calcularSaldoPorConta(
   contas: { id: string; nome: string; banco: string | null; tipo: string; saldo_inicial: number | string }[],
-  transacoes: { conta_id: string; tipo: string; valor: number | string }[]
+  transacoes: { conta_id: string; tipo: string; valor: number | string; data?: string }[],
+  /** Etapa 203 — saldo ATUAL: ignora lançamentos com data depois
+   *  desse dia (ex: conta agendada pro mês que vem não sai do saldo
+   *  de hoje). Sem esse parâmetro, soma tudo (comportamento antigo). */
+  ateData?: string
 ): ContaComSaldo[] {
   const somaPorConta = new Map<string, number>();
   for (const t of transacoes) {
+    if (ateData && t.data && t.data > ateData) continue;
     const atual = somaPorConta.get(t.conta_id) ?? 0;
     somaPorConta.set(t.conta_id, atual + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)));
   }
@@ -71,7 +76,8 @@ export async function buscarSaldoTotal(supabase: ReturnType<typeof createClient>
   const { data: transacoes } = await supabase
     .from("financa_transacoes")
     .select("conta_id, tipo, valor")
-    .in("conta_id", idsContas);
+    .in("conta_id", idsContas)
+    .lte("data", new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10)); // Etapa 203: só até hoje
 
   return (contas ?? []).reduce((total, conta) => {
     const doTransacoes = (transacoes ?? [])

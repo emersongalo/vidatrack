@@ -95,6 +95,7 @@ function HojeConteudo() {
         horarioLembrete: t.horario_lembrete,
         prioridade: t.prioridade ?? 0,
         atrasadaDesde: atrasada ? t.data : null,
+        financa: t.financa_valor ? { tipo: t.financa_tipo, valor: Number(t.financa_valor) } : null,
         progressoSubtarefas:
           subtarefas.length > 0
             ? { feitas: subtarefas.filter((s) => s.feita).length, total: subtarefas.length }

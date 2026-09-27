@@ -31,6 +31,8 @@ export type ItemAgenda = {
   /** Etapa 193 — tarefa única que passou da data sem ser concluída:
    *  aparece em Hoje com o selo "Atrasada desde dd/mm". */
   atrasadaDesde?: string | null;
+  /** Etapa 194 — tarefa que lança em Finanças ao concluir */
+  financa?: { tipo: string; valor: number } | null;
 };
 
 /** Etapa 193 — pendentes primeiro; entre elas, atrasadas, depois
@@ -149,6 +151,15 @@ export function ItemLinhaAgenda({
           {item.atrasadaDesde && !item.feito && (
             <span className="text-[11px] px-1.5 py-0.5 rounded font-medium bg-red-400/15 text-red-400">
               Atrasada desde {new Date(item.atrasadaDesde + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+            </span>
+          )}
+          {item.financa && (
+            <span
+              className={`text-[11px] px-1.5 py-0.5 rounded font-medium font-mono ${
+                item.financa.tipo === "receita" ? "bg-habito/15 text-habito" : "bg-financa/15 text-financa"
+              }`}
+            >
+              {item.financa.tipo === "receita" ? "+" : "−"}R$ {item.financa.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </span>
           )}
           {!!item.prioridade && item.prioridade > 0 && (

@@ -41,6 +41,8 @@ function EditarTarefaConteudo() {
     <FormularioTarefa
       action={atualizarTarefa.bind(null, tarefa.id)}
       categorias={categorias as any}
+      contasFinancas={((snapshot?.financas.contas ?? []) as any[]).filter((c) => c.dono_id === undefined || c.dono_id === snapshot?.perfil.id)}
+      categoriasFinancas={((snapshot?.financas.categorias ?? []) as any[]).filter((c) => c.dono_id === snapshot?.perfil.id)}
       erro={searchParams.get("erro") ?? undefined}
       hoje={hojeISO()}
       voltarHref={`/habitos/tarefas/${tarefa.id}`}
@@ -60,6 +62,10 @@ function EditarTarefaConteudo() {
         mes: tarefa.mes,
         intervaloDias: tarefa.intervalo_dias,
         prioridade: tarefa.prioridade,
+        financaTipo: tarefa.financa_tipo,
+        financaValor: tarefa.financa_valor != null ? Number(tarefa.financa_valor) : null,
+        financaContaId: tarefa.financa_conta_id,
+        financaCategoriaId: tarefa.financa_categoria_id,
       }}
     />
   );

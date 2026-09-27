@@ -35,10 +35,10 @@ export async function GET() {
       .eq("arquivado", false),
     supabase
       .from("tarefas")
-      .select("id, titulo, icone, repetir, dias_semana, data, concluida, ordem, subtarefas, categoria_id, horario_lembrete, observacoes, dia_mes, mes, intervalo_dias, prioridade")
+      .select("id, titulo, icone, repetir, dias_semana, data, concluida, ordem, subtarefas, categoria_id, horario_lembrete, observacoes, dia_mes, mes, intervalo_dias, prioridade, financa_tipo, financa_valor, financa_conta_id, financa_categoria_id")
       .eq("arquivada", false),
     supabase.from("categorias_produtividade").select("id, nome, cor"),
-    supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),
+    supabase.from("financa_contas").select("id, dono_id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),
     supabase.from("financa_categorias").select("id, dono_id, nome, tipo, icone, cor, meta_mensal"),
     supabase.from("metas_financeiras").select("id, nome, valor_atual, valor_alvo, concluida, data_alvo"),
     supabase
@@ -93,7 +93,9 @@ export async function GET() {
 
   const todasTransacoes = transacoes ?? [];
 
-  const contasComSaldo = calcularSaldoPorConta(contas ?? [], todasTransacoes);
+  // Etapa 203 — saldo de HOJE (lançamento com data futura não sai ainda)
+  const hojeBrasil = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+  const contasComSaldo = calcularSaldoPorConta(contas ?? [], todasTransacoes, hojeBrasil);
   const mapaSaldos = new Map(contasComSaldo.map((c) => [c.id, c.saldo]));
   const contasComSaldoCerto = (contas ?? []).map((c) => ({ ...c, saldo: mapaSaldos.get(c.id) ?? Number(c.saldo_inicial) }));
 

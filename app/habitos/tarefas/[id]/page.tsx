@@ -106,6 +106,23 @@ function DetalheTarefaConteudo() {
         </div>
       </div>
 
+      {tarefa.financa_valor && (
+        <div className="flex items-center gap-3 bg-financa/10 border border-financa/30 rounded-xl2 p-3 mb-4 text-sm">
+          <span className="text-lg">💰</span>
+          <p className="flex-1 min-w-0">
+            Ao concluir, lança {tarefa.financa_tipo === "receita" ? "uma receita" : "uma despesa"} de{" "}
+            <span className="font-mono font-medium">
+              R$ {Number(tarefa.financa_valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            </span>
+            {(() => {
+              const conta = (snapshot?.financas.contas ?? []).find((c: any) => c.id === tarefa.financa_conta_id);
+              return conta ? <> em <span className="font-medium">{conta.nome}</span></> : null;
+            })()}
+            .
+          </p>
+        </div>
+      )}
+
       {tarefa.repetir === "nenhuma" && (
         <button
           onClick={alternarConcluida}
