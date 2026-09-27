@@ -11,17 +11,21 @@ const valorMonetario = z
   .transform((v) => Number(v.replace(/\./g, "").replace(",", ".")))
   .pipe(z.number({ invalid_type_error: "Valor inválido" }).positive("O valor precisa ser maior que zero"));
 
+// Etapa 199 — .nullish() (e não só .optional()): quando um campo nem
+// aparece na tela (ex: "Dia do fechamento" só existe pra cartão), o
+// formData.get() devolve null — e .optional() recusava null, fazendo
+// a conta/categoria NÃO ser criada, sem mostrar erro nenhum.
 const valorMonetarioOpcional = z
   .string()
   .trim()
-  .optional()
+  .nullish()
   .transform((v) => (v ? Number(v.replace(/\./g, "").replace(",", ".")) : null))
   .pipe(z.number().positive("O valor precisa ser maior que zero").nullable());
 
 const uuidObrigatorio = (mensagem: string) => z.string().uuid(mensagem);
 const uuidOpcional = z
   .string()
-  .optional()
+  .nullish()
   .transform((v) => (v ? v : null))
   .pipe(z.string().uuid().nullable());
 
@@ -34,7 +38,7 @@ export const esquemaTransacao = z.object({
   valor: valorMonetario,
   contaId: uuidObrigatorio("Escolha uma conta"),
   categoriaId: uuidOpcional,
-  descricao: z.string().trim().max(200, "Descrição muito longa").optional().transform((v) => v || null),
+  descricao: z.string().trim().max(200, "Descrição muito longa").nullish().transform((v) => v || null),
   data: dataISO,
   recorrente: z.string().nullable().optional().transform((v) => v === "on"),
   diaMes: z
@@ -53,23 +57,23 @@ export const esquemaTransacao = z.object({
 export const esquemaConta = z.object({
   nome: z.string().trim().min(1, "Dê um nome para a conta").max(60, "Nome muito longo"),
   tipo: z.enum(["carteira", "banco", "cartao", "investimento"]),
-  banco: z.string().trim().optional().transform((v) => v || "outro"),
+  banco: z.string().trim().nullish().transform((v) => v || "outro"),
   saldoInicial: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((v) => (v ? Number(v.replace(/\./g, "").replace(",", ".")) : 0))
     .pipe(z.number({ invalid_type_error: "Saldo inicial inválido" })),
   diaFechamento: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((v) => (v ? Number(v) : null))
     .pipe(z.number().int().min(1).max(28).nullable()),
   diaVencimento: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((v) => (v ? Number(v) : null))
     .pipe(z.number().int().min(1).max(28).nullable()),
 });
@@ -78,10 +82,10 @@ export const esquemaCategoria = z.object({
   nome: z.string().trim().min(1, "Dê um nome para a categoria").max(40, "Nome muito longo"),
   tipo: z.enum(["receita", "despesa"]),
   metaMensal: valorMonetarioOpcional,
-  icone: z.string().trim().min(1).max(30).optional().transform((v) => v || "PiggyBank"),
+  icone: z.string().trim().min(1).max(30).nullish().transform((v) => v || "PiggyBank"),
   cor: z
     .enum(["financa", "habito", "nota", "neutro", "rosa", "azul", "roxo", "verde", "laranja", "ciano"])
-    .optional()
+    .nullish()
     .transform((v) => v || "financa"),
 });
 
@@ -90,7 +94,7 @@ export const esquemaRecorrencia = z.object({
   valor: valorMonetario,
   contaId: uuidObrigatorio("Escolha uma conta"),
   categoriaId: uuidOpcional,
-  descricao: z.string().trim().max(200, "Descrição muito longa").optional().transform((v) => v || null),
+  descricao: z.string().trim().max(200, "Descrição muito longa").nullish().transform((v) => v || null),
   diaMes: z
     .string()
     .transform((v) => Number(v))

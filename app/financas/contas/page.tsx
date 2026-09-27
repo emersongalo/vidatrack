@@ -1,9 +1,12 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Pencil, Share2, Archive, Trash2, Receipt } from "lucide-react";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
-import { criarConta, arquivarConta, excluirContaDefinitivamente } from "../actions";
+import { arquivarConta, excluirContaDefinitivamente } from "../actions";
+import { createClient } from "@/lib/supabase/client";
+import { esquemaConta, primeiroErro } from "@/lib/validacao/financas";
 import { SeletorTipoConta } from "@/components/SeletorTipoConta";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
@@ -30,6 +33,65 @@ const RÓTULOS_TIPO: Record<string, string> = {
 export default function ContasPage() {
   const { snapshot, recarregar } = useSnapshotOffline();
   const contas = snapshot?.financas.contas ?? [];
+  const formRef = useRef<HTMLFormElement>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [criada, setCriada] = useState<string | null>(null);
+
+  // Etapa 199b — cria a conta DIRETO pelo Supabase do aparelho (as
+  // regras de segurança do banco garantem que só dá pra criar conta
+  // sua). Antes passava por uma Ação de Servidor, que falhava calada
+  // quando o app estava com uma versão antiga carregada.
+  async function aoCriar(formData: FormData) {
+    setErro(null);
+    setCriada(null);
+    const falhar = (msg: string) => {
+      setErro(msg);
+      try {
+        fetch("/api/analytics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pagina: ("erro-criar-conta: " + msg).slice(0, 200) }),
+        });
+      } catch {}
+    };
+    if (!navigator.onLine) return falhar("Sem internet — criar conta precisa de conexão.");
+
+    const resultado = esquemaConta.safeParse({
+      nome: formData.get("nome"),
+      tipo: formData.get("tipo"),
+      banco: formData.get("banco"),
+      saldoInicial: formData.get("saldoInicial"),
+      diaFechamento: formData.get("diaFechamento"),
+      diaVencimento: formData.get("diaVencimento"),
+    });
+    if (!resultado.success) return falhar(primeiroErro(resultado));
+
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return falhar("Sua sessão expirou. Saia e entre de novo.");
+
+      const { error } = await supabase.from("financa_contas").insert({
+        dono_id: user.id,
+        nome: resultado.data.nome,
+        tipo: resultado.data.tipo,
+        banco: resultado.data.banco,
+        saldo_inicial: resultado.data.saldoInicial,
+        dia_fechamento: resultado.data.diaFechamento,
+        dia_vencimento: resultado.data.diaVencimento,
+      });
+      if (error) return falhar(error.message);
+
+      setCriada(resultado.data.nome);
+      formRef.current?.reset();
+      await recarregar();
+    } catch (e: any) {
+      falhar(String(e?.message ?? e ?? "erro desconhecido"));
+    }
+  }
+
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
@@ -123,7 +185,15 @@ export default function ContasPage() {
       )}
 
       <p className="text-sm text-ink-400 mb-3">Nova conta</p>
-      <form action={criarConta} className="space-y-3">
+      {erro && (
+        <p className="mb-3 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">{erro}</p>
+      )}
+      {criada && (
+        <p className="mb-3 text-sm text-habito bg-habito/10 border border-habito/30 rounded-lg px-3 py-2">
+          Conta "{criada}" criada!
+        </p>
+      )}
+      <form ref={formRef} action={aoCriar} className="space-y-3">
         <input
           name="nome"
           type="text"
@@ -152,7 +222,7 @@ export default function ContasPage() {
           placeholder="Saldo inicial (opcional, ex: 150,00)"
           className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
         />
-        <BotaoSalvarFormulario>Criar conta</BotaoSalvarFormulario>
+        <BotaoSalvarFormulario textoEnviando="Criando...">Criar conta</BotaoSalvarFormulario>
       </form>
     </main>
   );

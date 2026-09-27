@@ -10,6 +10,43 @@ import {
   primeiroErro,
 } from "@/lib/validacao/financas";
 
+/**
+ * Etapa 199 — versão usada pela tela Contas: em vez de redirecionar
+ * (a tela lê do retrato local e não percebia a conta nova, nem
+ * mostrava o erro), devolve o resultado pra tela atualizar na hora.
+ */
+export async function criarContaNaTela(formData: FormData): Promise<{ erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sua sessão expirou. Entre de novo." };
+
+  const resultado = esquemaConta.safeParse({
+    nome: formData.get("nome"),
+    tipo: formData.get("tipo"),
+    banco: formData.get("banco"),
+    saldoInicial: formData.get("saldoInicial"),
+    diaFechamento: formData.get("diaFechamento"),
+    diaVencimento: formData.get("diaVencimento"),
+  });
+  if (!resultado.success) return { erro: primeiroErro(resultado) };
+
+  const { error } = await supabase.from("financa_contas").insert({
+    dono_id: user.id,
+    nome: resultado.data.nome,
+    tipo: resultado.data.tipo,
+    banco: resultado.data.banco,
+    saldo_inicial: resultado.data.saldoInicial,
+    dia_fechamento: resultado.data.diaFechamento,
+    dia_vencimento: resultado.data.diaVencimento,
+  });
+  if (error) return { erro: error.message };
+
+  revalidatePath("/financas");
+  return {};
+}
+
 export async function criarConta(formData: FormData) {
   const supabase = createClient();
   const {
