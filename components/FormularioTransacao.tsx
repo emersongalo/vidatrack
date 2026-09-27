@@ -91,6 +91,12 @@ export function FormularioTransacao({
 
   const hoje = new Date().toLocaleDateString("sv-SE");
   const router = useRouter();
+  // Etapa 205 — o dia da repetição acompanha a data escolhida (lançou
+  // pro dia 09/10 → "todo dia 9"), a menos que a pessoa mude na mão.
+  const [dataLancamento, setDataLancamento] = useState(valoresIniciais?.data ?? hoje);
+  const diaDaData = (iso: string) => Math.min(28, Number(iso.slice(8, 10)) || 1);
+  const [diaMesRecorrencia, setDiaMesRecorrencia] = useState(diaDaData(valoresIniciais?.data ?? hoje));
+  const [diaMesEditado, setDiaMesEditado] = useState(false);
 
   function aoSubmeter(e: React.FormEvent<HTMLFormElement>) {
     // Só intercepta a criação (não a edição) quando não tem internet —
@@ -283,7 +289,11 @@ export function FormularioTransacao({
             id="data"
             name="data"
             type="date"
-            defaultValue={valoresIniciais?.data ?? hoje}
+            value={dataLancamento}
+            onChange={(e) => {
+              setDataLancamento(e.target.value);
+              if (!diaMesEditado && e.target.value) setDiaMesRecorrencia(diaDaData(e.target.value));
+            }}
             required
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
@@ -327,7 +337,11 @@ export function FormularioTransacao({
                     type="number"
                     min={1}
                     max={28}
-                    defaultValue={new Date().getDate() > 28 ? 28 : new Date().getDate()}
+                    value={diaMesRecorrencia}
+                    onChange={(e) => {
+                      setDiaMesEditado(true);
+                      setDiaMesRecorrencia(Math.max(1, Math.min(28, Number(e.target.value) || 1)));
+                    }}
                     className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition font-mono"
                   />
                   <p className="text-[11px] text-ink-400 mt-1">
@@ -348,7 +362,7 @@ export function FormularioTransacao({
                           : "border-base-600 text-ink-400 hover:text-ink-100"
                       }`}
                     >
-                      Para sempre
+                      Sem data pra acabar
                     </button>
                     <button
                       type="button"
@@ -367,16 +381,19 @@ export function FormularioTransacao({
                       name="dataFimRecorrencia"
                       type="date"
                       required
-                      min={hoje}
+                      min={dataLancamento || hoje}
                       className="w-full mt-2 bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
                     />
                   )}
                 </div>
 
                 <p className="text-[11px] text-ink-400">
-                  O lançamento de hoje é criado normalmente, e os próximos
-                  meses passam a aparecer sozinhos — dá pra gerenciar (pausar
-                  ou excluir) depois em Finanças → Recorrentes.
+                  Começa em{" "}
+                  <span className="text-ink-100">
+                    {dataLancamento ? new Date(dataLancamento + "T00:00:00").toLocaleDateString("pt-BR") : "--"}
+                  </span>{" "}
+                  e repete todo dia {diaMesRecorrencia} dos meses seguintes — nada é lançado antes dessa data.
+                  Dá pra pausar ou excluir depois em Finanças → Recorrentes.
                 </p>
               </div>
             )}

@@ -35,7 +35,7 @@ export async function GET() {
       .select("id, titulo, repetir, dias_semana, data, concluida, horario_lembrete, dia_mes, mes, intervalo_dias, prioridade")
       .eq("arquivada", false),
     supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial").eq("arquivado", false),
-    supabase.from("financa_recorrencias").select("tipo, valor, dia_mes, data_fim, ativo, descricao"),
+    supabase.from("financa_recorrencias").select("tipo, valor, dia_mes, data_fim, data_inicio, ativo, descricao"),
   ]);
 
   const idsHabitos = (habitos ?? []).map((h) => h.id);

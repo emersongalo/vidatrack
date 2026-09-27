@@ -106,7 +106,13 @@ export default function FinancasPage() {
     ? calcularSaldoPrevisto(
         saldoTotal,
         recorrencias
-          .filter((r) => r.ativo && (!r.data_fim || r.data_fim >= mesAtualISO + "-31"))
+          .filter(
+            (r: any) =>
+              r.ativo &&
+              (!r.data_fim || r.data_fim >= mesAtualISO + "-31") &&
+              // Etapa 205 — recorrência que só começa num mês futuro não entra no previsto deste
+              (!r.data_inicio || r.data_inicio <= ultimoDiaDoMes(mesAtualISO + "-01"))
+          )
           .map((r) => ({ tipo: r.tipo, valor: Number(r.valor), diaMes: r.dia_mes })),
         hoje.getDate()
       )

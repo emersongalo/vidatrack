@@ -306,7 +306,7 @@ async function notificarContasAPagar(
 
   const { data: recorrencias } = await supabase
     .from("financa_recorrencias")
-    .select("id, descricao, valor, dia_mes, data_fim, dono_id, financa_contas(nome)")
+    .select("id, descricao, valor, dia_mes, data_fim, data_inicio, dono_id, financa_contas(nome)")
     .eq("ativo", true)
     .eq("tipo", "despesa")
     .in("dia_mes", Array.from(new Set([diaHoje, diaAmanha])));
@@ -320,6 +320,7 @@ async function notificarContasAPagar(
 
     const dataDoVencimento = venceHoje ? hoje : amanhaISO;
     if (r.data_fim && dataDoVencimento > r.data_fim) continue; // já expirou
+    if ((r as any).data_inicio && dataDoVencimento < (r as any).data_inicio) continue; // Etapa 205: ainda não começou
 
     const descricao = r.descricao || (r as any).financa_contas?.nome || "Conta";
     const texto = venceHoje

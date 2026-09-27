@@ -317,15 +317,19 @@ export async function criarTransacao(formData: FormData) {
     redirect(`/financas/nova?erro=${encodeURIComponent(primeiroErro(resultado))}`);
   }
 
-  const { error } = await supabase.from("financa_transacoes").insert({
-    dono_id: user!.id,
-    conta_id: resultado.data.contaId,
-    categoria_id: resultado.data.categoriaId,
-    tipo: resultado.data.tipo,
-    valor: resultado.data.valor,
-    descricao: resultado.data.descricao,
-    data: resultado.data.data,
-  });
+  const { data: transacaoCriada, error } = await supabase
+    .from("financa_transacoes")
+    .insert({
+      dono_id: user!.id,
+      conta_id: resultado.data.contaId,
+      categoria_id: resultado.data.categoriaId,
+      tipo: resultado.data.tipo,
+      valor: resultado.data.valor,
+      descricao: resultado.data.descricao,
+      data: resultado.data.data,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     redirect(`/financas/nova?erro=${encodeURIComponent(error.message)}`);
@@ -334,17 +338,29 @@ export async function criarTransacao(formData: FormData) {
   // "Repetir todo mês" marcado: além do lançamento de hoje, já deixa
   // configurada a recorrência pros próximos meses (a mesma tabela que
   // a tela /financas/recorrentes usa).
+  // Etapa 205 — a recorrência COMEÇA na data do lançamento ("para
+  // sempre" = daquela data em diante, nunca pra trás), e esse primeiro
+  // lançamento fica ligado a ela — assim o gerador automático não cria
+  // de novo o mesmo mês (nem um mês anterior).
   if (resultado.data.recorrente && resultado.data.diaMes) {
-    await supabase.from("financa_recorrencias").insert({
-      dono_id: user!.id,
-      conta_id: resultado.data.contaId,
-      categoria_id: resultado.data.categoriaId,
-      tipo: resultado.data.tipo,
-      valor: resultado.data.valor,
-      descricao: resultado.data.descricao,
-      dia_mes: resultado.data.diaMes,
-      data_fim: resultado.data.dataFimRecorrencia,
-    });
+    const { data: recorrencia } = await supabase
+      .from("financa_recorrencias")
+      .insert({
+        dono_id: user!.id,
+        conta_id: resultado.data.contaId,
+        categoria_id: resultado.data.categoriaId,
+        tipo: resultado.data.tipo,
+        valor: resultado.data.valor,
+        descricao: resultado.data.descricao,
+        dia_mes: resultado.data.diaMes,
+        data_fim: resultado.data.dataFimRecorrencia,
+        data_inicio: resultado.data.data,
+      })
+      .select("id")
+      .single();
+    if (recorrencia && transacaoCriada) {
+      await supabase.from("financa_transacoes").update({ recorrencia_id: recorrencia.id }).eq("id", transacaoCriada.id);
+    }
   }
 
   revalidatePath("/financas");

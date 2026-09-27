@@ -82,7 +82,7 @@ export async function garantirLancamentosRecorrentes() {
 
   const { data: recorrencias } = await supabase
     .from("financa_recorrencias")
-    .select("id, conta_id, categoria_id, tipo, valor, descricao, dia_mes, data_fim")
+    .select("id, conta_id, categoria_id, tipo, valor, descricao, dia_mes, data_fim, data_inicio")
     .eq("ativo", true)
     .eq("dono_id", user.id)
     .lte("dia_mes", diaAtual);
@@ -109,6 +109,8 @@ export async function garantirLancamentosRecorrentes() {
     // Se tem data final e esse mês já passou dela, não gera mais —
     // a recorrência "expirou" sozinha, sem precisar excluir na mão.
     if (r.data_fim && data > r.data_fim) continue;
+    // Etapa 205 — ainda não começou (ex: fatura cadastrada pro mês que vem)
+    if (r.data_inicio && data < r.data_inicio) continue;
 
     paraInserir.push({
       dono_id: user.id,

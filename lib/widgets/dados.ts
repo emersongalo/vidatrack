@@ -35,7 +35,7 @@ export type EntradaWidgets = {
   tarefas: any[];
   conclusoesTarefas: { tarefa_id: string; data: string }[];
   contas: { tipo: string; saldo: number | string }[];
-  recorrencias: { tipo: string; valor: number | string; dia_mes: number; data_fim: string | null; ativo: boolean; descricao: string | null }[];
+  recorrencias: { tipo: string; valor: number | string; dia_mes: number; data_fim: string | null; data_inicio?: string | null; ativo: boolean; descricao: string | null }[];
   pendencias?: number | null;
 };
 
@@ -191,7 +191,9 @@ export function montarDadosWidgets(e: EntradaWidgets): DadosWidgets {
       let ano = anoH;
       let mes = mesH;
       let dia = Math.min(r.dia_mes, ultimoDiaDoMes(ano, mes));
-      if (dia < diaH) {
+      const isoDe = (a: number, m: number, d: number) => `${a}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      // Etapa 205 — pula o mês se a recorrência ainda não tinha começado
+      if (dia < diaH || (r.data_inicio && isoDe(ano, mes, dia) < r.data_inicio)) {
         mes += 1;
         if (mes > 12) {
           mes = 1;
@@ -202,7 +204,7 @@ export function montarDadosWidgets(e: EntradaWidgets): DadosWidgets {
       const quando = `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
       return { r, quando };
     })
-    .filter(({ r, quando }) => !r.data_fim || quando <= r.data_fim)
+    .filter(({ r, quando }) => (!r.data_fim || quando <= r.data_fim) && (!r.data_inicio || quando >= r.data_inicio))
     .sort((a, b) => a.quando.localeCompare(b.quando))
     .slice(0, 3)
     .map(({ r, quando }) => {
