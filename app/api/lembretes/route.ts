@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
+import { tarefaApareceNoDia } from "@/lib/agenda/recorrencia";
 import { enviarPush } from "@/lib/push/servidor";
 import { segredosIguais } from "@/lib/seguranca";
 import { horaAtualNoFuso, dataAtualNoFuso, horaMinutosAtrasNoFuso } from "@/lib/tempo/fuso";
@@ -75,7 +76,7 @@ export async function GET(request: Request) {
   // --- Tarefas com lembrete ---
   const { data: tarefas } = await supabase
     .from("tarefas")
-    .select("id, titulo, dono_id, repetir, dias_semana, data, horario_lembrete")
+    .select("id, titulo, dono_id, repetir, dias_semana, data, horario_lembrete, dia_mes, mes, intervalo_dias")
     .eq("arquivada", false)
     .not("horario_lembrete", "is", null);
 
@@ -83,8 +84,7 @@ export async function GET(request: Request) {
     const horario = (t.horario_lembrete as string).slice(0, 5);
     if (!(horario >= cincoMinAntes && horario <= horaAtual)) continue;
 
-    const apareceHoje =
-      t.repetir === "nenhuma" ? t.data === hoje : diaBateComFrequencia(t.repetir, t.dias_semana ?? [], hoje);
+    const apareceHoje = tarefaApareceNoDia(t, hoje);
     if (!apareceHoje) continue;
 
     enviados += await notificarUsuariosDoItem(

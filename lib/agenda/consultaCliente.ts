@@ -2,7 +2,9 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
-import type { ItemAgenda } from "@/components/ItemLinhaAgenda";
+import { tarefaApareceNoDia, tarefaAtrasada } from "@/lib/agenda/recorrencia";
+import { hojeISO } from "@/lib/habitos/streak";
+import { ordenarItensAgenda, type ItemAgenda } from "@/components/ItemLinhaAgenda";
 
 /**
  * Etapa 126 — mesma lógica de lib/agenda/consulta.ts (buscarItensDoDia),
@@ -15,6 +17,7 @@ export async function buscarItensDoDiaCliente(
   dataSelecionada: string,
   categoriaFiltro: string
 ): Promise<{ itens: ItemAgenda[]; temAlgumItemCadastrado: boolean }> {
+  const hojeReal = hojeISO();
   const supabase = createClient();
   const {
     data: { user },
@@ -27,7 +30,7 @@ export async function buscarItensDoDiaCliente(
       .eq("arquivado", false),
     supabase
       .from("tarefas")
-      .select("id, titulo, icone, categoria_id, repetir, dias_semana, data, horario_lembrete, concluida, subtarefas, ordem")
+      .select("id, titulo, icone, categoria_id, repetir, dias_semana, data, horario_lembrete, concluida, subtarefas, ordem, dia_mes, mes, intervalo_dias, prioridade")
       .eq("arquivada", false),
   ]);
 
@@ -132,10 +135,10 @@ export async function buscarItensDoDiaCliente(
   }
 
   for (const t of tarefas ?? []) {
-    const apareceHoje =
-      t.repetir === "nenhuma"
-        ? t.data === dataSelecionada
-        : diaBateComFrequencia(t.repetir, t.dias_semana ?? [], dataSelecionada);
+    // Etapa 193 — regra única de repetição (lib/agenda/recorrencia) +
+    // tarefa única atrasada aparece no dia de HOJE até ser concluída.
+    const atrasada = dataSelecionada === hojeReal && tarefaAtrasada(t, hojeReal);
+    const apareceHoje = atrasada || tarefaApareceNoDia(t, dataSelecionada);
     if (!apareceHoje) continue;
     if (categoriaFiltro && t.categoria_id !== categoriaFiltro) continue;
 
@@ -150,6 +153,8 @@ export async function buscarItensDoDiaCliente(
       feito: t.repetir === "nenhuma" ? t.concluida : tarefasFeitasHoje.has(t.id),
       repete: t.repetir !== "nenhuma",
       horarioLembrete: t.horario_lembrete,
+      prioridade: t.prioridade ?? 0,
+      atrasadaDesde: atrasada ? t.data : null,
       progressoSubtarefas:
         subtarefas.length > 0
           ? { feitas: subtarefas.filter((s) => s.feita).length, total: subtarefas.length }
@@ -158,10 +163,7 @@ export async function buscarItensDoDiaCliente(
     });
   }
 
-  itens = itens.sort((a, b) => {
-    if (a.feito !== b.feito) return a.feito ? 1 : -1;
-    return a.ordem - b.ordem;
-  });
+  itens = itens.sort(ordenarItensAgenda);
 
   return {
     itens,

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
+import { tarefaApareceNoDia } from "@/lib/agenda/recorrencia";
 
 type ItemComLembrete = {
   chave: string; // "habito-<id>" ou "tarefa-<id>"
@@ -44,7 +45,7 @@ export function AlarmeAlertaTela() {
           .not("horario_lembrete", "is", null),
         supabase
           .from("tarefas")
-          .select("id, titulo, repetir, dias_semana, data, horario_lembrete")
+          .select("id, titulo, repetir, dias_semana, data, horario_lembrete, dia_mes, mes, intervalo_dias")
           .eq("arquivada", false)
           .not("horario_lembrete", "is", null),
       ]);
@@ -65,8 +66,7 @@ export function AlarmeAlertaTela() {
       }
 
       for (const t of tarefas ?? []) {
-        const apareceHoje =
-          t.repetir === "nenhuma" ? t.data === hoje : diaBateComFrequencia(t.repetir, t.dias_semana ?? [], hoje);
+        const apareceHoje = tarefaApareceNoDia(t, hoje);
         if (apareceHoje) {
           encontrados.push({
             chave: `tarefa-${t.id}`,

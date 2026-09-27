@@ -1,4 +1,5 @@
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
+import { tarefaApareceNoDia } from "@/lib/agenda/recorrencia";
 import { hojeISO } from "@/lib/habitos/streak";
 import { lerDispensadosHoje } from "@/lib/notificacoes/dispensados";
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
@@ -53,8 +54,7 @@ export function calcularPendencias(snapshot: SnapshotOffline | null | undefined)
 
   for (const t of snapshot.tarefas as any[]) {
     if (!t.horario_lembrete) continue;
-    const apareceHoje =
-      t.repetir === "nenhuma" ? t.data === hoje : diaBateComFrequencia(t.repetir, t.dias_semana ?? [], hoje);
+    const apareceHoje = tarefaApareceNoDia(t, hoje);
     if (!apareceHoje) continue;
     const horario = (t.horario_lembrete as string).slice(0, 5);
     if (horario > agora) continue;

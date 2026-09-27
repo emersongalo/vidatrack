@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { hojeISO } from "@/lib/habitos/streak";
 import { atualizarTarefa } from "../../actions";
-import { FormularioTarefa } from "@/components/FormularioTarefa";
+import { FormularioTarefa, type TipoRepeticao } from "@/components/FormularioTarefa";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
 // Etapa 134
@@ -51,11 +51,15 @@ function EditarTarefaConteudo() {
         titulo: tarefa.titulo,
         icone: tarefa.icone,
         categoriaId: tarefa.categoria_id,
-        repetir: tarefa.repetir as "nenhuma" | "diaria" | "dias_semana",
+        repetir: tarefa.repetir as TipoRepeticao,
         diasSemana: tarefa.dias_semana ?? [],
         data: tarefa.data,
         horarioLembrete: tarefa.horario_lembrete,
         observacoes: tarefa.observacoes,
+        diaMes: tarefa.dia_mes,
+        mes: tarefa.mes,
+        intervaloDias: tarefa.intervalo_dias,
+        prioridade: tarefa.prioridade,
       }}
     />
   );

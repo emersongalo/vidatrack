@@ -6,10 +6,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { hojeISO } from "@/lib/habitos/streak";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
+import { tarefaApareceNoDia, tarefaAtrasada } from "@/lib/agenda/recorrencia";
 import { TiraDeDiasAgenda } from "@/components/TiraDeDiasAgenda";
 import { SugestoesHabito } from "@/components/SugestoesHabito";
 import { ListaHojeComOffline } from "@/components/ListaHojeComOffline";
-import type { ItemAgenda } from "@/components/ItemLinhaAgenda";
+import { ordenarItensAgenda, type ItemAgenda } from "@/components/ItemLinhaAgenda";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
 /**
@@ -76,10 +77,10 @@ function HojeConteudo() {
     }
 
     for (const t of snapshot.tarefas as any[]) {
-      const apareceHoje =
-        t.repetir === "nenhuma"
-          ? t.data === dataSelecionada
-          : diaBateComFrequencia(t.repetir, t.dias_semana ?? [], dataSelecionada);
+      // Etapa 193 — regra única de repetição (lib/agenda/recorrencia) +
+      // tarefa única atrasada aparece no dia de HOJE até ser concluída.
+      const atrasada = dataSelecionada === hoje && tarefaAtrasada(t, hoje);
+      const apareceHoje = atrasada || tarefaApareceNoDia(t, dataSelecionada);
       if (!apareceHoje) continue;
       if (categoriaFiltro && t.categoria_id !== categoriaFiltro) continue;
 
@@ -93,6 +94,8 @@ function HojeConteudo() {
         feito: t.repetir === "nenhuma" ? t.concluida : tarefasFeitasHoje.has(t.id),
         repete: t.repetir !== "nenhuma",
         horarioLembrete: t.horario_lembrete,
+        prioridade: t.prioridade ?? 0,
+        atrasadaDesde: atrasada ? t.data : null,
         progressoSubtarefas:
           subtarefas.length > 0
             ? { feitas: subtarefas.filter((s) => s.feita).length, total: subtarefas.length }
@@ -101,7 +104,7 @@ function HojeConteudo() {
       });
     }
 
-    lista.sort((a, b) => (a.feito !== b.feito ? (a.feito ? 1 : -1) : a.ordem - b.ordem));
+    lista.sort(ordenarItensAgenda);
 
     return {
       itens: lista,

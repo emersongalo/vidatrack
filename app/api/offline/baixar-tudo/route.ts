@@ -35,7 +35,7 @@ export async function GET() {
       .eq("arquivado", false),
     supabase
       .from("tarefas")
-      .select("id, titulo, icone, repetir, dias_semana, data, concluida, ordem, subtarefas, categoria_id, horario_lembrete, observacoes")
+      .select("id, titulo, icone, repetir, dias_semana, data, concluida, ordem, subtarefas, categoria_id, horario_lembrete, observacoes, dia_mes, mes, intervalo_dias, prioridade")
       .eq("arquivada", false),
     supabase.from("categorias_produtividade").select("id, nome, cor"),
     supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),

@@ -9,6 +9,8 @@ import { CheckboxSubtarefa } from "@/components/CheckboxSubtarefa";
 import { PainelCompartilhamentoCliente } from "@/components/PainelCompartilhamentoCliente";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { descreverRepeticao, tarefaAtrasada, PRIORIDADES } from "@/lib/agenda/recorrencia";
+import { hojeISO } from "@/lib/habitos/streak";
 
 // Etapa 134
 export default function DetalheTarefaPage() {
@@ -88,10 +90,18 @@ function DetalheTarefaConteudo() {
           <h1 className={`text-xl font-display font-semibold ${tarefa.concluida ? "line-through text-ink-400" : ""}`}>
             {tarefa.titulo}
           </h1>
-          <p className="text-xs text-ink-400">
-            {tarefa.repetir === "nenhuma"
-              ? tarefa.data && new Date(tarefa.data + "T00:00:00").toLocaleDateString("pt-BR")
-              : "Repete"}
+          <p className="text-xs text-ink-400 flex items-center gap-2 flex-wrap">
+            <span className={tarefaAtrasada(tarefa, hojeISO()) ? "text-red-400" : ""}>
+              {tarefa.repetir === "nenhuma" ? "" : "↻ "}
+              {descreverRepeticao(tarefa)}
+              {tarefaAtrasada(tarefa, hojeISO()) && " · atrasada"}
+            </span>
+            {!!tarefa.prioridade && tarefa.prioridade > 0 && (
+              <span className={`flex items-center gap-1 ${PRIORIDADES[tarefa.prioridade].classe}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${PRIORIDADES[tarefa.prioridade].fundo}`} />
+                Prioridade {PRIORIDADES[tarefa.prioridade].rotulo.toLowerCase()}
+              </span>
+            )}
           </p>
         </div>
       </div>

@@ -6,6 +6,34 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hojeISO } from "@/lib/habitos/streak";
 
+// Etapa 193 — lê os campos de repetição/prioridade do formulário e
+// devolve já no formato das colunas. Compartilhado por criar e editar
+// pra não ter duas regras diferentes de "o que salvar".
+const REPETICOES_VALIDAS = ["nenhuma", "diaria", "dias_semana", "mensal", "anual", "intervalo"];
+
+function camposRepeticao(formData: FormData) {
+  const repetirRaw = String(formData.get("repetir") ?? "nenhuma");
+  const repetir = REPETICOES_VALIDAS.includes(repetirRaw) ? repetirRaw : "nenhuma";
+  const diasSemana = formData.getAll("diasSemana").map(Number);
+  const dataRaw = String(formData.get("data") ?? "");
+  const limitar = (v: number, min: number, max: number) => (Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : null);
+  const diaMes = limitar(Number(formData.get("diaMes")), 1, 31);
+  const mes = limitar(Number(formData.get("mes")), 1, 12);
+  const intervaloDias = limitar(Number(formData.get("intervaloDias")), 1, 365);
+  const prioridade = limitar(Number(formData.get("prioridade") ?? 0), 0, 3) ?? 0;
+
+  return {
+    repetir,
+    dias_semana: repetir === "dias_semana" ? diasSemana : [],
+    // "data" = dia da tarefa única, ou o dia de início do "a cada N dias"
+    data: repetir === "nenhuma" || repetir === "intervalo" ? dataRaw || hojeISO() : null,
+    dia_mes: repetir === "mensal" || repetir === "anual" ? diaMes : null,
+    mes: repetir === "anual" ? mes : null,
+    intervalo_dias: repetir === "intervalo" ? intervaloDias : null,
+    prioridade,
+  };
+}
+
 export async function criarTarefa(formData: FormData) {
   const supabase = createClient();
   const {
@@ -21,9 +49,6 @@ export async function criarTarefa(formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const icone = String(formData.get("icone") ?? "NotebookPen");
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
-  const repetir = String(formData.get("repetir") ?? "nenhuma");
-  const diasSemana = formData.getAll("diasSemana").map(Number);
-  const dataRaw = String(formData.get("data") ?? "");
   const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
   const subtarefasTexto = formData.getAll("subtarefaTexto").map((t) => String(t).trim()).filter(Boolean);
   const observacoes = String(formData.get("observacoes") ?? "").trim();
@@ -43,9 +68,7 @@ export async function criarTarefa(formData: FormData) {
     titulo,
     icone,
     categoria_id: categoriaIdRaw || null,
-    repetir,
-    dias_semana: repetir === "dias_semana" ? diasSemana : [],
-    data: repetir === "nenhuma" ? dataRaw || hojeISO() : null,
+    ...camposRepeticao(formData),
     horario_lembrete: horarioLembreteRaw || null,
     subtarefas,
     observacoes: observacoes || null,
@@ -67,9 +90,6 @@ export async function atualizarTarefa(tarefaId: string, formData: FormData) {
   const titulo = String(formData.get("titulo") ?? "").trim();
   const icone = String(formData.get("icone") ?? "NotebookPen");
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
-  const repetir = String(formData.get("repetir") ?? "nenhuma");
-  const diasSemana = formData.getAll("diasSemana").map(Number);
-  const dataRaw = String(formData.get("data") ?? "");
   const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
   const observacoes = String(formData.get("observacoes") ?? "").trim();
 
@@ -83,9 +103,7 @@ export async function atualizarTarefa(tarefaId: string, formData: FormData) {
       titulo,
       icone,
       categoria_id: categoriaIdRaw || null,
-      repetir,
-      dias_semana: repetir === "dias_semana" ? diasSemana : [],
-      data: repetir === "nenhuma" ? dataRaw || hojeISO() : null,
+      ...camposRepeticao(formData),
       horario_lembrete: horarioLembreteRaw || null,
       observacoes: observacoes || null,
     })

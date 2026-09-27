@@ -8,6 +8,7 @@ import { IconeHabito } from "@/components/IconeHabito";
 import { CelebracaoConquista } from "@/components/CelebracaoConquista";
 import { alternarCheckin, ajustarQuantidadeHabito, salvarObservacaoCheckin } from "@/app/habitos/actions";
 import { alternarConclusaoTarefa } from "@/app/habitos/tarefas/actions";
+import { PRIORIDADES } from "@/lib/agenda/recorrencia";
 
 export type ItemAgenda = {
   id: string;
@@ -25,7 +26,25 @@ export type ItemAgenda = {
    *  mostra o status do dia de cada pessoa lado a lado, pra motivarem
    *  juntos (ex: "ler a Bíblia juntos"). */
   participantes?: { nome: string; feito: boolean }[];
+  /** Etapa 193 — 0 nenhuma, 1 baixa, 2 média, 3 alta (só tarefas). */
+  prioridade?: number;
+  /** Etapa 193 — tarefa única que passou da data sem ser concluída:
+   *  aparece em Hoje com o selo "Atrasada desde dd/mm". */
+  atrasadaDesde?: string | null;
 };
+
+/** Etapa 193 — pendentes primeiro; entre elas, atrasadas, depois
+ *  prioridade maior, depois a ordem que a pessoa arrastou. */
+export function ordenarItensAgenda(a: ItemAgenda, b: ItemAgenda) {
+  if (a.feito !== b.feito) return a.feito ? 1 : -1;
+  const atrasoA = a.atrasadaDesde ? 1 : 0;
+  const atrasoB = b.atrasadaDesde ? 1 : 0;
+  if (atrasoA !== atrasoB) return atrasoB - atrasoA;
+  const prioA = a.prioridade ?? 0;
+  const prioB = b.prioridade ?? 0;
+  if (prioA !== prioB) return prioB - prioA;
+  return a.ordem - b.ordem;
+}
 
 export function ItemLinhaAgenda({
   item,
@@ -127,6 +146,17 @@ export function ItemLinhaAgenda({
           >
             {item.tipo === "habito" ? "Hábito" : "Tarefa"}
           </span>
+          {item.atrasadaDesde && !item.feito && (
+            <span className="text-[11px] px-1.5 py-0.5 rounded font-medium bg-red-400/15 text-red-400">
+              Atrasada desde {new Date(item.atrasadaDesde + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+            </span>
+          )}
+          {!!item.prioridade && item.prioridade > 0 && (
+            <span className={`text-[11px] flex items-center gap-1 ${PRIORIDADES[item.prioridade].classe}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${PRIORIDADES[item.prioridade].fundo}`} />
+              {PRIORIDADES[item.prioridade].rotulo}
+            </span>
+          )}
           {item.progressoSubtarefas && (
             <span className="text-[11px] text-ink-400">
               {item.progressoSubtarefas.feitas}/{item.progressoSubtarefas.total}

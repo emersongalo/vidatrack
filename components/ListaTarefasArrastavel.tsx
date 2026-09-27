@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ListaArrastavel } from "@/components/ListaArrastavel";
 import { reordenarTarefas } from "@/app/habitos/tarefas/actions";
 import { IconeHabito } from "@/components/IconeHabito";
+import { descreverRepeticao, tarefaAtrasada, PRIORIDADES } from "@/lib/agenda/recorrencia";
+import { hojeISO } from "@/lib/habitos/streak";
 
 type Tarefa = {
   id: string;
@@ -13,6 +15,11 @@ type Tarefa = {
   data: string | null;
   concluida: boolean;
   subtarefas: { feita: boolean }[];
+  dias_semana?: number[] | null;
+  dia_mes?: number | null;
+  mes?: number | null;
+  intervalo_dias?: number | null;
+  prioridade?: number | null;
 };
 
 export function ListaTarefasArrastavel({ tarefas }: { tarefas: Tarefa[] }) {
@@ -39,14 +46,18 @@ export function ListaTarefasArrastavel({ tarefas }: { tarefas: Tarefa[] }) {
                 <p className={`font-medium truncate ${tarefa.concluida ? "line-through text-ink-400" : ""}`}>
                   {tarefa.titulo}
                 </p>
-                <p className="text-xs text-ink-400">
-                  {tarefa.repetir === "nenhuma"
-                    ? tarefa.data
-                      ? new Date(tarefa.data + "T00:00:00").toLocaleDateString("pt-BR")
-                      : "Sem data"
-                    : "Repete"}
-                  {subtarefas.length > 0 &&
-                    ` · ${subtarefas.filter((s) => s.feita).length}/${subtarefas.length}`}
+                <p className="text-xs text-ink-400 flex items-center gap-1.5 flex-wrap">
+                  {/* Etapa 193 — descrição real da repetição ("Todo dia 10 do mês")
+                      em vez de só "Repete", prioridade e selo de atrasada. */}
+                  {!!tarefa.prioridade && tarefa.prioridade > 0 && (
+                    <span className={`w-2 h-2 rounded-full ${PRIORIDADES[tarefa.prioridade].fundo}`} title={`Prioridade ${PRIORIDADES[tarefa.prioridade].rotulo}`} />
+                  )}
+                  <span className={tarefaAtrasada(tarefa, hojeISO()) ? "text-red-400" : ""}>
+                    {tarefa.repetir === "nenhuma" ? "" : "↻ "}
+                    {descreverRepeticao(tarefa)}
+                    {tarefaAtrasada(tarefa, hojeISO()) && " · atrasada"}
+                  </span>
+                  {subtarefas.length > 0 && <span>· {subtarefas.filter((s) => s.feita).length}/{subtarefas.length}</span>}
                 </p>
               </div>
             </Link>
