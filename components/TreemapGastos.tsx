@@ -1,18 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Treemap, ResponsiveContainer, Tooltip } from "recharts";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 
 const PALETA = ["#D9A24C", "#7FB894", "#9C8FD9", "#E08A8A", "#6BA3C7", "#C7A36B", "#8FA6D9", "#B694C4"];
 
 function ConteudoCelula(props: any) {
-  const { x, y, width, height, index, name, value } = props;
+  const { x, y, width, height, index, name, value, href, aoAbrir } = props;
   if (width < 2 || height < 2) return null;
   const cor = PALETA[index % PALETA.length];
   const mostrarTexto = width > 70 && height > 40;
 
   return (
-    <g>
+    <g onClick={href && aoAbrir ? () => aoAbrir(href) : undefined} style={{ cursor: href ? "pointer" : undefined }}>
       <rect
         x={x}
         y={y}
@@ -34,10 +35,12 @@ function ConteudoCelula(props: any) {
   );
 }
 
-export function TreemapGastos({ dados }: { dados: { nome: string; valor: number }[] }) {
+export function TreemapGastos({ dados }: { dados: { nome: string; valor: number; href?: string }[] }) {
+  const router = useRouter();
   if (dados.length === 0) return null;
 
-  const dadosFormatados = dados.map((d) => ({ name: d.nome, value: d.valor }));
+  // Etapa 197 — tocar num bloco abre o Extrato só daquela categoria
+  const dadosFormatados = dados.map((d) => ({ name: d.nome, value: d.valor, href: d.href }));
 
   return (
     <div className="h-72">
@@ -45,7 +48,7 @@ export function TreemapGastos({ dados }: { dados: { nome: string; valor: number 
         <Treemap
           data={dadosFormatados}
           dataKey="value"
-          content={<ConteudoCelula />}
+          content={<ConteudoCelula aoAbrir={(href: string) => router.push(href)} />}
           animationDuration={400}
         >
           <Tooltip

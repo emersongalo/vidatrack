@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 
 const LETRAS_DIA = ["D", "S", "T", "Q", "Q", "S", "S"];
@@ -24,7 +25,10 @@ function formatarValorCompacto(valor: number): string {
 export function MapaCalorGastos({
   anoMesISO,
   gastoPorDia,
+  hrefDoDia,
 }: {
+  /** Etapa 197 — se informado, os dias com gasto viram link (Extrato daquele dia) */
+  hrefDoDia?: (dataISO: string) => string;
   anoMesISO: string;
   /** dia do mês (1-31) → total gasto naquele dia */
   gastoPorDia: Map<number, number>;
@@ -68,13 +72,16 @@ export function MapaCalorGastos({
           const valor = gastoPorDia.get(dia) ?? 0;
           const nivel = nivelDoDia(valor);
           const ehHoje = dia === diaDeHoje;
+          const dataISO = `${anoMesISO.slice(0, 7)}-${String(dia).padStart(2, "0")}`;
+          const Celula: any = hrefDoDia && valor > 0 ? Link : "div";
           return (
-            <div
+            <Celula
               key={i}
+              {...(hrefDoDia && valor > 0 ? { href: hrefDoDia(dataISO) } : {})}
               title={valor > 0 ? `Dia ${dia}: ${formatarMoeda(valor)}` : `Dia ${dia}: sem gasto`}
               className={`aspect-square rounded-md flex flex-col items-center justify-center gap-0.5 text-[10px] leading-none ${NIVEIS[nivel]} ${
                 ehHoje ? "ring-2 ring-financa" : ""
-              } ${nivel >= 3 ? "text-ink-100" : "text-ink-400"}`}
+              } ${nivel >= 3 ? "text-ink-100" : "text-ink-400"} ${hrefDoDia && valor > 0 ? "hover:ring-2 hover:ring-ink-400 transition" : ""}`}
             >
               <span>{dia}</span>
               {valor > 0 && (
@@ -82,7 +89,7 @@ export function MapaCalorGastos({
                   {formatarValorCompacto(valor)}
                 </span>
               )}
-            </div>
+            </Celula>
           );
         })}
       </div>

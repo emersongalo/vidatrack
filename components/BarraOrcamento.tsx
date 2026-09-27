@@ -1,19 +1,24 @@
+import Link from "next/link";
 import { ValorMonetario } from "@/components/ValorMonetario";
 
 export function BarraOrcamento({
   nome,
   gasto,
   meta,
+  href,
 }: {
   nome: string;
   gasto: number;
   meta: number;
+  /** Etapa 197 — tocar leva pro Extrato daquela categoria */
+  href?: string;
 }) {
   const percentual = Math.min(100, Math.round((gasto / meta) * 100));
   const estourou = gasto > meta;
 
+  const Raiz: any = href ? Link : "div";
   return (
-    <div>
+    <Raiz {...(href ? { href, className: "block rounded-lg -mx-2 px-2 py-1 hover:bg-base-700 transition" } : {})}>
       <div className="flex items-baseline justify-between mb-1">
         <span className="text-sm">{nome}</span>
         <span className={`text-xs font-mono ${estourou ? "text-red-400" : "text-ink-400"}`}>
@@ -26,6 +31,6 @@ export function BarraOrcamento({
           style={{ width: `${percentual}%` }}
         />
       </div>
-    </div>
+    </Raiz>
   );
 }

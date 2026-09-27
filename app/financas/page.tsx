@@ -115,7 +115,12 @@ export default function FinancasPage() {
 
   const mapaCategoriaInfo = new Map(categoriasFinancas.map((c: any) => [c.id, c]));
   const dadosGrafico = Array.from(gastoPorCategoria.entries())
-    .map(([id, valor]) => ({ nome: (mapaCategoriaInfo.get(id) as any)?.nome ?? "Sem categoria", valor }))
+    .map(([id, valor]) => ({
+      nome: (mapaCategoriaInfo.get(id) as any)?.nome ?? "Sem categoria",
+      valor,
+      // Etapa 197 — tocar na categoria abre o Extrato só dela, no mês visto
+      href: `/financas/extrato?categoria=${id}&tipo=despesa&mes=${mesSelecionado}`,
+    }))
     .sort((a, b) => b.valor - a.valor);
 
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
@@ -145,7 +150,11 @@ export default function FinancasPage() {
            na Início pra não precisar navegar pra ver. */}
         <p className="text-sm text-ink-400 mb-3 mt-6">Mapa de calor — gasto por dia</p>
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
-          <MapaCalorGastos anoMesISO={mesSelecionado} gastoPorDia={gastoPorDiaMapaInicio} />
+          <MapaCalorGastos
+            anoMesISO={mesSelecionado}
+            gastoPorDia={gastoPorDiaMapaInicio}
+            hrefDoDia={(dia) => `/financas/extrato?tipo=despesa&dia=${dia}`}
+          />
         </div>
       </div>
     ) : null;
@@ -257,6 +266,7 @@ export default function FinancasPage() {
                       nome={cat.nome}
                       gasto={gastoPorCategoria.get(cat.id) ?? 0}
                       meta={Number(cat.meta_mensal)}
+                      href={`/financas/extrato?categoria=${cat.id}&tipo=despesa&mes=${mesSelecionado}`}
                     />
                   ))}
                 </div>

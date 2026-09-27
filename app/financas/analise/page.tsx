@@ -56,6 +56,16 @@ export default function AnaliseFinanceiraPage() {
     gastoPorDiaMapa.set(dia, (gastoPorDiaMapa.get(dia) ?? 0) + t.valor);
   }
 
+  // Etapa 197 — a Análise agrupa por NOME; aqui volta pro id pra montar
+  // o link do Extrato filtrado (tocar num bloco/barra → lançamentos dela).
+  const idPorNome = new Map<string, string>();
+  for (const c of snapshot?.financas.categorias ?? []) {
+    if ((c as any).tipo === "despesa" && !idPorNome.has((c as any).nome)) idPorNome.set((c as any).nome, (c as any).id);
+  }
+  const mesVisto = mesReferencia.slice(0, 7);
+  const hrefCategoria = (nome: string) =>
+    `/financas/extrato?categoria=${idPorNome.get(nome) ?? "sem"}&tipo=despesa&mes=${mesVisto}`;
+
   const nomeMes = new Date(mesReferencia + "T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
   function mudarMes(deslocamento: number) {
@@ -149,13 +159,15 @@ export default function AnaliseFinanceiraPage() {
           <div className="mb-6">
             <p className="text-sm text-ink-400 mb-3">Mapa de gastos — quanto maior o bloco, mais você gastou</p>
             <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
-              <TreemapGastos dados={categorias.map((c) => ({ nome: c.nome, valor: c.valor }))} />
+              <TreemapGastos dados={categorias.map((c) => ({ nome: c.nome, valor: c.valor, href: hrefCategoria(c.nome) }))} />
             </div>
           </div>
 
           <div className="mb-6">
             <p className="text-sm text-ink-400 mb-3">Este mês x mês passado, por categoria</p>
-            <GraficoComparacaoMensal dados={categorias.map((c) => ({ nome: c.nome, valor: c.valor, valorMesAnterior: c.valorMesAnterior }))} />
+            <GraficoComparacaoMensal
+              dados={categorias.map((c) => ({ nome: c.nome, valor: c.valor, valorMesAnterior: c.valorMesAnterior, href: hrefCategoria(c.nome) }))}
+            />
           </div>
 
           <div className="mb-6">
@@ -168,7 +180,11 @@ export default function AnaliseFinanceiraPage() {
           <div className="mb-6">
             <p className="text-sm text-ink-400 mb-3">Mapa de calor — gasto por dia</p>
             <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
-              <MapaCalorGastos anoMesISO={mesReferencia.slice(0, 7)} gastoPorDia={gastoPorDiaMapa} />
+              <MapaCalorGastos
+                anoMesISO={mesVisto}
+                gastoPorDia={gastoPorDiaMapa}
+                hrefDoDia={(dia) => `/financas/extrato?tipo=despesa&dia=${dia}`}
+              />
             </div>
           </div>
 
@@ -187,7 +203,7 @@ export default function AnaliseFinanceiraPage() {
               {categorias.map((c, i) => {
                 const percentual = totalDespesasMes > 0 ? (c.valor / totalDespesasMes) * 100 : 0;
                 return (
-                  <div key={c.nome} className="p-4">
+                  <Link key={c.nome} href={hrefCategoria(c.nome)} className="block p-4 hover:bg-base-700/50 transition">
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-ink-400 font-mono w-4">{i + 1}</span>
@@ -205,7 +221,7 @@ export default function AnaliseFinanceiraPage() {
                     <div className="h-1.5 bg-base-600 rounded-full overflow-hidden">
                       <div className="h-full bg-financa rounded-full" style={{ width: `${Math.max(2, percentual)}%` }} />
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

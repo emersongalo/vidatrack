@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { PieChart as PieChartIcon, BarChart3 } from "lucide-react";
 import { formatarMoeda } from "@/lib/financas/formatacao";
@@ -14,7 +16,9 @@ export function GraficoDespesasCategoria({
   dados,
   mapaCategoriaInfo,
 }: {
-  dados: { nome: string; valor: number }[];
+  /** Etapa 197 — href opcional: tocar na fatia/barra/legenda leva pro
+   *  Extrato filtrado naquela categoria. */
+  dados: { nome: string; valor: number; href?: string }[];
   /** Etapa 162 — opcional: quando informado, a legenda ganha o ícone
    *  e a cor reais da categoria (em vez da bolinha genérica da
    *  paleta) e uma coluna de porcentagem, inspirado no Despezzas. */
@@ -23,6 +27,12 @@ export function GraficoDespesasCategoria({
   const ocultos = useValoresOcultos();
   const [tipoGrafico, setTipoGrafico] = useState<"pizza" | "coluna">("pizza");
   const totalDados = dados.reduce((s, d) => s + d.valor, 0);
+  const router = useRouter();
+  const clicavel = dados.some((d) => d.href);
+  function abrir(i: number) {
+    const href = dados[i]?.href;
+    if (href) router.push(href);
+  }
 
   if (dados.length === 0) return null;
 
@@ -60,6 +70,8 @@ export function GraficoDespesasCategoria({
                 innerRadius={50}
                 outerRadius={80}
                 paddingAngle={2}
+                onClick={(_: unknown, i: number) => abrir(i)}
+                cursor={clicavel ? "pointer" : undefined}
                 style={{ filter: "drop-shadow(0 0 8px rgba(0,0,0,0.35))" }}
               >
                 {dados.map((_, i) => (
@@ -112,7 +124,12 @@ export function GraficoDespesasCategoria({
                 labelStyle={{ color: "#F2F0EA" }}
                 itemStyle={{ color: "#F2F0EA" }}
               />
-              <Bar dataKey="valor" radius={[0, 4, 4, 0]}>
+              <Bar
+                dataKey="valor"
+                radius={[0, 4, 4, 0]}
+                onClick={(_: unknown, i: number) => abrir(i)}
+                cursor={clicavel ? "pointer" : undefined}
+              >
                 {dados.map((_, i) => (
                   <Cell key={i} fill={PALETA[i % PALETA.length]} />
                 ))}
@@ -124,14 +141,15 @@ export function GraficoDespesasCategoria({
 
       {/* Legenda em lista de 1 coluna — cada nome tem a linha inteira
           pra si, nunca mais cortando com "..." por falta de espaço. */}
-      <div className="space-y-2 mt-3">
+      {clicavel && <p className="text-[11px] text-ink-400 mt-2 text-center">Toque numa categoria pra ver os lançamentos</p>}
+      <div className={`${clicavel ? "space-y-0.5" : "space-y-2"} mt-3`}>
         {dados.map((d, i) => {
           const percentual = totalDados > 0 ? (d.valor / totalDados) * 100 : 0;
           const info = mapaCategoriaInfo
             ? Array.from(mapaCategoriaInfo.values()).find((c: any) => c.nome === d.nome)
             : null;
-          return (
-            <div key={d.nome} className="flex items-center gap-2 text-xs">
+          const conteudo = (
+            <>
               {info ? (
                 <span
                   className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] shrink-0 ${classeFundoSuave(info.cor)}`}
@@ -147,6 +165,20 @@ export function GraficoDespesasCategoria({
               <span className="text-ink-400 flex-1 min-w-0 truncate">{d.nome}</span>
               {mapaCategoriaInfo && <span className="text-ink-400 shrink-0 w-8 text-right">{percentual.toFixed(0)}%</span>}
               <span className="font-mono shrink-0">{ocultos ? "R$ ••••••" : formatarMoeda(d.valor)}</span>
+              {d.href && <span className="text-ink-400 shrink-0">›</span>}
+            </>
+          );
+          return d.href ? (
+            <Link
+              key={d.nome}
+              href={d.href}
+              className="flex items-center gap-2 text-xs rounded-lg -mx-2 px-2 py-1 hover:bg-base-700 transition"
+            >
+              {conteudo}
+            </Link>
+          ) : (
+            <div key={d.nome} className="flex items-center gap-2 text-xs">
+              {conteudo}
             </div>
           );
         })}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { useValoresOcultos } from "@/lib/preferencias/useValoresOcultos";
@@ -7,9 +8,15 @@ import { useValoresOcultos } from "@/lib/preferencias/useValoresOcultos";
 export function GraficoComparacaoMensal({
   dados,
 }: {
-  dados: { nome: string; valor: number; valorMesAnterior: number }[];
+  dados: { nome: string; valor: number; valorMesAnterior: number; href?: string }[];
 }) {
   const ocultos = useValoresOcultos();
+  const router = useRouter();
+  const abrir = (_: unknown, i: number) => {
+    const href = dados[i]?.href;
+    if (href) router.push(href);
+  };
+  const cursor = dados.some((d) => d.href) ? "pointer" : undefined;
 
   if (dados.length === 0) return null;
 
@@ -43,7 +50,7 @@ export function GraficoComparacaoMensal({
             />
             <Legend wrapperStyle={{ fontSize: 12, color: "#9B9890" }} />
             <Bar dataKey="valorMesAnterior" name="Mês passado" fill="#5A5D66" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="valor" name="Este mês" fill="#D9A24C" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="valor" name="Este mês" fill="#D9A24C" radius={[4, 4, 0, 0]} onClick={abrir} cursor={cursor} />
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { X } from "lucide-react";
 import { TrendingUp, TrendingDown, Scale } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
-import { calcularPeriodo, formatarMoeda, type PresetPeriodo } from "@/lib/financas/formatacao";
+import { calcularPeriodo, formatarMoeda, primeiroDiaDoMes, ultimoDiaDoMes, type PresetPeriodo } from "@/lib/financas/formatacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
@@ -27,25 +29,84 @@ const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
 // vêm do retrato local — os avatares de "quem lançou" (multi-usuário)
 // ficam de fora por enquanto (mesma razão das outras telas: depende
 // de foto resolvida no servidor).
+/**
+ * Etapa 197 — o Extrato aceita filtros pela URL, pra que os gráficos
+ * de Finanças levem direto pro que você tocou:
+ *   ?categoria=<id> (ou "sem")  ?tipo=despesa|receita
+ *   ?mes=AAAA-MM  ?dia=AAAA-MM-DD  ?conta=<id>
+ * Ex: tocar em "Moradia" no gráfico → só as despesas de Moradia do mês.
+ */
+type PeriodoFixo = { chave: "mes" | "dia"; valor: string; inicio: string; fim: string; rotulo: string };
+
+function periodoDaUrl(mes: string | null, dia: string | null): PeriodoFixo | null {
+  if (dia && /^\d{4}-\d{2}-\d{2}$/.test(dia)) {
+    return {
+      chave: "dia",
+      valor: dia,
+      inicio: dia,
+      fim: dia,
+      rotulo: new Date(dia + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+    };
+  }
+  if (mes && /^\d{4}-\d{2}$/.test(mes)) {
+    const rotulo = new Date(mes + "-01T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+    return { chave: "mes", valor: mes, inicio: primeiroDiaDoMes(mes + "-01"), fim: ultimoDiaDoMes(mes + "-01"), rotulo };
+  }
+  return null;
+}
+
 export default function ExtratoPage() {
+  return (
+    <Suspense fallback={null}>
+      <ExtratoConteudo />
+    </Suspense>
+  );
+}
+
+function ExtratoConteudo() {
   const { snapshot, recarregar } = useSnapshotOffline();
-  const [tipo, setTipo] = useState<"todos" | "receita" | "despesa">("todos");
+  const params = useSearchParams();
+  const tipoUrl = params.get("tipo");
+  const [tipo, setTipo] = useState<"todos" | "receita" | "despesa">(
+    tipoUrl === "receita" || tipoUrl === "despesa" ? tipoUrl : "todos"
+  );
   const [preset, setPreset] = useState<PresetPeriodo>("este_mes");
+  const [periodoFixo, setPeriodoFixo] = useState<PeriodoFixo | null>(() => periodoDaUrl(params.get("mes"), params.get("dia")));
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(params.get("categoria"));
+  const [contaFiltro, setContaFiltro] = useState<string | null>(params.get("conta"));
   const [visualizacao, setVisualizacao] = useState<"transacoes" | "categorias">("transacoes");
+
+  // mantém a URL igual aos filtros (voltar/atualizar a página não perde o filtro)
+  useEffect(() => {
+    const q = new URLSearchParams();
+    if (categoriaFiltro) q.set("categoria", categoriaFiltro);
+    if (contaFiltro) q.set("conta", contaFiltro);
+    if (tipo !== "todos") q.set("tipo", tipo);
+    if (periodoFixo) q.set(periodoFixo.chave, periodoFixo.valor);
+    const url = "/financas/extrato" + (q.toString() ? "?" + q.toString() : "");
+    if (url !== window.location.pathname + window.location.search) {
+      window.history.replaceState(window.history.state, "", url);
+    }
+  }, [categoriaFiltro, contaFiltro, tipo, periodoFixo]);
 
   const contas = snapshot?.financas.contas ?? [];
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
   const mapaCategorias = new Map((snapshot?.financas.categorias ?? []).map((c: any) => [c.id, c]));
 
-  const { inicio, fim } = calcularPeriodo(preset);
+  const { inicio, fim } = periodoFixo ?? calcularPeriodo(preset);
 
   const lista = useMemo(() => {
     return (snapshot?.financas.transacoes ?? []).filter((t: any) => {
       if (t.data < inicio || t.data > fim) return false;
       if (tipo !== "todos" && t.tipo !== tipo) return false;
+      if (categoriaFiltro === "sem" && t.categoria_id) return false;
+      if (categoriaFiltro && categoriaFiltro !== "sem" && t.categoria_id !== categoriaFiltro) return false;
+      if (contaFiltro && t.conta_id !== contaFiltro) return false;
       return true;
     });
-  }, [snapshot, inicio, fim, tipo]);
+  }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro]);
+
+  const categoriaInfo = categoriaFiltro && categoriaFiltro !== "sem" ? (mapaCategorias.get(categoriaFiltro) as any) : null;
 
   const totalReceitas = lista.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
   const totalDespesas = lista.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
@@ -116,15 +177,45 @@ export default function ExtratoPage() {
         {PRESETS.map((p) => (
           <button
             key={p.valor}
-            onClick={() => setPreset(p.valor)}
+            onClick={() => {
+              setPreset(p.valor);
+              setPeriodoFixo(null);
+            }}
             className={`shrink-0 text-xs rounded-full px-3 py-1.5 border transition ${
-              preset === p.valor ? "bg-financa/20 border-financa text-financa" : "border-base-600 text-ink-400 hover:text-ink-100"
+              !periodoFixo && preset === p.valor ? "bg-financa/20 border-financa text-financa" : "border-base-600 text-ink-400 hover:text-ink-100"
             }`}
           >
             {p.rotulo}
           </button>
         ))}
       </div>
+
+      {(categoriaFiltro || contaFiltro || periodoFixo) && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {categoriaFiltro && (
+            <ChipFiltro
+              aoLimpar={() => setCategoriaFiltro(null)}
+              icone={
+                categoriaInfo ? (
+                  <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] ${classeFundoSuave(categoriaInfo.cor ?? "financa")}`}>
+                    <IconeCategoria icone={categoriaInfo.icone} />
+                  </span>
+                ) : null
+              }
+            >
+              {categoriaFiltro === "sem" ? "Sem categoria" : categoriaInfo?.nome ?? "Categoria"}
+            </ChipFiltro>
+          )}
+          {contaFiltro && (
+            <ChipFiltro aoLimpar={() => setContaFiltro(null)}>{String(mapaContas.get(contaFiltro) ?? "Conta")}</ChipFiltro>
+          )}
+          {periodoFixo && (
+            <ChipFiltro aoLimpar={() => setPeriodoFixo(null)}>
+              <span className="capitalize">{periodoFixo.rotulo}</span>
+            </ChipFiltro>
+          )}
+        </div>
+      )}
 
       {/* Etapa 174 — alternador Transações/Categorias, inspirado no
          Despezzas (que mostra os gastos agrupados por categoria, com
@@ -150,7 +241,14 @@ export default function ExtratoPage() {
       </div>
 
       {visualizacao === "categorias" ? (
-        <VisaoPorCategoria lista={lista} mapaCategorias={mapaCategorias} />
+        <VisaoPorCategoria
+          lista={lista}
+          mapaCategorias={mapaCategorias}
+          aoEscolher={(id) => {
+            setCategoriaFiltro(id);
+            setVisualizacao("transacoes");
+          }}
+        />
       ) : snapshot === undefined ? (
         <div className="space-y-2 animate-pulse">
           {[1, 2, 3].map((i) => (
@@ -158,7 +256,9 @@ export default function ExtratoPage() {
           ))}
         </div>
       ) : lista.length === 0 ? (
-        <p className="text-ink-400 text-sm">🧾 Nenhum lançamento nesse período.</p>
+        <p className="text-ink-400 text-sm">
+          🧾 Nenhum lançamento {categoriaFiltro || contaFiltro ? "com esse filtro " : ""}nesse período.
+        </p>
       ) : (
         <ul className="space-y-2">
           {lista.map((t: any) => {
@@ -238,14 +338,18 @@ export default function ExtratoPage() {
  * progresso pra quem tem limite mensal definido (meta_mensal) —
  * inspirado na aba "Categorias" do Extrato do Despezzas.
  */
+type ItemCategoria = { id: string; nome: string; icone: string | null; cor: string; valor: number; meta: number | null };
+
 function VisaoPorCategoria({
   lista,
   mapaCategorias,
+  aoEscolher,
 }: {
   lista: any[];
   mapaCategorias: Map<string, any>;
+  aoEscolher: (categoriaId: string) => void;
 }) {
-  const porCategoria = new Map<string, { nome: string; icone: string | null; cor: string; valor: number; meta: number | null }>();
+  const porCategoria = new Map<string, ItemCategoria>();
   let semCategoria = { valor: 0, count: 0 };
 
   for (const t of lista) {
@@ -257,6 +361,7 @@ function VisaoPorCategoria({
     const info = mapaCategorias.get(t.categoria_id);
     const chave = `${t.categoria_id}-${t.tipo}`;
     const atual = porCategoria.get(chave) ?? {
+      id: t.categoria_id,
       nome: info?.nome ?? "Categoria",
       icone: info?.icone ?? null,
       cor: info?.cor ?? "financa",
@@ -280,10 +385,14 @@ function VisaoPorCategoria({
     return <p className="text-ink-400 text-sm">🧾 Nenhum lançamento categorizado nesse período.</p>;
   }
 
-  function Linha({ item }: { item: { nome: string; icone: string | null; cor: string; valor: number; meta: number | null } }) {
+  function Linha({ item }: { item: ItemCategoria }) {
     const percentual = item.meta ? Math.min(100, Math.round((item.valor / item.meta) * 100)) : null;
     return (
-      <div className="py-3 border-b border-base-600 last:border-0">
+      <button
+        type="button"
+        onClick={() => aoEscolher(item.id)}
+        className="block w-full text-left py-3 border-b border-base-600 last:border-0 hover:opacity-80 transition"
+      >
         <div className="flex items-center gap-3">
           <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(item.cor)}`}>
             <IconeCategoria icone={item.icone} />
@@ -304,7 +413,7 @@ function VisaoPorCategoria({
             <p className="text-[11px] text-ink-400 mt-1">de {formatarMoeda(item.meta!)}</p>
           </div>
         )}
-      </div>
+      </button>
     );
   }
 
@@ -314,10 +423,10 @@ function VisaoPorCategoria({
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 px-4 mb-4">
           <p className="text-sm text-ink-400 pt-4 pb-1">Saídas por categoria</p>
           {despesasPorCategoria.map((item) => (
-            <Linha key={item.nome} item={item} />
+            <Linha key={item.id} item={item} />
           ))}
           {semCategoria.valor > 0 && (
-            <div className="py-3">
+            <button type="button" onClick={() => aoEscolher("sem")} className="block w-full text-left py-3">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-base-700 flex items-center justify-center text-sm shrink-0 text-ink-400">?</span>
                 <p className="text-sm flex-1 text-ink-400">Sem categoria</p>
@@ -325,7 +434,7 @@ function VisaoPorCategoria({
                   <ValorMonetario valor={semCategoria.valor} />
                 </span>
               </div>
-            </div>
+            </button>
           )}
         </div>
       )}
@@ -333,10 +442,27 @@ function VisaoPorCategoria({
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 px-4">
           <p className="text-sm text-ink-400 pt-4 pb-1">Entradas por categoria</p>
           {receitasPorCategoria.map((item) => (
-            <Linha key={item.nome} item={item} />
+            <Linha key={item.id} item={item} />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function ChipFiltro({ children, icone, aoLimpar }: { children: React.ReactNode; icone?: React.ReactNode; aoLimpar: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs bg-financa/15 border border-financa/40 text-financa rounded-full pl-2 pr-1 py-1">
+      {icone}
+      <span className="text-ink-100">{children}</span>
+      <button
+        type="button"
+        onClick={aoLimpar}
+        aria-label="Tirar filtro"
+        className="w-5 h-5 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+      >
+        <X size={12} strokeWidth={2.5} />
+      </button>
+    </span>
   );
 }
