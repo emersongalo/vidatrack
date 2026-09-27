@@ -29,7 +29,7 @@ export default function NotificacoesPage() {
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-curta">
       <LinkVoltar href="/dashboard" texto="Painel" />
       <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Notificações</h1>
 

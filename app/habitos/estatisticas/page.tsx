@@ -31,7 +31,7 @@ export default function EstatisticasHabitosPage() {
 
   if (snapshot === undefined) {
     return (
-      <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-4xl mx-auto pb-16 animate-pulse">
+      <main className="min-h-screen p-6 md:p-12 pagina pb-16 animate-pulse">
         <div className="h-40 bg-base-800 border border-base-600 rounded-xl2" />
       </main>
     );
@@ -136,7 +136,7 @@ export default function EstatisticasHabitosPage() {
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-4xl mx-auto pb-16">
+    <main className="min-h-screen p-6 md:p-12 pagina pb-16">
       <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Hábitos
       </Link>

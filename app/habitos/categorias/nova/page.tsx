@@ -14,7 +14,7 @@ export default function NovaCategoriaPage({
   const [cor, setCor] = useState("habito");
 
   return (
-    <main className="max-w-md mx-auto px-6 md:px-12 pt-2">
+    <main className="pagina-form px-6 md:px-12 pt-2">
       <Link href="/habitos/categorias" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Categorias
       </Link>
@@ -26,7 +26,8 @@ export default function NovaCategoriaPage({
         </p>
       )}
 
-      <form action={criarCategoriaProdutividade} className="space-y-5">
+      <form action={criarCategoriaProdutividade}>
+        <div className="form-colunas">
         <div>
           <label htmlFor="nome" className="block text-sm text-ink-400 mb-1">
             Nome
@@ -43,7 +44,7 @@ export default function NovaCategoriaPage({
 
         <div>
           <span className="block text-sm text-ink-400 mb-2">Cor</span>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             {CORES_DISPONIVEIS.map((c) => (
               <button
                 type="button"
@@ -58,8 +59,11 @@ export default function NovaCategoriaPage({
           </div>
           <input type="hidden" name="cor" value={cor} />
         </div>
+        </div>
 
-        <BotaoSalvarFormulario>Criar categoria</BotaoSalvarFormulario>
+        <div className="form-rodape">
+          <BotaoSalvarFormulario>Criar categoria</BotaoSalvarFormulario>
+        </div>
       </form>
     </main>
   );

@@ -26,7 +26,7 @@ function EditarContaConteudo() {
 
   if (snapshot === undefined) {
     return (
-      <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto animate-pulse">
+      <main className="min-h-screen p-6 md:p-12 pagina-form animate-pulse">
         <div className="h-64 bg-base-800 border border-base-600 rounded-xl2 mt-6" />
       </main>
     );
@@ -36,7 +36,7 @@ function EditarContaConteudo() {
 
   if (!conta) {
     return (
-      <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+      <main className="min-h-screen p-6 md:p-12 pagina-form">
         <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
           ← Contas
         </Link>
@@ -49,7 +49,7 @@ function EditarContaConteudo() {
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-form">
       <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Contas
       </Link>
@@ -61,7 +61,9 @@ function EditarContaConteudo() {
         </p>
       )}
 
-      <form action={atualizarConta.bind(null, conta.id)} className="space-y-3">
+      <form action={atualizarConta.bind(null, conta.id)}>
+        <div className="form-colunas">
+        <div className="form-coluna">
         <input
           name="nome"
           type="text"
@@ -74,6 +76,8 @@ function EditarContaConteudo() {
           diaFechamentoInicial={conta.dia_fechamento}
           diaVencimentoInicial={conta.dia_vencimento}
         />
+        </div>
+        <div className="form-coluna">
         <div>
           <label className="block text-xs text-ink-400 mb-1.5">Banco (pra mostrar o selo certo)</label>
           <select
@@ -98,7 +102,11 @@ function EditarContaConteudo() {
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
           />
         </div>
-        <BotaoSalvarFormulario>Salvar alterações</BotaoSalvarFormulario>
+        </div>
+        </div>
+        <div className="form-rodape">
+          <BotaoSalvarFormulario>Salvar alterações</BotaoSalvarFormulario>
+        </div>
       </form>
     </main>
   );

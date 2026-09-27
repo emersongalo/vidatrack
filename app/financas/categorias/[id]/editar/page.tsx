@@ -26,7 +26,7 @@ function EditarCategoriaConteudo() {
 
   if (!categoria) {
     return (
-      <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+      <main className="min-h-screen p-6 md:p-12 pagina-form">
         <p className="text-ink-400 text-sm">
           Não encontrei essa categoria no que está salvo no aparelho. Se ela foi criada há pouco tempo, conecte
           à internet uma vez pra atualizar.

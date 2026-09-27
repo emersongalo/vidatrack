@@ -76,7 +76,7 @@ export default function CategoriasPage() {
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-4xl mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina">
       <div className="flex items-center justify-between mb-6">
         <div>
           <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">

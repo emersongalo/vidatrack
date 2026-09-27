@@ -29,7 +29,7 @@ function PerfilConteudo() {
   const sucesso = searchParams.get("sucesso");
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-sm mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-curta">
       <Link href="/dashboard" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Painel
       </Link>
@@ -46,7 +46,7 @@ function PerfilConteudo() {
         </p>
       )}
 
-      <form action={atualizarPerfil} className="space-y-5">
+      <form action={atualizarPerfil} className="space-y-5 lg:space-y-0 lg:grid lg:grid-cols-[180px_1fr] lg:gap-10 lg:items-start">
         <div className="flex flex-col items-center gap-3">
           <FotoPerfil
             url={urlFoto}
@@ -64,6 +64,7 @@ function PerfilConteudo() {
           </label>
         </div>
 
+        <div className="space-y-5 lg:text-right [&>div]:text-left">
         <div>
           <label htmlFor="nome" className="block text-sm text-ink-400 mb-1">
             Nome
@@ -84,9 +85,10 @@ function PerfilConteudo() {
           <p className="text-sm text-ink-100 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5">{email}</p>
         </div>
 
-        <button type="submit" className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition">
+        <button type="submit" className="w-full lg:w-auto lg:px-10 bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition">
           Salvar
         </button>
+        </div>
       </form>
 
       <div className="flex flex-col items-center gap-3 mt-10 pt-6 border-t border-base-600">

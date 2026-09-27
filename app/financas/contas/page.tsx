@@ -32,7 +32,7 @@ export default function ContasPage() {
   const contas = snapshot?.financas.contas ?? [];
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-3xl mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina">
       <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Finanças
       </Link>

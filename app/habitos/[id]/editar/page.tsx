@@ -27,7 +27,7 @@ function EditarHabitoConteudo() {
 
   if (snapshot === undefined) {
     return (
-      <main className="max-w-md lg:max-w-xl mx-auto px-6 md:px-12 pt-2 animate-pulse">
+      <main className="pagina-form px-6 md:px-12 pt-2 animate-pulse">
         <div className="h-64 bg-base-800 border border-base-600 rounded-xl2 mt-6" />
       </main>
     );
@@ -38,7 +38,7 @@ function EditarHabitoConteudo() {
 
   if (!habito) {
     return (
-      <main className="max-w-md lg:max-w-xl mx-auto px-6 md:px-12 pt-2">
+      <main className="pagina-form px-6 md:px-12 pt-2">
         <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
           ← Hábitos
         </Link>
@@ -51,7 +51,7 @@ function EditarHabitoConteudo() {
   }
 
   return (
-    <main className="max-w-md lg:max-w-xl mx-auto px-6 md:px-12 pt-2">
+    <main className="pagina-form px-6 md:px-12 pt-2">
       <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Hábitos
       </Link>

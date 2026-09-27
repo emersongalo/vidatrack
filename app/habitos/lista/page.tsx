@@ -13,7 +13,7 @@ export default function ListaHabitosPage() {
   const { snapshot, recarregar } = useSnapshotOffline();
 
   return (
-    <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2">
+    <main className="pagina px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-3">
         <h1 className="text-2xl font-display font-semibold">Hábitos</h1>
         <div className="flex items-center gap-3">

@@ -33,7 +33,7 @@ export function FormularioCategoria({
   const [cor, setCor] = useState(valoresIniciais?.cor ?? "financa");
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-xl mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-form">
       <Link href={voltarHref} className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Categorias
       </Link>
@@ -45,7 +45,9 @@ export function FormularioCategoria({
         </p>
       )}
 
-      <form action={action} className="space-y-5">
+      <form action={action}>
+        <div className="form-colunas">
+        <div className="form-coluna">
         <div>
           <label htmlFor="nome" className="block text-sm text-ink-400 mb-1">
             Nome
@@ -90,44 +92,6 @@ export function FormularioCategoria({
           <input type="hidden" name="tipo" value={tipo} />
         </div>
 
-        <div>
-          <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-          <div className="grid grid-cols-6 lg:grid-cols-9 gap-2 max-h-56 overflow-y-auto pr-1">
-            {ICONES_CATEGORIA.map(({ nome, Icone }) => (
-              <button
-                type="button"
-                key={nome}
-                onClick={() => setIcone(nome)}
-                aria-label={nome}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center border transition ${
-                  icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
-                }`}
-              >
-                <Icone size={18} strokeWidth={2} />
-              </button>
-            ))}
-          </div>
-          <input type="hidden" name="icone" value={icone} />
-        </div>
-
-        <div>
-          <span className="block text-sm text-ink-400 mb-2">Cor</span>
-          <div className="flex gap-3">
-            {CORES_DISPONIVEIS.map((c) => (
-              <button
-                type="button"
-                key={c.valor}
-                onClick={() => setCor(c.valor)}
-                aria-label={`Cor ${c.valor}`}
-                className={`w-8 h-8 rounded-full ${c.classe} ${
-                  cor === c.valor ? "ring-2 ring-offset-2 ring-offset-base-900 ring-ink-100" : ""
-                }`}
-              />
-            ))}
-          </div>
-          <input type="hidden" name="cor" value={cor} />
-        </div>
-
         {tipo === "despesa" && (
           <div>
             <label htmlFor="metaMensal" className="block text-sm text-ink-400 mb-1">
@@ -144,8 +108,54 @@ export function FormularioCategoria({
             />
           </div>
         )}
+        </div>
 
-        <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
+        <div className="form-coluna">
+
+        <div>
+          <span className="block text-sm text-ink-400 mb-2">Ícone</span>
+          <div className="grade-icones">
+            {ICONES_CATEGORIA.map(({ nome, Icone }) => (
+              <button
+                type="button"
+                key={nome}
+                onClick={() => setIcone(nome)}
+                aria-label={nome}
+                className={`w-full h-10 rounded-lg flex items-center justify-center border transition ${
+                  icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
+                }`}
+              >
+                <Icone size={18} strokeWidth={2} />
+              </button>
+            ))}
+          </div>
+          <input type="hidden" name="icone" value={icone} />
+        </div>
+
+        <div>
+          <span className="block text-sm text-ink-400 mb-2">Cor</span>
+          <div className="flex flex-wrap gap-3">
+            {CORES_DISPONIVEIS.map((c) => (
+              <button
+                type="button"
+                key={c.valor}
+                onClick={() => setCor(c.valor)}
+                aria-label={`Cor ${c.valor}`}
+                className={`w-8 h-8 rounded-full ${c.classe} ${
+                  cor === c.valor ? "ring-2 ring-offset-2 ring-offset-base-900 ring-ink-100" : ""
+                }`}
+              />
+            ))}
+          </div>
+          <input type="hidden" name="cor" value={cor} />
+        </div>
+
+        </div>
+        </div>
+
+        <div className="form-rodape">
+          <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
+        </div>
       </form>
     </main>
   );

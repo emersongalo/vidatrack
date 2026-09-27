@@ -28,7 +28,7 @@ function EditarTarefaConteudo() {
 
   if (!tarefa) {
     return (
-      <main className="max-w-md mx-auto px-6 md:px-12 pt-6">
+      <main className="pagina-form px-6 md:px-12 pt-6">
         <p className="text-ink-400 text-sm">
           Não encontrei essa tarefa no que está salvo no aparelho. Se ela foi criada há pouco tempo, conecte à
           internet uma vez pra atualizar.

@@ -11,7 +11,7 @@ export default function TarefasPage() {
   const tarefas = [...(snapshot?.tarefas ?? [])].sort((a: any, b: any) => (a.ordem ?? 0) - (b.ordem ?? 0));
 
   return (
-    <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2">
+    <main className="pagina px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-3">
         <h1 className="text-2xl font-display font-semibold">Tarefas</h1>
         <Link

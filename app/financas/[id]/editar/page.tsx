@@ -29,7 +29,7 @@ function EditarTransacaoConteudo() {
 
   if (!transacao) {
     return (
-      <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+      <main className="min-h-screen p-6 md:p-12 pagina-form">
         <p className="text-ink-400 text-sm">
           Não encontrei esse lançamento no que está salvo no aparelho. Se ele foi feito há pouco tempo, conecte à
           internet uma vez pra atualizar.

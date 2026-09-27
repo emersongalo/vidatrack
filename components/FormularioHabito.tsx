@@ -57,7 +57,11 @@ export function FormularioHabito({
   }
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action}>
+      {/* Etapa 196 — 2 colunas no desktop: o "o quê" à esquerda, o
+          "quando/quanto" à direita. No celular, uma coluna só. */}
+      <div className="form-colunas">
+      <div className="form-coluna">
       <div>
         <label htmlFor="nome" className="block text-sm text-ink-400 mb-1">
           Nome do hábito
@@ -106,14 +110,14 @@ export function FormularioHabito({
 
       <div>
         <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-        <div className="grid grid-cols-6 lg:grid-cols-9 gap-2 max-h-56 overflow-y-auto pr-1">
+        <div className="grade-icones">
           {ICONES_HABITO.map(({ nome, Icone }) => (
             <button
               type="button"
               key={nome}
               onClick={() => setIcone(nome)}
               aria-label={nome}
-              className={`w-10 h-10 rounded-lg flex items-center justify-center border transition ${
+              className={`w-full h-10 rounded-lg flex items-center justify-center border transition ${
                 icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
               }`}
             >
@@ -126,7 +130,7 @@ export function FormularioHabito({
 
       <div>
         <span className="block text-sm text-ink-400 mb-2">Cor</span>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           {CORES_DISPONIVEIS.map((c) => (
             <button
               type="button"
@@ -141,6 +145,9 @@ export function FormularioHabito({
         </div>
         <input type="hidden" name="cor" value={cor} />
       </div>
+      </div>
+
+      <div className="form-coluna">
 
       {categorias.length > 0 && (
         <div>
@@ -192,7 +199,7 @@ export function FormularioHabito({
         <input type="hidden" name="frequencia" value={frequencia} />
 
         {frequencia === "dias_semana" && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {DIAS.map((dia) => (
               <button
                 type="button"
@@ -255,7 +262,12 @@ export function FormularioHabito({
         </p>
       </div>
 
-      <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
+      </div>
+      </div>
+
+      <div className="form-rodape">
+        <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
+      </div>
     </form>
   );
 }

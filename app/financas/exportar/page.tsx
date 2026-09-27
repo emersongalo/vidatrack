@@ -6,7 +6,7 @@ export default function ExportarPage({
   searchParams: { erro?: string };
 }) {
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-curta">
       <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Finanças
       </Link>

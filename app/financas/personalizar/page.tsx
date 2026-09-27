@@ -30,7 +30,7 @@ export default function PersonalizarFinancasPage() {
   }, []);
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-curta">
       <LinkVoltar href="/financas" texto="Finanças" />
       <h1 className="text-2xl font-display font-semibold mt-4 mb-2">Personalizar ordem</h1>
       <p className="text-ink-400 text-sm mb-6">

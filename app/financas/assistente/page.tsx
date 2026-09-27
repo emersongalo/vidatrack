@@ -3,7 +3,7 @@ import { ChatAssistente } from "@/components/ChatAssistente";
 
 export default function AssistentePage() {
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-2xl mx-auto flex flex-col">
+    <main className="min-h-screen p-6 md:p-12 pagina-curta flex flex-col">
       <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition mb-2">
         ← Finanças
       </Link>

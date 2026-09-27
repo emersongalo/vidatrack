@@ -61,7 +61,7 @@ export default function FinancasPage() {
 
   if (snapshot === undefined) {
     return (
-      <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-5xl mx-auto animate-pulse">
+      <main className="min-h-screen p-6 md:p-12 pagina animate-pulse">
         <div className="h-64 bg-base-800 border border-base-600 rounded-xl2" />
       </main>
     );
@@ -208,7 +208,7 @@ export default function FinancasPage() {
   const blocosPorId: Record<string, ReactNode> = { grafico: blocoGrafico, lancamentos: blocoLancamentos };
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-2xl lg:max-w-5xl mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina">
       <LinkVoltar href="/dashboard" texto="Painel" />
       <h1 className="text-2xl font-display font-semibold mt-2 mb-6">Finanças</h1>
 

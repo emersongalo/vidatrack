@@ -14,7 +14,7 @@ export default function ExcluirContaPage({
   const podeExcluir = confirmacao.trim().toUpperCase() === "EXCLUIR";
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-sm mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-curta">
       <LinkVoltar href="/perfil" texto="Perfil" />
       <h1 className="text-2xl font-display font-semibold mt-4 mb-2 text-red-400">Excluir conta</h1>
 

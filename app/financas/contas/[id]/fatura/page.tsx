@@ -25,7 +25,7 @@ export default function FaturaCartaoPage() {
 
   if (!conta || !conta.dia_fechamento || !conta.dia_vencimento) {
     return (
-      <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-2xl mx-auto">
+      <main className="min-h-screen p-6 md:p-12 pagina-form">
         <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
           ← Contas
         </Link>
@@ -56,7 +56,7 @@ export default function FaturaCartaoPage() {
   const proximo = periodoFaturaAdjacente(conta.dia_fechamento, periodo.fim, 1);
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-2xl mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-form">
       <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Contas
       </Link>

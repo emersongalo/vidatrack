@@ -33,7 +33,7 @@ function NovaTransacaoConteudo() {
 
   if (contas.length === 0) {
     return (
-      <main className="min-h-screen p-6 md:p-12 max-w-md mx-auto">
+      <main className="min-h-screen p-6 md:p-12 pagina-form">
         <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
           ← Finanças
         </Link>

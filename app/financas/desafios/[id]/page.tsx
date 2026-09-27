@@ -27,7 +27,7 @@ export default function DesafioDetalhePage() {
 
   if (!desafio) {
     return (
-      <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-2xl mx-auto">
+      <main className="min-h-screen p-6 md:p-12 pagina-form">
         <Link href="/financas/desafios" className="text-ink-400 text-sm hover:text-ink-100 transition">
           ← Desafios
         </Link>
@@ -57,7 +57,7 @@ export default function DesafioDetalhePage() {
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-2xl mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-form">
       <div className="flex items-center justify-between mb-4">
         <Link href="/financas/desafios" className="text-ink-400 text-sm hover:text-ink-100 transition">
           ← Desafios

@@ -12,7 +12,7 @@ export default function CategoriasProdutividadePage() {
   const categorias = [...(snapshot?.categoriasProdutividade ?? [])].sort((a: any, b: any) => a.nome.localeCompare(b.nome));
 
   return (
-    <main className="max-w-md lg:max-w-3xl mx-auto px-6 md:px-12 pt-2">
+    <main className="pagina px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-display font-semibold">Categorias</h1>
         <Link

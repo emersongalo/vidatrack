@@ -44,7 +44,7 @@ function PlanejadorConteudo() {
   }, [dataSelecionada]);
 
   return (
-    <main className="max-w-2xl lg:max-w-4xl mx-auto px-6 md:px-12 pt-2">
+    <main className="pagina px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-4">
         <div>
           <Link href="/habitos" className="text-ink-400 text-sm hover:text-ink-100 transition">

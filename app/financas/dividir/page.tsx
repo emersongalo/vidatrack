@@ -35,7 +35,7 @@ function DividirConteudo() {
   }, []);
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-xl mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-form">
       <Link href="/financas/divisoes" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Divisões
       </Link>
@@ -55,8 +55,9 @@ function DividirConteudo() {
           {transacoes === null ? "Carregando..." : "Nenhuma despesa lançada ainda pra dividir."}
         </p>
       ) : (
-        <form action={criarDivisao} className="space-y-4">
-          <div>
+        <form action={criarDivisao}>
+          <div className="form-colunas">
+          <div className="lg:col-span-2">
             <label className="block text-xs text-ink-400 mb-1.5">Qual despesa</label>
             <select
               name="transacaoId"
@@ -93,7 +94,11 @@ function DividirConteudo() {
             />
           </div>
 
-          <BotaoSalvarFormulario>Registrar divisão</BotaoSalvarFormulario>
+          </div>
+
+          <div className="form-rodape">
+            <BotaoSalvarFormulario>Registrar divisão</BotaoSalvarFormulario>
+          </div>
         </form>
       )}
     </main>

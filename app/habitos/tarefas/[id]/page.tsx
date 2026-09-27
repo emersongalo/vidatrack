@@ -37,7 +37,7 @@ function DetalheTarefaConteudo() {
 
   if (!tarefa) {
     return (
-      <main className="max-w-md mx-auto px-6 md:px-12 pt-6">
+      <main className="pagina-form px-6 md:px-12 pt-6">
         <Link href="/habitos/tarefas" className="text-ink-400 text-sm hover:text-ink-100 transition">
           ← Tarefas
         </Link>
@@ -65,7 +65,7 @@ function DetalheTarefaConteudo() {
   }
 
   return (
-    <main className="max-w-md mx-auto px-6 md:px-12 pt-2">
+    <main className="pagina-form px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-6">
         <Link href="/habitos/tarefas" className="text-ink-400 text-sm hover:text-ink-100 transition">
           ← Tarefas

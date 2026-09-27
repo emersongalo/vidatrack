@@ -112,7 +112,7 @@ export function FormularioTarefa({
       : descreverRepeticao({ repetir, dias_semana: diasSelecionados, dia_mes: diaMes, mes, intervalo_dias: intervaloDias });
 
   return (
-    <main className="max-w-md lg:max-w-4xl mx-auto px-6 md:px-12 pt-2 pb-10">
+    <main className="pagina-form px-6 md:px-12 pt-2 pb-10">
       <Link href={voltarHref} className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Tarefas
       </Link>
@@ -166,14 +166,14 @@ export function FormularioTarefa({
 
             <div>
               <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-              <div className="grid grid-cols-6 sm:grid-cols-9 gap-2 max-h-56 overflow-y-auto pr-1">
+              <div className="grade-icones">
                 {ICONES_HABITO.map(({ nome, Icone }) => (
                   <button
                     type="button"
                     key={nome}
                     onClick={() => setIcone(nome)}
                     aria-label={nome}
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center border transition ${
+                    className={`w-full h-10 rounded-lg flex items-center justify-center border transition ${
                       icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
                     }`}
                   >

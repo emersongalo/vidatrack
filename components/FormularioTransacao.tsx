@@ -118,7 +118,7 @@ export function FormularioTransacao({
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-12 max-w-md lg:max-w-xl mx-auto">
+    <main className="min-h-screen p-6 md:p-12 pagina-form">
       <Link href={voltarHref} className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Finanças
       </Link>
@@ -130,7 +130,9 @@ export function FormularioTransacao({
         </p>
       )}
 
-      <form action={action} onSubmit={aoSubmeter} className="space-y-4">
+      <form action={action} onSubmit={aoSubmeter}>
+        <div className="form-colunas">
+        <div className="form-coluna">
         <div className="flex gap-2">
           <button
             type="button"
@@ -270,6 +272,9 @@ export function FormularioTransacao({
           )}
         </div>
 
+        </div>
+
+        <div className="form-coluna">
         <div>
           <label htmlFor="data" className="block text-sm text-ink-400 mb-1">
             Data
@@ -378,7 +383,12 @@ export function FormularioTransacao({
           </div>
         )}
 
-        <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
+        </div>
+        </div>
+
+        <div className="form-rodape">
+          <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
+        </div>
       </form>
     </main>
   );
