@@ -19,6 +19,8 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 
 const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "este_mes", rotulo: "Este mês" },
+  { valor: "proximo_mes", rotulo: "Próximo mês" },
+  { valor: "agendados", rotulo: "Agendados" },
   { valor: "mes_passado", rotulo: "Mês passado" },
   { valor: "ultimos_30", rotulo: "Últimos 30 dias" },
   { valor: "este_ano", rotulo: "Este ano" },
@@ -96,7 +98,7 @@ function ExtratoConteudo() {
   const { inicio, fim } = periodoFixo ?? calcularPeriodo(preset);
 
   const lista = useMemo(() => {
-    return (snapshot?.financas.transacoes ?? []).filter((t: any) => {
+    const filtrada = (snapshot?.financas.transacoes ?? []).filter((t: any) => {
       if (t.data < inicio || t.data > fim) return false;
       if (tipo !== "todos" && t.tipo !== tipo) return false;
       if (categoriaFiltro === "sem" && t.categoria_id) return false;
@@ -104,6 +106,9 @@ function ExtratoConteudo() {
       if (contaFiltro && t.conta_id !== contaFiltro) return false;
       return true;
     });
+    // Etapa 207 — agendados/futuros: o mais próximo primeiro
+    const futuro = inicio > new Date().toLocaleDateString("sv-SE");
+    return futuro ? [...filtrada].sort((a: any, b: any) => String(a.data).localeCompare(String(b.data))) : filtrada;
   }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro]);
 
   const categoriaInfo = categoriaFiltro && categoriaFiltro !== "sem" ? (mapaCategorias.get(categoriaFiltro) as any) : null;

@@ -29,6 +29,7 @@ export default function FinancasPage() {
   const hoje = new Date();
   const mesAtualISO = hoje.toLocaleDateString("sv-SE").slice(0, 7);
   const [mesSelecionado, setMesSelecionado] = useState(mesAtualISO);
+  const [mostrarTodosLancamentos, setMostrarTodosLancamentos] = useState(false);
   const ehMesAtual = mesSelecionado === mesAtualISO;
   const [pessoas, setPessoas] = useState<{ nome: string; urlFoto: string | null }[]>([]);
 
@@ -147,7 +148,10 @@ export default function FinancasPage() {
     .sort((a, b) => b.valor - a.valor);
 
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
-  const ultimasTransacoes = transacoesDoMes.slice(0, 10);
+  // Etapa 207 — antes cortava em 10 sem avisar; agora mostra 10 e um
+  // botão "Ver todos" (o mês inteiro, inclusive os agendados).
+  const ultimasTransacoes = mostrarTodosLancamentos ? transacoesDoMes : transacoesDoMes.slice(0, 10);
+  const lancamentosEscondidos = transacoesDoMes.length - ultimasTransacoes.length;
 
   const gastoPorDiaMapaInicio = new Map<number, number>();
   for (const t of transacoesDoMes) {
@@ -186,7 +190,7 @@ export default function FinancasPage() {
     <div key="lancamentos" className="mb-6 lg:break-inside-avoid">
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm text-ink-400">Lançamentos do mês</p>
-        <Link href="/financas/extrato" className="text-xs text-ink-400 hover:text-ink-100 transition">
+        <Link href={`/financas/extrato?mes=${mesSelecionado}`} className="text-xs text-ink-400 hover:text-ink-100 transition">
           Ver extrato completo →
         </Link>
       </div>
@@ -234,6 +238,15 @@ export default function FinancasPage() {
             );
           })}
         </ul>
+      )}
+      {lancamentosEscondidos > 0 && (
+        <button
+          type="button"
+          onClick={() => setMostrarTodosLancamentos(true)}
+          className="w-full mt-2 text-sm text-financa border border-financa/30 rounded-lg py-2.5 hover:bg-financa/10 transition"
+        >
+          Ver todos os {transacoesDoMes.length} lançamentos do mês
+        </button>
       )}
     </div>
   );
