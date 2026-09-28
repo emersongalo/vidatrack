@@ -412,27 +412,85 @@ export async function criarTransacaoSilenciosa(dadosFormulario: {
 
 export async function atualizarTransacao(transacaoId: string, formData: FormData) {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const resultado = esquemaTransacao.safeParse(dadosTransacaoDoFormulario(formData));
 
   if (!resultado.success) {
     redirect(`/financas/${transacaoId}/editar?erro=${encodeURIComponent(primeiroErro(resultado))}`);
   }
+  const d = resultado.data;
 
   const { error } = await supabase
     .from("financa_transacoes")
     .update({
-      conta_id: resultado.data.contaId,
-      categoria_id: resultado.data.categoriaId,
-      tipo: resultado.data.tipo,
-      valor: resultado.data.valor,
-      descricao: resultado.data.descricao,
-      data: resultado.data.data,
+      conta_id: d.contaId,
+      categoria_id: d.categoriaId,
+      tipo: d.tipo,
+      valor: d.valor,
+      descricao: d.descricao,
+      data: d.data,
     })
     .eq("id", transacaoId);
 
   if (error) {
     redirect(`/financas/${transacaoId}/editar?erro=${encodeURIComponent(error.message)}`);
+  }
+
+  // Etapa 208 — lançamento que faz parte de uma recorrência
+  const recorrenciaId = String(formData.get("recorrenciaId") ?? "");
+  if (recorrenciaId) {
+    const escopo = formData.get("escopoRecorrencia") === "so_este" ? "so_este" : "proximos";
+    const parar = formData.get("pararRecorrencia") === "on";
+    const mudancas: Record<string, unknown> = {};
+    if (escopo === "proximos") {
+      Object.assign(mudancas, {
+        conta_id: d.contaId,
+        categoria_id: d.categoriaId,
+        tipo: d.tipo,
+        valor: d.valor,
+        descricao: d.descricao,
+        dia_mes: Math.min(28, Number(d.data.slice(8, 10)) || 1),
+      });
+    }
+    if (parar) mudancas.data_fim = d.data;
+    if (Object.keys(mudancas).length) {
+      const { error: erroRec } = await supabase.from("financa_recorrencias").update(mudancas).eq("id", recorrenciaId);
+      if (erroRec) redirect(`/financas/${transacaoId}/editar?erro=${encodeURIComponent(erroRec.message)}`);
+    }
+    // lançamentos dessa recorrência que já existem DEPOIS deste
+    if (parar) {
+      await supabase.from("financa_transacoes").delete().eq("recorrencia_id", recorrenciaId).gt("data", d.data);
+    } else if (escopo === "proximos") {
+      await supabase
+        .from("financa_transacoes")
+        .update({ conta_id: d.contaId, categoria_id: d.categoriaId, tipo: d.tipo, valor: d.valor, descricao: d.descricao })
+        .eq("recorrencia_id", recorrenciaId)
+        .gt("data", d.data);
+    }
+  } else if (d.recorrente && d.diaMes) {
+    // Lançamento avulso que a pessoa marcou "Repetir todo mês" ao editar
+    const { data: recorrencia } = await supabase
+      .from("financa_recorrencias")
+      .insert({
+        dono_id: user!.id,
+        conta_id: d.contaId,
+        categoria_id: d.categoriaId,
+        tipo: d.tipo,
+        valor: d.valor,
+        descricao: d.descricao,
+        dia_mes: d.diaMes,
+        data_fim: d.dataFimRecorrencia,
+        data_inicio: d.data,
+      })
+      .select("id")
+      .single();
+    if (recorrencia) {
+      await supabase.from("financa_transacoes").update({ recorrencia_id: recorrencia.id }).eq("id", transacaoId);
+    }
   }
 
   revalidatePath("/financas");

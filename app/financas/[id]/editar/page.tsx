@@ -54,6 +54,11 @@ function EditarTransacaoConteudo() {
         categoriaId: transacao.categoria_id,
         data: transacao.data,
         descricao: transacao.descricao,
+        // Etapa 208 — lançamento que faz parte de uma recorrência
+        recorrencia: (() => {
+          const r = (snapshot?.financas.recorrencias ?? []).find((x: any) => x.id === transacao.recorrencia_id) as any;
+          return r ? { id: r.id, diaMes: r.dia_mes, dataFim: r.data_fim ?? null } : null;
+        })(),
       }}
     />
   );

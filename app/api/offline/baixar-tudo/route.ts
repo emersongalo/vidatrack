@@ -45,7 +45,7 @@ export async function GET() {
       .from("desafios_financeiros")
       .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido, conta_origem_id")
       .eq("arquivado", false),
-    supabase.from("financa_recorrencias").select("id, tipo, valor, dia_mes, data_fim, data_inicio, ativo, descricao, conta_id"),
+    supabase.from("financa_recorrencias").select("id, tipo, valor, dia_mes, data_fim, data_inicio, ativo, descricao, conta_id, categoria_id"),
     supabase.from("perfis").select("nome, foto_url, ordem_blocos_financas").eq("id", user.id).maybeSingle(),
   ]);
 

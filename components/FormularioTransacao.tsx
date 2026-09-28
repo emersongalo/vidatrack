@@ -38,6 +38,7 @@ export function FormularioTransacao({
     categoriaId: string | null;
     data: string;
     descricao: string | null;
+    recorrencia?: { id: string; diaMes: number; dataFim: string | null } | null;
   };
   /** Etapa 135 — pra pré-marcar Receita/Despesa vindo da folha rápida
    *  do "+", sem precisar fingir que é uma edição (valoresIniciais). */
@@ -47,6 +48,9 @@ export function FormularioTransacao({
   const [recorrente, setRecorrente] = useState(false);
   const [duracaoRecorrencia, setDuracaoRecorrencia] = useState<"sempre" | "ate_data">("sempre");
   const ehEdicao = !!valoresIniciais;
+  const recorrenciaExistente = valoresIniciais?.recorrencia ?? null;
+  const [escopoRecorrencia, setEscopoRecorrencia] = useState<"proximos" | "so_este">("proximos");
+  const [pararRecorrencia, setPararRecorrencia] = useState(false);
 
   const [categoriasLocais, setCategoriasLocais] = useState(categorias);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(valoresIniciais?.categoriaId ?? "");
@@ -313,7 +317,55 @@ export function FormularioTransacao({
           />
         </div>
 
-        {!ehEdicao && (
+        {/* Etapa 208 — editando um lançamento que repete: escolhe se a
+           mudança vale só pra este ou também pros próximos meses. */}
+        {recorrenciaExistente && (
+          <div className="bg-base-800 border border-financa/40 rounded-lg p-3 space-y-2.5">
+            <p className="text-sm">
+              <span className="text-financa">↻</span> Esse lançamento repete todo mês (dia {recorrenciaExistente.diaMes})
+            </p>
+            <input type="hidden" name="recorrenciaId" value={recorrenciaExistente.id} />
+            <input type="hidden" name="escopoRecorrencia" value={escopoRecorrencia} />
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  ["proximos", "Este e os próximos"],
+                  ["so_este", "Só este mês"],
+                ] as const
+              ).map(([valor, rotulo]) => (
+                <button
+                  key={valor}
+                  type="button"
+                  onClick={() => setEscopoRecorrencia(valor)}
+                  className={`rounded-lg py-2 text-xs border transition ${
+                    escopoRecorrencia === valor
+                      ? "bg-ink-100 text-base-900 border-ink-100"
+                      : "border-base-600 text-ink-400 hover:text-ink-100"
+                  }`}
+                >
+                  {rotulo}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-ink-400">
+              {escopoRecorrencia === "proximos"
+                ? `Valor, conta, categoria e descrição valem daqui pra frente. Mudou a data? Os próximos passam a cair no dia ${diaDaData(dataLancamento)}.`
+                : "Muda só este lançamento; os próximos meses continuam como estavam."}
+            </p>
+            <label className="flex items-center gap-2.5 cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                name="pararRecorrencia"
+                checked={pararRecorrencia}
+                onChange={(e) => setPararRecorrencia(e.target.checked)}
+                className="w-4 h-4 accent-red-400"
+              />
+              <span className="text-sm">Parar de repetir depois deste</span>
+            </label>
+          </div>
+        )}
+
+        {!recorrenciaExistente && (
           <div className="bg-base-800 border border-base-600 rounded-lg p-3">
             <label className="flex items-center gap-2.5 cursor-pointer">
               <input
