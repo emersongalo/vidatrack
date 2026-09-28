@@ -42,7 +42,7 @@ export default function DashboardPage() {
   // Etapa 195 — o widget "Pendências" agora é alimentado pelo SincronizadorWidgets (layout).
 
   const contas = snapshot?.financas.contas ?? [];
-  const contasComuns = contas.filter((c: any) => c.tipo !== "investimento");
+  const contasComuns = contas.filter((c: any) => c.tipo !== "investimento" && c.tipo !== "cartao");
   const saldoAtual = contasComuns.reduce((total: number, c: any) => total + Number(c.saldo), 0);
 
   return (

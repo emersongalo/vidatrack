@@ -31,6 +31,8 @@ export type ItemAgenda = {
   /** Etapa 193 — tarefa única que passou da data sem ser concluída:
    *  aparece em Hoje com o selo "Atrasada desde dd/mm". */
   atrasadaDesde?: string | null;
+  /** Etapa 213 — hábito "X por semana": quantas já foram nessa semana */
+  semana?: { feitos: number; meta: number } | null;
   /** Etapa 194 — tarefa que lança em Finanças ao concluir */
   financa?: { tipo: string; valor: number } | null;
 };
@@ -151,6 +153,15 @@ export function ItemLinhaAgenda({
           {item.atrasadaDesde && !item.feito && (
             <span className="text-[11px] px-1.5 py-0.5 rounded font-medium bg-red-400/15 text-red-400">
               Atrasada desde {new Date(item.atrasadaDesde + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+            </span>
+          )}
+          {item.semana && (
+            <span
+              className={`text-[11px] px-1.5 py-0.5 rounded font-medium ${
+                item.semana.feitos >= item.semana.meta ? "bg-habito/15 text-habito" : "bg-base-700 text-ink-400"
+              }`}
+            >
+              {item.semana.feitos >= item.semana.meta ? "Meta da semana ✓" : `${item.semana.feitos}/${item.semana.meta} na semana`}
             </span>
           )}
           {item.financa && (

@@ -3,9 +3,10 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { X, ChevronLeft, ChevronRight, CalendarDays, ChevronDown } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, CalendarDays, ChevronDown, Search } from "lucide-react";
 import { TrendingUp, TrendingDown, Scale } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
+import { BotaoPaguei } from "@/components/BotaoPaguei";
 import { calcularPeriodo, formatarMoeda, primeiroDiaDoMes, ultimoDiaDoMes, type PresetPeriodo } from "@/lib/financas/formatacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { BotaoOcultarValores } from "@/components/BotaoOcultarValores";
@@ -38,6 +39,10 @@ const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
  *   ?mes=AAAA-MM  ?dia=AAAA-MM-DD  ?conta=<id>
  * Ex: tocar em "Moradia" no gráfico → só as despesas de Moradia do mês.
  */
+function semAcento(s: string) {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
 // Etapa 208 — período único (mês navegável, atalho, intervalo livre ou um dia)
 type Periodo =
   | { tipo: "mes"; mes: string }
@@ -120,6 +125,8 @@ function ExtratoConteudo() {
   const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(params.get("categoria"));
   const [contaFiltro, setContaFiltro] = useState<string | null>(params.get("conta"));
   const [visualizacao, setVisualizacao] = useState<"transacoes" | "categorias">("transacoes");
+  // Etapa 212 — busca por texto (descrição, categoria, conta ou valor)
+  const [busca, setBusca] = useState(params.get("busca") ?? "");
 
   // mantém a URL igual aos filtros (voltar/atualizar a página não perde o filtro)
   useEffect(() => {
@@ -127,6 +134,7 @@ function ExtratoConteudo() {
     if (categoriaFiltro) q.set("categoria", categoriaFiltro);
     if (contaFiltro) q.set("conta", contaFiltro);
     if (tipo !== "todos") q.set("tipo", tipo);
+    if (busca.trim()) q.set("busca", busca.trim());
     if (periodo.tipo === "mes") {
       if (periodo.mes !== mesDe(new Date().toLocaleDateString("sv-SE"))) q.set("mes", periodo.mes);
     } else if (periodo.tipo === "dia") q.set("dia", periodo.dia);
@@ -138,7 +146,7 @@ function ExtratoConteudo() {
     if (url !== window.location.pathname + window.location.search) {
       window.history.replaceState(window.history.state, "", url);
     }
-  }, [categoriaFiltro, contaFiltro, tipo, periodo]);
+  }, [categoriaFiltro, contaFiltro, tipo, periodo, busca]);
 
   const contas = snapshot?.financas.contas ?? [];
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
@@ -150,6 +158,7 @@ function ExtratoConteudo() {
     setPainelPeriodo(false);
   }
 
+  const termo = semAcento(busca.trim());
   const lista = useMemo(() => {
     const filtrada = (snapshot?.financas.transacoes ?? []).filter((t: any) => {
       if (t.data < inicio || t.data > fim) return false;
@@ -157,18 +166,29 @@ function ExtratoConteudo() {
       if (categoriaFiltro === "sem" && t.categoria_id) return false;
       if (categoriaFiltro && categoriaFiltro !== "sem" && t.categoria_id !== categoriaFiltro) return false;
       if (contaFiltro && t.conta_id !== contaFiltro) return false;
+      if (termo) {
+        const cat = t.categoria_id ? (mapaCategorias.get(t.categoria_id) as any)?.nome ?? "" : "";
+        const alvo = semAcento(`${t.descricao ?? ""} ${cat} ${mapaContas.get(t.conta_id) ?? ""} ${Number(t.valor).toFixed(2).replace(".", ",")}`);
+        if (!alvo.includes(termo)) return false;
+      }
       return true;
     });
     // Etapa 207 — agendados/futuros: o mais próximo primeiro
     const futuro = inicio > new Date().toLocaleDateString("sv-SE");
     return futuro ? [...filtrada].sort((a: any, b: any) => String(a.data).localeCompare(String(b.data))) : filtrada;
-  }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro]);
+  }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro, termo]);
 
   const categoriaInfo = categoriaFiltro && categoriaFiltro !== "sem" ? (mapaCategorias.get(categoriaFiltro) as any) : null;
 
-  const totalReceitas = lista.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
-  const totalDespesas = lista.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
+  // Etapa 211 — transferências aparecem na lista, mas não somam como receita/despesa
+  const totalReceitas = lista.filter((t: any) => t.tipo === "receita" && !t.transferencia_grupo).reduce((a: number, t: any) => a + Number(t.valor), 0);
+  const totalDespesas = lista.filter((t: any) => t.tipo === "despesa" && !t.transferencia_grupo).reduce((a: number, t: any) => a + Number(t.valor), 0);
   const balanco = totalReceitas - totalDespesas;
+  // Etapa 209 — quanto ainda falta pagar/receber no período (agendados não marcados)
+  const hojeParaPendencia = new Date().toLocaleDateString("sv-SE");
+  const pendentes = lista.filter((t: any) => t.data > hojeParaPendencia && !t.pago_em);
+  const aPagar = pendentes.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
+  const aReceber = pendentes.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
@@ -216,6 +236,25 @@ function ExtratoConteudo() {
           </p>
         </div>
       </div>
+
+      {(aPagar > 0 || aReceber > 0) && (
+        <div className="flex items-center justify-between gap-3 bg-financa/10 border border-financa/30 rounded-xl px-3 py-2 mb-3 text-xs">
+          <span className="text-ink-400">Ainda não pago nesse período</span>
+          <span className="font-mono text-right">
+            {aPagar > 0 && (
+              <span className="text-red-400">
+                −<ValorMonetario valor={aPagar} />
+              </span>
+            )}
+            {aPagar > 0 && aReceber > 0 && <span className="text-ink-400"> · </span>}
+            {aReceber > 0 && (
+              <span className="text-habito">
+                +<ValorMonetario valor={aReceber} />
+              </span>
+            )}
+          </span>
+        </div>
+      )}
 
       {/* Etapa 208 — período: setas navegam mês a mês; tocar no nome abre
          os atalhos e a escolha de datas. Tudo cabe na tela. */}
@@ -310,6 +349,43 @@ function ExtratoConteudo() {
           </button>
         </div>
       )}
+
+      <div className="flex gap-2 mb-3">
+        <div className="relative flex-1 min-w-0">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar (ex: mercado, luz, 150)"
+            className="w-full bg-base-800 border border-base-600 rounded-xl pl-9 pr-8 py-2.5 text-sm text-ink-100 outline-none focus:border-ink-100"
+          />
+          {busca && (
+            <button
+              type="button"
+              onClick={() => setBusca("")}
+              aria-label="Limpar busca"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-100 p-1"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        {contas.length > 1 && (
+          <select
+            value={contaFiltro ?? ""}
+            onChange={(e) => setContaFiltro(e.target.value || null)}
+            aria-label="Filtrar por conta"
+            className="w-32 shrink-0 bg-base-800 border border-base-600 rounded-xl px-2 text-sm text-ink-100 outline-none"
+          >
+            <option value="">Todas as contas</option>
+            {contas.map((c: any) => (
+              <option key={c.id} value={c.id}>
+                {c.nome}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       <div className="grid grid-cols-3 gap-2 mb-4">
         {(["todos", "receita", "despesa"] as const).map((opcao) => (
@@ -425,6 +501,9 @@ function ExtratoConteudo() {
                       <p className="text-xs text-ink-400 truncate min-w-0">
                         {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
                         {t.recorrencia_id && <span className="text-financa"> · ↻ todo mês</span>}
+                        <span className="block mt-1 empty:hidden">
+                          <BotaoPaguei transacao={t} />
+                        </span>
                       </p>
                       <MenuAcoes>
                         {(fecharMenu) => (

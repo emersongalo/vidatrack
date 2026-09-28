@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
-import { diaBateComFrequencia } from "@/lib/agenda/dias";
+import { diaBateComFrequencia, inicioDaSemana, feitosNaSemana } from "@/lib/agenda/dias";
 import { tarefaApareceNoDia } from "@/lib/agenda/recorrencia";
 import { enviarPush } from "@/lib/push/servidor";
 import { segredosIguais } from "@/lib/seguranca";
@@ -414,12 +414,19 @@ async function notificarHabitosPendentesDaNoite(
   const [{ data: habitos }, { data: checkins }] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, dono_id, frequencia, dias_semana, meta_diaria")
+      .select("id, nome, dono_id, frequencia, dias_semana, meta_diaria, vezes_semana")
       .eq("arquivado", false)
       .eq("eh_negativo", false)
       .in("dono_id", ids),
     supabase.from("habito_checkins").select("habito_id, usuario_id, quantidade").eq("data", hoje).in("usuario_id", ids),
   ]);
+  // Etapa 213 — hábitos "X por semana": dias já feitos nesta semana
+  const { data: checkinsSemana } = await supabase
+    .from("habito_checkins")
+    .select("habito_id, usuario_id, data, quantidade")
+    .gte("data", inicioDaSemana(hoje))
+    .lte("data", hoje)
+    .in("usuario_id", ids);
 
   const feito = new Map<string, number>();
   for (const c of checkins ?? []) {
@@ -430,6 +437,12 @@ async function notificarHabitosPendentesDaNoite(
   const porUsuario = new Map<string, { total: number; pendentes: string[] }>();
   for (const h of habitos ?? []) {
     if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], hoje)) continue;
+    if (h.frequencia === "semanal") {
+      const dias = (checkinsSemana ?? [])
+        .filter((c) => c.habito_id === h.id && c.usuario_id === h.dono_id && Number(c.quantidade ?? 1) >= (h.meta_diaria ?? 1))
+        .map((c) => c.data as string);
+      if (feitosNaSemana(dias, hoje) >= ((h as any).vezes_semana ?? 3)) continue; // meta da semana já batida
+    }
     const r = porUsuario.get(h.dono_id) ?? { total: 0, pendentes: [] };
     r.total++;
     if ((feito.get(`${h.dono_id}|${h.id}`) ?? 0) < (h.meta_diaria ?? 1)) r.pendentes.push(h.nome);

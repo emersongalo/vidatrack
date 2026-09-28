@@ -22,6 +22,7 @@ export async function criarHabito(formData: FormData) {
   const icone = String(formData.get("icone") ?? "Droplet");
   const frequencia = String(formData.get("frequencia") ?? "diaria");
   const diasSemana = formData.getAll("diasSemana").map(Number);
+  const vezesSemana = Math.max(1, Math.min(7, Math.round(Number(formData.get("vezesSemana")) || 3)));
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
   const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
   const metaDiaria = Math.max(1, Number(formData.get("metaDiaria") ?? "1") || 1);
@@ -39,6 +40,7 @@ export async function criarHabito(formData: FormData) {
     icone,
     frequencia,
     dias_semana: frequencia === "dias_semana" ? diasSemana : [],
+    vezes_semana: frequencia === "semanal" ? vezesSemana : null,
     categoria_id: categoriaIdRaw || null,
     horario_lembrete: horarioLembreteRaw || null,
     meta_diaria: metaDiaria,
@@ -105,6 +107,7 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
   const icone = String(formData.get("icone") ?? "Droplet");
   const frequencia = String(formData.get("frequencia") ?? "diaria");
   const diasSemana = formData.getAll("diasSemana").map(Number);
+  const vezesSemana = Math.max(1, Math.min(7, Math.round(Number(formData.get("vezesSemana")) || 3)));
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
   const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
   const metaDiaria = Math.max(1, Number(formData.get("metaDiaria") ?? "1") || 1);
@@ -123,6 +126,7 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
       icone,
       frequencia,
       dias_semana: frequencia === "dias_semana" ? diasSemana : [],
+      vezes_semana: frequencia === "semanal" ? vezesSemana : null,
       categoria_id: categoriaIdRaw || null,
       horario_lembrete: horarioLembreteRaw || null,
       meta_diaria: metaDiaria,

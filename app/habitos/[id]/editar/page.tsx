@@ -72,6 +72,7 @@ function EditarHabitoConteudo() {
           cor: habito.cor,
           icone: habito.icone,
           frequencia: habito.frequencia,
+          vezesSemana: habito.vezes_semana ?? null,
           diasSemana: habito.dias_semana ?? [],
           categoriaId: habito.categoria_id,
           horarioLembrete: habito.horario_lembrete,

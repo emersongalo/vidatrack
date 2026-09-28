@@ -30,6 +30,7 @@ export function FormularioHabito({
     cor: string;
     icone: string;
     frequencia: string;
+    vezesSemana?: number | null;
     diasSemana: number[];
     categoriaId: string | null;
     horarioLembrete: string | null;
@@ -42,13 +43,14 @@ export function FormularioHabito({
   const [cor, setCor] = useState(valoresIniciais?.cor ?? "habito");
   const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_HABITO[0].nome);
   const [ehNegativo, setEhNegativo] = useState(valoresIniciais?.ehNegativo ?? false);
-  const [frequencia, setFrequencia] = useState<"diaria" | "dias_semana">(
-    (valoresIniciais?.frequencia as "diaria" | "dias_semana") ?? "diaria"
+  const [frequencia, setFrequencia] = useState<"diaria" | "dias_semana" | "semanal">(
+    (valoresIniciais?.frequencia as "diaria" | "dias_semana" | "semanal") ?? "diaria"
   );
   const [diasSelecionados, setDiasSelecionados] = useState<number[]>(
     valoresIniciais?.diasSemana ?? [1, 2, 3, 4, 5]
   );
   const [metaDiaria, setMetaDiaria] = useState(valoresIniciais?.metaDiaria ?? 1);
+  const [vezesSemana, setVezesSemana] = useState(valoresIniciais?.vezesSemana ?? 3);
 
   function alternarDia(dia: number) {
     setDiasSelecionados((atual) =>
@@ -172,7 +174,7 @@ export function FormularioHabito({
 
       <div>
         <span className="block text-sm text-ink-400 mb-2">Frequência</span>
-        <div className="flex gap-2 mb-3">
+        <div className="grid grid-cols-3 gap-2 mb-3">
           <button
             type="button"
             onClick={() => setFrequencia("diaria")}
@@ -195,7 +197,32 @@ export function FormularioHabito({
           >
             Dias específicos
           </button>
+          <button
+            type="button"
+            onClick={() => setFrequencia("semanal")}
+            className={`flex-1 rounded-lg py-2 text-sm border transition ${
+              frequencia === "semanal"
+                ? "bg-ink-100 text-base-900 border-ink-100"
+                : "border-base-600 text-ink-400 hover:text-ink-100"
+            }`}
+          >
+            X por semana
+          </button>
         </div>
+        {frequencia === "semanal" && (
+          <div className="flex items-center gap-2 mb-1">
+            <input
+              name="vezesSemana"
+              type="number"
+              min={1}
+              max={7}
+              value={vezesSemana}
+              onChange={(e) => setVezesSemana(Math.max(1, Math.min(7, Number(e.target.value) || 1)))}
+              className="w-16 bg-base-800 border border-base-600 rounded-lg px-2 py-2 text-ink-100 font-mono outline-none focus:border-ink-100"
+            />
+            <span className="text-sm text-ink-400">vezes por semana, em qualquer dia</span>
+          </div>
+        )}
         <input type="hidden" name="frequencia" value={frequencia} />
 
         {frequencia === "dias_semana" && (

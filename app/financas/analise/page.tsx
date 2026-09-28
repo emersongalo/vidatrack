@@ -30,7 +30,7 @@ export default function AnaliseFinanceiraPage() {
 
   const mapaCategorias = new Map((snapshot?.financas.categorias ?? []).map((c: any) => [c.id, c.nome]));
   const transacoesDespesa = (snapshot?.financas.transacoes ?? [])
-    .filter((t: any) => t.tipo === "despesa")
+    .filter((t: any) => t.tipo === "despesa" && !t.transferencia_grupo)
     .map((t: any) => ({
       valor: Number(t.valor),
       descricao: t.descricao,

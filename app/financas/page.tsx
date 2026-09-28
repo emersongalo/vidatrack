@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { PieChart, TrendingUp, TrendingDown, Bot } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
+import { BotaoPaguei } from "@/components/BotaoPaguei";
 import { primeiroDiaDoMes, ultimoDiaDoMes, formatarMoeda } from "@/lib/financas/formatacao";
 import { calcularSaldoPrevisto } from "@/lib/financas/consulta";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
@@ -84,8 +85,10 @@ export default function FinancasPage() {
     year: "numeric",
   });
 
+  // Etapa 211 — cartão de crédito não entra no "saldo em contas": o que
+  // se gasta nele vira fatura, e só sai do saldo quando a fatura é paga.
   const saldoTotal = contas
-    .filter((c: any) => c.tipo !== "investimento")
+    .filter((c: any) => c.tipo !== "investimento" && c.tipo !== "cartao")
     .reduce((total: number, c: any) => total + Number(c.saldo), 0);
 
   const totalInvestido = contas
@@ -96,10 +99,10 @@ export default function FinancasPage() {
   // dia 5 do mês que vem) não saem do saldo de hoje, mas entram no
   // "previsto" do mês em que vencem.
   const hojeISOBr = hoje.toLocaleDateString("sv-SE");
-  const idsContasComuns = new Set(contas.filter((c: any) => c.tipo !== "investimento").map((c: any) => c.id));
+  const idsContasComuns = new Set(contas.filter((c: any) => c.tipo !== "investimento" && c.tipo !== "cartao").map((c: any) => c.id));
   const futurosAte = (limiteISO: string) =>
     transacoes
-      .filter((t: any) => idsContasComuns.has(t.conta_id) && t.data > hojeISOBr && t.data <= limiteISO)
+      .filter((t: any) => idsContasComuns.has(t.conta_id) && t.data > hojeISOBr && t.data <= limiteISO && !t.pago_em)
       .reduce((s: number, t: any) => s + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)), 0);
   const ehMesFuturo = mesSelecionado > mesAtualISO;
 
@@ -128,11 +131,13 @@ export default function FinancasPage() {
   const inicioMesSelecionado = primeiroDiaDoMes(mesSelecionado + "-01");
   const fimMesSelecionado = ultimoDiaDoMes(mesSelecionado + "-01");
   const transacoesDoMes = transacoes.filter((t: any) => t.data >= inicioMesSelecionado && t.data <= fimMesSelecionado);
-  const receitasDoMes = transacoesDoMes.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
-  const despesasDoMes = transacoesDoMes.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
+  // Etapa 211 — transferência entre contas não é receita nem gasto de verdade
+  const movimentosDoMes = transacoesDoMes.filter((t: any) => !t.transferencia_grupo);
+  const receitasDoMes = movimentosDoMes.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
+  const despesasDoMes = movimentosDoMes.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
 
   const gastoPorCategoria = new Map<string, number>();
-  for (const t of transacoesDoMes) {
+  for (const t of movimentosDoMes) {
     if (t.tipo !== "despesa" || !t.categoria_id) continue;
     gastoPorCategoria.set(t.categoria_id, (gastoPorCategoria.get(t.categoria_id) ?? 0) + Number(t.valor));
   }
@@ -154,7 +159,7 @@ export default function FinancasPage() {
   const lancamentosEscondidos = transacoesDoMes.length - ultimasTransacoes.length;
 
   const gastoPorDiaMapaInicio = new Map<number, number>();
-  for (const t of transacoesDoMes) {
+  for (const t of movimentosDoMes) {
     if (t.tipo !== "despesa") continue;
     const dia = Number(t.data.slice(8, 10));
     gastoPorDiaMapaInicio.set(dia, (gastoPorDiaMapaInicio.get(dia) ?? 0) + Number(t.valor));
@@ -226,6 +231,9 @@ export default function FinancasPage() {
                   <p className="text-xs text-ink-400 truncate min-w-0">
                     {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
                     {t.recorrencia_id && <span className="text-financa"> · ↻ todo mês</span>}
+                    <span className="block mt-1 empty:hidden">
+                      <BotaoPaguei transacao={t} compacto />
+                    </span>
                   </p>
                   <div className="flex items-center gap-2 shrink-0">
                     <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
@@ -283,9 +291,9 @@ export default function FinancasPage() {
             hrefMesProximo={`/financas?mes=${mesProximoISO}`}
             hrefHoje="/financas"
             ehMesAtual={ehMesAtual}
-            aoMesAnterior={() => setMesSelecionado(mesAnteriorISO)}
-            aoMesProximo={() => setMesSelecionado(mesProximoISO)}
-            aoHoje={() => setMesSelecionado(mesAtualISO)}
+            aoMesAnterior={() => { setMesSelecionado(mesAnteriorISO); setMostrarTodosLancamentos(false); }}
+            aoMesProximo={() => { setMesSelecionado(mesProximoISO); setMostrarTodosLancamentos(false); }}
+            aoHoje={() => { setMesSelecionado(mesAtualISO); setMostrarTodosLancamentos(false); }}
           />
 
           <div className="lg:columns-2 lg:gap-6">

@@ -4,6 +4,10 @@ export function diaBateComFrequencia(
   dataISO: string
 ): boolean {
   if (frequencia === "diaria") return true;
+  // Etapa 213 — "X vezes por semana": aparece todo dia até bater a meta
+  // da semana (quem esconde depois de bater é quem chama, com
+  // metaSemanalBatida abaixo).
+  if (frequencia === "semanal") return true;
   if (frequencia === "dias_semana") {
     const diaDaSemana = new Date(dataISO + "T00:00:00").getDay(); // 0=domingo
     return diasSemana.includes(diaDaSemana);
@@ -28,4 +32,24 @@ export function tiraDeDias(dataCentralISO: string, quantidadeAntes = 3, quantida
     });
   }
   return dias;
+}
+
+/** Etapa 213 — segunda-feira da semana de uma data (YYYY-MM-DD). */
+export function inicioDaSemana(dataISO: string): string {
+  const d = new Date(dataISO + "T00:00:00");
+  const deslocamento = (d.getDay() + 6) % 7; // segunda = 0
+  d.setDate(d.getDate() - deslocamento);
+  return d.toLocaleDateString("sv-SE");
+}
+
+/**
+ * Etapa 213 — quantos dias da semana (seg–dom) de `dataISO` o hábito
+ * foi feito, contando só ATÉ esse dia. `diasFeitos` = datas em que o
+ * hábito bateu a meta diária.
+ */
+export function feitosNaSemana(diasFeitos: Iterable<string>, dataISO: string): number {
+  const inicio = inicioDaSemana(dataISO);
+  let n = 0;
+  for (const d of diasFeitos) if (d >= inicio && d <= dataISO) n++;
+  return n;
 }

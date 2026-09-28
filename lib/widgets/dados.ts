@@ -178,7 +178,7 @@ export function montarDadosWidgets(e: EntradaWidgets): DadosWidgets {
   }
 
   // --- Saldo (mesma conta do Painel: tudo menos investimento) ---
-  const contasComuns = e.contas.filter((c) => c.tipo !== "investimento");
+  const contasComuns = e.contas.filter((c) => c.tipo !== "investimento" && c.tipo !== "cartao");
   const saldoTexto = contasComuns.length
     ? formatarMoeda(contasComuns.reduce((s, c) => s + Number(c.saldo), 0))
     : null;

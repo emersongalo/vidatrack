@@ -14,7 +14,9 @@ const RÓTULOS_TIPO: Record<string, string> = {
 export function ListaContasComSaldo({ contas }: { contas: ContaComSaldo[] }) {
   if (contas.length === 0) return null;
 
-  const contasNormais = contas.filter((c) => c.tipo !== "investimento");
+  // Etapa 211 — cartões ficam num bloco próprio (não somam no saldo)
+  const contasNormais = contas.filter((c) => c.tipo !== "investimento" && c.tipo !== "cartao");
+  const cartoes = contas.filter((c) => c.tipo === "cartao");
   const contasInvestimento = contas.filter((c) => c.tipo === "investimento");
   const totalInvestido = contasInvestimento.reduce((soma, c) => soma + c.saldo, 0);
 
@@ -48,6 +50,37 @@ export function ListaContasComSaldo({ contas }: { contas: ContaComSaldo[] }) {
                 </Link>
               </li>
             ))}
+          </ul>
+        </div>
+      )}
+
+      {cartoes.length > 0 && (
+        <div className="mb-6">
+          <p className="text-sm text-ink-400 mb-3">Cartões de crédito</p>
+          <ul className="space-y-2">
+            {cartoes.map((cartao) => {
+              const devendo = Math.max(0, -cartao.saldo);
+              return (
+                <li key={cartao.id}>
+                  <Link
+                    href={`/financas/contas/${cartao.id}/fatura`}
+                    className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 hover:border-financa transition"
+                  >
+                    <SeloBanco bancoId={cartao.banco} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{cartao.nome}</p>
+                      <p className="text-xs text-ink-400">Ver fatura →</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[11px] text-ink-400">A pagar</p>
+                      <p className={`font-mono text-sm ${devendo > 0 ? "text-red-400" : "text-ink-100"}`}>
+                        <ValorMonetario valor={devendo} />
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

@@ -31,7 +31,7 @@ export async function GET() {
   ] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete")
+      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete, vezes_semana")
       .eq("arquivado", false),
     supabase
       .from("tarefas")
@@ -84,7 +84,7 @@ export async function GET() {
     idsContas.length
       ? supabase
           .from("financa_transacoes")
-          .select("id, conta_id, categoria_id, tipo, valor, descricao, data, recorrencia_id")
+          .select("id, conta_id, categoria_id, tipo, valor, descricao, data, recorrencia_id, pago_em, parcela_grupo, parcela_numero, parcela_total, transferencia_grupo")
           .in("conta_id", idsContas)
           .order("data", { ascending: false })
           .limit(LIMITE_TRANSACOES)

@@ -45,6 +45,7 @@ function EditarTransacaoConteudo() {
       erro={erro}
       action={atualizarTransacao.bind(null, transacao.id)}
       titulo="Editar lançamento"
+      idTransacaoEditada={transacao.id}
       textoBotao="Salvar alterações"
       voltarHref="/financas"
       valoresIniciais={{
@@ -54,6 +55,9 @@ function EditarTransacaoConteudo() {
         categoriaId: transacao.categoria_id,
         data: transacao.data,
         descricao: transacao.descricao,
+        parcela: transacao.parcela_grupo
+          ? { grupo: transacao.parcela_grupo, numero: transacao.parcela_numero, total: transacao.parcela_total }
+          : null,
         // Etapa 208 — lançamento que faz parte de uma recorrência
         recorrencia: (() => {
           const r = (snapshot?.financas.recorrencias ?? []).find((x: any) => x.id === transacao.recorrencia_id) as any;

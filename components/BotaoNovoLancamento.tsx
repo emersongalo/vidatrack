@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Plus, TrendingUp, TrendingDown, PiggyBank, X, Check, Zap } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, PiggyBank, X, Check, Zap, ArrowLeftRight } from "lucide-react";
 import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { adicionarNaFila } from "@/lib/offline/fila";
@@ -248,7 +248,7 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
         {!feito && (
           <>
             <p className="text-xs text-ink-400 mb-2">Ou abra o formulário completo</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               <Link
                 href="/financas/nova?tipo=despesa"
                 onClick={aoFechar}
@@ -264,6 +264,14 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
               >
                 <TrendingUp size={18} strokeWidth={2} />
                 <span className="text-xs font-medium">Receita</span>
+              </Link>
+              <Link
+                href="/financas/transferir"
+                onClick={aoFechar}
+                className="flex flex-col items-center gap-1 border border-base-600 text-ink-100 rounded-xl py-3 hover:bg-base-700 transition"
+              >
+                <ArrowLeftRight size={18} strokeWidth={2} />
+                <span className="text-xs font-medium">Transferir</span>
               </Link>
               <Link
                 href="/financas/investir"

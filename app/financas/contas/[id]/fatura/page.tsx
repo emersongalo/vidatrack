@@ -85,6 +85,20 @@ export default function FaturaCartaoPage() {
         <p className="text-sm text-ink-400">
           Vencimento: <span className="text-ink-100">{new Date(vencimento + "T00:00:00").toLocaleDateString("pt-BR")}</span>
         </p>
+        {/* Etapa 211 — pagar a fatura = transferir da conta do banco pro cartão */}
+        {total > 0 && (
+          <Link
+            href={`/financas/transferir?para=${conta.id}&valor=${total.toFixed(2)}&data=${vencimento < hoje ? hoje : vencimento}&descricao=${encodeURIComponent(
+              `Pagamento fatura ${conta.nome}`
+            )}`}
+            className="mt-4 block text-center bg-financa text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
+          >
+            Pagar fatura
+          </Link>
+        )}
+        <p className="text-[11px] text-ink-400 mt-3">
+          Gastos no cartão não saem do seu saldo na hora — só quando você paga a fatura (sai da conta do banco).
+        </p>
       </div>
 
       <p className="text-sm text-ink-400 mb-3">Lançamentos dessa fatura</p>

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { hojeISO } from "@/lib/habitos/streak";
-import { diaBateComFrequencia } from "@/lib/agenda/dias";
+import { diaBateComFrequencia, feitosNaSemana } from "@/lib/agenda/dias";
 import { tarefaApareceNoDia, tarefaAtrasada } from "@/lib/agenda/recorrencia";
 import { TiraDeDiasAgenda } from "@/components/TiraDeDiasAgenda";
 import { SugestoesHabito } from "@/components/SugestoesHabito";
@@ -61,6 +61,14 @@ function HojeConteudo() {
       if (categoriaFiltro && h.categoria_id !== categoriaFiltro) continue;
       const quantidadeAtual = checkinsPorHabito.get(h.id) ?? 0;
       const meta = h.meta_diaria ?? 1;
+      // Etapa 213 — "X por semana": conta os dias feitos na semana até o dia visto
+      let semana: { feitos: number; meta: number } | null = null;
+      if (h.frequencia === "semanal") {
+        const diasFeitos = snapshot.habitoCheckins
+          .filter((c) => c.habito_id === h.id && (c.quantidade ?? 1) >= meta)
+          .map((c) => c.data);
+        semana = { feitos: feitosNaSemana(diasFeitos, dataSelecionada), meta: h.vezes_semana ?? 3 };
+      }
       lista.push({
         id: h.id,
         tipo: "habito",
@@ -71,6 +79,7 @@ function HojeConteudo() {
         repete: true,
         horarioLembrete: h.horario_lembrete,
         meta: meta > 1 ? { atual: quantidadeAtual, alvo: meta, unidade: h.unidade } : null,
+        semana,
         ordem: h.ordem ?? 0,
       });
     }

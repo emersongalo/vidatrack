@@ -3,7 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { criarTransacao, criarCategoriaRapida } from "@/app/financas/actions";
+import { criarTransacao, criarCategoriaRapida, removerParcelasDaqui } from "@/app/financas/actions";
+import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { ICONES_CATEGORIA } from "@/lib/financas/icones-categoria";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { adicionarNaFila } from "@/lib/offline/fila";
@@ -23,7 +24,10 @@ export function FormularioTransacao({
   voltarHref = "/financas",
   valoresIniciais,
   tipoInicial,
+  idTransacaoEditada,
 }: {
+  /** Etapa 210 — pra excluir parcelas a partir da tela de edição */
+  idTransacaoEditada?: string;
   contas: Conta[];
   categorias: Categoria[];
   erro?: string;
@@ -39,6 +43,7 @@ export function FormularioTransacao({
     data: string;
     descricao: string | null;
     recorrencia?: { id: string; diaMes: number; dataFim: string | null } | null;
+    parcela?: { grupo: string; numero: number; total: number } | null;
   };
   /** Etapa 135 — pra pré-marcar Receita/Despesa vindo da folha rápida
    *  do "+", sem precisar fingir que é uma edição (valoresIniciais). */
@@ -46,6 +51,11 @@ export function FormularioTransacao({
 }) {
   const [tipo, setTipo] = useState<"despesa" | "receita">(valoresIniciais?.tipo ?? tipoInicial ?? "despesa");
   const [recorrente, setRecorrente] = useState(false);
+  // Etapa 210 — compra parcelada
+  const [parcelado, setParcelado] = useState(false);
+  const [numParcelas, setNumParcelas] = useState(2);
+  const [modoParcela, setModoParcela] = useState<"total" | "parcela">("total");
+  const [valorDigitado, setValorDigitado] = useState(valoresIniciais?.valor ? String(valoresIniciais.valor) : "");
   const [duracaoRecorrencia, setDuracaoRecorrencia] = useState<"sempre" | "ate_data">("sempre");
   const ehEdicao = !!valoresIniciais;
   const recorrenciaExistente = valoresIniciais?.recorrencia ?? null;
@@ -140,7 +150,14 @@ export function FormularioTransacao({
         </p>
       )}
 
-      <form action={action} onSubmit={aoSubmeter}>
+      <form
+        action={action}
+        onSubmit={aoSubmeter}
+        onInput={(e) => {
+          const alvo = e.target as HTMLInputElement;
+          if (alvo.name === "valor") setValorDigitado(alvo.value);
+        }}
+      >
         <div className="form-colunas">
         <div className="form-coluna">
         <div className="flex gap-2">
@@ -365,14 +382,113 @@ export function FormularioTransacao({
           </div>
         )}
 
-        {!recorrenciaExistente && (
+        {/* Etapa 210 — compra parcelada (só ao criar) */}
+        {!ehEdicao && (
+          <div className="bg-base-800 border border-base-600 rounded-lg p-3">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                name="parcelado"
+                checked={parcelado}
+                onChange={(e) => {
+                  setParcelado(e.target.checked);
+                  if (e.target.checked) setRecorrente(false);
+                }}
+                className="w-4 h-4 accent-financa"
+              />
+              <span className="text-sm">💳 Compra parcelada</span>
+            </label>
+            {parcelado && (() => {
+              const valorNum = Number(valorDigitado.replace(/\./g, "").replace(",", ".")) || 0;
+              const porParcela = modoParcela === "total" ? valorNum / numParcelas : valorNum;
+              const total = modoParcela === "total" ? valorNum : valorNum * numParcelas;
+              const fim = (() => {
+                const [a, m] = (dataLancamento || hoje).split("-").map(Number);
+                return new Date(a, m - 1 + numParcelas - 1, 1).toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+              })();
+              const inicio = new Date((dataLancamento || hoje) + "T00:00:00").toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+              const moeda = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+              return (
+                <div className="mt-3 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-ink-400">Em</span>
+                    <input
+                      name="numParcelas"
+                      type="number"
+                      min={2}
+                      max={48}
+                      value={numParcelas}
+                      onChange={(e) => setNumParcelas(Math.max(2, Math.min(48, Number(e.target.value) || 2)))}
+                      className="w-16 bg-base-900 border border-base-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 font-mono outline-none focus:border-ink-100"
+                    />
+                    <span className="text-xs text-ink-400">vezes</span>
+                  </div>
+                  <input type="hidden" name="modoParcela" value={modoParcela} />
+                  <div className="grid grid-cols-2 gap-2">
+                    {(
+                      [
+                        ["total", "Valor é o total"],
+                        ["parcela", "Valor é cada parcela"],
+                      ] as const
+                    ).map(([v, r]) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setModoParcela(v)}
+                        className={`rounded-lg py-1.5 text-xs border transition ${
+                          modoParcela === v ? "bg-ink-100 text-base-900 border-ink-100" : "border-base-600 text-ink-400 hover:text-ink-100"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-ink-400">
+                    {valorNum > 0 ? (
+                      <>
+                        <span className="text-ink-100 font-mono">
+                          {numParcelas}× de {moeda(porParcela)}
+                        </span>{" "}
+                        (total {moeda(total)}), de {inicio} a {fim}. Cada parcela entra no saldo no mês dela.
+                      </>
+                    ) : (
+                      "Digite o valor lá em cima pra ver as parcelas."
+                    )}
+                  </p>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Etapa 210 — editando uma parcela */}
+        {valoresIniciais?.parcela && (
+          <div className="bg-base-800 border border-financa/40 rounded-lg p-3 space-y-2">
+            <p className="text-sm">
+              💳 Parcela {valoresIniciais.parcela.numero} de {valoresIniciais.parcela.total}
+            </p>
+            <input type="hidden" name="parcelaGrupo" value={valoresIniciais.parcela.grupo} />
+            <input type="hidden" name="parcelaNumero" value={valoresIniciais.parcela.numero} />
+            {valoresIniciais.parcela.numero < valoresIniciais.parcela.total && (
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" name="aplicarParcelas" className="w-4 h-4 accent-financa" />
+                <span className="text-sm">Aplicar valor, conta e categoria às próximas parcelas</span>
+              </label>
+            )}
+          </div>
+        )}
+
+        {!recorrenciaExistente && !parcelado && !valoresIniciais?.parcela && (
           <div className="bg-base-800 border border-base-600 rounded-lg p-3">
             <label className="flex items-center gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
                 name="recorrente"
                 checked={recorrente}
-                onChange={(e) => setRecorrente(e.target.checked)}
+                onChange={(e) => {
+                  setRecorrente(e.target.checked);
+                  if (e.target.checked) setParcelado(false);
+                }}
                 className="w-4 h-4 accent-financa"
               />
               <span className="text-sm">🔁 Repetir todo mês</span>
@@ -459,6 +575,22 @@ export function FormularioTransacao({
           <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
         </div>
       </form>
+
+      {valoresIniciais?.parcela && (
+        <div className="mt-6 flex justify-center">
+          <BotaoComConfirmacao
+            acao={removerParcelasDaqui.bind(null, idTransacaoEditada ?? "")}
+            textoBotao={
+              valoresIniciais.parcela.numero < valoresIniciais.parcela.total
+                ? `Excluir esta e as próximas parcelas (${valoresIniciais.parcela.numero} a ${valoresIniciais.parcela.total})`
+                : "Excluir esta parcela"
+            }
+            textoConfirmacao="Excluir essas parcelas? Não tem volta."
+            classeBotao="text-sm text-red-400 hover:underline"
+            aoConcluir={() => router.push("/financas")}
+          />
+        </div>
+      )}
     </main>
   );
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { randomUUID } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import {
   esquemaTransacao,
@@ -290,6 +291,14 @@ export async function removerCategoria(categoriaId: string) {
   revalidatePath("/financas");
 }
 
+/** Mesmo dia N meses depois (dia 31 vira o último dia do mês, se precisar). */
+function somarMesesISO(iso: string, meses: number) {
+  const [a, m, d] = iso.split("-").map(Number);
+  const ultimo = new Date(a, m - 1 + meses + 1, 0).getDate();
+  const data = new Date(a, m - 1 + meses, Math.min(d, ultimo));
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+}
+
 function dadosTransacaoDoFormulario(formData: FormData) {
   return {
     tipo: formData.get("tipo"),
@@ -315,6 +324,34 @@ export async function criarTransacao(formData: FormData) {
 
   if (!resultado.success) {
     redirect(`/financas/nova?erro=${encodeURIComponent(primeiroErro(resultado))}`);
+  }
+
+  // Etapa 210 — compra parcelada: cria uma parcela por mês, a partir da data escolhida
+  if (formData.get("parcelado") === "on") {
+    const d = resultado.data;
+    const n = Math.max(2, Math.min(48, Math.round(Number(formData.get("numParcelas")) || 2)));
+    const centavos = Math.round(d.valor * 100);
+    const totalCentavos = formData.get("modoParcela") === "parcela" ? centavos * n : centavos;
+    const base = Math.floor(totalCentavos / n);
+    const grupo = randomUUID();
+    const nomeBase = d.descricao || "Compra parcelada";
+    const linhas = Array.from({ length: n }, (_, i) => ({
+      dono_id: user!.id,
+      conta_id: d.contaId,
+      categoria_id: d.categoriaId,
+      tipo: d.tipo,
+      // a última parcela absorve os centavos que sobraram da divisão
+      valor: (i === n - 1 ? totalCentavos - base * (n - 1) : base) / 100,
+      descricao: `${nomeBase} (${i + 1}/${n})`,
+      data: somarMesesISO(d.data, i),
+      parcela_grupo: grupo,
+      parcela_numero: i + 1,
+      parcela_total: n,
+    }));
+    const { error: erroParcelas } = await supabase.from("financa_transacoes").insert(linhas);
+    if (erroParcelas) redirect(`/financas/nova?erro=${encodeURIComponent(erroParcelas.message)}`);
+    revalidatePath("/financas");
+    redirect("/financas");
   }
 
   const { data: transacaoCriada, error } = await supabase
@@ -440,6 +477,17 @@ export async function atualizarTransacao(transacaoId: string, formData: FormData
     redirect(`/financas/${transacaoId}/editar?erro=${encodeURIComponent(error.message)}`);
   }
 
+  // Etapa 210 — parcela: aplicar valor/conta/categoria às próximas
+  const parcelaGrupo = String(formData.get("parcelaGrupo") ?? "");
+  const parcelaNumero = Number(formData.get("parcelaNumero") ?? 0);
+  if (parcelaGrupo && formData.get("aplicarParcelas") === "on") {
+    await supabase
+      .from("financa_transacoes")
+      .update({ conta_id: d.contaId, categoria_id: d.categoriaId, tipo: d.tipo, valor: d.valor })
+      .eq("parcela_grupo", parcelaGrupo)
+      .gt("parcela_numero", parcelaNumero);
+  }
+
   // Etapa 208 — lançamento que faz parte de uma recorrência
   const recorrenciaId = String(formData.get("recorrenciaId") ?? "");
   if (recorrenciaId) {
@@ -497,9 +545,87 @@ export async function atualizarTransacao(transacaoId: string, formData: FormData
   redirect("/financas");
 }
 
+/** Etapa 210 — exclui esta parcela e as seguintes do mesmo parcelamento. */
+export async function removerParcelasDaqui(transacaoId: string) {
+  "use server";
+  const supabase = createClient();
+  const { data: t } = await supabase
+    .from("financa_transacoes")
+    .select("parcela_grupo, parcela_numero")
+    .eq("id", transacaoId)
+    .maybeSingle();
+  if (!t?.parcela_grupo) {
+    await supabase.from("financa_transacoes").delete().eq("id", transacaoId);
+  } else {
+    await supabase
+      .from("financa_transacoes")
+      .delete()
+      .eq("parcela_grupo", t.parcela_grupo)
+      .gte("parcela_numero", t.parcela_numero ?? 1);
+  }
+  revalidatePath("/financas");
+}
+
+/**
+ * Etapa 211 — transferência entre contas (inclui pagar fatura do
+ * cartão): sai de uma conta e entra na outra, as duas pontas ligadas.
+ * Não conta como receita nem despesa nos totais e gráficos.
+ */
+export async function criarTransferencia(formData: FormData): Promise<{ erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sua sessão expirou. Entre de novo." };
+
+  const origem = String(formData.get("contaOrigemId") ?? "");
+  const destino = String(formData.get("contaDestinoId") ?? "");
+  const valor = Number(String(formData.get("valor") ?? "").replace(/\./g, "").replace(",", "."));
+  const data = String(formData.get("data") ?? "") || new Date().toLocaleDateString("sv-SE");
+  const descricao = String(formData.get("descricao") ?? "").trim().slice(0, 200);
+  if (!origem || !destino) return { erro: "Escolha as duas contas" };
+  if (origem === destino) return { erro: "A conta de origem e a de destino precisam ser diferentes" };
+  if (!valor || valor <= 0) return { erro: "Informe um valor válido" };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return { erro: "Data inválida" };
+
+  const { data: contas } = await supabase.from("financa_contas").select("id, nome").in("id", [origem, destino]);
+  const nome = (id: string) => contas?.find((c) => c.id === id)?.nome ?? "conta";
+  const grupo = randomUUID();
+  const { error } = await supabase.from("financa_transacoes").insert([
+    {
+      dono_id: user.id,
+      conta_id: origem,
+      tipo: "despesa",
+      valor,
+      data,
+      descricao: descricao || `Transferência para ${nome(destino)}`,
+      transferencia_grupo: grupo,
+    },
+    {
+      dono_id: user.id,
+      conta_id: destino,
+      tipo: "receita",
+      valor,
+      data,
+      descricao: descricao || `Transferência de ${nome(origem)}`,
+      transferencia_grupo: grupo,
+    },
+  ]);
+  if (error) return { erro: error.message };
+  revalidatePath("/financas");
+  return {};
+}
+
 export async function removerTransacao(transacaoId: string) {
   "use server";
   const supabase = createClient();
+  // Etapa 211 — transferência: apagar uma ponta apaga a outra junto
+  const { data: t } = await supabase.from("financa_transacoes").select("transferencia_grupo").eq("id", transacaoId).maybeSingle();
+  if (t?.transferencia_grupo) {
+    await supabase.from("financa_transacoes").delete().eq("transferencia_grupo", t.transferencia_grupo);
+    revalidatePath("/financas");
+    return;
+  }
   await supabase.from("financa_transacoes").delete().eq("id", transacaoId);
   revalidatePath("/financas");
 }

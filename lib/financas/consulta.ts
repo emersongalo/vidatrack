@@ -21,7 +21,7 @@ export type ContaComSaldo = {
  */
 export function calcularSaldoPorConta(
   contas: { id: string; nome: string; banco: string | null; tipo: string; saldo_inicial: number | string }[],
-  transacoes: { conta_id: string; tipo: string; valor: number | string; data?: string }[],
+  transacoes: { conta_id: string; tipo: string; valor: number | string; data?: string; pago_em?: string | null }[],
   /** Etapa 203 — saldo ATUAL: ignora lançamentos com data depois
    *  desse dia (ex: conta agendada pro mês que vem não sai do saldo
    *  de hoje). Sem esse parâmetro, soma tudo (comportamento antigo). */
@@ -29,7 +29,8 @@ export function calcularSaldoPorConta(
 ): ContaComSaldo[] {
   const somaPorConta = new Map<string, number>();
   for (const t of transacoes) {
-    if (ateData && t.data && t.data > ateData) continue;
+    // Etapa 209 — agendado que já foi marcado "Paguei" conta desde já
+    if (ateData && t.data && t.data > ateData && !t.pago_em) continue;
     const atual = somaPorConta.get(t.conta_id) ?? 0;
     somaPorConta.set(t.conta_id, atual + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)));
   }
@@ -67,17 +68,19 @@ export function calcularSaldoPrevisto(
 export async function buscarSaldoTotal(supabase: ReturnType<typeof createClient>): Promise<number> {
   const { data: contas } = await supabase
     .from("financa_contas")
-    .select("id, saldo_inicial")
-    .eq("arquivado", false);
+    .select("id, saldo_inicial, tipo")
+    .eq("arquivado", false)
+    .not("tipo", "in", "(investimento,cartao)"); // Etapa 211: saldo = só contas "de dinheiro"
 
   const idsContas = (contas ?? []).map((c) => c.id);
   if (idsContas.length === 0) return 0;
 
   const { data: transacoes } = await supabase
     .from("financa_transacoes")
-    .select("conta_id, tipo, valor")
+    .select("conta_id, tipo, valor, data, pago_em")
     .in("conta_id", idsContas)
-    .lte("data", new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10)); // Etapa 203: só até hoje
+    // Etapa 203/209: até hoje, ou agendado já marcado como pago
+    .or(`data.lte.${new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10)},pago_em.not.is.null`);
 
   return (contas ?? []).reduce((total, conta) => {
     const doTransacoes = (transacoes ?? [])
