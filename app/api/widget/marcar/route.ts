@@ -13,7 +13,9 @@ export const dynamic = "force-dynamic";
  * acao "alternar" (widget): marca se não estava, desmarca se estava.
  * acao "marcar" (notificação): só marca — tocar duas vezes no mesmo
  * lembrete nunca desfaz sem querer.
- * Hábito com meta numérica (ex: 8 copos): marcar = completar a meta.
+ * Hábito com meta numérica (ex: 8 copos): no widget, marcar = completar
+ * a meta; na notificação (Etapa 216), "✓ Feito" soma 1 — com vários
+ * lembretes de água no dia, cada toque é um copo.
  */
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -54,14 +56,16 @@ export async function POST(request: Request) {
       feito = true; // já estava feito
     }
   } else if (existente) {
-    await supabase.from("habito_checkins").update({ quantidade: meta }).eq("id", existente.id);
-    feito = true;
+    const nova = acao === "marcar" && meta > 1 ? Math.min(meta, (existente.quantidade ?? 0) + 1) : meta;
+    await supabase.from("habito_checkins").update({ quantidade: nova }).eq("id", existente.id);
+    feito = nova >= meta;
   } else {
+    const inicial = acao === "marcar" && meta > 1 ? 1 : meta;
     const { error } = await supabase
       .from("habito_checkins")
-      .insert({ habito_id: habitoId, usuario_id: user.id, data, quantidade: meta });
+      .insert({ habito_id: habitoId, usuario_id: user.id, data, quantidade: inicial });
     if (error) return NextResponse.json({ erro: error.message }, { status: 500 });
-    feito = true;
+    feito = inicial >= meta;
   }
 
   revalidatePath("/habitos");

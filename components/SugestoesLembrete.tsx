@@ -46,7 +46,7 @@ export function SugestoesLembrete({ snapshot, hojeISO }: { snapshot: SnapshotOff
 
   async function aplicar(habitoId: string, horario: string) {
     setErro(null);
-    const { error } = await createClient().from("habitos").update({ horario_lembrete: horario }).eq("id", habitoId);
+    const { error } = await createClient().from("habitos").update({ horario_lembrete: horario, horarios_lembrete: [horario] }).eq("id", habitoId);
     if (error) return setErro("Não consegui mudar o lembrete. Verifique a internet.");
     setAplicadas((a) => [...a, habitoId]);
     atualizarSnapshotEmTodasAsTelas();

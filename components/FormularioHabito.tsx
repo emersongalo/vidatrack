@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ICONES_HABITO } from "@/lib/agenda/icones-habito";
 import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
+import { CampoLembretesHabito } from "@/components/CampoLembretesHabito";
 
 type Categoria = { id: string; nome: string };
 
@@ -34,6 +35,8 @@ export function FormularioHabito({
     diasSemana: number[];
     categoriaId: string | null;
     horarioLembrete: string | null;
+    /** Etapa 216 — vários horários */
+    horariosLembrete?: string[] | null;
     metaDiaria: number;
     unidade: string | null;
     ehNegativo?: boolean;
@@ -49,8 +52,15 @@ export function FormularioHabito({
   const [diasSelecionados, setDiasSelecionados] = useState<number[]>(
     valoresIniciais?.diasSemana ?? [1, 2, 3, 4, 5]
   );
-  const [metaDiaria, setMetaDiaria] = useState(valoresIniciais?.metaDiaria ?? 1);
-  const [vezesSemana, setVezesSemana] = useState(valoresIniciais?.vezesSemana ?? 3);
+  // Etapa 216 — guarda o texto digitado (antes, apagar o "1" no celular
+  // voltava na hora pra 1 e não dava pra digitar outro número)
+  const [metaTexto, setMetaTexto] = useState(String(valoresIniciais?.metaDiaria ?? 1));
+  const [vezesTexto, setVezesTexto] = useState(String(valoresIniciais?.vezesSemana ?? 3));
+  const [unidadeTexto, setUnidadeTexto] = useState(valoresIniciais?.unidade ?? "");
+  const metaDiaria = Math.max(1, Math.min(999, parseInt(metaTexto, 10) || 1));
+  const vezesSemana = Math.max(1, Math.min(7, parseInt(vezesTexto, 10) || 1));
+  const somarMeta = (d: number) => setMetaTexto(String(Math.max(1, Math.min(999, metaDiaria + d))));
+  const somarVezes = (d: number) => setVezesTexto(String(Math.max(1, Math.min(7, vezesSemana + d))));
 
   function alternarDia(dia: number) {
     setDiasSelecionados((atual) =>
@@ -211,15 +221,17 @@ export function FormularioHabito({
         </div>
         {frequencia === "semanal" && (
           <div className="flex items-center gap-2 mb-1">
+            <button type="button" aria-label="Menos" onClick={() => somarVezes(-1)} className="w-9 h-9 rounded-lg border border-base-600 text-lg">−</button>
             <input
-              name="vezesSemana"
-              type="number"
-              min={1}
-              max={7}
-              value={vezesSemana}
-              onChange={(e) => setVezesSemana(Math.max(1, Math.min(7, Number(e.target.value) || 1)))}
-              className="w-16 bg-base-800 border border-base-600 rounded-lg px-2 py-2 text-ink-100 font-mono outline-none focus:border-ink-100"
+              type="text"
+              inputMode="numeric"
+              value={vezesTexto}
+              onChange={(e) => setVezesTexto(e.target.value.replace(/\D/g, "").slice(0, 1))}
+              onBlur={() => setVezesTexto(String(vezesSemana))}
+              className="w-12 text-center bg-base-800 border border-base-600 rounded-lg px-2 py-2 text-ink-100 font-mono outline-none focus:border-ink-100"
             />
+            <input type="hidden" name="vezesSemana" value={vezesSemana} />
+            <button type="button" aria-label="Mais" onClick={() => somarVezes(1)} className="w-9 h-9 rounded-lg border border-base-600 text-lg">+</button>
             <span className="text-sm text-ink-400">vezes por semana, em qualquer dia</span>
           </div>
         )}
@@ -251,20 +263,25 @@ export function FormularioHabito({
       <div>
         <span className="block text-sm text-ink-400 mb-2">Meta diária (opcional)</span>
         <div className="flex gap-2 items-center">
+          <button type="button" aria-label="Diminuir meta" onClick={() => somarMeta(-1)} className="w-9 h-10 rounded-lg border border-base-600 text-lg shrink-0">−</button>
           <input
-            name="metaDiaria"
-            type="number"
-            min={1}
-            value={metaDiaria}
-            onChange={(e) => setMetaDiaria(Math.max(1, Number(e.target.value) || 1))}
-            className="w-20 bg-base-800 border border-base-600 rounded-lg px-3 py-2 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
+            type="text"
+            inputMode="numeric"
+            value={metaTexto}
+            onChange={(e) => setMetaTexto(e.target.value.replace(/\D/g, "").slice(0, 3))}
+            onBlur={() => setMetaTexto(String(metaDiaria))}
+            onFocus={(e) => e.target.select()}
+            className="w-14 text-center bg-base-800 border border-base-600 rounded-lg px-2 py-2 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
           />
+          <input type="hidden" name="metaDiaria" value={metaDiaria} />
+          <button type="button" aria-label="Aumentar meta" onClick={() => somarMeta(1)} className="w-9 h-10 rounded-lg border border-base-600 text-lg shrink-0">+</button>
           <input
             name="unidade"
             type="text"
-            defaultValue={valoresIniciais?.unidade ?? ""}
+            value={unidadeTexto}
+            onChange={(e) => setUnidadeTexto(e.target.value)}
             placeholder="unidade (ex: copos, min, páginas)"
-            className="flex-1 bg-base-800 border border-base-600 rounded-lg px-3 py-2 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="flex-1 min-w-0 bg-base-800 border border-base-600 rounded-lg px-3 py-2 text-ink-100 focus:border-ink-100 outline-none transition"
           />
         </div>
         <p className="text-xs text-ink-400 mt-1">
@@ -273,21 +290,17 @@ export function FormularioHabito({
         </p>
       </div>
 
-      <div>
-        <label htmlFor="horarioLembrete" className="block text-sm text-ink-400 mb-1">
-          Lembrete (opcional)
-        </label>
-        <input
-          id="horarioLembrete"
-          name="horarioLembrete"
-          type="time"
-          defaultValue={valoresIniciais?.horarioLembrete ?? ""}
-          className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
-        />
-        <p className="text-xs text-ink-400 mt-1">
-          Isso só marca o horário na tela — enviar notificação de verdade fica para uma etapa futura.
-        </p>
-      </div>
+      <CampoLembretesHabito
+        iniciais={
+          valoresIniciais?.horariosLembrete?.length
+            ? valoresIniciais.horariosLembrete.map((h) => h.slice(0, 5))
+            : valoresIniciais?.horarioLembrete
+              ? [valoresIniciais.horarioLembrete.slice(0, 5)]
+              : []
+        }
+        ehContador={!ehNegativo && metaDiaria > 1}
+        unidade={unidadeTexto.trim() || undefined}
+      />
 
       </div>
       </div>

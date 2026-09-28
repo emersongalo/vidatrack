@@ -40,7 +40,7 @@ export type SugestaoLembrete = {
 };
 
 export function sugerirLembretes(
-  habitos: { id: string; nome: string; horario_lembrete?: string | null; eh_negativo?: boolean }[],
+  habitos: { id: string; nome: string; horario_lembrete?: string | null; horarios_lembrete?: string[] | null; eh_negativo?: boolean }[],
   checkins: { habito_id: string; data: string; criado_em?: string | null }[],
   hojeISO: string,
   opcoes: { minimoAmostras?: number; diferencaMinima?: number; antecedencia?: number } = {}
@@ -64,6 +64,7 @@ export function sugerirLembretes(
   const saida: SugestaoLembrete[] = [];
   for (const hab of habitos) {
     if (hab.eh_negativo) continue;
+    if ((hab.horarios_lembrete?.length ?? 0) > 1) continue; // vários lembretes (ex: água): não mexe
     const lista = (porHabito.get(hab.id) ?? []).sort((x, y) => x - y);
     if (lista.length < minimo) continue;
     const mediana = lista[Math.floor(lista.length / 2)];

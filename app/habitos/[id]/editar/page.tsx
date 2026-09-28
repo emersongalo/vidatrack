@@ -76,6 +76,7 @@ function EditarHabitoConteudo() {
           diasSemana: habito.dias_semana ?? [],
           categoriaId: habito.categoria_id,
           horarioLembrete: habito.horario_lembrete,
+          horariosLembrete: habito.horarios_lembrete ?? null,
           metaDiaria: habito.meta_diaria ?? 1,
           unidade: habito.unidade,
           ehNegativo: habito.eh_negativo,

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hojeISO, calcularStreak, MARCOS_CONQUISTA } from "@/lib/habitos/streak";
+import { normalizarHorarios } from "@/lib/habitos/horariosLembrete";
 
 export async function criarHabito(formData: FormData) {
   const supabase = createClient();
@@ -24,7 +25,10 @@ export async function criarHabito(formData: FormData) {
   const diasSemana = formData.getAll("diasSemana").map(Number);
   const vezesSemana = Math.max(1, Math.min(7, Math.round(Number(formData.get("vezesSemana")) || 3)));
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
-  const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
+  // Etapa 216 — vários horários (o primeiro continua em horario_lembrete)
+  const horariosEnviados = formData.getAll("horariosLembrete").map(String);
+  const horarios = normalizarHorarios(horariosEnviados.length ? horariosEnviados : [String(formData.get("horarioLembrete") ?? "")]);
+  const horarioLembreteRaw = horarios[0] ?? "";
   const metaDiaria = Math.max(1, Number(formData.get("metaDiaria") ?? "1") || 1);
   const unidade = String(formData.get("unidade") ?? "").trim() || null;
   const ehNegativo = formData.get("ehNegativo") === "true";
@@ -43,6 +47,7 @@ export async function criarHabito(formData: FormData) {
     vezes_semana: frequencia === "semanal" ? vezesSemana : null,
     categoria_id: categoriaIdRaw || null,
     horario_lembrete: horarioLembreteRaw || null,
+    horarios_lembrete: horarios.length ? horarios : null,
     meta_diaria: metaDiaria,
     unidade,
     eh_negativo: ehNegativo,
@@ -109,7 +114,10 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
   const diasSemana = formData.getAll("diasSemana").map(Number);
   const vezesSemana = Math.max(1, Math.min(7, Math.round(Number(formData.get("vezesSemana")) || 3)));
   const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
-  const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
+  // Etapa 216 — vários horários (o primeiro continua em horario_lembrete)
+  const horariosEnviados = formData.getAll("horariosLembrete").map(String);
+  const horarios = normalizarHorarios(horariosEnviados.length ? horariosEnviados : [String(formData.get("horarioLembrete") ?? "")]);
+  const horarioLembreteRaw = horarios[0] ?? "";
   const metaDiaria = Math.max(1, Number(formData.get("metaDiaria") ?? "1") || 1);
   const unidade = String(formData.get("unidade") ?? "").trim() || null;
   const ehNegativo = formData.get("ehNegativo") === "true";
@@ -129,6 +137,7 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
       vezes_semana: frequencia === "semanal" ? vezesSemana : null,
       categoria_id: categoriaIdRaw || null,
       horario_lembrete: horarioLembreteRaw || null,
+      horarios_lembrete: horarios.length ? horarios : null,
       meta_diaria: metaDiaria,
       unidade,
       eh_negativo: ehNegativo,

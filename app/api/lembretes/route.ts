@@ -10,6 +10,7 @@ import { enviarNotificacaoFCM, enviarLembreteHabitoFCM } from "@/lib/fcm/servido
 import { somarDias } from "@/lib/widgets/dados";
 import { calcularPeriodoFatura, periodoFaturaAdjacente } from "@/lib/financas/fatura";
 import { resumoFatura } from "@/lib/financas/previsao";
+import { horariosDoHabito } from "@/lib/habitos/horariosLembrete";
 
 // Sem cookie nem sessão, o Next.js não tem como saber sozinho que essa
 // rota precisa rodar de novo a cada chamada — sem isso aqui, o Vercel
@@ -54,27 +55,47 @@ export async function GET(request: Request) {
   let enviados = 0;
 
   // --- Hábitos com lembrete ---
+  // Etapa 216 — vários horários por hábito; não avisa quem já completou
   const { data: habitos } = await supabase
     .from("habitos")
-    .select("id, nome, dono_id, frequencia, dias_semana, horario_lembrete")
+    .select("id, nome, dono_id, frequencia, dias_semana, horario_lembrete, horarios_lembrete, meta_diaria, unidade, eh_negativo")
     .eq("arquivado", false)
     .not("horario_lembrete", "is", null);
 
   for (const h of habitos ?? []) {
-    const horario = (h.horario_lembrete as string).slice(0, 5);
-    if (!(horario >= cincoMinAntes && horario <= horaAtual)) continue;
+    const horario = horariosDoHabito(h as any).find((x) => x >= cincoMinAntes && x <= horaAtual);
+    if (!horario) continue;
     if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], hoje)) continue;
+
+    const meta = Number(h.meta_diaria ?? 1) || 1;
+    let feitoHoje = 0;
+    if (!h.eh_negativo) {
+      const { data: checkins } = await supabase
+        .from("habito_checkins")
+        .select("quantidade")
+        .eq("habito_id", h.id)
+        .eq("usuario_id", h.dono_id)
+        .eq("data", hoje);
+      feitoHoje = (checkins ?? []).reduce((s, c) => s + Number(c.quantidade ?? 1), 0);
+      if (feitoHoje >= meta) continue; // já completou hoje — não incomoda
+    }
+
+    const unidade = ((h.unidade as string | null) ?? "").trim();
+    const ehContador = meta > 1 && !h.eh_negativo;
+    const titulo = ehContador ? `🔔 ${h.nome}: ${feitoHoje} de ${meta}${unidade ? ` ${unidade}` : ""}` : `🔔 Hora de: ${h.nome}`;
+    const corpo = ehContador ? "Toque em ✓ Feito pra somar mais 1." : "Toque em ✓ Feito se já fez.";
 
     enviados += await notificarUsuariosDoItem(
       supabase,
       "habito",
       h.id,
       h.dono_id,
-      `🔔 Hora de: ${h.nome}`,
+      titulo,
       "/habitos",
       hoje,
       // Etapa 195 — app novo mostra com botões "✓ Feito" / "Lembrar em 30 min"
-      { habitoId: h.id, titulo: `🔔 Hora de: ${h.nome}`, corpo: "Toque em ✓ Feito se já fez.", data: hoje }
+      { habitoId: h.id, titulo, corpo, data: hoje },
+      horario
     );
   }
 
@@ -173,7 +194,9 @@ async function notificarUsuariosDoItem(
   texto: string,
   url: string,
   hoje: string,
-  lembreteHabito?: { habitoId: string; titulo: string; corpo: string; data: string }
+  lembreteHabito?: { habitoId: string; titulo: string; corpo: string; data: string },
+  /** Etapa 216 — "já avisei" por horário (hábito com vários lembretes no dia) */
+  hora = ""
 ): Promise<number> {
   // Dono + convidados com acesso (só se aplica a hábito/tarefa/nota —
   // contas a pagar notificam só o dono, ver notificarContasAPagar)
@@ -198,6 +221,7 @@ async function notificarUsuariosDoItem(
       .eq("item_id", itemId)
       .eq("usuario_id", usuarioId)
       .eq("data", hoje)
+      .eq("hora", hora)
       .maybeSingle();
     if (jaEnviado) continue;
 
@@ -292,6 +316,7 @@ async function notificarUsuariosDoItem(
       item_id: itemId,
       usuario_id: usuarioId,
       data: hoje,
+      hora,
     });
   }
 

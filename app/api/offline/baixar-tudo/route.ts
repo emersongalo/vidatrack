@@ -31,7 +31,7 @@ export async function GET() {
   ] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete, vezes_semana")
+      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete, horarios_lembrete, vezes_semana")
       .eq("arquivado", false),
     supabase
       .from("tarefas")
