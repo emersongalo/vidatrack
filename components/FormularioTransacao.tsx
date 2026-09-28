@@ -10,6 +10,8 @@ import { IconeCategoria } from "@/components/IconeCategoria";
 import { adicionarNaFila } from "@/lib/offline/fila";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
+import { lerSnapshotOffline } from "@/lib/offline/snapshot";
+import { sugerirCategoria } from "@/lib/financas/sugestaoCategoria";
 
 type Conta = { id: string; nome: string };
 type Categoria = { id: string; nome: string; tipo: "receita" | "despesa"; icone?: string };
@@ -64,6 +66,9 @@ export function FormularioTransacao({
 
   const [categoriasLocais, setCategoriasLocais] = useState(categorias);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(valoresIniciais?.categoriaId ?? "");
+  // Etapa 215 — categoria sugerida pela descrição (só enquanto a pessoa não escolheu uma)
+  const [categoriaTocada, setCategoriaTocada] = useState(!!valoresIniciais?.categoriaId);
+  const [categoriaSugerida, setCategoriaSugerida] = useState(false);
   const [mostrarNovaCategoria, setMostrarNovaCategoria] = useState(false);
   const [nomeNovaCategoria, setNomeNovaCategoria] = useState("");
   const [iconeNovaCategoria, setIconeNovaCategoria] = useState(ICONES_CATEGORIA[0].nome);
@@ -74,6 +79,20 @@ export function FormularioTransacao({
     () => categoriasLocais.filter((c) => c.tipo === tipo),
     [categoriasLocais, tipo]
   );
+
+  function sugerirPelaDescricao(texto: string) {
+    if (categoriaTocada) return;
+    const snap = lerSnapshotOffline();
+    if (!snap) return;
+    const id = sugerirCategoria(texto, tipo, snap.financas.transacoes, categoriasFiltradas);
+    if (id) {
+      setCategoriaSelecionada(id);
+      setCategoriaSugerida(true);
+    } else if (categoriaSugerida) {
+      setCategoriaSelecionada("");
+      setCategoriaSugerida(false);
+    }
+  }
 
   function abrirNovaCategoria() {
     setIconeNovaCategoria(ICONES_CATEGORIA[0].nome);
@@ -99,6 +118,8 @@ export function FormularioTransacao({
       }
       setCategoriasLocais((atual) => [...atual, resultado as Categoria]);
       setCategoriaSelecionada(resultado.id);
+      setCategoriaTocada(true);
+      setCategoriaSugerida(false);
       setMostrarNovaCategoria(false);
     });
   }
@@ -241,7 +262,11 @@ export function FormularioTransacao({
             id="categoriaId"
             name="categoriaId"
             value={categoriaSelecionada}
-            onChange={(e) => setCategoriaSelecionada(e.target.value)}
+            onChange={(e) => {
+              setCategoriaSelecionada(e.target.value);
+              setCategoriaTocada(true);
+              setCategoriaSugerida(false);
+            }}
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
           >
             <option value="">Sem categoria</option>
@@ -251,6 +276,9 @@ export function FormularioTransacao({
               </option>
             ))}
           </select>
+          {categoriaSugerida && (
+            <p className="text-[11px] text-financa mt-1">✨ Sugerida pela descrição — pode trocar se quiser</p>
+          )}
 
           {mostrarNovaCategoria && (
             <div className="mt-2 bg-base-800 border border-base-600 rounded-lg p-3 space-y-2.5">
@@ -329,6 +357,7 @@ export function FormularioTransacao({
             name="descricao"
             type="text"
             defaultValue={valoresIniciais?.descricao ?? ""}
+            onChange={(e) => sugerirPelaDescricao(e.target.value)}
             placeholder="Ex: Supermercado, Uber, Freelance"
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />

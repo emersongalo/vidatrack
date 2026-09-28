@@ -8,6 +8,7 @@
     <string name="widget_tarefas_descricao">Suas próximas tarefas</string>
     <string name="widget_sequencia_descricao">Sua maior sequência de hábitos</string>
     <string name="widget_semana_descricao">Progresso dos hábitos na semana</string>
+    <string name="widget_previsao_descricao">Quanto vai sobrar até o fim do mês</string>
     <string name="atalho_gasto_curto">Novo gasto</string>
     <string name="atalho_gasto_longo">Lançar gasto rápido</string>
     <string name="atalho_hoje_curto">Hoje</string>

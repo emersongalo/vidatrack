@@ -29,7 +29,8 @@ export function SincronizadorWidgets() {
       tarefas: snapshot.tarefas,
       conclusoesTarefas: snapshot.conclusoesTarefas,
       contas: snapshot.financas.contas,
-      recorrencias: snapshot.financas.recorrencias,
+      recorrencias: snapshot.financas.recorrencias as any,
+      transacoes: snapshot.financas.transacoes,
       pendencias: tarefasVencidas.length + lembretesPassados.length + alertasCategoria.length,
     });
     const assinatura = JSON.stringify({ ...dados, geradoEm: "" });

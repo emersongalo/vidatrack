@@ -1,6 +1,7 @@
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { tarefaApareceNoDia, tarefaAtrasada } from "@/lib/agenda/recorrencia";
 import { formatarMoeda } from "@/lib/financas/formatacao";
+import { preverFimDoMes } from "@/lib/financas/previsao";
 
 /**
  * Etapa 195 — TUDO que os widgets de tela inicial mostram sai daqui.
@@ -23,6 +24,11 @@ export type DadosWidgets = {
   sequencias: { nome: string; atual: number; recorde: number; negativo: boolean }[];
   semana: { rotulo: string; pct: number | null; ehHoje: boolean }[];
   saldoTexto: string | null;
+  /** Etapa 215 — widget "Previsão do mês" */
+  previstoTexto: string | null;
+  previstoNegativo: boolean;
+  gastoMesTexto: string | null;
+  porDiaTexto: string | null;
   contas: string[];
   /** só o app calcula (depende do que a pessoa dispensou no aparelho) */
   pendencias: number | null;
@@ -34,8 +40,10 @@ export type EntradaWidgets = {
   checkins: { habito_id: string; data: string; quantidade?: number | null }[];
   tarefas: any[];
   conclusoesTarefas: { tarefa_id: string; data: string }[];
-  contas: { tipo: string; saldo: number | string }[];
-  recorrencias: { tipo: string; valor: number | string; dia_mes: number; data_fim: string | null; data_inicio?: string | null; ativo: boolean; descricao: string | null }[];
+  contas: { id?: string; nome?: string; tipo: string; saldo: number | string; dia_fechamento?: number | null; dia_vencimento?: number | null }[];
+  recorrencias: { id?: string; conta_id?: string; tipo: string; valor: number | string; dia_mes: number; data_fim: string | null; data_inicio?: string | null; ativo: boolean; descricao: string | null }[];
+  /** Etapa 215 — pra previsão do mês e gasto do mês (opcional) */
+  transacoes?: { id?: string; conta_id: string; tipo: string; valor: number | string; data: string; descricao?: string | null; pago_em?: string | null; recorrencia_id?: string | null; transferencia_grupo?: string | null }[];
   pendencias?: number | null;
 };
 
@@ -183,6 +191,29 @@ export function montarDadosWidgets(e: EntradaWidgets): DadosWidgets {
     ? formatarMoeda(contasComuns.reduce((s, c) => s + Number(c.saldo), 0))
     : null;
 
+  // --- Etapa 215: previsão até o fim do mês + gasto do mês ---
+  let previstoTexto: string | null = null;
+  let previstoNegativo = false;
+  let gastoMesTexto: string | null = null;
+  let porDiaTexto: string | null = null;
+  if (contasComuns.length && e.transacoes) {
+    const p = preverFimDoMes({
+      contas: e.contas.filter((c) => c.id) as any,
+      transacoes: e.transacoes,
+      recorrencias: e.recorrencias.filter((r) => r.id && r.conta_id) as any,
+      hojeISO: hoje,
+    });
+    previstoTexto = formatarMoeda(Math.abs(p.sobra));
+    previstoNegativo = p.sobra < 0;
+    porDiaTexto = p.porDia !== null ? formatarMoeda(p.porDia) : null;
+    const investimento = new Set(e.contas.filter((c) => c.tipo === "investimento").map((c) => c.id));
+    const mes = hoje.slice(0, 7);
+    const gasto = e.transacoes
+      .filter((t) => t.tipo === "despesa" && !t.transferencia_grupo && !investimento.has(t.conta_id) && t.data.startsWith(mes) && t.data <= hoje)
+      .reduce((s, t) => s + Number(t.valor), 0);
+    gastoMesTexto = formatarMoeda(gasto);
+  }
+
   // --- Próximas contas a pagar (despesas recorrentes) ---
   const [anoH, mesH, diaH] = hoje.split("-").map(Number);
   const contas = e.recorrencias
@@ -223,6 +254,10 @@ export function montarDadosWidgets(e: EntradaWidgets): DadosWidgets {
     sequencias,
     semana,
     saldoTexto,
+    previstoTexto,
+    previstoNegativo,
+    gastoMesTexto,
+    porDiaTexto,
     contas,
     pendencias: e.pendencias ?? null,
   };

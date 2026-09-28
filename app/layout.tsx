@@ -13,6 +13,7 @@ import { SincronizadorWidgets } from "@/components/SincronizadorWidgets";
 import { ErrosGlobais } from "@/components/ErrosGlobais";
 import { BloqueioApp } from "@/components/BloqueioApp";
 import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
+import { SCRIPT_APARENCIA } from "@/lib/preferencias/aparencia";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -82,6 +83,7 @@ export default function RootLayout({
           }}
         />
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_PRE_BLOQUEIO }} />
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_APARENCIA }} />
         {children}
         <RegistradorPWA />
         <RecuperadorDeSegundoPlano />

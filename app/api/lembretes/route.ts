@@ -8,6 +8,8 @@ import { horaAtualNoFuso, dataAtualNoFuso, horaMinutosAtrasNoFuso } from "@/lib/
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { enviarNotificacaoFCM, enviarLembreteHabitoFCM } from "@/lib/fcm/servidor";
 import { somarDias } from "@/lib/widgets/dados";
+import { calcularPeriodoFatura, periodoFaturaAdjacente } from "@/lib/financas/fatura";
+import { resumoFatura } from "@/lib/financas/previsao";
 
 // Sem cookie nem sessão, o Next.js não tem como saber sozinho que essa
 // rota precisa rodar de novo a cada chamada — sem isso aqui, o Vercel
@@ -113,6 +115,11 @@ export async function GET(request: Request) {
   // ponto de precisar checar a cada poucos minutos.
   if (horaAtual >= "08:05" && horaAtual <= "08:10") {
     enviados += await notificarOrcamentosEstourados(supabase, hoje);
+  }
+
+  // --- Etapa 215: fatura do cartão (3 dias antes, véspera e no dia) ---
+  if (horaAtual >= "08:10" && horaAtual <= "08:15") {
+    enviados += await notificarFaturasCartao(supabase, hoje);
   }
 
   // --- Etapa 202: avisos que trazem a pessoa de volta ---
@@ -610,6 +617,54 @@ async function notificarResumoMensal(supabase: ReturnType<typeof criarClienteAdm
     }
     const texto = `📅 Seu ${nomeMes}: ${partes.join(" · ")}.${comparacao}`;
     enviados += await notificarUsuariosDoItem(supabase, "resumo_mes", usuarioId, usuarioId, texto, "/financas/analise", hoje);
+  }
+  return enviados;
+}
+
+/**
+ * Etapa 215 — lembrete da fatura do cartão: 3 dias antes, na véspera e
+ * no dia do vencimento, só se ainda tiver valor a pagar (pagamento =
+ * transferência pro cartão depois do fechamento).
+ */
+async function notificarFaturasCartao(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+  const { data: cartoes } = await supabase
+    .from("financa_contas")
+    .select("id, nome, tipo, dono_id, dia_fechamento, dia_vencimento")
+    .eq("tipo", "cartao")
+    .eq("arquivado", false)
+    .not("dia_fechamento", "is", null)
+    .not("dia_vencimento", "is", null);
+
+  const avisarEm = new Map([
+    [somarDias(hoje, 3), "em 3 dias"],
+    [somarDias(hoje, 1), "amanhã"],
+    [hoje, "HOJE"],
+  ]);
+  let enviados = 0;
+
+  for (const c of cartoes ?? []) {
+    const aberta = calcularPeriodoFatura(c.dia_fechamento as number, hoje);
+    const fechada = periodoFaturaAdjacente(c.dia_fechamento as number, aberta.fim, -1);
+    for (const periodo of [fechada, aberta]) {
+      const { data: transacoes } = await supabase
+        .from("financa_transacoes")
+        .select("conta_id, tipo, valor, data, transferencia_grupo")
+        .eq("conta_id", c.id)
+        .gte("data", periodo.inicio);
+      const r = resumoFatura(c as any, (transacoes ?? []) as any, periodo);
+      if (!r.vencimento || !avisarEm.has(r.vencimento) || r.aPagar <= 0) continue;
+      const quando = avisarEm.get(r.vencimento)!;
+      const texto = `💳 Fatura do ${c.nome} vence ${quando} (${r.vencimento.slice(8, 10)}/${r.vencimento.slice(5, 7)}): ${formatarMoeda(r.aPagar)}`;
+      enviados += await notificarUsuariosDoItem(
+        supabase,
+        "fatura_cartao",
+        c.id,
+        c.dono_id as string,
+        texto,
+        `/financas/contas/${c.id}/fatura`,
+        hoje
+      );
+    }
   }
   return enviados;
 }

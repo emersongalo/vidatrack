@@ -11,6 +11,7 @@ import { formatarValorDigitado } from "@/components/CampoValorMonetario";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { classeFundoSuave, classeTextoCor } from "@/lib/agenda/estilo";
 import { extrairDadosCupom } from "@/lib/financas/cupom";
+import { sugerirCategoria } from "@/lib/financas/sugestaoCategoria";
 
 const CHAVE_ULTIMA_CONTA = "vidatrack-gasto-rapido-conta";
 
@@ -69,18 +70,21 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
     [snapshot, meuId]
   );
 
+  const todasDespesa: Categoria[] = useMemo(
+    () => ((snapshot?.financas.categorias ?? []) as Categoria[]).filter((c) => c.tipo === "despesa" && (!c.dono_id || c.dono_id === meuId)),
+    [snapshot, meuId]
+  );
+
   // categorias de despesa, as mais usadas nos últimos 60 dias primeiro
-  const categorias: Categoria[] = useMemo(() => {
-    const todas = ((snapshot?.financas.categorias ?? []) as Categoria[]).filter(
-      (c) => c.tipo === "despesa" && (!c.dono_id || c.dono_id === meuId)
-    );
+  const categoriasMaisUsadas: Categoria[] = useMemo(() => {
+    const todas = todasDespesa;
     const limite = new Date(Date.now() - 60 * 86400000).toLocaleDateString("sv-SE");
     const uso = new Map<string, number>();
     for (const t of (snapshot?.financas.transacoes ?? []) as any[]) {
       if (t.tipo === "despesa" && t.categoria_id && t.data >= limite) uso.set(t.categoria_id, (uso.get(t.categoria_id) ?? 0) + 1);
     }
     return [...todas].sort((a, b) => (uso.get(b.id) ?? 0) - (uso.get(a.id) ?? 0) || a.nome.localeCompare(b.nome)).slice(0, 8);
-  }, [snapshot, meuId]);
+  }, [snapshot, todasDespesa]);
 
   const [valor, setValor] = useState("");
   const [categoriaId, setCategoriaId] = useState<string>("");
@@ -92,6 +96,27 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
     return contas[0]?.id ?? "";
   });
   const [descricao, setDescricao] = useState("");
+  // Etapa 215 — categoria sugerida pela descrição (até a pessoa tocar numa)
+  const [categoriaTocada, setCategoriaTocada] = useState(false);
+  const [categoriaSugerida, setCategoriaSugerida] = useState(false);
+  const categorias: Categoria[] = useMemo(() => {
+    if (!categoriaId || categoriasMaisUsadas.some((c) => c.id === categoriaId)) return categoriasMaisUsadas;
+    const extra = todasDespesa.find((c) => c.id === categoriaId);
+    return extra ? [extra, ...categoriasMaisUsadas.slice(0, 7)] : categoriasMaisUsadas;
+  }, [categoriaId, categoriasMaisUsadas, todasDespesa]);
+
+  function mudarDescricao(texto: string) {
+    setDescricao(texto);
+    if (categoriaTocada) return;
+    const id = sugerirCategoria(texto, "despesa", (snapshot?.financas.transacoes ?? []) as any[], todasDespesa);
+    if (id) {
+      setCategoriaId(id);
+      setCategoriaSugerida(true);
+    } else if (categoriaSugerida) {
+      setCategoriaId("");
+      setCategoriaSugerida(false);
+    }
+  }
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [feito, setFeito] = useState<string | null>(null);
@@ -112,7 +137,7 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
       const texto = await lerTextoDaImagem(arquivo, (p) => setLendo(p));
       const d = extrairDadosCupom(texto);
       if (d.valor) setValor(d.valor);
-      if (d.descricao && !descricao.trim()) setDescricao(d.descricao);
+      if (d.descricao && !descricao.trim()) mudarDescricao(d.descricao);
       const hoje = new Date().toLocaleDateString("sv-SE");
       setDataCupom(d.data && d.data !== hoje ? d.data : null);
       setAvisoCupom(
@@ -169,6 +194,8 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
       setValor("");
       setDescricao("");
       setCategoriaId("");
+      setCategoriaTocada(false);
+      setCategoriaSugerida(false);
       setDataCupom(null);
       setTimeout(aoFechar, 1100);
     } catch {
@@ -257,7 +284,11 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => setCategoriaId(ativa ? "" : c.id)}
+                      onClick={() => {
+                        setCategoriaId(ativa ? "" : c.id);
+                        setCategoriaTocada(true);
+                        setCategoriaSugerida(false);
+                      }}
                       className={`flex flex-col items-center gap-1 rounded-xl border px-1 py-2 transition ${
                         ativa ? "border-financa bg-financa/15" : "border-base-600 hover:border-ink-400"
                       }`}
@@ -276,10 +307,11 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
               </div>
             )}
 
+            {categoriaSugerida && <p className="text-[11px] text-financa -mt-1 mb-2">✨ Categoria sugerida pela descrição</p>}
             <div className="flex gap-2 mb-3">
               <input
                 value={descricao}
-                onChange={(e) => setDescricao(e.target.value)}
+                onChange={(e) => mudarDescricao(e.target.value)}
                 maxLength={200}
                 placeholder="Descrição (opcional)"
                 className="flex-1 min-w-0 bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none"

@@ -23,6 +23,22 @@
   --c-ink-400: 107 108 118;
 }
 
+/* Etapa 215 — acessibilidade: texto maior (tudo em rem escala junto) */
+html[data-fonte="grande"] { font-size: 112.5%; }
+html[data-fonte="maior"] { font-size: 125%; }
+
+/* Etapa 215 — alto contraste: texto secundário e bordas mais fortes */
+:root[data-contraste="alto"]:not([data-theme="light"]) {
+  --c-ink-100: 255 255 255;
+  --c-ink-400: 208 209 216;
+  --c-base-600: 96 100 112;
+}
+[data-theme="light"][data-contraste="alto"] {
+  --c-ink-100: 0 0 0;
+  --c-ink-400: 52 53 60;
+  --c-base-600: 140 138 130;
+}
+
 @layer base {
   html, body {
     /* Rede de segurança: nenhum elemento, em nenhuma tela, consegue

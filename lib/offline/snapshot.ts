@@ -32,6 +32,8 @@ export type SnapshotOffline = {
     ordemBlocosFinancas: string[] | null;
   };
   perfil: { nome: string | null; email: string | null; id: string };
+  /** Etapa 215 — diário do dia (humor + frase). Campo novo: retrato antigo vem sem, lido como []. */
+  diario?: { data: string; humor: number; texto: string | null }[];
 };
 
 export function salvarSnapshotOffline(dados: Omit<SnapshotOffline, "versao">) {
@@ -78,6 +80,7 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
         recorrencias: dados.financas?.recorrencias ?? [],
         ordemBlocosFinancas: dados.financas?.ordemBlocosFinancas ?? null,
       },
+      diario: Array.isArray(dados.diario) ? dados.diario : [],
       perfil: {
         nome: dados.perfil?.nome ?? null,
         email: dados.perfil?.email ?? null,

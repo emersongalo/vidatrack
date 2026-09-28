@@ -40,7 +40,8 @@ export async function GET() {
     supabase.from("categorias_produtividade").select("id, nome, cor"),
     supabase.from("financa_contas").select("id, dono_id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),
     supabase.from("financa_categorias").select("id, dono_id, nome, tipo, icone, cor, meta_mensal"),
-    supabase.from("metas_financeiras").select("id, nome, valor_atual, valor_alvo, concluida, data_alvo"),
+    // Etapa 215 — meta arquivada não aparece mais na lista
+    supabase.from("metas_financeiras").select("id, nome, valor_atual, valor_alvo, concluida, data_alvo").eq("arquivada", false),
     supabase
       .from("desafios_financeiros")
       .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido, conta_origem_id")
@@ -68,11 +69,11 @@ export async function GET() {
   dataLimite.setDate(dataLimite.getDate() - 400);
   const dataLimiteISO = dataLimite.toLocaleDateString("sv-SE");
 
-  const [{ data: checkins }, { data: conclusoesTarefas }, { data: transacoes }] = await Promise.all([
+  const [{ data: checkins }, { data: conclusoesTarefas }, { data: transacoes }, { data: diario }] = await Promise.all([
     idsHabitos.length
       ? supabase
           .from("habito_checkins")
-          .select("habito_id, usuario_id, data, quantidade")
+          .select("habito_id, usuario_id, data, quantidade, criado_em")
           .in("habito_id", idsHabitos)
           .gte("data", dataLimiteISO)
       : Promise.resolve({ data: [] as any[] }),
@@ -89,6 +90,8 @@ export async function GET() {
           .order("data", { ascending: false })
           .limit(LIMITE_TRANSACOES)
       : Promise.resolve({ data: [] as any[] }),
+    // Etapa 215 — diário do dia
+    supabase.from("diario_dias").select("data, humor, texto").eq("dono_id", user.id).gte("data", dataLimiteISO).order("data", { ascending: false }),
   ]);
 
   const todasTransacoes = transacoes ?? [];
@@ -131,6 +134,7 @@ export async function GET() {
       recorrencias: recorrencias ?? [],
       ordemBlocosFinancas: perfil?.ordem_blocos_financas ?? null,
     },
+    diario: diario ?? [],
     perfil: {
       nome: perfil?.nome ?? null,
       email: user.email ?? null,

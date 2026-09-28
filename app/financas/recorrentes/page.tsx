@@ -10,6 +10,8 @@ import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { SugestoesRecorrentes } from "@/components/SugestoesRecorrentes";
+import { hojeISO } from "@/lib/habitos/streak";
 
 // Etapa 129
 export default function RecorrentesPage() {
@@ -87,6 +89,8 @@ function RecorrentesConteudo() {
           ))}
         </ul>
       )}
+
+      {snapshot && <SugestoesRecorrentes snapshot={snapshot} hojeISO={hojeISO()} />}
 
       {snapshot !== undefined && contas.length === 0 ? (
         <p className="text-ink-400 text-sm">Crie uma conta primeiro para adicionar recorrências.</p>

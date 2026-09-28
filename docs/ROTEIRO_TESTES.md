@@ -1,4 +1,4 @@
-# Roteiro de testes — VidaTrack (Etapas 203 a 214)
+# Roteiro de testes — VidaTrack (Etapas 203 a 215)
 
 Faça no celular, logado na sua conta. Use valores pequenos e apague no final (item 15).
 Marque ✅ ou anote o que deu errado (com print).
@@ -69,6 +69,21 @@ Marque ✅ ou anote o que deu errado (com print).
 ## 14. Avisos novos (automáticos)
 - [ ] Com um orçamento perto do limite, chega o aviso de **80%** (uma vez por categoria no mês).
 - [ ] No dia 1º, por volta das 9h, chega o **resumo do mês anterior** (se "Resumos da semana e do mês" estiver ligado).
+
+## Etapa 215 — novidades
+- [ ] **Previsão:** em Finanças aparece "Vai sobrar R$ X" com "dá pra gastar R$ Y por dia". Toque em "Ver o que ainda vai entrar e sair" e confira a lista (agendados, ↻ todo mês, cartão).
+- [ ] **Categoria automática:** novo lançamento, digite uma descrição que você já usou (ex: "Uber") → a categoria é escolhida sozinha ("✨ Sugerida"). Trocar a categoria na mão deve funcionar normal. No Gasto rápido do "+" também.
+- [ ] **Alertas:** se alguma categoria estiver bem acima da média, aparece o aviso 📈 no topo de Finanças (dá pra fechar no X). Em Análise aparece "Fora do normal".
+- [ ] **Contas fixas detectadas:** em Recorrentes, se tiver algo que se repete todo mês, aparece "Parecem contas fixas" → "Cadastrar como recorrente".
+- [ ] **Metas:** cada meta mostra "guarde R$ X/mês até ..."; teste Guardar, Retirar e o lápis (editar). As metas aparecem também na tela de Finanças.
+- [ ] **Fatura:** na tela da fatura aparece o "Melhor dia pra comprar". O aviso chega 3 dias antes, na véspera e no dia (8h10).
+- [ ] **Exportar:** Mais → Exportar e backup → baixe "Este ano" e abra no Excel/Planilhas (colunas certas, valores com vírgula). Baixe o backup .json. No app Android (versão nova) o arquivo vai pra Downloads.
+- [ ] **Diário:** na tela Hoje, "Como está seu dia?" → toque num emoji, escreva uma frase. Hábitos → Estatísticas → 🙂 Diário mostra o histórico.
+- [ ] **Lembrete inteligente:** depois de marcar um hábito ~5 vezes no mesmo horário, aparece a sugestão "Mover lembrete pra HH:MM".
+- [ ] **Retrospectiva:** Estatísticas → 🎉 Retrospectiva do ano. "Compartilhar" copia um texto (sem valores em dinheiro).
+- [ ] **Busca:** no Painel, 🔍 → busque um nome de lançamento, um hábito e um valor (ex: 45,90).
+- [ ] **Aparência:** Perfil → Aparência → texto Grande/Maior e Alto contraste. Feche e abra o app: continua igual.
+- [ ] **Widget (app novo 1.0.9):** segure na tela inicial → Widgets → VidaTrack "Previsão do mês".
 
 ## 15. Limpeza
 - [ ] Apague os lançamentos, a recorrência e o hábito de teste.

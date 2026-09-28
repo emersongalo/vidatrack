@@ -16,7 +16,7 @@ const ITENS = [
   { href: "/financas/recorrentes", Icone: Repeat, titulo: "Recorrentes", texto: "Contas e receitas que se repetem todo mês" },
   { href: "/financas/analise", Icone: BarChart3, titulo: "Análise", texto: "Mapa de gastos e comparação com o mês passado" },
   { href: "/financas/personalizar", Icone: ArrowUpDown, titulo: "Personalizar ordem", texto: "Reorganize os blocos da tela inicial" },
-  { href: "/financas/exportar", Icone: Download, titulo: "Exportar CSV", texto: "Baixe seus lançamentos em planilha" },
+  { href: "/financas/exportar", Icone: Download, titulo: "Exportar e backup", texto: "Planilha dos lançamentos (mês, ano, tudo) e cópia completa dos seus dados" },
   { href: "/financas/contas/lixeira", Icone: Trash2, titulo: "Lixeira de contas", texto: "Contas arquivadas — restaure ou exclua de vez" },
 ];
 

@@ -9,7 +9,7 @@ import { ConfirmarSaidaApp } from "@/components/ConfirmarSaidaApp";
 import { FotoPerfil } from "@/components/FotoPerfil";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { sair } from "../login/actions";
-import { Bell } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
@@ -58,6 +58,14 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {/* Etapa 215 — busca geral */}
+          <Link
+            href="/buscar"
+            aria-label="Buscar"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
+          >
+            <Search size={18} strokeWidth={2} />
+          </Link>
           <Link
             href="/notificacoes"
             aria-label="Notificações"
@@ -108,6 +116,27 @@ export default function DashboardPage() {
           <span className="text-ink-400">→</span>
         </Link>
       )}
+
+      {/* Etapa 215 — retrospectiva em dezembro (do ano) e janeiro (do ano que passou) */}
+      {(() => {
+        const agora = new Date();
+        const mes = agora.getMonth() + 1;
+        if (mes !== 12 && mes !== 1) return null;
+        const ano = mes === 12 ? agora.getFullYear() : agora.getFullYear() - 1;
+        return (
+          <Link
+            href={`/retrospectiva?ano=${ano}`}
+            className="flex items-center gap-3 mt-3 mb-1 rounded-xl2 p-4 border border-financa/40 bg-gradient-to-r from-nota/15 to-financa/15 hover:border-financa transition"
+          >
+            <span className="text-2xl">🎉</span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-medium">Sua retrospectiva {ano}</span>
+              <span className="block text-xs text-ink-400">Hábitos, dinheiro e humor do ano num lugar só</span>
+            </span>
+            <span className="text-ink-400">→</span>
+          </Link>
+        );
+      })()}
 
       <div className="flex flex-col flex-1 min-h-0 lg:grid lg:grid-cols-[1fr_300px] lg:gap-8">
         <TrilhoMenu />

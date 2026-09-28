@@ -85,6 +85,18 @@
                 android:resource="@xml/saldo_widget_info" />
         </receiver>
 
+        <!-- Etapa 215: previsão do mês -->
+        <receiver
+            android:name="com.vidatrack.app.widget.PrevisaoWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/previsao_widget_info" />
+        </receiver>
+
         <receiver
             android:name="com.vidatrack.app.widget.ContasAPagarWidgetProvider"
             android:exported="false">

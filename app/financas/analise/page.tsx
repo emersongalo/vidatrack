@@ -12,6 +12,8 @@ import { GraficoAcumuladoLazy as GraficoAcumulado } from "@/components/GraficoAc
 import { RadarOrcamentoLazy as RadarOrcamento } from "@/components/RadarOrcamentoLazy";
 import { MapaCalorGastos } from "@/components/MapaCalorGastos";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { gastosForaDoNormal } from "@/lib/financas/alertas";
+import { SugestoesRecorrentes } from "@/components/SugestoesRecorrentes";
 
 // Etapa 128 — o cálculo pesado (lib/financas/insights-calculo.ts) já
 // era puro; só precisava alimentar com as transações certas vindas
@@ -66,6 +68,12 @@ export default function AnaliseFinanceiraPage() {
   const hrefCategoria = (nome: string) =>
     `/financas/extrato?categoria=${idPorNome.get(nome) ?? "sem"}&tipo=despesa&mes=${mesVisto}`;
 
+  // Etapa 215 — categorias bem acima da média dos 3 meses anteriores
+  const hojeAgora = hojeISO();
+  const refForaDoNormal = ultimoDiaDoMes(mesReferencia) < hojeAgora ? ultimoDiaDoMes(mesReferencia) : hojeAgora;
+  const foraDoNormal = gastosForaDoNormal((snapshot?.financas.transacoes ?? []) as any, refForaDoNormal, { minimoPercentual: 20, minimoValor: 30 });
+  const ehMesCorrente = mesReferencia.slice(0, 7) === hojeAgora.slice(0, 7);
+
   const nomeMes = new Date(mesReferencia + "T00:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
   function mudarMes(deslocamento: number) {
@@ -107,6 +115,30 @@ export default function AnaliseFinanceiraPage() {
               </div>
             ))}
           </div>
+
+          {foraDoNormal.length > 0 && (
+            <div className="bg-base-800 border border-red-400/30 rounded-xl2 p-4 mb-6">
+              <p className="text-sm font-medium mb-1">📈 Fora do normal</p>
+              <p className="text-xs text-ink-400 mb-3">Comparado com a média dos 3 meses anteriores</p>
+              <ul className="space-y-2">
+                {foraDoNormal.map((g) => {
+                  const nome = mapaCategorias.get(g.categoriaId) ?? "Categoria";
+                  return (
+                    <li key={g.categoriaId}>
+                      <Link href={hrefCategoria(nome)} className="flex items-center justify-between gap-3 text-sm hover:text-financa transition">
+                        <span className="truncate">{nome}</span>
+                        <span className="shrink-0 text-right">
+                          <span className="font-mono">{formatarMoeda(g.gastoMes)}</span>
+                          <span className="text-xs text-red-400 ml-2">+{g.percentualAcima}%</span>
+                          <span className="block text-[11px] text-ink-400">média {formatarMoeda(g.media)}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
           <div className="bg-base-800 border border-base-600 rounded-xl2 p-5 mb-6">
             <p className="text-ink-400 text-sm mb-1">Total gasto em {nomeMes}</p>
@@ -227,6 +259,11 @@ export default function AnaliseFinanceiraPage() {
             </div>
           </div>
         </>
+      )}
+      {snapshot && ehMesCorrente && (
+        <div className="mt-6">
+          <SugestoesRecorrentes snapshot={snapshot} hojeISO={hojeAgora} />
+        </div>
       )}
     </main>
   );

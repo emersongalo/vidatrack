@@ -96,6 +96,12 @@ export default function FaturaCartaoPage() {
             Pagar fatura
           </Link>
         )}
+        {/* Etapa 215 */}
+        <p className="text-xs text-ink-400 mt-3">
+          🛒 Melhor dia pra comprar: <span className="text-ink-100">dia {conta.dia_fechamento >= 31 ? 1 : conta.dia_fechamento + 1}</span> — o que você compra
+          depois do fechamento só é cobrado na fatura seguinte.
+        </p>
+        <p className="text-xs text-ink-400 mt-1">🔔 Você recebe um aviso 3 dias antes, na véspera e no dia do vencimento.</p>
         <p className="text-[11px] text-ink-400 mt-3">
           Gastos no cartão não saem do seu saldo na hora — só quando você paga a fatura (sai da conta do banco).
         </p>

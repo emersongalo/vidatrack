@@ -9,6 +9,7 @@ import { FotoPerfil } from "@/components/FotoPerfil";
 import { IconeInstagram } from "@/components/IconeInstagram";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
 import { ConfigBloqueioPin } from "@/components/ConfigBloqueioPin";
+import { ConfigAparencia } from "@/components/ConfigAparencia";
 
 // Etapa 134
 export default function PerfilPage() {
@@ -92,7 +93,20 @@ function PerfilConteudo() {
         </div>
       </form>
 
+      <ConfigAparencia />
       <ConfigBloqueioPin />
+
+      {/* Etapa 215 — LGPD: cópia dos seus dados */}
+      <section className="mt-10 pt-6 border-t border-base-600">
+        <h2 className="font-display font-semibold">💾 Seus dados</h2>
+        <p className="text-xs text-ink-400 mt-1 mb-3">Baixe uma cópia de tudo que você guardou no app (arquivo .json).</p>
+        <a href="/api/backup" className="inline-block px-4 py-2 rounded-lg border border-base-600 text-sm hover:border-ink-100 transition">
+          Baixar backup
+        </a>
+        <a href="/financas/exportar" className="inline-block ml-2 px-4 py-2 rounded-lg border border-base-600 text-sm hover:border-ink-100 transition">
+          Planilha de lançamentos
+        </a>
+      </section>
 
       <div className="flex flex-col items-center gap-3 mt-10 pt-6 border-t border-base-600">
         <a

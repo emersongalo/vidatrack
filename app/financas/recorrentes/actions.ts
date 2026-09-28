@@ -131,3 +131,42 @@ export async function garantirLancamentosRecorrentes() {
     await supabase.from("financa_transacoes").insert(paraInserir);
   }
 }
+
+/**
+ * Etapa 215 — "Cadastrar como recorrente" a partir de uma cobrança que
+ * o app detectou se repetindo todo mês. Começa no próximo vencimento
+ * (não duplica o mês que já foi cobrado).
+ */
+export async function criarRecorrenciaSugerida(dados: {
+  contaId: string;
+  categoriaId: string | null;
+  valor: number;
+  descricao: string;
+  diaMes: number;
+  dataInicio: string;
+}): Promise<{ erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sua sessão expirou. Saia e entre de novo." };
+  const valor = Math.round(Number(dados.valor) * 100) / 100;
+  const diaMes = Math.trunc(Number(dados.diaMes));
+  if (!(valor > 0) || !(diaMes >= 1 && diaMes <= 28) || !/^\d{4}-\d{2}-\d{2}$/.test(dados.dataInicio)) {
+    return { erro: "Dados inválidos" };
+  }
+  const { error } = await supabase.from("financa_recorrencias").insert({
+    dono_id: user.id,
+    conta_id: dados.contaId,
+    categoria_id: dados.categoriaId,
+    tipo: "despesa",
+    valor,
+    descricao: String(dados.descricao).slice(0, 200),
+    dia_mes: diaMes,
+    data_inicio: dados.dataInicio,
+  });
+  if (error) return { erro: error.message };
+  revalidatePath("/financas");
+  revalidatePath("/financas/recorrentes");
+  return {};
+}

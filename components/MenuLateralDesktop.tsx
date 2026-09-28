@@ -24,6 +24,13 @@ export function MenuLateralDesktop({
       >
         ← Painel
       </Link>
+      {/* Etapa 215 */}
+      <Link
+        href="/buscar"
+        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-ink-400 hover:text-ink-100 hover:bg-base-700 transition mb-4 -mt-3"
+      >
+        🔍 Buscar
+      </Link>
 
       {submenu}
 

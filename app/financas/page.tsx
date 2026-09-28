@@ -18,6 +18,10 @@ import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { preverFimDoMes } from "@/lib/financas/previsao";
+import { PrevisaoMes } from "@/components/PrevisaoMes";
+import { AlertasFinancas } from "@/components/AlertasFinancas";
+import { MetasResumo } from "@/components/MetasResumo";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -121,8 +125,14 @@ export default function FinancasPage() {
         hoje.getDate()
       )
     : null;
-  const saldoPrevisto =
-    saldoPrevistoBase !== null
+  // Etapa 215 — previsão completa do mês atual (agendados + recorrentes
+  // ainda não lançadas + faturas do cartão), sem contar nada duas vezes.
+  const previsao = ehMesAtual
+    ? preverFimDoMes({ contas: contas as any, transacoes: transacoes as any, recorrencias: recorrencias as any, hojeISO: hojeISOBr, saldoHoje: saldoTotal })
+    : null;
+  const saldoPrevisto = previsao
+    ? previsao.sobra
+    : saldoPrevistoBase !== null
       ? saldoPrevistoBase + futurosAte(ultimoDiaDoMes(mesAtualISO + "-01"))
       : ehMesFuturo
         ? saldoTotal + futurosAte(ultimoDiaDoMes(mesSelecionado + "-01"))
@@ -296,7 +306,10 @@ export default function FinancasPage() {
             aoHoje={() => { setMesSelecionado(mesAtualISO); setMostrarTodosLancamentos(false); }}
           />
 
+          {snapshot && ehMesAtual && <AlertasFinancas snapshot={snapshot} hojeISO={hojeISOBr} />}
+
           <div className="lg:columns-2 lg:gap-6">
+            {previsao && <PrevisaoMes previsao={previsao} />}
             <div className="lg:break-inside-avoid">
               <ListaContasComSaldo contas={contas as any} />
             </div>
@@ -317,6 +330,8 @@ export default function FinancasPage() {
                 </div>
               </div>
             )}
+
+            <MetasResumo metas={snapshot?.financas.metas ?? []} hojeISO={hojeISOBr} />
 
             <Link
               href="/financas/assistente"
