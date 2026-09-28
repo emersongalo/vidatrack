@@ -15,8 +15,8 @@ const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }
   },
   {
     chave: "resumo_semanal",
-    titulo: "Resumo da semana (domingo, 19:00)",
-    texto: "Quanto dos hábitos você fez, tarefas concluídas e quanto gastou nos últimos 7 dias.",
+    titulo: "Resumos da semana e do mês",
+    texto: "Domingo às 19:00: hábitos, tarefas e gastos da semana. Dia 1 às 09:00: quanto entrou e saiu no mês.",
     Icone: BarChart3,
   },
 ];

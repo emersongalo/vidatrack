@@ -1,0 +1,18 @@
+# Etapa 214 — roda os testes automáticos a cada push no GitHub.
+# Se algum teste falhar, aparece um X vermelho no commit (a Vercel
+# continua publicando normalmente — isso só avisa).
+name: Testes
+on:
+  push:
+  pull_request:
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test

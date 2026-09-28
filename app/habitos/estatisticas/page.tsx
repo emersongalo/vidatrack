@@ -140,7 +140,15 @@ export default function EstatisticasHabitosPage() {
       <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
         ← Hábitos
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Estatísticas</h1>
+      <div className="flex items-center justify-between gap-3 mt-4 mb-6">
+        <h1 className="text-2xl font-display font-semibold">Estatísticas</h1>
+        <Link
+          href="/habitos/conquistas"
+          className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition"
+        >
+          🏆 Conquistas →
+        </Link>
+      </div>
 
       {habitos.length > 0 && (
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">

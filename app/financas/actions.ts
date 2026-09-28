@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import { createClient } from "@/lib/supabase/server";
+import { dividirParcelas, somarMesesISO } from "@/lib/financas/parcelas";
 import {
   esquemaTransacao,
   esquemaConta,
@@ -291,14 +292,6 @@ export async function removerCategoria(categoriaId: string) {
   revalidatePath("/financas");
 }
 
-/** Mesmo dia N meses depois (dia 31 vira o último dia do mês, se precisar). */
-function somarMesesISO(iso: string, meses: number) {
-  const [a, m, d] = iso.split("-").map(Number);
-  const ultimo = new Date(a, m - 1 + meses + 1, 0).getDate();
-  const data = new Date(a, m - 1 + meses, Math.min(d, ultimo));
-  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
-}
-
 function dadosTransacaoDoFormulario(formData: FormData) {
   return {
     tipo: formData.get("tipo"),
@@ -329,10 +322,8 @@ export async function criarTransacao(formData: FormData) {
   // Etapa 210 — compra parcelada: cria uma parcela por mês, a partir da data escolhida
   if (formData.get("parcelado") === "on") {
     const d = resultado.data;
-    const n = Math.max(2, Math.min(48, Math.round(Number(formData.get("numParcelas")) || 2)));
-    const centavos = Math.round(d.valor * 100);
-    const totalCentavos = formData.get("modoParcela") === "parcela" ? centavos * n : centavos;
-    const base = Math.floor(totalCentavos / n);
+    const valores = dividirParcelas(d.valor, Number(formData.get("numParcelas")), formData.get("modoParcela") === "parcela" ? "parcela" : "total");
+    const n = valores.length;
     const grupo = randomUUID();
     const nomeBase = d.descricao || "Compra parcelada";
     const linhas = Array.from({ length: n }, (_, i) => ({
@@ -340,8 +331,7 @@ export async function criarTransacao(formData: FormData) {
       conta_id: d.contaId,
       categoria_id: d.categoriaId,
       tipo: d.tipo,
-      // a última parcela absorve os centavos que sobraram da divisão
-      valor: (i === n - 1 ? totalCentavos - base * (n - 1) : base) / 100,
+      valor: valores[i],
       descricao: `${nomeBase} (${i + 1}/${n})`,
       data: somarMesesISO(d.data, i),
       parcela_grupo: grupo,

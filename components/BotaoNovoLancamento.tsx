@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Plus, TrendingUp, TrendingDown, PiggyBank, X, Check, Zap, ArrowLeftRight } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, PiggyBank, X, Check, Zap, ArrowLeftRight, Camera } from "lucide-react";
 import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { adicionarNaFila } from "@/lib/offline/fila";
@@ -10,6 +10,7 @@ import { criarTransacaoSilenciosa } from "@/app/financas/actions";
 import { formatarValorDigitado } from "@/components/CampoValorMonetario";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { classeFundoSuave, classeTextoCor } from "@/lib/agenda/estilo";
+import { extrairDadosCupom } from "@/lib/financas/cupom";
 
 const CHAVE_ULTIMA_CONTA = "vidatrack-gasto-rapido-conta";
 
@@ -22,6 +23,8 @@ type Categoria = { id: string; nome: string; tipo: string; icone?: string | null
  * pronto, sem sair da tela (3 toques). Categorias mais usadas nos
  * últimos 60 dias aparecem primeiro; a conta fica lembrada. Sem
  * internet, vai pra fila e sincroniza depois.
+ * Etapa 214 — "Ler cupom": tira foto do cupom/nota e preenche valor,
+ * data e descrição (OCR no próprio aparelho).
  */
 export function BotaoNovoLancamento() {
   const [aberto, setAberto] = useState(false);
@@ -93,6 +96,37 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
   const [erro, setErro] = useState<string | null>(null);
   const [feito, setFeito] = useState<string | null>(null);
   const campoValor = useRef<HTMLInputElement>(null);
+  const campoFoto = useRef<HTMLInputElement>(null);
+  const [dataCupom, setDataCupom] = useState<string | null>(null);
+  const [lendo, setLendo] = useState<number | null>(null);
+  const [avisoCupom, setAvisoCupom] = useState<string | null>(null);
+
+  async function lerCupom(arquivo: File | undefined) {
+    if (!arquivo) return;
+    setErro(null);
+    setAvisoCupom(null);
+    if (!navigator.onLine) return setErro("Ler cupom precisa de internet.");
+    setLendo(0);
+    try {
+      const { lerTextoDaImagem } = await import("@/lib/financas/ocr");
+      const texto = await lerTextoDaImagem(arquivo, (p) => setLendo(p));
+      const d = extrairDadosCupom(texto);
+      if (d.valor) setValor(d.valor);
+      if (d.descricao && !descricao.trim()) setDescricao(d.descricao);
+      const hoje = new Date().toLocaleDateString("sv-SE");
+      setDataCupom(d.data && d.data !== hoje ? d.data : null);
+      setAvisoCupom(
+        d.valor
+          ? "Confira o valor antes de lançar — a leitura pode errar."
+          : "Não achei o valor no cupom. Digite ou tente uma foto mais nítida e reta."
+      );
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não consegui ler o cupom.");
+    } finally {
+      setLendo(null);
+      if (campoFoto.current) campoFoto.current.value = "";
+    }
+  }
 
   useEffect(() => {
     const t = setTimeout(() => campoValor.current?.focus(), 150);
@@ -112,7 +146,7 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
       contaId,
       categoriaId,
       descricao: descricao.trim() || categoria?.nome || "",
-      data: new Date().toLocaleDateString("sv-SE"),
+      data: dataCupom ?? new Date().toLocaleDateString("sv-SE"),
     };
     try {
       localStorage.setItem(CHAVE_ULTIMA_CONTA, contaId);
@@ -135,6 +169,7 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
       setValor("");
       setDescricao("");
       setCategoriaId("");
+      setDataCupom(null);
       setTimeout(aoFechar, 1100);
     } catch {
       setErro("Não deu pra lançar. Se o app acabou de atualizar, feche e abra de novo.");
@@ -181,7 +216,38 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
                 onChange={(e) => setValor(formatarValorDigitado(e.target.value))}
                 className="flex-1 min-w-0 bg-transparent text-4xl font-mono font-semibold text-ink-100 outline-none"
               />
+              <button
+                type="button"
+                onClick={() => campoFoto.current?.click()}
+                disabled={lendo !== null}
+                aria-label="Ler cupom pela câmera"
+                className="shrink-0 flex items-center gap-1 text-xs text-financa border border-financa/40 rounded-lg px-2 py-1.5 hover:bg-financa/10 transition disabled:opacity-50"
+              >
+                <Camera size={15} strokeWidth={2} />
+                {lendo !== null ? `${lendo}%` : "Cupom"}
+              </button>
+              <input
+                ref={campoFoto}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => lerCupom(e.target.files?.[0])}
+              />
             </div>
+
+            {lendo !== null && (
+              <p className="text-xs text-ink-400 mb-3">Lendo o cupom... (na 1ª vez baixa o leitor, pode levar alguns segundos)</p>
+            )}
+            {avisoCupom && lendo === null && <p className="text-xs text-amber-400 mb-3">{avisoCupom}</p>}
+            {dataCupom && (
+              <p className="text-xs text-ink-400 mb-3 flex items-center gap-2">
+                Data do cupom: {dataCupom.split("-").reverse().join("/")}
+                <button type="button" onClick={() => setDataCupom(null)} className="underline">
+                  usar hoje
+                </button>
+              </p>
+            )}
 
             {categorias.length > 0 && (
               <div className="grid grid-cols-4 gap-2 mb-3">

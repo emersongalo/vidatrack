@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { ContasDoDia } from "@/components/ContasDoDia";
 import { useSearchParams } from "next/navigation";
 import { hojeISO } from "@/lib/habitos/streak";
 import { diaBateComFrequencia, feitosNaSemana } from "@/lib/agenda/dias";
@@ -210,6 +211,8 @@ function HojeConteudo() {
           ) : (
             <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />
           )}
+
+          {snapshot && <ContasDoDia snapshot={snapshot} dataISO={dataSelecionada} hojeISO={hoje} />}
         </div>
 
         {total > 0 && (

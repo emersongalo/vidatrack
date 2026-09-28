@@ -8,6 +8,7 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { FotoPerfil } from "@/components/FotoPerfil";
 import { IconeInstagram } from "@/components/IconeInstagram";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
+import { ConfigBloqueioPin } from "@/components/ConfigBloqueioPin";
 
 // Etapa 134
 export default function PerfilPage() {
@@ -90,6 +91,8 @@ function PerfilConteudo() {
         </button>
         </div>
       </form>
+
+      <ConfigBloqueioPin />
 
       <div className="flex flex-col items-center gap-3 mt-10 pt-6 border-t border-base-600">
         <a

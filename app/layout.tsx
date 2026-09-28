@@ -10,6 +10,9 @@ import { AnalyticsAnonimo } from "@/components/AnalyticsAnonimo";
 import { PromptInstalarApp } from "@/components/PromptInstalarApp";
 import { AlarmeAlertaTela } from "@/components/AlarmeAlertaTela";
 import { SincronizadorWidgets } from "@/components/SincronizadorWidgets";
+import { ErrosGlobais } from "@/components/ErrosGlobais";
+import { BloqueioApp } from "@/components/BloqueioApp";
+import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -72,6 +75,13 @@ export default function RootLayout({
             __html: `try{document.documentElement.setAttribute('data-theme', localStorage.getItem('vidatrack-tema') || 'dark')}catch(e){}`,
           }}
         />
+        {/* Etapa 214 — se o PIN estiver ativo, esconde a tela até desbloquear */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `html[data-bloqueado] body > :not(#bloqueio-app):not(script):not(style){visibility:hidden}`,
+          }}
+        />
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_PRE_BLOQUEIO }} />
         {children}
         <RegistradorPWA />
         <RecuperadorDeSegundoPlano />
@@ -82,6 +92,8 @@ export default function RootLayout({
         <PromptInstalarApp />
         <AlarmeAlertaTela />
         <SincronizadorWidgets />
+        <ErrosGlobais />
+        <BloqueioApp />
       </body>
     </html>
   );

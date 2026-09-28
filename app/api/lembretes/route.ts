@@ -120,6 +120,10 @@ export async function GET(request: Request) {
   if (horaAtual >= "20:30" && horaAtual <= "20:35") {
     enviados += await notificarHabitosPendentesDaNoite(supabase, hoje);
   }
+  // Etapa 214 — dia 1 às 09:00: resumo do mês que acabou
+  if (hoje.endsWith("-01") && horaAtual >= "09:00" && horaAtual <= "09:05") {
+    enviados += await notificarResumoMensal(supabase, hoje);
+  }
   // Domingo 19:00 — resumo da semana
   if (diaDaSemana(hoje) === 0 && horaAtual >= "19:00" && horaAtual <= "19:05") {
     enviados += await notificarResumoSemanal(supabase, hoje);
@@ -367,15 +371,20 @@ async function notificarOrcamentosEstourados(
       .lt("data", primeiroDiaProximoMes);
 
     const gastoTotal = (transacoes ?? []).reduce((soma, t) => soma + Number(t.valor), 0);
-    if (gastoTotal <= Number(cat.meta_mensal)) continue;
+    const limite = Number(cat.meta_mensal);
+    if (!limite || gastoTotal < limite * 0.8) continue;
 
-    const texto = `⚠️ Orçamento de "${cat.nome}" estourou este mês: ${formatarMoeda(gastoTotal)} de ${formatarMoeda(
-      Number(cat.meta_mensal)
-    )}`;
+    // Etapa 214 — aviso antes de estourar (80%); o de estourou continua
+    const estourou = gastoTotal > limite;
+    const texto = estourou
+      ? `⚠️ Orçamento de "${cat.nome}" estourou este mês: ${formatarMoeda(gastoTotal)} de ${formatarMoeda(limite)}`
+      : `🟡 "${cat.nome}" já está em ${Math.round((gastoTotal / limite) * 100)}% do limite do mês: ${formatarMoeda(
+          gastoTotal
+        )} de ${formatarMoeda(limite)}`;
 
     enviados += await notificarUsuariosDoItem(
       supabase,
-      "orcamento_estourado",
+      estourou ? "orcamento_estourado" : "orcamento_80",
       cat.id,
       cat.dono_id,
       texto,
@@ -541,6 +550,66 @@ async function notificarResumoSemanal(
       "/habitos/estatisticas",
       hoje
     );
+  }
+  return enviados;
+}
+
+/**
+ * Etapa 214 — no dia 1, resumo do mês anterior: entrou, saiu, a
+ * categoria que mais pesou e a comparação com o mês antes dele.
+ * Transferências entre contas não contam. Usa a mesma preferência do
+ * resumo semanal (Notificações → Avisos automáticos).
+ */
+async function notificarResumoMensal(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+  const { data: perfis } = await supabase.from("perfis").select("id").eq("resumo_semanal", true);
+  const ids = (perfis ?? []).map((p) => p.id as string);
+  if (!ids.length) return 0;
+
+  const [a, m] = hoje.split("-").map(Number);
+  const iso = (d: Date) => d.toLocaleDateString("sv-SE");
+  const inicioMes = iso(new Date(a, m - 2, 1));
+  const fimMes = iso(new Date(a, m - 1, 0));
+  const inicioAnterior = iso(new Date(a, m - 3, 1));
+  const nomeMes = new Date(a, m - 2, 1).toLocaleDateString("pt-BR", { month: "long" });
+
+  const { data: transacoes } = await supabase
+    .from("financa_transacoes")
+    .select("dono_id, tipo, valor, data, categoria_id, transferencia_grupo")
+    .gte("data", inicioAnterior)
+    .lte("data", fimMes)
+    .is("transferencia_grupo", null)
+    .in("dono_id", ids);
+  const { data: categorias } = await supabase.from("financa_categorias").select("id, nome").in("dono_id", ids);
+  const nomeCategoria = new Map((categorias ?? []).map((c) => [c.id as string, c.nome as string]));
+
+  type R = { entrou: number; saiu: number; saiuAntes: number; porCat: Map<string, number> };
+  const porUsuario = new Map<string, R>();
+  for (const t of transacoes ?? []) {
+    const r = porUsuario.get(t.dono_id) ?? { entrou: 0, saiu: 0, saiuAntes: 0, porCat: new Map() };
+    const v = Number(t.valor);
+    if (t.data >= inicioMes) {
+      if (t.tipo === "receita") r.entrou += v;
+      else {
+        r.saiu += v;
+        if (t.categoria_id) r.porCat.set(t.categoria_id, (r.porCat.get(t.categoria_id) ?? 0) + v);
+      }
+    } else if (t.tipo === "despesa") r.saiuAntes += v;
+    porUsuario.set(t.dono_id, r);
+  }
+
+  let enviados = 0;
+  for (const [usuarioId, r] of porUsuario) {
+    if (r.entrou === 0 && r.saiu === 0) continue;
+    const partes = [`entrou ${formatarMoeda(r.entrou)}`, `saiu ${formatarMoeda(r.saiu)}`];
+    const topo = [...r.porCat.entries()].sort((x, y) => y[1] - x[1])[0];
+    if (topo && nomeCategoria.get(topo[0])) partes.push(`mais gasto: ${nomeCategoria.get(topo[0])} (${formatarMoeda(topo[1])})`);
+    let comparacao = "";
+    if (r.saiuAntes > 0) {
+      const dif = Math.round(((r.saiu - r.saiuAntes) / r.saiuAntes) * 100);
+      comparacao = dif === 0 ? " Gastou igual ao mês anterior." : ` Gastou ${Math.abs(dif)}% ${dif < 0 ? "a menos" : "a mais"} que no mês anterior.`;
+    }
+    const texto = `📅 Seu ${nomeMes}: ${partes.join(" · ")}.${comparacao}`;
+    enviados += await notificarUsuariosDoItem(supabase, "resumo_mes", usuarioId, usuarioId, texto, "/financas/analise", hoje);
   }
   return enviados;
 }
