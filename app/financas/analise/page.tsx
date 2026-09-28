@@ -31,8 +31,13 @@ export default function AnaliseFinanceiraPage() {
   }
 
   const mapaCategorias = new Map((snapshot?.financas.categorias ?? []).map((c: any) => [c.id, c.nome]));
+  // Etapa 217 — mês atual/passado: só o que já foi gasto (data até hoje
+  // ou marcado "Paguei"). Mês futuro: o que está agendado (previsão).
+  const hojeRef = hojeISO();
+  const mesFuturo = mesReferencia.slice(0, 7) > hojeRef.slice(0, 7);
   const transacoesDespesa = (snapshot?.financas.transacoes ?? [])
     .filter((t: any) => t.tipo === "despesa" && !t.transferencia_grupo)
+    .filter((t: any) => mesFuturo || t.data <= hojeRef || t.pago_em)
     .map((t: any) => ({
       valor: Number(t.valor),
       descricao: t.descricao,
@@ -98,6 +103,12 @@ export default function AnaliseFinanceiraPage() {
         <button onClick={() => mudarMes(1)} className="text-ink-400 hover:text-ink-100 transition px-2">›</button>
       </div>
 
+      {mesFuturo && (
+        <p className="mb-4 text-xs text-ink-400 bg-base-800 border border-base-600 rounded-lg px-3 py-2">
+          📅 Mês que ainda não chegou: aqui aparece só o que já está agendado (contas fixas e lançamentos com data futura).
+        </p>
+      )}
+
       {categorias.length === 0 ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
           <p className="font-display font-semibold mb-1">Nada por aqui ainda</p>
@@ -106,7 +117,7 @@ export default function AnaliseFinanceiraPage() {
       ) : (
         <>
           <div className="space-y-2 mb-6">
-            {dicas.map((dica, i) => (
+            {(mesFuturo ? [] : dicas).map((dica, i) => (
               <div key={i} className="flex items-start gap-3 bg-financa-soft border border-financa/30 rounded-xl2 p-4">
                 <span className="text-financa shrink-0">
                   <Lightbulb size={18} strokeWidth={2} />
@@ -141,7 +152,7 @@ export default function AnaliseFinanceiraPage() {
           )}
 
           <div className="bg-base-800 border border-base-600 rounded-xl2 p-5 mb-6">
-            <p className="text-ink-400 text-sm mb-1">Total gasto em {nomeMes}</p>
+            <p className="text-ink-400 text-sm mb-1">{mesFuturo ? `Previsto para ${nomeMes}` : `Total gasto em ${nomeMes}`}</p>
             <p className="text-3xl font-display font-semibold font-mono mb-1">{formatarMoeda(totalDespesasMes)}</p>
             {totalDespesasMesAnterior > 0 && (
               <p className={`text-sm ${totalDespesasMes <= totalDespesasMesAnterior ? "text-habito" : "text-red-400"}`}>

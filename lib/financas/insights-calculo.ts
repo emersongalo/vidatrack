@@ -62,7 +62,10 @@ export function calcularInsightsFinanceiros(
   const inicioMes = primeiroDiaDoMes(mesReferenciaISO);
   const inicioMesAnterior = mesAnteriorISO(inicioMes);
 
-  const doMes = transacoesDespesa.filter((t) => t.data >= inicioMes);
+  // Etapa 217 — limite de fim do mês: sem ele, lançamentos agendados dos
+  // meses seguintes entravam no mês visto (ex: setembro mostrava outubro)
+  const inicioProximo = proximoMes(inicioMes);
+  const doMes = transacoesDespesa.filter((t) => t.data >= inicioMes && t.data < inicioProximo);
   const doMesAnterior = transacoesDespesa.filter((t) => t.data >= inicioMesAnterior && t.data < inicioMes);
 
   const mapaAtual = new Map<string, number>();

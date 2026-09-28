@@ -12,6 +12,8 @@ import { IconeCategoria } from "@/components/IconeCategoria";
 import { classeFundoSuave, classeTextoCor } from "@/lib/agenda/estilo";
 import { extrairDadosCupom } from "@/lib/financas/cupom";
 import { sugerirCategoria } from "@/lib/financas/sugestaoCategoria";
+import { sugerirDescricoes, descricoesFrequentes, type DescricaoSugerida } from "@/lib/financas/sugestaoDescricao";
+import { ChipsDescricao } from "@/components/ChipsDescricao";
 
 const CHAVE_ULTIMA_CONTA = "vidatrack-gasto-rapido-conta";
 
@@ -104,6 +106,28 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
     const extra = todasDespesa.find((c) => c.id === categoriaId);
     return extra ? [extra, ...categoriasMaisUsadas.slice(0, 7)] : categoriasMaisUsadas;
   }, [categoriaId, categoriasMaisUsadas, todasDespesa]);
+
+  // Etapa 217 — completar a descrição com o que você costuma lançar
+  const historico = useMemo(() => (snapshot?.financas.transacoes ?? []) as any[], [snapshot]);
+  const frequentes = useMemo(
+    () => descricoesFrequentes("despesa", historico, new Date().toLocaleDateString("sv-SE")),
+    [historico]
+  );
+  const sugestoesDescricao = useMemo(
+    () => (descricao.trim().length >= 2 ? sugerirDescricoes(descricao, "despesa", historico) : []),
+    [descricao, historico]
+  );
+
+  function escolherDescricao(s: DescricaoSugerida) {
+    setDescricao(s.descricao);
+    if (s.categoriaId && todasDespesa.some((c) => c.id === s.categoriaId)) {
+      setCategoriaId(s.categoriaId);
+      setCategoriaTocada(true);
+      setCategoriaSugerida(false);
+    }
+    if (!valor && s.ultimoValor > 0) setValor(formatarValorDigitado(s.ultimoValor.toFixed(2).replace(".", "")));
+    if (s.contaId && contas.some((c) => c.id === s.contaId)) setContaId(s.contaId);
+  }
 
   function mudarDescricao(texto: string) {
     setDescricao(texto);
@@ -328,6 +352,14 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
                     </option>
                   ))}
                 </select>
+              )}
+            </div>
+
+            <div className="-mt-1 mb-3">
+              {descricao.trim().length >= 2 ? (
+                <ChipsDescricao sugestoes={sugestoesDescricao} aoEscolher={escolherDescricao} />
+              ) : (
+                <ChipsDescricao sugestoes={frequentes} titulo="Frequentes — toque pra preencher" aoEscolher={escolherDescricao} />
               )}
             </div>
 

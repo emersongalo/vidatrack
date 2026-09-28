@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { criarTransacao, criarCategoriaRapida, removerParcelasDaqui } from "@/app/financas/actions";
@@ -12,6 +12,9 @@ import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 import { sugerirCategoria } from "@/lib/financas/sugestaoCategoria";
+import { sugerirDescricoes, descricoesFrequentes, type DescricaoSugerida } from "@/lib/financas/sugestaoDescricao";
+import { ChipsDescricao } from "@/components/ChipsDescricao";
+import { formatarValorDigitado } from "@/components/CampoValorMonetario";
 
 type Conta = { id: string; nome: string };
 type Categoria = { id: string; nome: string; tipo: "receita" | "despesa"; icone?: string };
@@ -79,6 +82,40 @@ export function FormularioTransacao({
     () => categoriasLocais.filter((c) => c.tipo === tipo),
     [categoriasLocais, tipo]
   );
+
+  // Etapa 217 — completar a descrição ("lave" → "Lavagem do carro")
+  const [descricaoTexto, setDescricaoTexto] = useState(valoresIniciais?.descricao ?? "");
+  const [valorPreenchido, setValorPreenchido] = useState<string | null>(null);
+  const [chaveValor, setChaveValor] = useState(0);
+  // lido depois de montar (no servidor não existe o retrato local)
+  const [historicoLocal, setHistoricoLocal] = useState<any[]>([]);
+  useEffect(() => {
+    setHistoricoLocal((lerSnapshotOffline()?.financas.transacoes ?? []) as any[]);
+  }, []);
+  const ehNovo = !valoresIniciais;
+  const sugestoesDescricao = useMemo(
+    () => (ehNovo && descricaoTexto.trim().length >= 2 ? sugerirDescricoes(descricaoTexto, tipo, historicoLocal) : []),
+    [ehNovo, descricaoTexto, tipo, historicoLocal]
+  );
+  const frequentes = useMemo(
+    () => (ehNovo ? descricoesFrequentes(tipo, historicoLocal, new Date().toLocaleDateString("sv-SE")) : []),
+    [ehNovo, tipo, historicoLocal]
+  );
+
+  function escolherDescricao(s: DescricaoSugerida) {
+    setDescricaoTexto(s.descricao);
+    if (s.categoriaId && categoriasFiltradas.some((c) => c.id === s.categoriaId)) {
+      setCategoriaSelecionada(s.categoriaId);
+      setCategoriaTocada(true);
+      setCategoriaSugerida(false);
+    }
+    if (!valorDigitado && s.ultimoValor > 0) {
+      const texto = formatarValorDigitado(s.ultimoValor.toFixed(2).replace(".", ""));
+      setValorPreenchido(s.ultimoValor.toFixed(2));
+      setValorDigitado(texto);
+      setChaveValor((k) => k + 1);
+    }
+  }
 
   function sugerirPelaDescricao(texto: string) {
     if (categoriaTocada) return;
@@ -218,9 +255,10 @@ export function FormularioTransacao({
             Valor
           </label>
           <CampoValorMonetario
+            key={chaveValor}
             id="valor"
             name="valor"
-            valorInicial={valoresIniciais?.valor}
+            valorInicial={valorPreenchido ?? valoresIniciais?.valor}
             required
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
           />
@@ -356,11 +394,20 @@ export function FormularioTransacao({
             id="descricao"
             name="descricao"
             type="text"
-            defaultValue={valoresIniciais?.descricao ?? ""}
-            onChange={(e) => sugerirPelaDescricao(e.target.value)}
+            value={descricaoTexto}
+            autoComplete="off"
+            onChange={(e) => {
+              setDescricaoTexto(e.target.value);
+              sugerirPelaDescricao(e.target.value);
+            }}
             placeholder="Ex: Supermercado, Uber, Freelance"
             className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
+          {descricaoTexto.trim().length >= 2 ? (
+            <ChipsDescricao sugestoes={sugestoesDescricao} aoEscolher={escolherDescricao} />
+          ) : (
+            <ChipsDescricao sugestoes={frequentes} titulo="Frequentes — toque pra preencher" aoEscolher={escolherDescricao} />
+          )}
         </div>
 
         {/* Etapa 208 — editando um lançamento que repete: escolhe se a
