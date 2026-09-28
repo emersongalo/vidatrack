@@ -294,6 +294,7 @@ function ExtratoConteudo() {
                     <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
                       <p className="text-xs text-ink-400 truncate min-w-0">
                         {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
+                        {t.recorrencia_id && <span className="text-financa"> · ↻ todo mês</span>}
                       </p>
                       <MenuAcoes>
                         {(fecharMenu) => (

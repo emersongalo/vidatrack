@@ -221,6 +221,7 @@ export default function FinancasPage() {
                 <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
                   <p className="text-xs text-ink-400 truncate min-w-0">
                     {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
+                    {t.recorrencia_id && <span className="text-financa"> · ↻ todo mês</span>}
                   </p>
                   <div className="flex items-center gap-2 shrink-0">
                     <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
