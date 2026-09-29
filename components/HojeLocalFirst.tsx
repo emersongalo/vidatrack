@@ -14,7 +14,23 @@ import { TiraDeDiasAgenda } from "@/components/TiraDeDiasAgenda";
 import { SugestoesHabito } from "@/components/SugestoesHabito";
 import { ListaHojeComOffline } from "@/components/ListaHojeComOffline";
 import { ordenarItensAgenda, type ItemAgenda } from "@/components/ItemLinhaAgenda";
-import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { useSnapshotOffline, atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
+import { HeroHoje } from "@/components/HeroHoje";
+import { calcularStreak } from "@/lib/habitos/streak";
+import { pausasDe } from "@/lib/habitos/pausa";
+import { resumoDaSemana } from "@/lib/geral/semana";
+import { createClient } from "@/lib/supabase/client";
+import { Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff } from "lucide-react";
+import {
+  NOMES_BLOCOS_HOJE,
+  alternarVisivel,
+  fixarItemNoTopo,
+  lerLayoutHoje,
+  moverItem,
+  salvarLayoutHoje,
+  type BlocoHoje,
+  type BlocoHojeId,
+} from "@/lib/habitos/blocosHoje";
 
 /**
  * Etapa 132 — antes essa tela guardava um cache separado "por dia
@@ -44,6 +60,11 @@ function HojeConteudo() {
   const [dataSelecionada, setDataSelecionada] = useState(searchParams.get("data") || hoje);
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
   const { snapshot, recarregar } = useSnapshotOffline();
+  // Etapa 227 — personalizar a tela (ordem e blocos escondidos, por login)
+  const [editandoLayout, setEditandoLayout] = useState(false);
+  const [layoutEditado, setLayoutEditado] = useState<BlocoHoje[] | null>(null);
+  const [salvandoLayout, setSalvandoLayout] = useState(false);
+  const [erroLayout, setErroLayout] = useState<string | null>(null);
 
   const categorias = snapshot?.categoriasProdutividade ?? [];
 
@@ -131,27 +152,54 @@ function HojeConteudo() {
 
   // Etapa 195 — o widget "Hoje" agora é alimentado pelo SincronizadorWidgets (layout).
 
-  return (
-    <main className="max-w-2xl lg:max-w-5xl mx-auto px-6 md:px-12 pt-2">
-      <div className="flex items-center justify-end gap-4 mb-1">
-        {/* Etapa 221 — rotina da manhã / da noite */}
-        <Link href="/habitos/rotina" className="text-sm text-ink-400 hover:text-ink-100 transition">
-          ☀️ Rotina
-        </Link>
-        <Link
-          href={`/habitos/planejador?data=${dataSelecionada}`}
-          className="text-sm text-ink-400 hover:text-ink-100 transition"
-        >
-          🕐 Blocos de tempo
-        </Link>
-      </div>
-      <h1 className="text-3xl font-display font-bold mb-4">Hoje</h1>
+  // Etapa 227 — números do topo (mesmo estilo do topo de Finanças)
+  const numerosTopo = useMemo(() => {
+    if (!snapshot) return { sequencia: 0, taxaSemana: null as number | null };
+    let sequencia = 0;
+    for (const h of snapshot.habitos as any[]) {
+      if (h.eh_negativo) continue;
+      const meta = Math.max(1, Number(h.meta_diaria) || 1);
+      const datas = snapshot.habitoCheckins.filter((c) => c.habito_id === h.id && (c.quantidade ?? 1) >= meta).map((c) => c.data);
+      sequencia = Math.max(sequencia, calcularStreak(datas, pausasDe(h), hoje));
+    }
+    const semana = resumoDaSemana(snapshot, hoje);
+    return { sequencia, taxaSemana: semana.habitos.devidos > 0 ? semana.habitos.pct : null };
+  }, [snapshot, hoje]);
 
-      <div className="lg:grid lg:grid-cols-[1fr_260px] lg:gap-6 lg:items-start">
-        <div>
-          <TiraDeDiasAgenda dataSelecionada={dataSelecionada} hojeISO={hoje} aoSelecionarData={setDataSelecionada} />
+  const layoutSalvo = lerLayoutHoje(snapshot?.perfil?.ordem_blocos_habitos);
+  const layout = editandoLayout && layoutEditado ? layoutEditado : layoutSalvo;
 
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 mt-4 mb-5 scrollbar-none">
+  async function salvarLayout() {
+    if (!layoutEditado || !snapshot) return setEditandoLayout(false);
+    setSalvandoLayout(true);
+    setErroLayout(null);
+    const { error } = await createClient()
+      .from("perfis")
+      .update({ ordem_blocos_habitos: salvarLayoutHoje(layoutEditado) })
+      .eq("id", snapshot.perfil.id);
+    if (error) setErroLayout("Não consegui salvar. Verifique a internet.");
+    else {
+      await atualizarSnapshotEmTodasAsTelas();
+      setEditandoLayout(false);
+    }
+    setSalvandoLayout(false);
+  }
+
+  const blocos: Record<BlocoHojeId, React.ReactNode> = {
+    resumo: snapshot ? (
+      <HeroHoje
+        feitos={feitos}
+        total={total}
+        sequencia={numerosTopo.sequencia}
+        taxaSemana={numerosTopo.taxaSemana}
+        dataSelecionada={dataSelecionada}
+        hoje={hoje}
+        aoMudarData={setDataSelecionada}
+      />
+    ) : null,
+    lista: (
+      <div className="mb-6">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-4 scrollbar-none">
             <button
               onClick={() => setCategoriaFiltro("")}
               className={`shrink-0 text-sm rounded-full px-3.5 py-1.5 border transition ${
@@ -218,48 +266,102 @@ function HojeConteudo() {
           ) : (
             <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />
           )}
-
-          {/* Etapa 218 — hábitos pausados nesse dia */}
-          {snapshot &&
-            (() => {
+      </div>
+    ),
+    pausados: !snapshot
+      ? null
+      : (() => {
               const pausados = (snapshot.habitos as any[]).filter((h) => emPausa(h, dataSelecionada));
               if (!pausados.length) return null;
               const fim = pausaAtualOuFutura(pausados[0], dataSelecionada)?.fim;
               return (
-                <p className="mt-4 text-xs text-ink-400 bg-base-800 border border-base-600 rounded-lg px-3 py-2">
+                <p className="mb-4 text-sm text-ink-400 bg-base-800 border border-base-600 rounded-2xl px-4 py-3">
                   ⏸ {pausados.length === 1 ? `"${pausados[0].nome}" está pausado` : `${pausados.length} hábitos pausados`}
                   {fim ? ` até ${fim.slice(8, 10)}/${fim.slice(5, 7)}` : ""} — a sequência fica guardada.
                 </p>
               );
-            })()}
-          {snapshot && <ContasDoDia snapshot={snapshot} dataISO={dataSelecionada} hojeISO={hoje} />}
-          {snapshot && <DiarioDoDia snapshot={snapshot} dataISO={dataSelecionada} hojeISO={hoje} />}
-          {snapshot && dataSelecionada === hoje && (
-            <div className="mt-6">
-              <SugestoesLembrete snapshot={snapshot} hojeISO={hoje} />
-            </div>
+            })(),
+    contas: snapshot ? <ContasDoDia snapshot={snapshot} dataISO={dataSelecionada} hojeISO={hoje} /> : null,
+    diario: snapshot ? <DiarioDoDia snapshot={snapshot} dataISO={dataSelecionada} hojeISO={hoje} /> : null,
+    sugestoes:
+      snapshot && dataSelecionada === hoje ? (
+        <div className="mt-6">
+          <SugestoesLembrete snapshot={snapshot} hojeISO={hoje} />
+        </div>
+      ) : null,
+  };
+
+  const botaoLayout = "w-8 h-8 rounded-lg flex items-center justify-center bg-base-700 text-ink-100 disabled:opacity-30";
+
+  return (
+    <main className="max-w-2xl lg:max-w-3xl mx-auto px-6 md:px-12 pt-2 pb-6">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h1 className="text-3xl font-display font-bold">Hoje</h1>
+        <div className="flex items-center gap-3 text-sm text-ink-400">
+          {/* Etapa 221 — rotina da manhã / da noite */}
+          <Link href="/habitos/rotina" className="hover:text-ink-100 transition">
+            ☀️ Rotina
+          </Link>
+          <Link href={`/habitos/planejador?data=${dataSelecionada}`} className="hover:text-ink-100 transition">
+            🕐 Blocos
+          </Link>
+          {editandoLayout ? (
+            <button
+              onClick={salvarLayout}
+              disabled={salvandoLayout}
+              className="flex items-center gap-1 bg-habito text-base-900 font-semibold rounded-full px-3 py-1.5 disabled:opacity-50"
+            >
+              <Check size={14} /> {salvandoLayout ? "..." : "Salvar"}
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setLayoutEditado(layoutSalvo);
+                setErroLayout(null);
+                setEditandoLayout(true);
+              }}
+              aria-label="Personalizar a tela"
+              className="hover:text-ink-100 transition"
+            >
+              <Settings2 size={18} />
+            </button>
           )}
         </div>
-
-        {total > 0 && (
-          <div className="hidden lg:block bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 sticky top-6">
-            <p className="text-xs text-ink-400 mb-1">Hoje</p>
-            <p className="text-3xl font-display font-bold mb-1">
-              {feitos}
-              <span className="text-ink-400 text-xl">/{total}</span>
-            </p>
-            <div className="h-1.5 bg-base-600 rounded-full overflow-hidden mb-4">
-              <div
-                className="h-full bg-habito rounded-full"
-                style={{ width: `${total > 0 ? Math.round((feitos / total) * 100) : 0}%` }}
-              />
-            </div>
-            <Link href="/habitos/estatisticas" className="text-xs text-ink-400 hover:text-ink-100 transition">
-              Ver estatísticas →
-            </Link>
-          </div>
-        )}
       </div>
+      {editandoLayout && (
+        <div className="flex items-center justify-between mb-3 text-sm">
+          <p className="text-ink-400">Organize a tela: 📌 fixa no topo, ↑↓ muda a ordem, 👁 esconde.</p>
+          <button onClick={() => setEditandoLayout(false)} className="text-ink-400 px-2">
+            Cancelar
+          </button>
+        </div>
+      )}
+      {erroLayout && <p className="text-sm text-red-400 mb-3">{erroLayout}</p>}
+
+      {layout.map((b, i) => {
+        const conteudo = blocos[b.id];
+        if (!editandoLayout) return b.visivel && conteudo ? <div key={b.id}>{conteudo}</div> : null;
+        return (
+          <div key={b.id} className={`mb-4 rounded-2xl border border-habito/40 p-2 ${b.visivel ? "" : "opacity-40"}`}>
+            <div className="flex items-center gap-1 mb-1">
+              <p className="text-sm font-medium flex-1 min-w-0 truncate px-1">{NOMES_BLOCOS_HOJE[b.id]}</p>
+              <button className={botaoLayout} aria-label="Fixar no topo" disabled={i === 0} onClick={() => setLayoutEditado(fixarItemNoTopo(layout, i))}>
+                <Pin size={15} />
+              </button>
+              <button className={botaoLayout} aria-label="Subir" disabled={i === 0} onClick={() => setLayoutEditado(moverItem(layout, i, -1))}>
+                <ChevronUp size={15} />
+              </button>
+              <button className={botaoLayout} aria-label="Descer" disabled={i === layout.length - 1} onClick={() => setLayoutEditado(moverItem(layout, i, 1))}>
+                <ChevronDown size={15} />
+              </button>
+              <button className={botaoLayout} aria-label={b.visivel ? "Esconder" : "Mostrar"} onClick={() => setLayoutEditado(alternarVisivel(layout, i))}>
+                {b.visivel ? <Eye size={15} /> : <EyeOff size={15} />}
+              </button>
+            </div>
+            {b.id !== "lista" && b.id !== "resumo" && !conteudo && <p className="text-xs text-ink-400 px-1">Nada pra mostrar agora</p>}
+          </div>
+        );
+      })}
     </main>
   );
 }

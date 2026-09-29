@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ItemLinhaAgenda, ItemAgenda } from "@/components/ItemLinhaAgenda";
 import { adicionarNaFila, salvarCacheHoje } from "@/lib/offline/fila";
 import { EVENTO_SINCRONIZACAO_CONCLUIDA } from "@/components/GerenciadorSincronizacaoOffline";
+import { agruparItensHoje } from "@/lib/habitos/gruposHoje";
 
 export function ListaHojeComOffline({
   itensServidor,
@@ -17,7 +18,7 @@ export function ListaHojeComOffline({
 }) {
   const [itens, setItens] = useState(itensServidor);
   const [offline, setOffline] = useState(false);
-  const refLista = useRef<HTMLUListElement>(null);
+  const refLista = useRef<HTMLDivElement>(null);
 
   // Sempre que os dados do servidor mudam (nova renderização, revalidação),
   // atualiza o cache local pra essa data.
@@ -65,7 +66,7 @@ export function ListaHojeComOffline({
       const numero = Number(e.key);
       if (!Number.isInteger(numero) || numero < 1 || numero > 9) return;
 
-      const itensDaLista = refLista.current?.querySelectorAll(":scope > li");
+      const itensDaLista = refLista.current?.querySelectorAll("li[data-item]");
       const itemAlvo = itensDaLista?.[numero - 1];
       const botao = itemAlvo?.querySelector<HTMLButtonElement>("button[aria-pressed], button[aria-label='Aumentar']");
       botao?.click();
@@ -112,20 +113,33 @@ export function ListaHojeComOffline({
       <p className="hidden lg:block text-xs text-ink-400 mb-2">
         Dica: teclas 1-9 marcam os itens na ordem da lista
       </p>
-      <ul ref={refLista} className="space-y-2">
-        {itens.map((item) => (
-          <ItemLinhaAgenda
-            key={`${item.tipo}-${item.id}`}
-            item={item}
-            dataISO={dataISO}
-            aoAlternarLocal={() => atualizarVisualmente(item)}
-            aoAjustarLocal={(delta) => ajustarVisualmente(item, delta)}
-            aoClicarOffline={() => enfileirarOffline(item)}
-            aoAjustarOffline={(delta) => enfileirarAjusteOffline(item, delta)}
-            aoConcluirMutacao={aoConcluirMutacao}
-          />
+      {/* Etapa 227 — agrupado (Manhã / Tarde / Noite / Tarefas), cada grupo num cartão */}
+      <div ref={refLista} className="space-y-5">
+        {agruparItensHoje(itens).map((g) => (
+          <section key={g.id}>
+            <div className="flex items-baseline justify-between px-1 mb-2">
+              <h3 className="text-base font-semibold">{g.titulo}</h3>
+              <span className={`text-sm ${g.feitos === g.itens.length ? "text-habito" : "text-ink-400"}`}>
+                {g.feitos}/{g.itens.length}
+              </span>
+            </div>
+            <ul className="bg-base-800 border border-base-600 rounded-2xl overflow-hidden divide-y divide-base-600">
+              {g.itens.map((item) => (
+                <ItemLinhaAgenda
+                  key={`${item.tipo}-${item.id}`}
+                  item={item}
+                  dataISO={dataISO}
+                  aoAlternarLocal={() => atualizarVisualmente(item)}
+                  aoAjustarLocal={(delta) => ajustarVisualmente(item, delta)}
+                  aoClicarOffline={() => enfileirarOffline(item)}
+                  aoAjustarOffline={(delta) => enfileirarAjusteOffline(item, delta)}
+                  aoConcluirMutacao={aoConcluirMutacao}
+                />
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

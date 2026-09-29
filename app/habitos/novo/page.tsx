@@ -2,7 +2,6 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { criarHabito } from "../actions";
 import { FormularioHabito } from "@/components/FormularioHabito";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
@@ -22,19 +21,20 @@ function NovoHabitoConteudo() {
   const { snapshot } = useSnapshotOffline();
 
   return (
-    <main className="pagina-form px-6 md:px-12 pt-2">
-      <Link href="/habitos" className="text-ink-400 text-base hover:text-ink-100 transition">
-        ← Hoje
-      </Link>
-      <h1 className="text-3xl font-display font-bold mt-4 mb-6">Novo hábito</h1>
-
+    <main className="pagina-form">
       {erro && (
-        <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
+        <p className="m-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
           {decodeURIComponent(erro)}
         </p>
       )}
 
-      <FormularioHabito action={criarHabito} categorias={(snapshot?.categoriasProdutividade ?? []) as any} textoBotao="Criar hábito" />
+      {/* Etapa 227 — topo na cor do hábito, igual ao lançamento de Finanças */}
+      <FormularioHabito
+        action={criarHabito}
+        categorias={(snapshot?.categoriasProdutividade ?? []) as any}
+        textoBotao="Criar hábito"
+        topo={{ titulo: "Novo hábito", voltarHref: "/habitos" }}
+      />
     </main>
   );
 }

@@ -52,14 +52,9 @@ function EditarHabitoConteudo() {
   }
 
   return (
-    <main className="pagina-form px-6 md:px-12 pt-2">
-      <Link href="/habitos/lista" className="text-ink-400 text-base hover:text-ink-100 transition">
-        ← Hábitos
-      </Link>
-      <h1 className="text-3xl font-display font-bold mt-4 mb-6">Editar hábito</h1>
-
+    <main className="pagina-form pb-8">
       {erro && (
-        <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
+        <p className="m-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
           {decodeURIComponent(erro)}
         </p>
       )}
@@ -68,6 +63,7 @@ function EditarHabitoConteudo() {
         action={atualizarHabito.bind(null, habito.id)}
         categorias={categorias as any}
         textoBotao="Salvar alterações"
+        topo={{ titulo: "Editar hábito", voltarHref: `/habitos/${habito.id}` }}
         valoresIniciais={{
           nome: habito.nome,
           cor: habito.cor,
@@ -85,7 +81,9 @@ function EditarHabitoConteudo() {
       />
 
       {/* Etapa 218 */}
-      <PausarHabito key={habito.id} habito={habito as any} />
+      <div className="px-6 md:px-12">
+        <PausarHabito key={habito.id} habito={habito as any} />
+      </div>
     </main>
   );
 }

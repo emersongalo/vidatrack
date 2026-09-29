@@ -6,7 +6,10 @@ export function ListaArrastavel<T extends { id: string }>({
   itens,
   renderItem,
   aoReordenar,
+  classeLista = "space-y-2",
 }: {
+  /** Etapa 227 — ex: lista num cartão só, com divisórias */
+  classeLista?: string;
   itens: T[];
   renderItem: (item: T, arrastando: boolean) => React.ReactNode;
   aoReordenar: (idsEmOrdem: string[]) => Promise<void>;
@@ -38,7 +41,7 @@ export function ListaArrastavel<T extends { id: string }>({
   }
 
   return (
-    <ul className="space-y-2">
+    <ul className={classeLista}>
       {ordemLocal.map((item, i) => (
         <li
           key={item.id}

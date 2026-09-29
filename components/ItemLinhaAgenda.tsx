@@ -132,7 +132,7 @@ export function ItemLinhaAgenda({
   const conteudo = (
     <>
       <div
-        className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0 ${classeFundoSuave(
+        className={`w-11 h-11 rounded-full flex items-center justify-center text-xl shrink-0 ${classeFundoSuave(
           item.cor
         )}`}
       >
@@ -143,14 +143,7 @@ export function ItemLinhaAgenda({
         <p className={`text-[1.0625rem] font-medium truncate ${item.feito ? "line-through text-ink-400" : ""}`}>
           {item.titulo}
         </p>
-        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-          <span
-            className={`text-xs px-1.5 py-0.5 rounded font-medium ${classeFundoSuave(
-              item.cor
-            )} ${classeTextoCor(item.cor)}`}
-          >
-            {item.tipo === "habito" ? "Hábito" : "Tarefa"}
-          </span>
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap empty:hidden">
           {item.atrasadaDesde && !item.feito && (
             <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-red-400/15 text-red-400">
               Atrasada desde {new Date(item.atrasadaDesde + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
@@ -186,8 +179,9 @@ export function ItemLinhaAgenda({
             </span>
           )}
           {ehNumerico && item.meta && (
-            <span className="text-xs text-ink-400 font-mono">
-              {item.meta.atual}/{item.meta.alvo} {item.meta.unidade ?? ""}
+            <span className="text-sm text-ink-400">
+              <span className={item.feito ? "text-habito font-medium" : "text-ink-100 font-medium"}>{item.meta.atual}</span> de{" "}
+              {item.meta.alvo} {item.meta.unidade ?? ""}
             </span>
           )}
           {item.repete && (
@@ -201,7 +195,17 @@ export function ItemLinhaAgenda({
             </span>
           )}
           {/* Etapa 220 — adiar tarefa única sem abrir */}
-          {item.tipo === "tarefa" && !item.repete && !item.feito && <AdiarTarefa tarefaId={item.id} aoAdiar={aoConcluirMutacao} />}
+          {item.tipo === "tarefa" && !item.repete && !item.feito && (
+            // dentro do link da linha: não deixa o toque em "Adiar" abrir a tarefa
+            <span
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <AdiarTarefa tarefaId={item.id} aoAdiar={aoConcluirMutacao} />
+            </span>
+          )}
         </div>
 
         {item.participantes && item.participantes.length > 1 && (
@@ -231,14 +235,21 @@ export function ItemLinhaAgenda({
         onFechar={() => setMarcoAtingido(null)}
       />
     )}
-    <li className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-2xl p-4">
-      {item.tipo === "tarefa" && item.progressoSubtarefas ? (
-        <Link href={`/habitos/tarefas/${item.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-          {conteudo}
-        </Link>
-      ) : (
-        <div className="flex items-center gap-3 flex-1 min-w-0">{conteudo}</div>
-      )}
+    {/* Etapa 227 — linha no estilo do Extrato: faixa lateral (verde feito,
+       vermelho atrasada, cinza pendente) e toque abre o detalhe */}
+    <li data-item className="relative flex items-center gap-3 bg-base-800 pl-4 pr-3 py-3.5">
+      <span
+        aria-hidden
+        className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${
+          item.feito ? "bg-habito" : item.atrasadaDesde ? "bg-red-400" : "bg-base-600"
+        }`}
+      />
+      <Link
+        href={item.tipo === "tarefa" ? `/habitos/tarefas/${item.id}` : `/habitos/${item.id}`}
+        className="flex items-center gap-3 flex-1 min-w-0"
+      >
+        {conteudo}
+      </Link>
 
       {ehNumerico ? (
         <div className="flex items-center gap-1.5 shrink-0">
@@ -246,7 +257,7 @@ export function ItemLinhaAgenda({
             onClick={() => ajustar(-1)}
             disabled={pendente}
             aria-label="Diminuir"
-            className="w-7 h-7 rounded-full border border-base-600 flex items-center justify-center hover:border-ink-400 transition text-sm"
+            className="w-10 h-10 rounded-full border border-base-600 flex items-center justify-center hover:border-ink-400 transition text-lg"
           >
             −
           </button>
@@ -254,7 +265,7 @@ export function ItemLinhaAgenda({
             onClick={() => ajustar(1)}
             disabled={pendente}
             aria-label="Aumentar"
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition text-sm ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition text-lg ${
               item.feito ? `${classeCor(item.cor)} text-base-900` : "border border-base-600 hover:border-ink-400"
             }`}
           >
@@ -267,12 +278,12 @@ export function ItemLinhaAgenda({
           disabled={pendente}
           aria-pressed={item.feito}
           aria-label={item.feito ? "Desmarcar" : "Marcar como feito"}
-          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
+          className={`w-11 h-11 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
             item.feito ? `${classeCor(item.cor)} border-transparent` : "border-base-600 hover:border-ink-400"
           } ${pendente ? "opacity-60" : ""}`}
         >
           {item.feito && (
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
               <path
                 d="M3 8.5L6.2 11.5L13 4.5"
                 stroke="#0F1013"
@@ -287,7 +298,7 @@ export function ItemLinhaAgenda({
     </li>
 
     {mostrarNota && (
-      <li className="bg-base-800 border border-base-600 rounded-2xl p-4 -mt-1">
+      <li className="bg-base-800 px-4 pb-4 pt-1">
         <textarea
           value={textoNota}
           onChange={(e) => setTextoNota(e.target.value)}

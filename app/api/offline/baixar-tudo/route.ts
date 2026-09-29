@@ -47,7 +47,7 @@ export async function GET() {
       .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido, conta_origem_id")
       .eq("arquivado", false),
     supabase.from("financa_recorrencias").select("id, tipo, valor, dia_mes, data_fim, data_inicio, ativo, descricao, conta_id, categoria_id"),
-    supabase.from("perfis").select("nome, foto_url, ordem_blocos_financas, teto_mensal").eq("id", user.id).maybeSingle(),
+    supabase.from("perfis").select("nome, foto_url, ordem_blocos_financas, teto_mensal, ordem_blocos_habitos").eq("id", user.id).maybeSingle(),
   ]);
 
   const idsDesafios = (desafios ?? []).map((d) => d.id);
@@ -147,6 +147,8 @@ export async function GET() {
       nome: perfil?.nome ?? null,
       email: user.email ?? null,
       teto_mensal: (perfil as any)?.teto_mensal ?? null,
+      // Etapa 227 — ordem dos blocos da tela Hoje (por login)
+      ordem_blocos_habitos: (perfil as any)?.ordem_blocos_habitos ?? null,
       id: user.id,
     },
   });

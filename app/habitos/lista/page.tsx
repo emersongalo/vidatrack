@@ -90,8 +90,22 @@ function ListaComStreak({
   return (
     <>
       <ModoFerias habitos={snapshot.habitos as any} />
-      <p className="text-xs text-ink-400 mb-3">Arraste ⠿ para reordenar</p>
+      {/* Etapa 227 — cartão único no estilo da lista de Contas */}
+      <div className="flex items-center justify-between mb-3 mt-2">
+        <h2 className="text-xl font-semibold">Seus hábitos</h2>
+        <Link href="/habitos/estatisticas" className="text-base text-ink-400 hover:text-ink-100 transition">
+          Estatísticas ›
+        </Link>
+      </div>
       <ListaHabitosArrastavel habitos={habitosComStreak as any} aoMudar={aoMudar} />
+      <Link
+        href="/habitos/novo"
+        className="flex items-center gap-3 mt-3 bg-base-800 border border-dashed border-base-600 rounded-3xl px-4 py-3.5 text-base hover:border-habito transition"
+      >
+        <span className="w-12 h-12 rounded-full bg-base-700 flex items-center justify-center text-2xl text-ink-400">+</span>
+        Novo hábito
+      </Link>
+      <p className="hidden md:block text-xs text-ink-400 mt-3">No computador, arraste ⠿ para reordenar.</p>
     </>
   );
 }

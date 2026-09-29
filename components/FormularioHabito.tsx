@@ -1,8 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+import { hexDaCor } from "@/lib/agenda/estilo";
+import { definirCorBarraStatus } from "@/lib/app/barraStatus";
+import { IconeHabito } from "@/components/IconeHabito";
 import { ICONES_HABITO } from "@/lib/agenda/icones-habito";
 import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
+
+// Etapa 227 — cor clara pede texto escuro no topo colorido
+function ehCorClara(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150;
+}
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoLembretesHabito } from "@/components/CampoLembretesHabito";
 
@@ -23,7 +35,10 @@ export function FormularioHabito({
   categorias,
   valoresIniciais,
   textoBotao,
+  topo,
 }: {
+  /** Etapa 227 — topo colorido (na cor do hábito) com o nome em destaque */
+  topo?: { titulo: string; voltarHref: string };
   action: (formData: FormData) => void;
   categorias: Categoria[];
   valoresIniciais?: {
@@ -62,6 +77,15 @@ export function FormularioHabito({
   const somarMeta = (d: number) => setMetaTexto(String(Math.max(1, Math.min(999, metaDiaria + d))));
   const somarVezes = (d: number) => setVezesTexto(String(Math.max(1, Math.min(7, vezesSemana + d))));
 
+  const hex = hexDaCor(cor);
+  const textoTopo = ehCorClara(hex) ? "text-base-900" : "text-white";
+  useEffect(() => {
+    if (topo) definirCorBarraStatus(hex);
+  }, [hex, topo]);
+  useEffect(() => () => definirCorBarraStatus(null), []);
+  const selecionado = { backgroundColor: hex, borderColor: hex };
+  const classeSel = ehCorClara(hex) ? "text-base-900 font-medium" : "text-white font-medium";
+
   function alternarDia(dia: number) {
     setDiasSelecionados((atual) =>
       atual.includes(dia) ? atual.filter((d) => d !== dia) : [...atual, dia].sort()
@@ -70,12 +94,44 @@ export function FormularioHabito({
 
   return (
     <form action={action}>
+      {topo && (
+        <div className={`px-6 pt-5 pb-12 md:rounded-b-3xl transition-colors duration-300 ${textoTopo}`} style={{ backgroundColor: hex }}>
+          <div className="flex items-center gap-3">
+            <Link
+              href={topo.voltarHref}
+              aria-label="Voltar"
+              className="w-11 h-11 rounded-full bg-black/15 flex items-center justify-center shrink-0"
+            >
+              <ChevronLeft size={22} />
+            </Link>
+            <p className="text-lg font-semibold">{topo.titulo}</p>
+          </div>
+          <div className="flex items-center gap-3 mt-6">
+            <span className="w-14 h-14 rounded-full bg-black/15 flex items-center justify-center shrink-0">
+              <IconeHabito icone={icone} tamanho={26} />
+            </span>
+            <input
+              id="nome"
+              name="nome"
+              type="text"
+              required
+              defaultValue={valoresIniciais?.nome}
+              placeholder="Nome do hábito"
+              aria-label="Nome do hábito"
+              className={`flex-1 min-w-0 bg-transparent text-3xl font-display font-bold outline-none placeholder:text-current placeholder:opacity-60 ${textoTopo}`}
+            />
+          </div>
+          <p className="text-sm opacity-80 mt-2">Ex: Beber água, Ler 10 páginas, Meditar</p>
+        </div>
+      )}
+      <div className={topo ? "relative -mt-6 bg-base-900 rounded-t-3xl px-6 pt-7 pb-6 md:px-12" : ""}>
       {/* Etapa 196 — 2 colunas no desktop: o "o quê" à esquerda, o
           "quando/quanto" à direita. No celular, uma coluna só. */}
       <div className="form-colunas">
       <div className="form-coluna">
+      {!topo && (
       <div>
-        <label htmlFor="nome" className="block text-sm text-ink-400 mb-1">
+        <label htmlFor="nome" className="block text-base font-medium mb-2">
           Nome do hábito
         </label>
         <input
@@ -88,9 +144,10 @@ export function FormularioHabito({
           className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
         />
       </div>
+      )}
 
       <div>
-        <span className="block text-sm text-ink-400 mb-2">Tipo de hábito</span>
+        <span className="block text-base font-medium mb-2">Tipo de hábito</span>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -121,7 +178,7 @@ export function FormularioHabito({
       </div>
 
       <div>
-        <span className="block text-sm text-ink-400 mb-2">Ícone</span>
+        <span className="block text-base font-medium mb-2">Ícone</span>
         <div className="grade-icones">
           {ICONES_HABITO.map(({ nome, Icone }) => (
             <button
@@ -141,7 +198,7 @@ export function FormularioHabito({
       </div>
 
       <div>
-        <span className="block text-sm text-ink-400 mb-2">Cor</span>
+        <span className="block text-base font-medium mb-2">Cor</span>
         <div className="flex flex-wrap gap-3">
           {CORES_DISPONIVEIS.map((c) => (
             <button
@@ -149,7 +206,7 @@ export function FormularioHabito({
               key={c.valor}
               onClick={() => setCor(c.valor)}
               aria-label={`Cor ${c.valor}`}
-              className={`w-8 h-8 rounded-full ${c.classe} ${
+              className={`w-10 h-10 rounded-full ${c.classe} ${
                 cor === c.valor ? "ring-2 ring-offset-2 ring-offset-base-900 ring-ink-100" : ""
               }`}
             />
@@ -163,7 +220,7 @@ export function FormularioHabito({
 
       {categorias.length > 0 && (
         <div>
-          <label htmlFor="categoriaId" className="block text-sm text-ink-400 mb-1">
+          <label htmlFor="categoriaId" className="block text-base font-medium mb-2">
             Categoria (opcional)
           </label>
           <select
@@ -183,15 +240,14 @@ export function FormularioHabito({
       )}
 
       <div>
-        <span className="block text-sm text-ink-400 mb-2">Frequência</span>
+        <span className="block text-base font-medium mb-2">Frequência</span>
         <div className="grid grid-cols-3 gap-2 mb-3">
           <button
             type="button"
             onClick={() => setFrequencia("diaria")}
-            className={`flex-1 rounded-lg py-2 text-sm border transition ${
-              frequencia === "diaria"
-                ? "bg-ink-100 text-base-900 border-ink-100"
-                : "border-base-600 text-ink-400 hover:text-ink-100"
+            style={frequencia === "diaria" ? selecionado : undefined}
+            className={`flex-1 rounded-2xl py-3 text-base border transition ${
+              frequencia === "diaria" ? classeSel : "border-base-600 text-ink-400 hover:text-ink-100"
             }`}
           >
             Todos os dias
@@ -199,10 +255,9 @@ export function FormularioHabito({
           <button
             type="button"
             onClick={() => setFrequencia("dias_semana")}
-            className={`flex-1 rounded-lg py-2 text-sm border transition ${
-              frequencia === "dias_semana"
-                ? "bg-ink-100 text-base-900 border-ink-100"
-                : "border-base-600 text-ink-400 hover:text-ink-100"
+            style={frequencia === "dias_semana" ? selecionado : undefined}
+            className={`flex-1 rounded-2xl py-3 text-base border transition ${
+              frequencia === "dias_semana" ? classeSel : "border-base-600 text-ink-400 hover:text-ink-100"
             }`}
           >
             Dias específicos
@@ -210,10 +265,9 @@ export function FormularioHabito({
           <button
             type="button"
             onClick={() => setFrequencia("semanal")}
-            className={`flex-1 rounded-lg py-2 text-sm border transition ${
-              frequencia === "semanal"
-                ? "bg-ink-100 text-base-900 border-ink-100"
-                : "border-base-600 text-ink-400 hover:text-ink-100"
+            style={frequencia === "semanal" ? selecionado : undefined}
+            className={`flex-1 rounded-2xl py-3 text-base border transition ${
+              frequencia === "semanal" ? classeSel : "border-base-600 text-ink-400 hover:text-ink-100"
             }`}
           >
             X por semana
@@ -244,10 +298,9 @@ export function FormularioHabito({
                 type="button"
                 key={dia.valor}
                 onClick={() => alternarDia(dia.valor)}
-                className={`w-9 h-9 rounded-full text-sm border transition ${
-                  diasSelecionados.includes(dia.valor)
-                    ? "bg-ink-100 text-base-900 border-ink-100"
-                    : "border-base-600 text-ink-400 hover:text-ink-100"
+                style={diasSelecionados.includes(dia.valor) ? selecionado : undefined}
+                className={`w-11 h-11 rounded-full text-base border transition ${
+                  diasSelecionados.includes(dia.valor) ? classeSel : "border-base-600 text-ink-400 hover:text-ink-100"
                 }`}
               >
                 {dia.rotulo}
@@ -261,7 +314,7 @@ export function FormularioHabito({
       </div>
 
       <div>
-        <span className="block text-sm text-ink-400 mb-2">Meta diária (opcional)</span>
+        <span className="block text-base font-medium mb-2">Meta diária (opcional)</span>
         <div className="flex gap-2 items-center">
           <button type="button" aria-label="Diminuir meta" onClick={() => somarMeta(-1)} className="w-9 h-10 rounded-lg border border-base-600 text-lg shrink-0">−</button>
           <input
@@ -306,7 +359,13 @@ export function FormularioHabito({
       </div>
 
       <div className="form-rodape">
-        <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
+        <BotaoSalvarFormulario
+          className={`w-full text-lg rounded-2xl py-4 hover:opacity-90 transition disabled:opacity-50 ${classeSel}`}
+          estilo={{ backgroundColor: hex }}
+        >
+          {textoBotao}
+        </BotaoSalvarFormulario>
+      </div>
       </div>
     </form>
   );

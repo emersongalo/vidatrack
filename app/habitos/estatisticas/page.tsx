@@ -147,30 +147,60 @@ export default function EstatisticasHabitosPage() {
         <h1 className="text-3xl font-display font-bold">Estatísticas</h1>
         <Link
           href="/habitos/conquistas"
-          className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition"
+          className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-habito/60 transition"
         >
           🏆 Conquistas →
         </Link>
       </div>
+      {/* Etapa 227 — resumo em 3 cartões, no estilo da Análise de Finanças */}
+      {habitos.length > 0 && (() => {
+        const mes = calcularResumo(janela);
+        return (
+          <div className="grid grid-cols-3 gap-2 mb-5">
+            <div className="bg-base-800 border border-base-600 rounded-2xl p-3 min-w-0">
+              <p className="text-sm text-ink-400">Esta semana</p>
+              <p className="text-xl font-semibold mt-0.5">{resumoAtual.percentual}%</p>
+              {resumoAnterior.aplicaveis > 0 && diferencaSemanas !== 0 && (
+                <p className={`text-xs ${diferencaSemanas > 0 ? "text-habito" : "text-red-400"}`}>
+                  {diferencaSemanas > 0 ? "↑" : "↓"} {Math.abs(diferencaSemanas)} pts
+                </p>
+              )}
+            </div>
+            <div className="bg-base-800 border border-base-600 rounded-2xl p-3 min-w-0">
+              <p className="text-sm text-ink-400">30 dias</p>
+              <p className="text-xl font-semibold mt-0.5">{mes.percentual}%</p>
+              <p className="text-xs text-ink-400">
+                {mes.feitos} de {mes.aplicaveis}
+              </p>
+            </div>
+            <div className="bg-base-800 border border-base-600 rounded-2xl p-3 min-w-0">
+              <p className="text-sm text-ink-400">🔥 Sequência</p>
+              <p className="text-xl font-semibold mt-0.5">{melhorSequenciaGeral.dias}</p>
+              <p className="text-xs text-ink-400 truncate">{melhorSequenciaGeral.dias > 0 ? melhorSequenciaGeral.nome : "—"}</p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Etapa 215 */}
-      <div className="flex flex-wrap gap-2 -mt-3 mb-6">
-        <Link href="/habitos/diario" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-nota/60 transition">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-6 scrollbar-none">
+        <Link href="/habitos/diario" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-nota/60 transition">
           🙂 Diário
         </Link>
-        <Link href="/habitos/metas" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
+        <Link href="/habitos/metas" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-habito/60 transition">
           🎯 Metas do ano
         </Link>
-        <Link href="/habitos/desafios" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
+        <Link href="/habitos/desafios" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-habito/60 transition">
           🤝 Desafios
         </Link>
         {/* Etapa 221 */}
-        <Link href="/habitos/semana" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
+        <Link href="/habitos/semana" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-habito/60 transition">
           📊 Sua semana
         </Link>
-        <Link href="/habitos/rotina" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
+        <Link href="/habitos/rotina" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-habito/60 transition">
           ☀️ Rotinas
         </Link>
-        <Link href="/retrospectiva" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-financa/60 transition">
+        <Link href="/retrospectiva" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-financa/60 transition">
           🎉 Retrospectiva do ano
         </Link>
       </div>
@@ -178,7 +208,7 @@ export default function EstatisticasHabitosPage() {
       {snapshot && <PadroesSemana snapshot={snapshot} hojeISO={hojeISO()} />}
 
       {habitos.length > 0 && (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
+        <div className="bg-base-800 border border-base-600 rounded-2xl p-5 mb-6">
           <h2 className="text-lg font-semibold mb-3">Resumo da semana</h2>
           <div className="flex items-end gap-6 mb-4">
             <div>
@@ -212,14 +242,14 @@ export default function EstatisticasHabitosPage() {
       )}
 
       {habitos.length > 0 && (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
+        <div className="bg-base-800 border border-base-600 rounded-2xl p-5 mb-6">
           <h2 className="text-lg font-semibold mb-3">Mapa de contribuições · último ano</h2>
           <MapaContribuicoes pontos={mapaContribuicoes} />
         </div>
       )}
 
       {comparacaoOrdenada.length > 1 && (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
+        <div className="bg-base-800 border border-base-600 rounded-2xl p-5 mb-6">
           <h2 className="text-lg font-semibold mb-3">Comparação entre hábitos · essa semana</h2>
           <div className="space-y-3">
             {comparacaoOrdenada.map((c) => (
