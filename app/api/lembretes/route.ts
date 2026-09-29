@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { habitoDevidoNoDia } from "@/lib/habitos/pausa";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { diaBateComFrequencia, inicioDaSemana, feitosNaSemana } from "@/lib/agenda/dias";
 import { tarefaApareceNoDia } from "@/lib/agenda/recorrencia";
@@ -58,14 +59,14 @@ export async function GET(request: Request) {
   // Etapa 216 — vários horários por hábito; não avisa quem já completou
   const { data: habitos } = await supabase
     .from("habitos")
-    .select("id, nome, dono_id, frequencia, dias_semana, horario_lembrete, horarios_lembrete, meta_diaria, unidade, eh_negativo")
+    .select("id, nome, dono_id, frequencia, dias_semana, horario_lembrete, horarios_lembrete, meta_diaria, unidade, eh_negativo, pausas")
     .eq("arquivado", false)
     .not("horario_lembrete", "is", null);
 
   for (const h of habitos ?? []) {
     const horario = horariosDoHabito(h as any).find((x) => x >= cincoMinAntes && x <= horaAtual);
     if (!horario) continue;
-    if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], hoje)) continue;
+    if (!habitoDevidoNoDia(h, hoje)) continue;
 
     const meta = Number(h.meta_diaria ?? 1) || 1;
     let feitoHoje = 0;
@@ -141,6 +142,11 @@ export async function GET(request: Request) {
   // --- Etapa 215: fatura do cartão (3 dias antes, véspera e no dia) ---
   if (horaAtual >= "08:10" && horaAtual <= "08:15") {
     enviados += await notificarFaturasCartao(supabase, hoje);
+  }
+
+  // --- Etapa 218: resumo da manhã (07:00) ---
+  if (horaAtual >= "07:00" && horaAtual <= "07:05") {
+    enviados += await notificarResumoManha(supabase, hoje);
   }
 
   // --- Etapa 202: avisos que trazem a pessoa de volta ---
@@ -455,7 +461,7 @@ async function notificarHabitosPendentesDaNoite(
   const [{ data: habitos }, { data: checkins }] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, dono_id, frequencia, dias_semana, meta_diaria, vezes_semana")
+      .select("id, nome, dono_id, frequencia, dias_semana, meta_diaria, vezes_semana, pausas")
       .eq("arquivado", false)
       .eq("eh_negativo", false)
       .in("dono_id", ids),
@@ -477,7 +483,7 @@ async function notificarHabitosPendentesDaNoite(
 
   const porUsuario = new Map<string, { total: number; pendentes: string[] }>();
   for (const h of habitos ?? []) {
-    if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], hoje)) continue;
+    if (!habitoDevidoNoDia(h, hoje)) continue;
     if (h.frequencia === "semanal") {
       const dias = (checkinsSemana ?? [])
         .filter((c) => c.habito_id === h.id && c.usuario_id === h.dono_id && Number(c.quantidade ?? 1) >= (h.meta_diaria ?? 1))
@@ -519,7 +525,7 @@ async function notificarResumoSemanal(
   const [{ data: habitos }, { data: checkins }, { data: conclusoes }, { data: gastos }] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, dono_id, frequencia, dias_semana, meta_diaria")
+      .select("id, dono_id, frequencia, dias_semana, meta_diaria, pausas")
       .eq("arquivado", false)
       .eq("eh_negativo", false)
       .in("dono_id", ids),
@@ -556,7 +562,7 @@ async function notificarResumoSemanal(
   for (let i = 0; i < 7; i++) {
     const dia = somarDias(inicio, i);
     for (const h of habitos ?? []) {
-      if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], dia)) continue;
+      if (!habitoDevidoNoDia(h, dia)) continue;
       const r = pegar(h.dono_id);
       r.devidos++;
       if ((qtd.get(`${h.dono_id}|${h.id}|${dia}`) ?? 0) >= (h.meta_diaria ?? 1)) r.feitos++;
@@ -690,6 +696,88 @@ async function notificarFaturasCartao(supabase: ReturnType<typeof criarClienteAd
         hoje
       );
     }
+  }
+  return enviados;
+}
+
+/**
+ * Etapa 218 — 07:00: "Hoje: 4 hábitos · 2 tarefas · vence: Luz (R$ 120)".
+ * Só pra quem deixou ligado (perfis.resumo_manha) e só se tiver algo.
+ */
+async function notificarResumoManha(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+  const { data: perfis } = await supabase.from("perfis").select("id").eq("resumo_manha", true);
+  const ids = (perfis ?? []).map((p) => p.id as string);
+  if (!ids.length) return 0;
+
+  const diaHoje = Number(hoje.slice(8, 10));
+  const [{ data: habitos }, { data: tarefas }, { data: conclusoes }, { data: transacoes }, { data: recorrencias }] = await Promise.all([
+    supabase
+      .from("habitos")
+      .select("id, dono_id, frequencia, dias_semana, eh_negativo, pausas")
+      .in("dono_id", ids)
+      .eq("arquivado", false),
+    supabase
+      .from("tarefas")
+      .select("id, dono_id, repetir, dias_semana, data, concluida, dia_mes, mes, intervalo_dias")
+      .in("dono_id", ids)
+      .eq("arquivada", false),
+    supabase.from("tarefa_conclusoes").select("tarefa_id").in("usuario_id", ids).eq("data", hoje),
+    supabase
+      .from("financa_transacoes")
+      .select("dono_id, descricao, valor, recorrencia_id, pago_em, transferencia_grupo")
+      .in("dono_id", ids)
+      .eq("data", hoje)
+      .eq("tipo", "despesa"),
+    supabase
+      .from("financa_recorrencias")
+      .select("id, dono_id, descricao, valor, data_fim, data_inicio")
+      .in("dono_id", ids)
+      .eq("ativo", true)
+      .eq("tipo", "despesa")
+      .eq("dia_mes", diaHoje),
+  ]);
+
+  type R = { habitos: number; tarefas: number; contas: { nome: string; valor: number }[] };
+  const porUsuario = new Map<string, R>();
+  const pegar = (id: string) => {
+    let r = porUsuario.get(id);
+    if (!r) porUsuario.set(id, (r = { habitos: 0, tarefas: 0, contas: [] }));
+    return r;
+  };
+  for (const h of habitos ?? []) {
+    if (h.eh_negativo || !habitoDevidoNoDia(h as any, hoje)) continue;
+    pegar(h.dono_id as string).habitos++;
+  }
+  const feitasHoje = new Set((conclusoes ?? []).map((c) => c.tarefa_id));
+  for (const t of tarefas ?? []) {
+    if (!tarefaApareceNoDia(t as any, hoje)) continue;
+    if (t.repetir === "nenhuma" ? t.concluida : feitasHoje.has(t.id)) continue;
+    pegar(t.dono_id as string).tarefas++;
+  }
+  const recorrenciasLancadas = new Set<string>();
+  for (const t of transacoes ?? []) {
+    if (t.recorrencia_id) recorrenciasLancadas.add(t.recorrencia_id as string);
+    if (t.pago_em || t.transferencia_grupo) continue;
+    pegar(t.dono_id as string).contas.push({ nome: (t.descricao as string) || "Conta", valor: Number(t.valor) });
+  }
+  for (const r of recorrencias ?? []) {
+    if (recorrenciasLancadas.has(r.id as string)) continue;
+    if (r.data_fim && hoje > (r.data_fim as string)) continue;
+    if (r.data_inicio && hoje < (r.data_inicio as string)) continue;
+    pegar(r.dono_id as string).contas.push({ nome: (r.descricao as string) || "Conta", valor: Number(r.valor) });
+  }
+
+  let enviados = 0;
+  for (const [usuarioId, r] of porUsuario) {
+    if (!r.habitos && !r.tarefas && !r.contas.length) continue;
+    const partes: string[] = [];
+    if (r.habitos) partes.push(`${r.habitos} hábito${r.habitos > 1 ? "s" : ""}`);
+    if (r.tarefas) partes.push(`${r.tarefas} tarefa${r.tarefas > 1 ? "s" : ""}`);
+    if (r.contas.length === 1) partes.push(`vence ${r.contas[0].nome} (${formatarMoeda(r.contas[0].valor)})`);
+    else if (r.contas.length > 1)
+      partes.push(`vencem ${r.contas.length} contas (${formatarMoeda(r.contas.reduce((s, c) => s + c.valor, 0))})`);
+    const texto = `☀️ Bom dia! Hoje: ${partes.join(" · ")}`;
+    enviados += await notificarUsuariosDoItem(supabase, "resumo_manha", usuarioId, usuarioId, texto, "/habitos", hoje);
   }
   return enviados;
 }

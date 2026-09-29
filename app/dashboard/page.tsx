@@ -166,6 +166,12 @@ export default function DashboardPage() {
         <Link href="/doacao" className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1">
           💛 Apoiar o projeto
         </Link>
+        <Link href="/ajuda" className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1">
+          Ajuda
+        </Link>
+        <Link href="/convidar" className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1">
+          🎁 Convidar
+        </Link>
         <Link href="/privacidade" className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1">
           Privacidade
         </Link>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeftRight, Tags, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target, Upload, Users, TrendingUp, Grid3x3, Bot } from "lucide-react";
+import { ArrowLeftRight, Tags, Hash, FileText, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target, Upload, Users, TrendingUp, Grid3x3, Bot } from "lucide-react";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { IconeInstagram } from "@/components/IconeInstagram";
 
@@ -12,11 +12,13 @@ const ITENS = [
   { href: "/financas/importar", Icone: Upload, titulo: "Importar extrato", texto: "Sobe um arquivo OFX ou CSV do seu banco" },
   { href: "/financas/metas", Icone: Target, titulo: "Metas de economia", texto: "Guarde dinheiro pra um objetivo específico" },
   { href: "/financas/investir", Icone: PiggyBank, titulo: "Guardar em investimento", texto: "Separe dinheiro do seu saldo pra investimento" },
+  { href: "/financas/etiquetas", Icone: Hash, titulo: "Etiquetas", texto: "Quanto foi numa viagem, numa reforma... misturando categorias" },
+  { href: "/financas/relatorio", Icone: FileText, titulo: "Relatório do mês (PDF)", texto: "Resumo bonito pra guardar ou mandar pro contador" },
   { href: "/financas/categorias", Icone: Tags, titulo: "Categorias", texto: "Organize receitas e despesas por tipo" },
   { href: "/financas/recorrentes", Icone: Repeat, titulo: "Recorrentes", texto: "Contas e receitas que se repetem todo mês" },
   { href: "/financas/analise", Icone: BarChart3, titulo: "Análise", texto: "Mapa de gastos e comparação com o mês passado" },
   { href: "/financas/personalizar", Icone: ArrowUpDown, titulo: "Personalizar ordem", texto: "Reorganize os blocos da tela inicial" },
-  { href: "/financas/exportar", Icone: Download, titulo: "Exportar e backup", texto: "Planilha dos lançamentos (mês, ano, tudo) e cópia completa dos seus dados" },
+  { href: "/financas/exportar", Icone: Download, titulo: "Exportar CSV", texto: "Baixe seus lançamentos em planilha" },
   { href: "/financas/contas/lixeira", Icone: Trash2, titulo: "Lixeira de contas", texto: "Contas arquivadas — restaure ou exclua de vez" },
 ];
 

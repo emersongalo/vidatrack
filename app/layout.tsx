@@ -12,6 +12,7 @@ import { AlarmeAlertaTela } from "@/components/AlarmeAlertaTela";
 import { SincronizadorWidgets } from "@/components/SincronizadorWidgets";
 import { ErrosGlobais } from "@/components/ErrosGlobais";
 import { BloqueioApp } from "@/components/BloqueioApp";
+import { RegistrarIndicacao } from "@/components/RegistrarIndicacao";
 import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
 import { SCRIPT_APARENCIA } from "@/lib/preferencias/aparencia";
 
@@ -96,6 +97,7 @@ export default function RootLayout({
         <SincronizadorWidgets />
         <ErrosGlobais />
         <BloqueioApp />
+        <RegistrarIndicacao />
       </body>
     </html>
   );

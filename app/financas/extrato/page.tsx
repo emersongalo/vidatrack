@@ -124,6 +124,8 @@ function ExtratoConteudo() {
   const [ateRascunho, setAteRascunho] = useState(hojeIso);
   const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(params.get("categoria"));
   const [contaFiltro, setContaFiltro] = useState<string | null>(params.get("conta"));
+  // Etapa 218 — filtro por etiqueta
+  const [etiquetaFiltro, setEtiquetaFiltro] = useState<string | null>(params.get("etiqueta"));
   const [visualizacao, setVisualizacao] = useState<"transacoes" | "categorias">("transacoes");
   // Etapa 212 — busca por texto (descrição, categoria, conta ou valor)
   const [busca, setBusca] = useState(params.get("busca") ?? "");
@@ -133,6 +135,7 @@ function ExtratoConteudo() {
     const q = new URLSearchParams();
     if (categoriaFiltro) q.set("categoria", categoriaFiltro);
     if (contaFiltro) q.set("conta", contaFiltro);
+    if (etiquetaFiltro) q.set("etiqueta", etiquetaFiltro);
     if (tipo !== "todos") q.set("tipo", tipo);
     if (busca.trim()) q.set("busca", busca.trim());
     if (periodo.tipo === "mes") {
@@ -146,7 +149,7 @@ function ExtratoConteudo() {
     if (url !== window.location.pathname + window.location.search) {
       window.history.replaceState(window.history.state, "", url);
     }
-  }, [categoriaFiltro, contaFiltro, tipo, periodo, busca]);
+  }, [categoriaFiltro, contaFiltro, etiquetaFiltro, tipo, periodo, busca]);
 
   const contas = snapshot?.financas.contas ?? [];
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
@@ -166,9 +169,10 @@ function ExtratoConteudo() {
       if (categoriaFiltro === "sem" && t.categoria_id) return false;
       if (categoriaFiltro && categoriaFiltro !== "sem" && t.categoria_id !== categoriaFiltro) return false;
       if (contaFiltro && t.conta_id !== contaFiltro) return false;
+      if (etiquetaFiltro && !(t.etiquetas ?? []).includes(etiquetaFiltro)) return false;
       if (termo) {
         const cat = t.categoria_id ? (mapaCategorias.get(t.categoria_id) as any)?.nome ?? "" : "";
-        const alvo = semAcento(`${t.descricao ?? ""} ${cat} ${mapaContas.get(t.conta_id) ?? ""} ${Number(t.valor).toFixed(2).replace(".", ",")}`);
+        const alvo = semAcento(`${t.descricao ?? ""} ${cat} ${mapaContas.get(t.conta_id) ?? ""} ${(t.etiquetas ?? []).join(" ")} ${Number(t.valor).toFixed(2).replace(".", ",")}`);
         if (!alvo.includes(termo)) return false;
       }
       return true;
@@ -176,7 +180,7 @@ function ExtratoConteudo() {
     // Etapa 207 — agendados/futuros: o mais próximo primeiro
     const futuro = inicio > new Date().toLocaleDateString("sv-SE");
     return futuro ? [...filtrada].sort((a: any, b: any) => String(a.data).localeCompare(String(b.data))) : filtrada;
-  }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro, termo]);
+  }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro, etiquetaFiltro, termo]);
 
   const categoriaInfo = categoriaFiltro && categoriaFiltro !== "sem" ? (mapaCategorias.get(categoriaFiltro) as any) : null;
 
@@ -401,7 +405,7 @@ function ExtratoConteudo() {
         ))}
       </div>
 
-      {(categoriaFiltro || contaFiltro) && (
+      {(categoriaFiltro || contaFiltro || etiquetaFiltro) && (
         <div className="flex flex-wrap gap-2 mb-4">
           {categoriaFiltro && (
             <ChipFiltro
@@ -420,6 +424,7 @@ function ExtratoConteudo() {
           {contaFiltro && (
             <ChipFiltro aoLimpar={() => setContaFiltro(null)}>{String(mapaContas.get(contaFiltro) ?? "Conta")}</ChipFiltro>
           )}
+          {etiquetaFiltro && <ChipFiltro aoLimpar={() => setEtiquetaFiltro(null)}>#{etiquetaFiltro}</ChipFiltro>}
         </div>
       )}
 
@@ -501,6 +506,11 @@ function ExtratoConteudo() {
                       <p className="text-xs text-ink-400 truncate min-w-0">
                         {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
                         {t.recorrencia_id && <span className="text-financa"> · ↻ todo mês</span>}
+                        {(t.etiquetas ?? []).map((e: string) => (
+                          <button key={e} type="button" onClick={() => setEtiquetaFiltro(e)} className="text-nota ml-1.5">
+                            #{e}
+                          </button>
+                        ))}
                         <span className="block mt-1 empty:hidden">
                           <BotaoPaguei transacao={t} />
                         </span>

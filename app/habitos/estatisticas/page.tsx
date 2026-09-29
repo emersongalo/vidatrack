@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { habitoDevidoNoDia, pausasDe } from "@/lib/habitos/pausa";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { hojeISO, calcularStreak } from "@/lib/habitos/streak";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
@@ -69,7 +70,7 @@ export default function EstatisticasHabitosPage() {
       let aplicaveisHabito = 0;
       let feitosHabito = 0;
       for (const d of dias) {
-        if (diaBateComFrequencia(habito.frequencia, habito.dias_semana ?? [], d)) {
+        if (habitoDevidoNoDia(habito, d)) {
           aplicaveisHabito++;
           if ((mapaDatas.get(d) ?? 0) >= meta) feitosHabito++;
         }
@@ -99,7 +100,7 @@ export default function EstatisticasHabitosPage() {
     const datasFeitas = Array.from(mapaDatas.entries())
       .filter(([, qtd]) => (qtd as number) >= meta)
       .map(([data]) => data as string);
-    const streak = calcularStreak(datasFeitas);
+    const streak = calcularStreak(datasFeitas, pausasDe(habito));
     if (streak > melhorSequenciaGeral.dias) melhorSequenciaGeral = { nome: habito.nome, dias: streak };
   }
 
@@ -154,6 +155,9 @@ export default function EstatisticasHabitosPage() {
       <div className="flex flex-wrap gap-2 -mt-3 mb-6">
         <Link href="/habitos/diario" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-nota/60 transition">
           🙂 Diário
+        </Link>
+        <Link href="/habitos/metas" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
+          🎯 Metas do ano
         </Link>
         <Link href="/retrospectiva" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-financa/60 transition">
           🎉 Retrospectiva do ano
@@ -233,13 +237,13 @@ export default function EstatisticasHabitosPage() {
             const meta = habito.meta_diaria ?? 1;
 
             const diasAplicaveis = janela.filter((d) =>
-              diaBateComFrequencia(habito.frequencia, habito.dias_semana ?? [], d)
+              habitoDevidoNoDia(habito, d)
             );
 
             const dadosGrafico = janela.map((d) => ({
               dia: d.slice(8, 10),
               feito:
-                diaBateComFrequencia(habito.frequencia, habito.dias_semana ?? [], d) &&
+                habitoDevidoNoDia(habito, d) &&
                 (mapaDatas.get(d) ?? 0) >= meta
                   ? 1
                   : 0,

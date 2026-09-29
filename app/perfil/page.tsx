@@ -96,6 +96,20 @@ function PerfilConteudo() {
       <ConfigAparencia />
       <ConfigBloqueioPin />
 
+      {/* Etapa 218 — ajuda e convites */}
+      <section className="mt-10 pt-6 border-t border-base-600 grid grid-cols-2 gap-2">
+        <a href="/ajuda" className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-ink-400 transition">
+          <span className="block text-lg">❓</span>
+          <span className="block text-sm font-medium mt-1">Ajuda</span>
+          <span className="block text-xs text-ink-400">Dúvidas e fale conosco</span>
+        </a>
+        <a href="/convidar" className="bg-base-800 border border-base-600 rounded-xl2 p-4 hover:border-ink-400 transition">
+          <span className="block text-lg">🎁</span>
+          <span className="block text-sm font-medium mt-1">Convidar amigos</span>
+          <span className="block text-xs text-ink-400">Seu link pessoal</span>
+        </a>
+      </section>
+
       {/* Etapa 215 — LGPD: cópia dos seus dados */}
       <section className="mt-10 pt-6 border-t border-base-600">
         <h2 className="font-display font-semibold">💾 Seus dados</h2>

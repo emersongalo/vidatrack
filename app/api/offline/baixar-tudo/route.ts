@@ -31,7 +31,7 @@ export async function GET() {
   ] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete, horarios_lembrete, vezes_semana")
+      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete, horarios_lembrete, vezes_semana, pausas")
       .eq("arquivado", false),
     supabase
       .from("tarefas")
@@ -69,7 +69,7 @@ export async function GET() {
   dataLimite.setDate(dataLimite.getDate() - 400);
   const dataLimiteISO = dataLimite.toLocaleDateString("sv-SE");
 
-  const [{ data: checkins }, { data: conclusoesTarefas }, { data: transacoes }, { data: diario }] = await Promise.all([
+  const [{ data: checkins }, { data: conclusoesTarefas }, { data: transacoes }, { data: diario }, { data: metasLongas }] = await Promise.all([
     idsHabitos.length
       ? supabase
           .from("habito_checkins")
@@ -85,13 +85,20 @@ export async function GET() {
     idsContas.length
       ? supabase
           .from("financa_transacoes")
-          .select("id, conta_id, categoria_id, tipo, valor, descricao, data, recorrencia_id, pago_em, parcela_grupo, parcela_numero, parcela_total, transferencia_grupo")
+          .select("id, conta_id, categoria_id, tipo, valor, descricao, data, recorrencia_id, pago_em, parcela_grupo, parcela_numero, parcela_total, transferencia_grupo, etiquetas")
           .in("conta_id", idsContas)
           .order("data", { ascending: false })
           .limit(LIMITE_TRANSACOES)
       : Promise.resolve({ data: [] as any[] }),
     // Etapa 215 — diário do dia
     supabase.from("diario_dias").select("data, humor, texto").eq("dono_id", user.id).gte("data", dataLimiteISO).order("data", { ascending: false }),
+    // Etapa 218 — metas de longo prazo
+    supabase
+      .from("metas_longas")
+      .select("id, nome, emoji, alvo, unidade, data_inicio, data_fim, habito_id, progresso")
+      .eq("dono_id", user.id)
+      .eq("arquivada", false)
+      .order("data_fim", { ascending: true }),
   ]);
 
   const todasTransacoes = transacoes ?? [];
@@ -135,6 +142,7 @@ export async function GET() {
       ordemBlocosFinancas: perfil?.ordem_blocos_financas ?? null,
     },
     diario: diario ?? [],
+    metasLongas: metasLongas ?? [],
     perfil: {
       nome: perfil?.nome ?? null,
       email: user.email ?? null,

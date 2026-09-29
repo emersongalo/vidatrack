@@ -34,25 +34,69 @@ export type SnapshotOffline = {
   perfil: { nome: string | null; email: string | null; id: string };
   /** Etapa 215 — diário do dia (humor + frase). Campo novo: retrato antigo vem sem, lido como []. */
   diario?: { data: string; humor: number; texto: string | null }[];
+  /** Etapa 218 — metas de longo prazo */
+  metasLongas?: {
+    id: string;
+    nome: string;
+    emoji: string | null;
+    alvo: number;
+    unidade: string | null;
+    data_inicio: string;
+    data_fim: string;
+    habito_id: string | null;
+    progresso: number;
+  }[];
 };
 
-export function salvarSnapshotOffline(dados: Omit<SnapshotOffline, "versao">) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(CHAVE_SNAPSHOT, JSON.stringify({ ...dados, versao: VERSAO_SNAPSHOT }));
-  } catch {
-    // Se o localStorage estiver cheio, ignora — o app volta a
-    // funcionar normal assim que a conexão retornar, só o modo
-    // offline completo é que fica indisponível até haver espaço.
-  }
+/**
+ * Etapa 218 — o retrato agora fica no IndexedDB (sem o limite de ~5 MB
+ * do localStorage, e sem travar a tela ao gravar). Pra continuar
+ * funcionando igual em todo lugar que lê o retrato na hora (sem
+ * await), ele fica também numa cópia em memória: carregada do
+ * IndexedDB assim que o app abre (hidratarSnapshot) e atualizada a
+ * cada gravação. Quem ainda tem o retrato antigo no localStorage é
+ * migrado sozinho na primeira abertura.
+ */
+const NOME_BANCO = "vidatrack";
+const LOJA = "retrato";
+
+let cache: SnapshotOffline | null | undefined = undefined; // undefined = ainda não carregou
+let hidratando: Promise<SnapshotOffline | null> | null = null;
+
+function abrirBanco(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const pedido = indexedDB.open(NOME_BANCO, 1);
+    pedido.onupgradeneeded = () => {
+      if (!pedido.result.objectStoreNames.contains(LOJA)) pedido.result.createObjectStore(LOJA);
+    };
+    pedido.onsuccess = () => resolve(pedido.result);
+    pedido.onerror = () => reject(pedido.error);
+  });
 }
 
-export function lerSnapshotOffline(): SnapshotOffline | null {
-  if (typeof window === "undefined") return null;
+async function lerDoBanco(): Promise<unknown> {
+  const banco = await abrirBanco();
+  return new Promise((resolve, reject) => {
+    const req = banco.transaction(LOJA, "readonly").objectStore(LOJA).get(CHAVE_SNAPSHOT);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function gravarNoBanco(valor: unknown): Promise<void> {
+  const banco = await abrirBanco();
+  await new Promise<void>((resolve, reject) => {
+    const tx = banco.transaction(LOJA, "readwrite");
+    tx.objectStore(LOJA).put(valor, CHAVE_SNAPSHOT);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+function normalizar(dados: any): SnapshotOffline | null {
   try {
-    const bruto = localStorage.getItem(CHAVE_SNAPSHOT);
-    if (!bruto) return null;
-    const dados = JSON.parse(bruto);
+    if (!dados) return null;
     // Formato antigo (ou corrompido) — trata como se nunca tivesse
     // baixado, em vez de deixar a tela quebrar tentando ler um campo
     // que não existe nesse retrato.
@@ -81,6 +125,7 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
         ordemBlocosFinancas: dados.financas?.ordemBlocosFinancas ?? null,
       },
       diario: Array.isArray(dados.diario) ? dados.diario : [],
+      metasLongas: Array.isArray(dados.metasLongas) ? dados.metasLongas : [],
       perfil: {
         nome: dados.perfil?.nome ?? null,
         email: dados.perfil?.email ?? null,
@@ -90,4 +135,84 @@ export function lerSnapshotOffline(): SnapshotOffline | null {
   } catch {
     return null;
   }
+}
+
+function lerLegado(): SnapshotOffline | null {
+  try {
+    const bruto = localStorage.getItem(CHAVE_SNAPSHOT);
+    return bruto ? normalizar(JSON.parse(bruto)) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Carrega o retrato do IndexedDB pra memória (uma vez por abertura do app). */
+export function hidratarSnapshot(): Promise<SnapshotOffline | null> {
+  if (typeof window === "undefined") return Promise.resolve(null);
+  if (cache !== undefined) return Promise.resolve(cache);
+  if (hidratando) return hidratando;
+  hidratando = (async () => {
+    let lido: SnapshotOffline | null = null;
+    try {
+      lido = normalizar(await lerDoBanco());
+    } catch {
+      lido = null;
+    }
+    if (!lido) {
+      // migração: retrato antigo no localStorage vai pro IndexedDB
+      const legado = lerLegado();
+      if (legado) {
+        lido = legado;
+        try {
+          await gravarNoBanco(legado);
+          localStorage.removeItem(CHAVE_SNAPSHOT);
+        } catch {}
+      }
+    }
+    // alguém pode ter gravado um retrato novo enquanto carregava
+    if (cache === undefined) cache = lido;
+    return cache ?? null;
+  })();
+  return hidratando;
+}
+
+export function salvarSnapshotOffline(dados: Omit<SnapshotOffline, "versao">) {
+  if (typeof window === "undefined") return;
+  const completo = { ...dados, versao: VERSAO_SNAPSHOT };
+  cache = normalizar(completo);
+  gravarNoBanco(completo)
+    .then(() => {
+      try {
+        localStorage.removeItem(CHAVE_SNAPSHOT);
+      } catch {}
+    })
+    .catch(() => {
+      // Sem IndexedDB (modo privado de alguns navegadores): tenta o jeito antigo
+      try {
+        localStorage.setItem(CHAVE_SNAPSHOT, JSON.stringify(completo));
+      } catch {
+        // cheio — o app volta a funcionar normal com internet
+      }
+    });
+}
+
+/**
+ * Leitura imediata (sem await). Antes de o app terminar de carregar o
+ * retrato do IndexedDB, usa o legado do localStorage se existir; as
+ * telas usam useSnapshotOffline, que espera a carga terminar.
+ */
+export function lerSnapshotOffline(): SnapshotOffline | null {
+  if (typeof window === "undefined") return null;
+  if (cache !== undefined) return cache;
+  return lerLegado();
+}
+
+/** true quando a cópia em memória já foi carregada. */
+export function snapshotHidratado(): boolean {
+  return cache !== undefined;
+}
+
+// Começa a carregar assim que qualquer tela importar este arquivo
+if (typeof window !== "undefined") {
+  hidratarSnapshot();
 }

@@ -16,16 +16,20 @@ function subtrairDias(dataISO: string, dias: number): string {
  * contando a partir de hoje (ou de ontem, se hoje ainda não foi marcado
  * mas ontem sim — assim o streak não "quebra" antes do dia terminar).
  */
-export function calcularStreak(datasCheckin: string[]): number {
+export function calcularStreak(
+  datasCheckin: string[],
+  /** Etapa 218 — dias pausados (férias) não contam nem quebram a sequência */
+  pausas: { inicio: string; fim: string }[] = [],
+  hoje: string = hojeISO()
+): number {
   const marcadas = new Set(datasCheckin);
-  const hoje = hojeISO();
+  const pausado = (d: string) => pausas.some((p) => d >= p.inicio && d <= p.fim);
 
   let cursor = marcadas.has(hoje) ? hoje : subtrairDias(hoje, 1);
-  if (!marcadas.has(cursor)) return 0;
-
   let streak = 0;
-  while (marcadas.has(cursor)) {
-    streak++;
+  for (let passos = 0; passos < 4000; passos++) {
+    if (marcadas.has(cursor)) streak++;
+    else if (!pausado(cursor)) break;
     cursor = subtrairDias(cursor, 1);
   }
   return streak;
@@ -59,9 +63,19 @@ export const MARCOS_CONQUISTA = [7, 30, 100, 365];
  * hábito já teve, em toda a história de check-ins (diferente do
  * streak atual, que só olha pra trás a partir de hoje).
  */
-export function calcularMelhorStreak(datasCheckin: string[]): number {
+export function calcularMelhorStreak(datasCheckin: string[], pausas: { inicio: string; fim: string }[] = []): number {
   if (datasCheckin.length === 0) return 0;
   const datasOrdenadas = [...new Set(datasCheckin)].sort();
+  const pausado = (d: string) => pausas.some((p) => d >= p.inicio && d <= p.fim);
+  // Etapa 218 — um buraco feito só de dias pausados não quebra a sequência
+  const soPausaEntre = (a: string, b: string) => {
+    let d = subtrairDias(b, 1);
+    for (let n = 0; d > a && n < 4000; n++) {
+      if (!pausado(d)) return false;
+      d = subtrairDias(d, 1);
+    }
+    return true;
+  };
 
   let melhor = 1;
   let atual = 1;
@@ -71,7 +85,7 @@ export function calcularMelhorStreak(datasCheckin: string[]): number {
     const atualData = new Date(datasOrdenadas[i] + "T00:00:00");
     const diffDias = Math.round((atualData.getTime() - anterior.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDias === 1) {
+    if (diffDias === 1 || (diffDias > 1 && pausas.length > 0 && soPausaEntre(datasOrdenadas[i - 1], datasOrdenadas[i]))) {
       atual++;
       melhor = Math.max(melhor, atual);
     } else {

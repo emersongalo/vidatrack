@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { lerSnapshotOffline, salvarSnapshotOffline, type SnapshotOffline } from "@/lib/offline/snapshot";
+import { hidratarSnapshot, lerSnapshotOffline, salvarSnapshotOffline, type SnapshotOffline } from "@/lib/offline/snapshot";
 
 /**
  * Etapa 127 — a peça que faz toda tela (não só "Hoje") virar
@@ -57,11 +57,18 @@ export function useSnapshotOffline() {
   }, []);
 
   useEffect(() => {
-    setSnapshot(lerSnapshotOffline());
+    // Etapa 218 — espera o retrato sair do IndexedDB (instantâneo na prática)
+    let ativo = true;
+    hidratarSnapshot().then((s) => {
+      if (ativo) setSnapshot((atual) => (atual === undefined ? s : atual));
+    });
     // Toda vez que uma tela dessas é aberta, tenta trazer dado fresco
     // em segundo plano — não trava a tela esperando isso (o que já
     // tinha salvo aparece na hora), só atualiza quando/se chegar.
     recarregar();
+    return () => {
+      ativo = false;
+    };
   }, [recarregar]);
 
   return { snapshot, atualizando, recarregar };

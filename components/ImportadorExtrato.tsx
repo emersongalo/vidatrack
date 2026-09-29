@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { analisarArquivo, confirmarImportacao } from "@/app/financas/importar/actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import type { TransacaoImportada } from "@/lib/financas/importar-extrato";
+import { lerSnapshotOffline } from "@/lib/offline/snapshot";
+import { acharPossiveisDuplicados } from "@/lib/financas/duplicados";
 
 export function ImportadorExtrato({ contas }: { contas: { id: string; nome: string }[] }) {
   const router = useRouter();
@@ -14,6 +16,16 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<{ importadas: number; ignoradasPorDuplicata: number } | null>(null);
   const [pendente, iniciarTransicao] = useTransition();
+
+  // Etapa 218 — o que parece já ter sido lançado na mão
+  const duplicados = useMemo(
+    () =>
+      transacoes
+        ? acharPossiveisDuplicados(transacoes, (lerSnapshotOffline()?.financas.transacoes ?? []) as any[], contaId)
+        : [],
+    [transacoes, contaId]
+  );
+  const qtdDuplicados = duplicados.filter(Boolean).length;
 
   function aoEscolherArquivo(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0];
@@ -33,7 +45,9 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
         return;
       }
       setTransacoes(resposta.transacoes);
-      setSelecionadas(new Set(resposta.transacoes.map((_, i) => i)));
+      // já vem desmarcado o que parece repetido
+      const dup = acharPossiveisDuplicados(resposta.transacoes, (lerSnapshotOffline()?.financas.transacoes ?? []) as any[], contaId);
+      setSelecionadas(new Set(resposta.transacoes.map((_, i) => i).filter((i) => !dup[i])));
     });
   }
 
@@ -86,7 +100,13 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
         <label className="block text-xs text-ink-400 mb-1.5">Importar pra qual conta</label>
         <select
           value={contaId}
-          onChange={(e) => setContaId(e.target.value)}
+          onChange={(e) => {
+            setContaId(e.target.value);
+            if (transacoes) {
+              const dup = acharPossiveisDuplicados(transacoes, (lerSnapshotOffline()?.financas.transacoes ?? []) as any[], e.target.value);
+              setSelecionadas(new Set(transacoes.map((_, i) => i).filter((i) => !dup[i])));
+            }
+          }}
           className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
         >
           {contas.map((c) => (
@@ -119,6 +139,12 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
           <p className="text-sm text-ink-400 mb-3">
             {selecionadas.size} de {transacoes.length} selecionado(s) — desmarca o que não quiser importar
           </p>
+          {qtdDuplicados > 0 && (
+            <p className="text-xs text-financa bg-financa/10 border border-financa/30 rounded-lg px-3 py-2 mb-3">
+              ⚠️ {qtdDuplicados} parece{qtdDuplicados > 1 ? "m" : ""} já ter sido lançado{qtdDuplicados > 1 ? "s" : ""} por você
+              (mesmo valor, data próxima). Deixamos desmarcado{qtdDuplicados > 1 ? "s" : ""} — marque se for outro gasto.
+            </p>
+          )}
           <ul className="space-y-1.5 max-h-96 overflow-y-auto mb-4">
             {transacoes.map((t, i) => (
               <li
@@ -132,6 +158,12 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate">{t.descricao}</p>
                   <p className="text-xs text-ink-400">{new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")}</p>
+                  {duplicados[i] && (
+                    <p className="text-[11px] text-financa truncate">
+                      Já lançado? “{duplicados[i]!.descricao || "sem descrição"}” em{" "}
+                      {new Date(duplicados[i]!.data + "T00:00:00").toLocaleDateString("pt-BR")}
+                    </p>
+                  )}
                 </div>
                 <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-ink-100"}`}>
                   {t.tipo === "receita" ? "+" : "-"}

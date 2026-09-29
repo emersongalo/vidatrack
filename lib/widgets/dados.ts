@@ -1,4 +1,6 @@
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
+import { habitoDevidoNoDia, pausasDe } from "@/lib/habitos/pausa";
+import { calcularStreak, calcularMelhorStreak } from "@/lib/habitos/streak";
 import { tarefaApareceNoDia, tarefaAtrasada } from "@/lib/agenda/recorrencia";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { preverFimDoMes } from "@/lib/financas/previsao";
@@ -110,7 +112,7 @@ export function montarDadosWidgets(e: EntradaWidgets): DadosWidgets {
   const feitoNoDia = (h: any, dia: string) => (qtd.get(`${h.id}|${dia}`) ?? 0) >= (h.meta_diaria ?? 1);
 
   // --- Hoje (mesma conta da tela Hoje: todos os hábitos do dia) ---
-  const doDia = habitos.filter((h) => diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], hoje));
+  const doDia = habitos.filter((h) => habitoDevidoNoDia(h, hoje));
   const hojeResumo = { feitos: doDia.filter((h) => feitoNoDia(h, hoje)).length, total: doDia.length };
 
   // --- Lista pra marcar no widget (só positivos: marcar um hábito
@@ -135,7 +137,13 @@ export function montarDadosWidgets(e: EntradaWidgets): DadosWidgets {
         const base = lapsos.at(-1) ?? String(h.criado_em ?? hoje).slice(0, 10);
         return { nome: h.nome, atual: Math.max(0, diasEntre(base, hoje)), recorde: 0, negativo: true };
       }
-      return { nome: h.nome, atual: streakAtual(datas, hoje), recorde: melhorStreak(datas), negativo: false };
+      // Etapa 218 — dias de pausa (férias) não quebram a sequência
+      return {
+        nome: h.nome,
+        atual: calcularStreak([...datas], pausasDe(h), hoje),
+        recorde: calcularMelhorStreak([...datas], pausasDe(h)),
+        negativo: false,
+      };
     })
     .filter((s) => s.atual > 0 || s.recorde > 0)
     .sort((a, b) => b.atual - a.atual || b.recorde - a.recorde)
@@ -144,7 +152,7 @@ export function montarDadosWidgets(e: EntradaWidgets): DadosWidgets {
   // --- Semana (7 dias terminando hoje, só positivos) ---
   const semana = Array.from({ length: 7 }, (_, i) => {
     const dia = somarDias(hoje, i - 6);
-    const devidos = habitos.filter((h) => !h.eh_negativo && diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], dia));
+    const devidos = habitos.filter((h) => !h.eh_negativo && habitoDevidoNoDia(h, dia));
     const feitos = devidos.filter((h) => feitoNoDia(h, dia)).length;
     return {
       rotulo: LETRAS_DIA[diaDaSemana(dia)],

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { habitoDevidoNoDia } from "@/lib/habitos/pausa";
 import { createClient } from "@/lib/supabase/client";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { tarefaApareceNoDia } from "@/lib/agenda/recorrencia";
@@ -40,7 +41,7 @@ export function AlarmeAlertaTela() {
       const [{ data: habitos }, { data: tarefas }] = await Promise.all([
         supabase
           .from("habitos")
-          .select("id, nome, frequencia, dias_semana, horario_lembrete")
+          .select("id, nome, frequencia, dias_semana, horario_lembrete, pausas")
           .eq("arquivado", false)
           .not("horario_lembrete", "is", null),
         supabase
@@ -55,7 +56,7 @@ export function AlarmeAlertaTela() {
       const encontrados: ItemComLembrete[] = [];
 
       for (const h of habitos ?? []) {
-        if (diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], hoje)) {
+        if (habitoDevidoNoDia(h, hoje)) {
           encontrados.push({
             chave: `habito-${h.id}`,
             nome: h.nome,

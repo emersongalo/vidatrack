@@ -55,6 +55,7 @@ function EditarTransacaoConteudo() {
         categoriaId: transacao.categoria_id,
         data: transacao.data,
         descricao: transacao.descricao,
+        etiquetas: transacao.etiquetas ?? null,
         parcela: transacao.parcela_grupo
           ? { grupo: transacao.parcela_grupo, numero: transacao.parcela_numero, total: transacao.parcela_total }
           : null,

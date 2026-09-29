@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon, BarChart3 } from "lucide-react";
+import { Moon, BarChart3, Sun } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-type Chave = "aviso_noite" | "resumo_semanal";
+type Chave = "resumo_manha" | "aviso_noite" | "resumo_semanal";
 
 const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }[] = [
+  {
+    chave: "resumo_manha",
+    titulo: "Resumo da manhã (07:00)",
+    texto: "O que tem pro dia: hábitos, tarefas e contas que vencem hoje.",
+    Icone: Sun,
+  },
   {
     chave: "aviso_noite",
     titulo: "Aviso da noite (20:30)",
@@ -30,8 +36,12 @@ export function PreferenciasAvisos() {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal").eq("id", user.id).maybeSingle();
-      setValores({ aviso_noite: data?.aviso_noite ?? true, resumo_semanal: data?.resumo_semanal ?? true });
+      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal, resumo_manha").eq("id", user.id).maybeSingle();
+      setValores({
+        resumo_manha: (data as any)?.resumo_manha ?? true,
+        aviso_noite: data?.aviso_noite ?? true,
+        resumo_semanal: data?.resumo_semanal ?? true,
+      });
     });
   }, []);
 

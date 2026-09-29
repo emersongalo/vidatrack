@@ -6,6 +6,8 @@ import { ListaHabitosArrastavel } from "@/components/ListaHabitosArrastavel";
 import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
 import { AlternadorHabitosTarefas } from "@/components/AlternadorHabitosTarefas";
 import { calcularStreak, calcularMelhorStreak, calcularStreakNegativo } from "@/lib/habitos/streak";
+import { pausasDe } from "@/lib/habitos/pausa";
+import { ModoFerias } from "@/components/ControlePausa";
 
 // Etapa 127: lê do mesmo retrato local usado pelas outras telas —
 // abre com o que já tinha salvo, atualiza sozinha se houver internet.
@@ -80,13 +82,14 @@ function ListaComStreak({
     }
     return {
       ...base,
-      streakAtual: calcularStreak(datas),
-      melhorStreak: calcularMelhorStreak(datas),
+      streakAtual: calcularStreak(datas, pausasDe(h)),
+      melhorStreak: calcularMelhorStreak(datas, pausasDe(h)),
     };
   });
 
   return (
     <>
+      <ModoFerias habitos={snapshot.habitos as any} />
       <p className="text-xs text-ink-400 mb-3">Arraste ⠿ para reordenar</p>
       <ListaHabitosArrastavel habitos={habitosComStreak as any} aoMudar={aoMudar} />
     </>

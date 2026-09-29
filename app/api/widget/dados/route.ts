@@ -28,14 +28,14 @@ export async function GET() {
   const [{ data: habitos }, { data: tarefas }, { data: contas }, { data: recorrencias }] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, frequencia, dias_semana, meta_diaria, eh_negativo, criado_em, ordem")
+      .select("id, nome, frequencia, dias_semana, meta_diaria, eh_negativo, criado_em, ordem, pausas")
       .eq("arquivado", false),
     supabase
       .from("tarefas")
       .select("id, titulo, repetir, dias_semana, data, concluida, horario_lembrete, dia_mes, mes, intervalo_dias, prioridade")
       .eq("arquivada", false),
-    supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),
-    supabase.from("financa_recorrencias").select("id, conta_id, tipo, valor, dia_mes, data_fim, data_inicio, ativo, descricao"),
+    supabase.from("financa_contas").select("id, nome, banco, tipo, saldo_inicial").eq("arquivado", false),
+    supabase.from("financa_recorrencias").select("tipo, valor, dia_mes, data_fim, data_inicio, ativo, descricao"),
   ]);
 
   const idsHabitos = (habitos ?? []).map((h) => h.id);
@@ -52,12 +52,7 @@ export async function GET() {
       : Promise.resolve({ data: [] as any[] }),
     supabase.from("tarefa_conclusoes").select("tarefa_id, data").eq("usuario_id", user.id).eq("data", hoje),
     idsContas.length
-      ? supabase
-          .from("financa_transacoes")
-          .select("id, conta_id, tipo, valor, data, pago_em, descricao, recorrencia_id, transferencia_grupo")
-          .in("conta_id", idsContas)
-          .order("data", { ascending: false })
-          .limit(5000)
+      ? supabase.from("financa_transacoes").select("conta_id, tipo, valor, data, pago_em").in("conta_id", idsContas).limit(5000)
       : Promise.resolve({ data: [] as any[] }),
   ]);
 
@@ -67,13 +62,8 @@ export async function GET() {
     checkins: checkins ?? [],
     tarefas: tarefas ?? [],
     conclusoesTarefas: conclusoes ?? [],
-    // Etapa 215 — saldo + dias do cartão (pra previsão com fatura)
-    contas: calcularSaldoPorConta((contas ?? []) as any, transacoes ?? [], hoje).map((c) => {
-      const orig = (contas ?? []).find((o) => o.id === c.id) as any;
-      return { ...c, dia_fechamento: orig?.dia_fechamento ?? null, dia_vencimento: orig?.dia_vencimento ?? null };
-    }),
+    contas: calcularSaldoPorConta((contas ?? []) as any, transacoes ?? [], hoje),
     recorrencias: (recorrencias ?? []) as any,
-    transacoes: (transacoes ?? []) as any,
     pendencias: null,
   });
 

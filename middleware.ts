@@ -25,7 +25,18 @@ const ROTAS_PUBLICAS = [
 // painel de uma conta que acabou de deixar de existir).
 const ROTAS_SO_PARA_DESLOGADO = ["/login", "/cadastro", "/esqueci-senha", "/verifique-email"];
 
+// Etapa 218 — link de convite (?ref=CODIGO): guarda o código num cookie
+// por 30 dias; depois do cadastro, o app registra quem convidou.
 export async function middleware(request: NextRequest) {
+  const resposta = await middlewareBase(request);
+  const ref = request.nextUrl.searchParams.get("ref");
+  if (ref && /^[A-Za-z0-9]{4,12}$/.test(ref)) {
+    resposta.cookies.set("vt_ref", ref.toUpperCase(), { maxAge: 60 * 60 * 24 * 30, path: "/", sameSite: "lax" });
+  }
+  return resposta;
+}
+
+async function middlewareBase(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

@@ -1,4 +1,5 @@
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
+import { habitoDevidoNoDia } from "@/lib/habitos/pausa";
 import { formatarMoeda, primeiroDiaDoMes, ultimoDiaDoMes } from "@/lib/financas/formatacao";
 import { calcularComparacaoSemanal } from "@/lib/financas/insights-calculo";
 import { hojeISO, calcularStreak } from "@/lib/habitos/streak";
@@ -104,7 +105,7 @@ export function interpretarPergunta(textoOriginal: string, snapshot: SnapshotOff
       snapshot.habitoCheckins.filter((c) => c.data === hoje && c.quantidade > 0).map((c) => c.habito_id)
     );
     const habitosPendentesHoje = snapshot.habitos.filter(
-      (h: any) => diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], hoje) && !checkinsHoje.has(h.id)
+      (h: any) => habitoDevidoNoDia(h, hoje) && !checkinsHoje.has(h.id)
     );
     if (habitosPendentesHoje.length === 0 && tarefasVencidas.length === 0 && lembretesPassados.length === 0) {
       return { tipo: "texto", texto: "Tudo feito por hoje — nenhum hábito ou tarefa pendente! 🎉" };

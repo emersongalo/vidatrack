@@ -62,7 +62,7 @@ export function buscarNoSnapshot(snapshot: SnapshotOffline, consulta: string, li
     const v = Number(t.valor);
     const porValor = valor !== null && Math.abs(v - valor) < 0.005;
     const porValorInteiro = valor !== null && !consulta.includes(",") && Math.floor(v) === valor;
-    if (!(porValor || porValorInteiro || bate(t.descricao, nomesCat.get(t.categoria_id)))) continue;
+    if (!(porValor || porValorInteiro || bate(t.descricao, nomesCat.get(t.categoria_id), (t.etiquetas ?? []).join(" ")))) continue;
     lancamentos.push({
       tipo: "lancamento",
       titulo: t.descricao || nomesCat.get(t.categoria_id) || (t.tipo === "receita" ? "Receita" : "Despesa"),

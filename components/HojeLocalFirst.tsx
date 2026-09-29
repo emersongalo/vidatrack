@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { habitoDevidoNoDia, emPausa, pausaAtualOuFutura } from "@/lib/habitos/pausa";
 import Link from "next/link";
 import { ContasDoDia } from "@/components/ContasDoDia";
 import { DiarioDoDia } from "@/components/DiarioDoDia";
@@ -60,7 +61,7 @@ function HojeConteudo() {
     const lista: ItemAgenda[] = [];
 
     for (const h of snapshot.habitos as any[]) {
-      if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], dataSelecionada)) continue;
+      if (!habitoDevidoNoDia(h, dataSelecionada)) continue;
       if (categoriaFiltro && h.categoria_id !== categoriaFiltro) continue;
       const quantidadeAtual = checkinsPorHabito.get(h.id) ?? 0;
       const meta = h.meta_diaria ?? 1;
@@ -214,6 +215,19 @@ function HojeConteudo() {
             <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />
           )}
 
+          {/* Etapa 218 — hábitos pausados nesse dia */}
+          {snapshot &&
+            (() => {
+              const pausados = (snapshot.habitos as any[]).filter((h) => emPausa(h, dataSelecionada));
+              if (!pausados.length) return null;
+              const fim = pausaAtualOuFutura(pausados[0], dataSelecionada)?.fim;
+              return (
+                <p className="mt-4 text-xs text-ink-400 bg-base-800 border border-base-600 rounded-lg px-3 py-2">
+                  ⏸ {pausados.length === 1 ? `"${pausados[0].nome}" está pausado` : `${pausados.length} hábitos pausados`}
+                  {fim ? ` até ${fim.slice(8, 10)}/${fim.slice(5, 7)}` : ""} — a sequência fica guardada.
+                </p>
+              );
+            })()}
           {snapshot && <ContasDoDia snapshot={snapshot} dataISO={dataSelecionada} hojeISO={hoje} />}
           {snapshot && <DiarioDoDia snapshot={snapshot} dataISO={dataSelecionada} hojeISO={hoje} />}
           {snapshot && dataSelecionada === hoje && (

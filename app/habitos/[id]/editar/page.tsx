@@ -6,6 +6,7 @@ import Link from "next/link";
 import { atualizarHabito } from "../../actions";
 import { FormularioHabito } from "@/components/FormularioHabito";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { PausarHabito } from "@/components/ControlePausa";
 
 // Etapa 128: acha o hábito pelo id dentro do retrato já baixado —
 // funciona mesmo offline, desde que esse hábito já existisse na
@@ -82,6 +83,9 @@ function EditarHabitoConteudo() {
           ehNegativo: habito.eh_negativo,
         }}
       />
+
+      {/* Etapa 218 */}
+      <PausarHabito key={habito.id} habito={habito as any} />
     </main>
   );
 }

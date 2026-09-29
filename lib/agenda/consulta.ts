@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { habitoDevidoNoDia } from "@/lib/habitos/pausa";
 import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { tarefaApareceNoDia, tarefaAtrasada } from "@/lib/agenda/recorrencia";
@@ -16,7 +17,7 @@ export async function buscarItensDoDia(
   const [{ data: habitos }, { data: tarefas }] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, cor, icone, categoria_id, frequencia, dias_semana, horario_lembrete, meta_diaria, unidade, ordem, dono_id")
+      .select("id, nome, cor, icone, categoria_id, frequencia, dias_semana, horario_lembrete, meta_diaria, unidade, ordem, dono_id, pausas")
       .eq("arquivado", false),
     supabase
       .from("tarefas")
@@ -95,7 +96,7 @@ export async function buscarItensDoDia(
   let itens: ItemAgenda[] = [];
 
   for (const h of habitos ?? []) {
-    if (!diaBateComFrequencia(h.frequencia, h.dias_semana ?? [], dataSelecionada)) continue;
+    if (!habitoDevidoNoDia(h, dataSelecionada)) continue;
     if (categoriaFiltro && h.categoria_id !== categoriaFiltro) continue;
     const quantidadeAtual = quantidadePorHabito.get(h.id) ?? 0;
     const meta = h.meta_diaria ?? 1;

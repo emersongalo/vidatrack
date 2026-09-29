@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { normalizarEtiquetas } from "@/lib/financas/etiquetas";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import { createClient } from "@/lib/supabase/server";
@@ -292,6 +293,12 @@ export async function removerCategoria(categoriaId: string) {
   revalidatePath("/financas");
 }
 
+// Etapa 218 — etiquetas livres (chegam como vários campos "etiquetas")
+function etiquetasDoFormulario(formData: FormData): string[] | null {
+  const lista = normalizarEtiquetas(formData.getAll("etiquetas").map(String));
+  return lista.length ? lista : null;
+}
+
 function dadosTransacaoDoFormulario(formData: FormData) {
   return {
     tipo: formData.get("tipo"),
@@ -333,6 +340,7 @@ export async function criarTransacao(formData: FormData) {
       tipo: d.tipo,
       valor: valores[i],
       descricao: `${nomeBase} (${i + 1}/${n})`,
+      etiquetas: etiquetasDoFormulario(formData),
       data: somarMesesISO(d.data, i),
       parcela_grupo: grupo,
       parcela_numero: i + 1,
@@ -354,6 +362,7 @@ export async function criarTransacao(formData: FormData) {
       valor: resultado.data.valor,
       descricao: resultado.data.descricao,
       data: resultado.data.data,
+      etiquetas: etiquetasDoFormulario(formData),
     })
     .select("id")
     .single();
@@ -460,6 +469,8 @@ export async function atualizarTransacao(transacaoId: string, formData: FormData
       valor: d.valor,
       descricao: d.descricao,
       data: d.data,
+      // só mexe nas etiquetas se o formulário as enviou (Etapa 218)
+      ...(formData.get("etiquetasPresente") ? { etiquetas: etiquetasDoFormulario(formData) } : {}),
     })
     .eq("id", transacaoId);
 

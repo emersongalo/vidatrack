@@ -14,6 +14,7 @@ import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 import { sugerirCategoria } from "@/lib/financas/sugestaoCategoria";
 import { sugerirDescricoes, descricoesFrequentes, type DescricaoSugerida } from "@/lib/financas/sugestaoDescricao";
 import { ChipsDescricao } from "@/components/ChipsDescricao";
+import { CampoEtiquetas } from "@/components/CampoEtiquetas";
 import { formatarValorDigitado } from "@/components/CampoValorMonetario";
 
 type Conta = { id: string; nome: string };
@@ -47,6 +48,8 @@ export function FormularioTransacao({
     categoriaId: string | null;
     data: string;
     descricao: string | null;
+    /** Etapa 218 */
+    etiquetas?: string[] | null;
     recorrencia?: { id: string; diaMes: number; dataFim: string | null } | null;
     parcela?: { grupo: string; numero: number; total: number } | null;
   };
@@ -409,6 +412,8 @@ export function FormularioTransacao({
             <ChipsDescricao sugestoes={frequentes} titulo="Frequentes — toque pra preencher" aoEscolher={escolherDescricao} />
           )}
         </div>
+
+        <CampoEtiquetas iniciais={valoresIniciais?.etiquetas ?? null} />
 
         {/* Etapa 208 — editando um lançamento que repete: escolhe se a
            mudança vale só pra este ou também pros próximos meses. */}
