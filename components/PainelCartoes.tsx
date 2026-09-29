@@ -49,31 +49,38 @@ export function PainelCartoes() {
   if (!snapshot) return null;
 
   return (
-    <section className="mt-3 mb-1">
+    <section>
       {!editando && (
-        <div className="flex gap-2 overflow-x-auto snap-x pb-1 -mx-1 px-1 [scrollbar-width:none]">
+        <div>
+          {/* Etapa 224 — grade de 2 colunas (antes rolava pro lado e cortava o 2º cartão) */}
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-semibold">Resumo</h2>
+            <button onClick={() => setEditando(true)} className="flex items-center gap-1.5 text-sm text-ink-400 hover:text-ink-100">
+              <SlidersHorizontal size={15} /> Personalizar
+            </button>
+          </div>
+        <div className="grid grid-cols-2 gap-2">
           {valores.map((v) => (
             <Link
               key={v.id}
               href={v.href}
-              className={`snap-start shrink-0 w-[11rem] bg-base-800 border rounded-2xl p-4 hover:border-ink-400 transition ${
+              className={`min-w-0 bg-base-800 border rounded-2xl p-4 hover:border-ink-400 transition ${
                 v.alerta ? "border-red-400/60" : "border-base-600"
               }`}
             >
               <p className="text-sm text-ink-400 truncate">
                 {CARTOES.find((c) => c.id === v.id)?.emoji} {v.titulo}
               </p>
-              <p className={`text-xl font-mono font-semibold truncate mt-1 ${v.alerta ? "text-red-400" : ""}`}>{v.valor}</p>
+              <p className={`text-lg min-[400px]:text-xl font-mono font-semibold truncate mt-1 ${v.alerta ? "text-red-400" : ""}`}>{v.valor}</p>
               {v.detalhe && <p className="text-sm text-ink-400 truncate">{v.detalhe}</p>}
             </Link>
           ))}
-          <button
-            onClick={() => setEditando(true)}
-            aria-label="Personalizar o painel"
-            className="snap-start shrink-0 w-14 rounded-2xl border border-dashed border-base-600 text-ink-400 hover:text-ink-100 flex items-center justify-center"
-          >
-            <SlidersHorizontal size={16} />
-          </button>
+          {valores.length === 0 && (
+            <button onClick={() => setEditando(true)} className="col-span-2 text-sm text-ink-400 border border-dashed border-base-600 rounded-2xl p-4">
+              Escolher o que mostrar aqui
+            </button>
+          )}
+        </div>
         </div>
       )}
 

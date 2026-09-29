@@ -30,7 +30,8 @@ export const CARTOES: { id: IdCartao; nome: string; emoji: string }[] = [
   { id: "metas", nome: "Metas", emoji: "🏁" },
 ];
 
-export const PADRAO_PAINEL: IdCartao[] = ["habitos", "saldo", "previsao", "proxima_conta"];
+// Etapa 224 — hábitos de hoje ganhou um cartão próprio no topo do Painel
+export const PADRAO_PAINEL: IdCartao[] = ["saldo", "previsao", "proxima_conta", "sequencia"];
 
 const VALIDOS = new Set<string>(CARTOES.map((c) => c.id));
 

@@ -4,10 +4,8 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlternadorTema } from "@/components/AlternadorTema";
-import { TrilhoMenu } from "@/components/TrilhoMenu";
 import { ConfirmarSaidaApp } from "@/components/ConfirmarSaidaApp";
 import { FotoPerfil } from "@/components/FotoPerfil";
-import { formatarMoeda } from "@/lib/financas/formatacao";
 import { sair } from "../login/actions";
 import { Bell, Search } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
@@ -16,6 +14,11 @@ import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
 import { NovidadesApp } from "@/components/NovidadesApp";
 import { PainelCartoes } from "@/components/PainelCartoes";
 import { AvisoConquista } from "@/components/AvisoConquista";
+import { SeuDia } from "@/components/SeuDia";
+import { AtalhosPainel } from "@/components/AtalhosPainel";
+import { ModulosPainel } from "@/components/ModulosPainel";
+import { resumoDoDia, saudacao } from "@/lib/painel/seuDia";
+import { hojeISO } from "@/lib/habitos/streak";
 
 // Etapa 133 — o Painel é pra onde todo botão "← Painel" do app aponta,
 // então precisa abrir sem internet igual ao resto. A foto de perfil
@@ -45,19 +48,19 @@ export default function DashboardPage() {
   // Etapa 195 — o widget "Pendências" agora é alimentado pelo SincronizadorWidgets (layout).
 
   const contas = snapshot?.financas.contas ?? [];
-  const contasComuns = contas.filter((c: any) => c.tipo !== "investimento" && c.tipo !== "cartao");
-  const saldoAtual = contasComuns.reduce((total: number, c: any) => total + Number(c.saldo), 0);
+  // Etapa 224 — "Seu dia" (hábitos e tarefas de hoje)
+  const resumoHoje = snapshot ? resumoDoDia(snapshot, hojeISO()) : null;
 
   return (
     <main className="min-h-screen min-h-[100dvh] p-6 md:p-12 max-w-lg lg:max-w-5xl mx-auto flex flex-col">
       <header className="flex items-center justify-between mb-2 gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/perfil" className="shrink-0">
-            <FotoPerfil url={urlFoto} tamanho={36} className="rounded-lg w-9 h-9" />
+            <FotoPerfil url={urlFoto} tamanho={48} className="rounded-full w-12 h-12 object-cover" />
           </Link>
           <div className="min-w-0">
-            <p className="text-ink-400 text-xs">Olá,</p>
-            <h1 className="text-lg font-display font-semibold truncate">{nome}</h1>
+            <p className="text-ink-400 text-sm">{saudacao(new Date().getHours())},</p>
+            <h1 className="text-xl font-display font-semibold truncate">{nome.split(" ")[0]}</h1>
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -122,7 +125,6 @@ export default function DashboardPage() {
 
       {/* Etapa 220 — novidades da versão (só pra quem já usa) e resumos escolhidos pela pessoa */}
       <NovidadesApp jaUsa={(snapshot?.habitos?.length ?? 0) > 0 || contas.length > 0} />
-      <PainelCartoes />
       {/* Etapa 221 — selo novo desbloqueado */}
       <AvisoConquista />
 
@@ -147,31 +149,19 @@ export default function DashboardPage() {
         );
       })()}
 
-      <div className="flex flex-col flex-1 min-h-0 lg:grid lg:grid-cols-[1fr_300px] lg:gap-8">
-        <TrilhoMenu />
-        <ConfirmarSaidaApp />
-
-        <div className="hidden lg:flex lg:flex-col lg:gap-3 lg:pt-2">
-          <Link
-            href="/habitos/estatisticas"
-            className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 hover:border-habito transition"
-          >
-            <p className="text-xs text-ink-400 mb-1">Hábitos</p>
-            <p className="text-sm">Ver estatísticas →</p>
-          </Link>
-          <Link
-            href="/financas"
-            className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 hover:border-financa transition"
-          >
-            <p className="text-xs text-ink-400 mb-1">Saldo em contas</p>
-            <p className={`text-xl font-mono font-semibold ${saldoAtual < 0 ? "text-red-400" : ""}`}>
-              {formatarMoeda(saldoAtual)}
-            </p>
-          </Link>
+      {/* Etapa 224 — Painel novo: seu dia, atalhos, resumo e as áreas do app
+         (o "trilho" vertical deixava metade da tela vazia no celular) */}
+      <ConfirmarSaidaApp />
+      <div className="flex-1 mt-4 space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 lg:items-start">
+        <div className="space-y-6">
+          {resumoHoje && <SeuDia resumo={resumoHoje} />}
+          <AtalhosPainel />
+          <ModulosPainel />
         </div>
+        <PainelCartoes />
       </div>
 
-      <div className="flex items-center justify-center gap-2 mt-2">
+      <div className="flex flex-wrap items-center justify-center gap-x-2 mt-8">
         <Link href="/doacao" className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1">
           💛 Apoiar o projeto
         </Link>
