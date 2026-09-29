@@ -4,7 +4,8 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { X, ChevronLeft, ChevronRight, CalendarDays, ChevronDown, Search } from "lucide-react";
-import { TrendingUp, TrendingDown, Scale } from "lucide-react";
+import { TrendingUp, TrendingDown, Scale, ArrowUp, ArrowDown, ArrowLeftRight } from "lucide-react";
+import { agruparPorDia } from "@/lib/financas/agruparPorDia";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { BotaoPaguei } from "@/components/BotaoPaguei";
 import { calcularPeriodo, formatarMoeda, primeiroDiaDoMes, ultimoDiaDoMes, type PresetPeriodo } from "@/lib/financas/formatacao";
@@ -212,37 +213,37 @@ function ExtratoConteudo() {
          tinha feito na Início, só que aqui na tela do Extrato eu
          tinha esquecido de aplicar também. */}
       <div className="grid grid-cols-3 gap-2 mb-5">
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3 min-w-0">
+        <div className="bg-base-800 border border-base-600 rounded-2xl p-3 min-w-0">
           <span className="w-7 h-7 rounded-full bg-habito/15 flex items-center justify-center text-habito mb-1.5">
             <TrendingUp size={14} strokeWidth={2.5} />
           </span>
-          <p className="text-[11px] text-ink-400">Receitas</p>
-          <p className="text-xs font-mono font-medium text-habito leading-tight break-words">
+          <p className="text-sm text-ink-400">Receitas</p>
+          <p className="text-base font-mono font-semibold text-habito leading-tight break-words">
             <ValorMonetario valor={totalReceitas} />
           </p>
         </div>
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3 min-w-0">
+        <div className="bg-base-800 border border-base-600 rounded-2xl p-3 min-w-0">
           <span className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center text-red-400 mb-1.5">
             <TrendingDown size={14} strokeWidth={2.5} />
           </span>
-          <p className="text-[11px] text-ink-400">Despesas</p>
-          <p className="text-xs font-mono font-medium text-red-400 leading-tight break-words">
+          <p className="text-sm text-ink-400">Despesas</p>
+          <p className="text-base font-mono font-semibold text-red-400 leading-tight break-words">
             <ValorMonetario valor={totalDespesas} />
           </p>
         </div>
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-3 min-w-0">
+        <div className="bg-base-800 border border-base-600 rounded-2xl p-3 min-w-0">
           <span className="w-7 h-7 rounded-full bg-financa/15 flex items-center justify-center text-financa mb-1.5">
             <Scale size={14} strokeWidth={2.5} />
           </span>
-          <p className="text-[11px] text-ink-400">Balanço</p>
-          <p className={`text-xs font-mono font-medium leading-tight break-words ${balanco < 0 ? "text-red-400" : "text-financa"}`}>
+          <p className="text-sm text-ink-400">Balanço</p>
+          <p className={`text-base font-mono font-semibold leading-tight break-words ${balanco < 0 ? "text-red-400" : "text-financa"}`}>
             <ValorMonetario valor={balanco} />
           </p>
         </div>
       </div>
 
       {(aPagar > 0 || aReceber > 0) && (
-        <div className="flex items-center justify-between gap-3 bg-financa/10 border border-financa/30 rounded-xl px-3 py-2 mb-3 text-xs">
+        <div className="flex items-center justify-between gap-3 bg-financa/10 border border-financa/30 rounded-xl px-3 py-2.5 mb-3 text-sm">
           <span className="text-ink-400">Ainda não pago nesse período</span>
           <span className="font-mono text-right">
             {aPagar > 0 && (
@@ -276,7 +277,7 @@ function ExtratoConteudo() {
         <button
           type="button"
           onClick={() => setPainelPeriodo((v) => !v)}
-          className={`flex-1 min-w-0 rounded-xl border px-3 py-2.5 flex items-center justify-center gap-2 text-sm transition ${
+          className={`flex-1 min-w-0 rounded-xl border px-3 py-3 flex items-center justify-center gap-2 text-base transition ${
             painelPeriodo ? "border-financa bg-financa/10 text-financa" : "border-base-600 bg-base-800 text-ink-100"
           }`}
         >
@@ -361,7 +362,7 @@ function ExtratoConteudo() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar (ex: mercado, luz, 150)"
-            className="w-full bg-base-800 border border-base-600 rounded-xl pl-9 pr-8 py-2.5 text-sm text-ink-100 outline-none focus:border-ink-100"
+            className="w-full bg-base-800 border border-base-600 rounded-xl pl-9 pr-8 py-3 text-base text-ink-100 outline-none focus:border-ink-100"
           />
           {busca && (
             <button
@@ -396,7 +397,7 @@ function ExtratoConteudo() {
           <button
             key={opcao}
             onClick={() => setTipo(opcao)}
-            className={`text-sm rounded-full px-2 py-1.5 border transition ${
+            className={`text-base rounded-full px-2 py-2 border transition ${
               tipo === opcao ? "bg-ink-100 text-base-900 border-ink-100" : "border-base-600 text-ink-400 hover:text-ink-100"
             }`}
           >
@@ -435,7 +436,7 @@ function ExtratoConteudo() {
       <div className="inline-flex bg-base-800 border border-base-600 rounded-full p-1 mb-6">
         <button
           onClick={() => setVisualizacao("transacoes")}
-          className={`px-4 py-1.5 rounded-full text-sm transition ${
+          className={`px-5 py-2 rounded-full text-base transition ${
             visualizacao === "transacoes" ? "bg-financa text-base-900 font-medium" : "text-ink-400 hover:text-ink-100"
           }`}
         >
@@ -443,7 +444,7 @@ function ExtratoConteudo() {
         </button>
         <button
           onClick={() => setVisualizacao("categorias")}
-          className={`px-4 py-1.5 rounded-full text-sm transition ${
+          className={`px-5 py-2 rounded-full text-base transition ${
             visualizacao === "categorias" ? "bg-financa text-base-900 font-medium" : "text-ink-400 hover:text-ink-100"
           }`}
         >
@@ -471,80 +472,120 @@ function ExtratoConteudo() {
           🧾 Nenhum lançamento {categoriaFiltro || contaFiltro ? "com esse filtro " : ""}nesse período.
         </p>
       ) : (
-        <ul className="space-y-2">
-          {lista.map((t: any) => {
-            const catInfo = mapaCategorias.get(t.categoria_id) as any;
-            return (
-              <li key={t.id}>
-                <LinhaComDeslizar
-                  acao={removerTransacao.bind(null, t.id)}
-                  textoConfirmacao="Excluir esse lançamento? Não tem volta."
-                  aoConcluir={recarregar}
-                >
-                  <div className="bg-base-800 border border-base-600 rounded-lg p-3">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
-                          catInfo?.cor ?? "financa"
-                        )}`}
+        // Etapa 225 — agrupado por dia, linhas maiores e receita/despesa bem marcadas
+        <div className="space-y-5">
+          {agruparPorDia(lista as any[], hojeParaPendencia).map((g) => (
+            <section key={g.dia}>
+              <div className="flex items-baseline justify-between px-1 mb-2">
+                <h3 className="text-base font-semibold">{g.rotulo}</h3>
+                <span className={`text-sm font-mono ${g.saldoDia > 0 ? "text-habito" : g.saldoDia < 0 ? "text-ink-400" : "text-ink-400"}`}>
+                  {g.saldoDia > 0 ? "+" : g.saldoDia < 0 ? "−" : ""}
+                  <ValorMonetario valor={Math.abs(g.saldoDia)} />
+                </span>
+              </div>
+              <ul className="bg-base-800 border border-base-600 rounded-2xl overflow-hidden divide-y divide-base-600">
+                {g.itens.map((t: any) => {
+                  const catInfo = mapaCategorias.get(t.categoria_id) as any;
+                  const ehTransf = !!t.transferencia_grupo;
+                  const ehReceita = t.tipo === "receita";
+                  const corValor = ehTransf ? "text-ink-400" : ehReceita ? "text-habito" : "text-red-400";
+                  const agendado = t.data > hojeParaPendencia && !t.pago_em;
+                  return (
+                    <li key={t.id}>
+                      <LinhaComDeslizar
+                        acao={removerTransacao.bind(null, t.id)}
+                        textoConfirmacao="Excluir esse lançamento? Não tem volta."
+                        aoConcluir={recarregar}
                       >
-                        {catInfo?.icone ? (
-                          <IconeCategoria icone={catInfo.icone} />
-                        ) : t.tipo === "receita" ? (
-                          <TrendingUp size={16} strokeWidth={2} />
-                        ) : (
-                          <TrendingDown size={16} strokeWidth={2} />
-                        )}
-                      </span>
-                      <p className="text-sm truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
-                      <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
-                        {t.tipo === "receita" ? "+" : "-"}
-                        <ValorMonetario valor={t.valor} />
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
-                      <p className="text-xs text-ink-400 truncate min-w-0">
-                        {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
-                        {t.recorrencia_id && <span className="text-financa"> · ↻ todo mês</span>}
-                        {(t.etiquetas ?? []).map((e: string) => (
-                          <button key={e} type="button" onClick={() => setEtiquetaFiltro(e)} className="text-nota ml-1.5">
-                            #{e}
-                          </button>
-                        ))}
-                        <span className="block mt-1 empty:hidden">
-                          <BotaoPaguei transacao={t} />
-                        </span>
-                      </p>
-                      <MenuAcoes>
-                        {(fecharMenu) => (
-                          <>
-                            <ItemMenuAcoes href={`/financas/${t.id}/editar`}>
-                              <Pencil size={15} strokeWidth={2} /> Editar
-                            </ItemMenuAcoes>
-                            <BotaoComConfirmacao
-                              acao={removerTransacao.bind(null, t.id)}
-                              textoBotao={
-                                <span className="flex items-center gap-2.5">
-                              <Trash2 size={15} strokeWidth={2} /> Excluir
+                        <div className="relative flex items-center gap-3 bg-base-800 pl-4 pr-1 py-3.5">
+                          {/* faixa lateral: verde = entrou, vermelho = saiu */}
+                          <span
+                            className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${
+                              ehTransf ? "bg-base-600" : ehReceita ? "bg-habito" : "bg-red-400"
+                            }`}
+                            aria-hidden
+                          />
+                          <Link href={`/financas/${t.id}/editar`} className="flex items-center gap-3 flex-1 min-w-0">
+                            <span className="relative shrink-0">
+                              <span
+                                className={`w-11 h-11 rounded-full flex items-center justify-center text-base ${classeFundoSuave(
+                                  catInfo?.cor ?? "financa"
+                                )}`}
+                              >
+                                {catInfo?.icone ? (
+                                  <IconeCategoria icone={catInfo.icone} />
+                                ) : ehReceita ? (
+                                  <TrendingUp size={18} strokeWidth={2} />
+                                ) : (
+                                  <TrendingDown size={18} strokeWidth={2} />
+                                )}
+                              </span>
+                              <span
+                                className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-base-800 flex items-center justify-center text-white ${
+                                  ehTransf ? "bg-ink-400" : ehReceita ? "bg-habito" : "bg-red-400"
+                                }`}
+                                aria-label={ehTransf ? "Transferência" : ehReceita ? "Receita" : "Despesa"}
+                              >
+                                {ehTransf ? <ArrowLeftRight size={10} strokeWidth={3} /> : ehReceita ? <ArrowUp size={11} strokeWidth={3} /> : <ArrowDown size={11} strokeWidth={3} />}
+                              </span>
                             </span>
-                          }
-                          textoConfirmacao="Excluir esse lançamento? Não tem volta."
-                          classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-red-400 hover:bg-base-700 transition"
-                          aoConcluir={() => {
-                            recarregar();
-                            fecharMenu();
-                          }}
-                        />
-                      </>
-                    )}
-                  </MenuAcoes>
-                </div>
-                  </div>
-                </LinhaComDeslizar>
-              </li>
-            );
-          })}
-        </ul>
+                            <span className="flex-1 min-w-0">
+                              <span className="block text-base font-medium truncate">{t.descricao || mapaContas.get(t.conta_id)}</span>
+                              <span className="block text-sm text-ink-400 truncate">
+                                {ehTransf ? "Transferência" : catInfo?.nome ?? "Sem categoria"} · {mapaContas.get(t.conta_id)}
+                                {t.recorrencia_id && <span className="text-financa"> · ↻</span>}
+                                {agendado && <span className="text-financa"> · agendado</span>}
+                              </span>
+                            </span>
+                            <span className={`font-mono text-base font-semibold shrink-0 ${corValor}`}>
+                              {ehTransf ? "" : ehReceita ? "+" : "−"}
+                              <ValorMonetario valor={t.valor} />
+                            </span>
+                          </Link>
+                          <MenuAcoes>
+                            {(fecharMenu) => (
+                              <>
+                                <ItemMenuAcoes href={`/financas/${t.id}/editar`}>
+                                  <Pencil size={15} strokeWidth={2} /> Editar
+                                </ItemMenuAcoes>
+                                <BotaoComConfirmacao
+                                  acao={removerTransacao.bind(null, t.id)}
+                                  textoBotao={
+                                    <span className="flex items-center gap-2.5">
+                                      <Trash2 size={15} strokeWidth={2} /> Excluir
+                                    </span>
+                                  }
+                                  textoConfirmacao="Excluir esse lançamento? Não tem volta."
+                                  classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-red-400 hover:bg-base-700 transition"
+                                  aoConcluir={() => {
+                                    recarregar();
+                                    fecharMenu();
+                                  }}
+                                />
+                              </>
+                            )}
+                          </MenuAcoes>
+                        </div>
+                        {((t.etiquetas ?? []).length > 0 || t.data > hojeParaPendencia) && (
+                          <div className="flex flex-wrap items-center gap-2 bg-base-800 pl-[4.5rem] pr-4 pb-3 -mt-1.5 text-sm">
+                            {(t.etiquetas ?? []).map((e: string) => (
+                              <button key={e} type="button" onClick={() => setEtiquetaFiltro(e)} className="text-nota">
+                                #{e}
+                              </button>
+                            ))}
+                            <span className="empty:hidden">
+                              <BotaoPaguei transacao={t} />
+                            </span>
+                          </div>
+                        )}
+                      </LinhaComDeslizar>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
       {(snapshot?.financas.transacoes.length ?? 0) >= 3000 && (
         <p className="text-xs text-ink-400 mt-4">Mostrando as 3.000 transações mais recentes guardadas offline.</p>
