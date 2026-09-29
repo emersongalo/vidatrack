@@ -119,7 +119,7 @@ export default function ContasPage() {
               <div className="bg-base-800 border border-base-600 rounded-lg p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <SeloBanco bancoId={conta.banco} />
+                  <SeloBanco bancoId={conta.banco} nome={conta.nome} tipo={conta.tipo} />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{conta.nome}</p>
                     <p className="text-xs text-ink-400">{RÓTULOS_TIPO[conta.tipo]}</p>

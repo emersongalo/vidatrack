@@ -4,15 +4,12 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { ReordenarBlocosFinancas } from "@/components/ReordenarBlocosFinancas";
-import { normalizarOrdemBlocos, type BlocoFinancasId } from "@/lib/financas/blocos";
+import { lerLayoutBlocos, type BlocoFinancas } from "@/lib/financas/blocos";
 
-// Etapa 133 — busca direto (preferência pessoal simples, não vale a
-// pena guardar no retrato principal). O calendário de gastos ainda
-// não voltou pra tela de Início local-first (Etapa 127), então por
-// enquanto só a ordem de Gráfico/Lançamentos tem efeito de verdade —
-// isso é uma limitação conhecida, não um bug.
+// Etapa 133 — busca direto (preferência pessoal, por login).
+// Etapa 222 — vale pra todos os blocos da tela, e dá pra esconder.
 export default function PersonalizarFinancasPage() {
-  const [ordem, setOrdem] = useState<BlocoFinancasId[] | null>(null);
+  const [ordem, setOrdem] = useState<BlocoFinancas[] | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -25,7 +22,7 @@ export default function PersonalizarFinancasPage() {
         .select("ordem_blocos_financas")
         .eq("id", user?.id ?? "")
         .maybeSingle();
-      setOrdem(normalizarOrdemBlocos(perfil?.ordem_blocos_financas ?? null));
+      setOrdem(lerLayoutBlocos(perfil?.ordem_blocos_financas ?? null));
     })();
   }, []);
 
@@ -34,11 +31,10 @@ export default function PersonalizarFinancasPage() {
       <LinkVoltar href="/financas" texto="Finanças" />
       <h1 className="text-2xl font-display font-semibold mt-4 mb-2">Personalizar ordem</h1>
       <p className="text-ink-400 text-sm mb-6">
-        Use as setinhas ↑ ↓ pra reorganizar como Gráfico e Lançamentos aparecem na tela de Finanças. Salva
-        sozinho a cada troca.
+        Organize os blocos da tela de Finanças: 📌 fixa no topo, ↑ ↓ muda a ordem e 👁 esconde. Vale só pro seu login e salva sozinho a cada troca. Também dá pra fazer direto na tela, em “Personalizar início”.
       </p>
 
-      {ordem && <ReordenarBlocosFinancas ordemInicial={ordem} />}
+      {ordem && <ReordenarBlocosFinancas layoutInicial={ordem} />}
     </main>
   );
 }

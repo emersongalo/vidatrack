@@ -106,6 +106,14 @@ export function HeroFinancas({
         </p>
       </div>
 
+      {/* Etapa 222 — barra receitas x despesas do mês */}
+      {receitas + despesas > 0 && (
+        <div className="flex h-2 overflow-hidden rounded-full bg-base-700 mb-3" aria-hidden>
+          <div className="bg-habito" style={{ width: `${(receitas / (receitas + despesas)) * 100}%` }} />
+          <div className="bg-red-400" style={{ width: `${(despesas / (receitas + despesas)) * 100}%` }} />
+        </div>
+      )}
+
       {/* Etapa 173 — cada estatística no seu próprio cartão (como no
          app do Despezzas), em vez de 3 colunas apertadas — isso
          cortava valores maiores tipo "R$ 5.000,00" mesmo já tentando

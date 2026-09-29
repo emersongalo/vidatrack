@@ -37,7 +37,7 @@ export function ListaContasComSaldo({ contas }: { contas: ContaComSaldo[] }) {
                   href="/financas/contas"
                   className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 hover:border-financa transition"
                 >
-                  <SeloBanco bancoId={conta.banco} />
+                  <SeloBanco bancoId={conta.banco} nome={conta.nome} tipo={conta.tipo} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{conta.nome}</p>
                     <p className="text-xs text-ink-400">{RÓTULOS_TIPO[conta.tipo] ?? conta.tipo}</p>
@@ -66,7 +66,7 @@ export function ListaContasComSaldo({ contas }: { contas: ContaComSaldo[] }) {
                     href={`/financas/contas/${cartao.id}/fatura`}
                     className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 hover:border-financa transition"
                   >
-                    <SeloBanco bancoId={cartao.banco} />
+                    <SeloBanco bancoId={cartao.banco} nome={cartao.nome} tipo={cartao.tipo} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{cartao.nome}</p>
                       <p className="text-xs text-ink-400">Ver fatura →</p>
@@ -110,7 +110,7 @@ export function ListaContasComSaldo({ contas }: { contas: ContaComSaldo[] }) {
                   href="/financas/contas"
                   className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 hover:border-financa transition"
                 >
-                  <SeloBanco bancoId={conta.banco} />
+                  <SeloBanco bancoId={conta.banco} nome={conta.nome} tipo={conta.tipo} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{conta.nome}</p>
                     <p className="text-xs text-ink-400">Investimento</p>

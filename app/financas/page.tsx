@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { PieChart, TrendingUp, TrendingDown, Bot } from "lucide-react";
+import { PieChart, TrendingUp, TrendingDown, Bot, Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { BotaoPaguei } from "@/components/BotaoPaguei";
 import { primeiroDiaDoMes, ultimoDiaDoMes, formatarMoeda } from "@/lib/financas/formatacao";
@@ -23,6 +23,17 @@ import { PrevisaoMes } from "@/components/PrevisaoMes";
 import { AlertasFinancas } from "@/components/AlertasFinancas";
 import { MetasResumo } from "@/components/MetasResumo";
 import { TetoMensal } from "@/components/TetoMensal";
+import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
+import { salvarOrdemBlocosFinancas } from "./actions";
+import {
+  NOMES_BLOCOS_FINANCAS,
+  alternarBloco,
+  fixarNoTopo,
+  lerLayoutBlocos,
+  moverBloco,
+  salvarLayoutBlocos,
+  type BlocoFinancas,
+} from "@/lib/financas/blocos";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -38,6 +49,11 @@ export default function FinancasPage() {
   const [mostrarTodosLancamentos, setMostrarTodosLancamentos] = useState(false);
   const ehMesAtual = mesSelecionado === mesAtualISO;
   const [pessoas, setPessoas] = useState<{ nome: string; urlFoto: string | null }[]>([]);
+  // Etapa 222 — "Personalizar início": ordem e blocos escondidos, salvos por login
+  const [editandoLayout, setEditandoLayout] = useState(false);
+  const [layoutEditado, setLayoutEditado] = useState<BlocoFinancas[] | null>(null);
+  const [salvandoLayout, setSalvandoLayout] = useState(false);
+  const [erroLayout, setErroLayout] = useState<string | null>(null);
 
   useEffect(() => {
     garantirLancamentosRecorrentes().catch(() => {
@@ -176,11 +192,22 @@ export default function FinancasPage() {
     gastoPorDiaMapaInicio.set(dia, (gastoPorDiaMapaInicio.get(dia) ?? 0) + Number(t.valor));
   }
 
-  const ordemBlocos = (snapshot?.financas.ordemBlocosFinancas ?? ["grafico", "lancamentos"]).filter(
-    (id) => id === "grafico" || id === "lancamentos"
-  );
-  if (!ordemBlocos.includes("grafico")) ordemBlocos.push("grafico");
-  if (!ordemBlocos.includes("lancamentos")) ordemBlocos.push("lancamentos");
+  const layoutSalvo = lerLayoutBlocos(snapshot?.financas.ordemBlocosFinancas);
+  const layout = editandoLayout && layoutEditado ? layoutEditado : layoutSalvo;
+
+  async function salvarLayout() {
+    if (!layoutEditado) return setEditandoLayout(false);
+    setSalvandoLayout(true);
+    setErroLayout(null);
+    try {
+      await salvarOrdemBlocosFinancas(salvarLayoutBlocos(layoutEditado));
+      await atualizarSnapshotEmTodasAsTelas();
+      setEditandoLayout(false);
+    } catch {
+      setErroLayout("Não consegui salvar. Verifique a internet.");
+    }
+    setSalvandoLayout(false);
+  }
 
   const blocoGrafico =
     dadosGrafico.length > 0 ? (
@@ -270,7 +297,62 @@ export default function FinancasPage() {
     </div>
   );
 
-  const blocosPorId: Record<string, ReactNode> = { grafico: blocoGrafico, lancamentos: blocoLancamentos };
+  const blocosPorId: Record<string, ReactNode> = {
+    previsao: previsao ? <PrevisaoMes previsao={previsao} /> : null,
+    teto: snapshot && ehMesAtual ? <TetoMensal snapshot={snapshot} hojeISO={hojeISOBr} /> : null,
+    contas: <ListaContasComSaldo contas={contas as any} />,
+    orcamento: (
+      categoriasComMeta.length > 0 ? (
+              <div className="mb-6 lg:break-inside-avoid">
+                <p className="text-sm text-ink-400 mb-3">Orçamento do mês</p>
+                <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 space-y-4">
+                  {categoriasComMeta.map((cat: any) => (
+                    <BarraOrcamento
+                      key={cat.id}
+                      nome={cat.nome}
+                      gasto={gastoPorCategoria.get(cat.id) ?? 0}
+                      meta={Number(cat.meta_mensal)}
+                      href={`/financas/extrato?categoria=${cat.id}&tipo=despesa&mes=${mesSelecionado}`}
+                    />
+                  ))}
+                </div>
+              </div>
+      ) : null
+    ),
+    metas: <MetasResumo metas={snapshot?.financas.metas ?? []} hojeISO={hojeISOBr} />,
+    atalhos: (
+      <>
+            <Link
+              href="/financas/assistente"
+              className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-habito rounded-xl2 p-4 mb-4 hover:border-habito transition lg:break-inside-avoid"
+            >
+              <span className="w-9 h-9 rounded-lg bg-habito/15 flex items-center justify-center text-habito shrink-0">
+                <Bot size={18} strokeWidth={2} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium">Assistente</p>
+                <p className="text-xs text-ink-400 mt-0.5">Pergunte sobre seus gastos ou peça pra lançar algo</p>
+              </div>
+              <span className="text-ink-400 text-sm shrink-0">Abrir →</span>
+            </Link>
+            <Link
+              href="/financas/analise"
+              className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-6 hover:border-financa transition lg:break-inside-avoid"
+            >
+              <span className="w-9 h-9 rounded-lg bg-financa/15 flex items-center justify-center text-financa shrink-0">
+                <PieChart size={18} strokeWidth={2} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium">Para onde vai seu dinheiro</p>
+                <p className="text-xs text-ink-400 mt-0.5">Mapa de gastos, comparação com o mês passado e dicas automáticas</p>
+              </div>
+              <span className="text-ink-400 text-sm shrink-0">Ver →</span>
+            </Link>
+      </>
+    ),
+    grafico: blocoGrafico,
+    lancamentos: blocoLancamentos,
+  };
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
@@ -309,65 +391,84 @@ export default function FinancasPage() {
 
           {snapshot && ehMesAtual && <AlertasFinancas snapshot={snapshot} hojeISO={hojeISOBr} />}
 
-          <div className="lg:columns-2 lg:gap-6">
-            {previsao && <PrevisaoMes previsao={previsao} />}
-            {snapshot && ehMesAtual && <TetoMensal snapshot={snapshot} hojeISO={hojeISOBr} />}
-            <div className="lg:break-inside-avoid">
-              <ListaContasComSaldo contas={contas as any} />
-            </div>
-
-            {categoriasComMeta.length > 0 && (
-              <div className="mb-6 lg:break-inside-avoid">
-                <p className="text-sm text-ink-400 mb-3">Orçamento do mês</p>
-                <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 space-y-4">
-                  {categoriasComMeta.map((cat: any) => (
-                    <BarraOrcamento
-                      key={cat.id}
-                      nome={cat.nome}
-                      gasto={gastoPorCategoria.get(cat.id) ?? 0}
-                      meta={Number(cat.meta_mensal)}
-                      href={`/financas/extrato?categoria=${cat.id}&tipo=despesa&mes=${mesSelecionado}`}
-                    />
-                  ))}
-                </div>
-              </div>
+          {/* Etapa 222 — personalizar a ordem e esconder blocos (vale só pro seu login) */}
+          <div className="flex items-center justify-end gap-2 -mt-2 mb-4">
+            {editandoLayout ? (
+              <>
+                <button onClick={() => setEditandoLayout(false)} className="text-sm text-ink-400 px-3 py-1.5">
+                  Cancelar
+                </button>
+                <button
+                  onClick={salvarLayout}
+                  disabled={salvandoLayout}
+                  className="flex items-center gap-1.5 bg-financa text-base-900 text-sm font-semibold rounded-full px-4 py-1.5 disabled:opacity-50"
+                >
+                  <Check size={15} /> {salvandoLayout ? "Salvando..." : "Salvar ordem"}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  setLayoutEditado(layoutSalvo);
+                  setErroLayout(null);
+                  setEditandoLayout(true);
+                }}
+                className="flex items-center gap-1.5 text-sm text-ink-400 hover:text-ink-100 transition"
+              >
+                <Settings2 size={15} /> Personalizar início
+              </button>
             )}
+          </div>
+          {erroLayout && <p className="text-sm text-red-400 mb-3">{erroLayout}</p>}
 
-            <MetasResumo metas={snapshot?.financas.metas ?? []} hojeISO={hojeISOBr} />
-
-            <Link
-              href="/financas/assistente"
-              className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-habito rounded-xl2 p-4 mb-4 hover:border-habito transition lg:break-inside-avoid"
-            >
-              <span className="w-9 h-9 rounded-lg bg-habito/15 flex items-center justify-center text-habito shrink-0">
-                <Bot size={18} strokeWidth={2} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">Assistente</p>
-                <p className="text-xs text-ink-400 mt-0.5">Pergunte sobre seus gastos ou peça pra lançar algo</p>
-              </div>
-              <span className="text-ink-400 text-sm shrink-0">Abrir →</span>
-            </Link>
-
-            <Link
-              href="/financas/analise"
-              className="flex items-center gap-3 bg-base-800 border border-base-600 border-l-4 border-l-financa rounded-xl2 p-4 mb-6 hover:border-financa transition lg:break-inside-avoid"
-            >
-              <span className="w-9 h-9 rounded-lg bg-financa/15 flex items-center justify-center text-financa shrink-0">
-                <PieChart size={18} strokeWidth={2} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">Para onde vai seu dinheiro</p>
-                <p className="text-xs text-ink-400 mt-0.5">Mapa de gastos, comparação com o mês passado e dicas automáticas</p>
-              </div>
-              <span className="text-ink-400 text-sm shrink-0">Ver →</span>
-            </Link>
-
-            {/* Etapa 133: respeita a ordem salva em /financas/personalizar. */}
-            {ordemBlocos.map((id) => blocosPorId[id])}
+          <div className="lg:columns-2 lg:gap-6">
+            {layout.map((b, i) => {
+              const conteudo = blocosPorId[b.id];
+              if (!editandoLayout) return b.visivel && conteudo ? <div key={b.id} className="lg:break-inside-avoid">{conteudo}</div> : null;
+              const mexer = (novo: BlocoFinancas[]) => setLayoutEditado(novo);
+              return (
+                <div key={b.id} className={`mb-4 rounded-xl2 border border-financa/40 p-2 lg:break-inside-avoid ${b.visivel ? "" : "opacity-40"}`}>
+                  <div className="flex items-center gap-1 mb-2">
+                    <p className="text-sm font-medium flex-1 min-w-0 truncate px-1">{NOMES_BLOCOS_FINANCAS[b.id]}</p>
+                    <BotaoLayout rotulo="Fixar no topo" desativado={i === 0} aoClicar={() => mexer(fixarNoTopo(layout, i))}>
+                      <Pin size={15} />
+                    </BotaoLayout>
+                    <BotaoLayout rotulo="Subir" desativado={i === 0} aoClicar={() => mexer(moverBloco(layout, i, -1))}>
+                      <ChevronUp size={15} />
+                    </BotaoLayout>
+                    <BotaoLayout rotulo="Descer" desativado={i === layout.length - 1} aoClicar={() => mexer(moverBloco(layout, i, 1))}>
+                      <ChevronDown size={15} />
+                    </BotaoLayout>
+                    <BotaoLayout rotulo={b.visivel ? "Esconder" : "Mostrar"} aoClicar={() => mexer(alternarBloco(layout, i))}>
+                      {b.visivel ? <Eye size={15} /> : <EyeOff size={15} />}
+                    </BotaoLayout>
+                  </div>
+                  {conteudo && b.visivel ? (
+                    <div className="pointer-events-none max-h-48 overflow-hidden">{conteudo}</div>
+                  ) : (
+                    <p className="text-xs text-ink-400 px-1 pb-1">{b.visivel ? "Nada pra mostrar agora" : "Escondido"}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </>
       )}
     </main>
+  );
+}
+
+function BotaoLayout({ children, aoClicar, rotulo, desativado }: { children: ReactNode; aoClicar: () => void; rotulo: string; desativado?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={aoClicar}
+      disabled={desativado}
+      aria-label={rotulo}
+      title={rotulo}
+      className="w-8 h-8 rounded-lg flex items-center justify-center bg-base-700 text-ink-100 disabled:opacity-30"
+    >
+      {children}
+    </button>
   );
 }
