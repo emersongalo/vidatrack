@@ -13,6 +13,8 @@ import { Bell, Search } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
+import { NovidadesApp } from "@/components/NovidadesApp";
+import { PainelCartoes } from "@/components/PainelCartoes";
 
 // Etapa 133 — o Painel é pra onde todo botão "← Painel" do app aponta,
 // então precisa abrir sem internet igual ao resto. A foto de perfil
@@ -116,6 +118,10 @@ export default function DashboardPage() {
           <span className="text-ink-400">→</span>
         </Link>
       )}
+
+      {/* Etapa 220 — novidades da versão (só pra quem já usa) e resumos escolhidos pela pessoa */}
+      <NovidadesApp jaUsa={(snapshot?.habitos?.length ?? 0) > 0 || contas.length > 0} />
+      <PainelCartoes />
 
       {/* Etapa 215 — retrospectiva em dezembro (do ano) e janeiro (do ano que passou) */}
       {(() => {

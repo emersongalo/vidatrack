@@ -97,6 +97,9 @@ export function PrevisaoMes({ previsao }: { previsao: TipoPrevisao }) {
           )}
         </>
       )}
+      <a href="/financas/calendario" className="block text-center text-xs text-financa mt-3 hover:underline">
+        📅 Ver dia a dia no calendário →
+      </a>
       <p className="text-[10px] text-ink-400 mt-2">
         Considera saldo das contas (sem cartão e investimento), lançamentos agendados, recorrentes e faturas do cartão.
       </p>

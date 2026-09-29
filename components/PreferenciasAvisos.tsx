@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon, BarChart3, Sun } from "lucide-react";
+import { Moon, BarChart3, Sun, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-type Chave = "resumo_manha" | "aviso_noite" | "resumo_semanal";
+type Chave = "resumo_manha" | "aviso_noite" | "resumo_semanal" | "lembrete_lancar";
 
 const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }[] = [
   {
@@ -18,6 +18,12 @@ const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }
     titulo: "Aviso da noite (20:30)",
     texto: "Se ainda faltar algum hábito do dia, a gente te lembra quais são.",
     Icone: Moon,
+  },
+  {
+    chave: "lembrete_lancar",
+    titulo: "Lembrete de lançar gastos (21:00)",
+    texto: "Se você passar 2 dias sem lançar nada, a gente pergunta se gastou algo.",
+    Icone: Wallet,
   },
   {
     chave: "resumo_semanal",
@@ -36,11 +42,12 @@ export function PreferenciasAvisos() {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal, resumo_manha").eq("id", user.id).maybeSingle();
+      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal, resumo_manha, lembrete_lancar").eq("id", user.id).maybeSingle();
       setValores({
         resumo_manha: (data as any)?.resumo_manha ?? true,
         aviso_noite: data?.aviso_noite ?? true,
         resumo_semanal: data?.resumo_semanal ?? true,
+        lembrete_lancar: (data as any)?.lembrete_lancar ?? true,
       });
     });
   }, []);

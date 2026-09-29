@@ -12,6 +12,7 @@ import { somarDias } from "@/lib/widgets/dados";
 import { calcularPeriodoFatura, periodoFaturaAdjacente } from "@/lib/financas/fatura";
 import { resumoFatura } from "@/lib/financas/previsao";
 import { horariosDoHabito } from "@/lib/habitos/horariosLembrete";
+import { gastoDoMes } from "@/lib/financas/teto";
 
 // Sem cookie nem sessão, o Next.js não tem como saber sozinho que essa
 // rota precisa rodar de novo a cada chamada — sem isso aqui, o Vercel
@@ -142,6 +143,15 @@ export async function GET(request: Request) {
   // --- Etapa 215: fatura do cartão (3 dias antes, véspera e no dia) ---
   if (horaAtual >= "08:10" && horaAtual <= "08:15") {
     enviados += await notificarFaturasCartao(supabase, hoje);
+  }
+
+  // --- Etapa 220: teto de gastos do mês (80% e estourou) ---
+  if (horaAtual >= "08:15" && horaAtual <= "08:20") {
+    enviados += await notificarTetoMensal(supabase, hoje);
+  }
+  // --- Etapa 220: 21:00 — "gastou algo hoje?" pra quem está há 2+ dias sem lançar ---
+  if (horaAtual >= "21:00" && horaAtual <= "21:05") {
+    enviados += await notificarLembreteLancar(supabase, hoje);
   }
 
   // --- Etapa 218: resumo da manhã (07:00) ---
@@ -778,6 +788,71 @@ async function notificarResumoManha(supabase: ReturnType<typeof criarClienteAdmi
       partes.push(`vencem ${r.contas.length} contas (${formatarMoeda(r.contas.reduce((s, c) => s + c.valor, 0))})`);
     const texto = `☀️ Bom dia! Hoje: ${partes.join(" · ")}`;
     enviados += await notificarUsuariosDoItem(supabase, "resumo_manha", usuarioId, usuarioId, texto, "/habitos", hoje);
+  }
+  return enviados;
+}
+
+/** Etapa 220 — avisa em 80% e quando passar do teto de gastos do mês (uma vez por mês cada). */
+async function notificarTetoMensal(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+  const { data: perfis } = await supabase.from("perfis").select("id, teto_mensal").not("teto_mensal", "is", null);
+  let enviados = 0;
+  const inicioMes = hoje.slice(0, 7) + "-01";
+  for (const p of perfis ?? []) {
+    const teto = Number(p.teto_mensal);
+    if (!(teto > 0)) continue;
+    const [{ data: contas }, { data: transacoes }] = await Promise.all([
+      supabase.from("financa_contas").select("id, tipo").eq("dono_id", p.id),
+      supabase
+        .from("financa_transacoes")
+        .select("conta_id, tipo, valor, data, transferencia_grupo, pago_em")
+        .eq("dono_id", p.id)
+        .eq("tipo", "despesa")
+        .gte("data", inicioMes)
+        .lte("data", hoje.slice(0, 7) + "-31"),
+    ]);
+    const gasto = gastoDoMes((contas ?? []) as any, (transacoes ?? []) as any, hoje);
+    if (gasto < teto * 0.8) continue;
+    const estourou = gasto > teto;
+    const texto = estourou
+      ? `🚨 Você passou do teto de gastos do mês: ${formatarMoeda(gasto)} de ${formatarMoeda(teto)}`
+      : `🟡 Já foram ${Math.round((gasto / teto) * 100)}% do teto do mês: ${formatarMoeda(gasto)} de ${formatarMoeda(teto)}`;
+    enviados += await notificarUsuariosDoItem(supabase, estourou ? "teto_100" : "teto_80", p.id as string, p.id as string, texto, "/financas", inicioMes);
+  }
+  return enviados;
+}
+
+/** Etapa 220 — lembra de lançar gastos quem está há 2+ dias sem lançar nada (no máx. a cada 2 dias). */
+async function notificarLembreteLancar(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+  const { data: perfis } = await supabase.from("perfis").select("id").eq("lembrete_lancar", true);
+  const ids = (perfis ?? []).map((p) => p.id as string);
+  if (!ids.length) return 0;
+  const doisDiasAtras = somarDias(hoje, -2);
+  const [{ data: contas }, { data: recentes }, { data: avisados }] = await Promise.all([
+    supabase.from("financa_contas").select("dono_id").in("dono_id", ids).eq("arquivado", false),
+    // lançado à mão (não gerado por conta fixa) nos últimos 2 dias
+    supabase
+      .from("financa_transacoes")
+      .select("dono_id")
+      .in("dono_id", ids)
+      .is("recorrencia_id", null)
+      .gte("criado_em", new Date(Date.parse(doisDiasAtras + "T03:00:00Z")).toISOString()),
+    supabase.from("lembretes_enviados").select("usuario_id").eq("tipo_item", "lembrete_lancar").gte("data", somarDias(hoje, -1)),
+  ]);
+  const temConta = new Set((contas ?? []).map((c) => c.dono_id as string));
+  const lancouRecente = new Set((recentes ?? []).map((t) => t.dono_id as string));
+  const avisadoRecente = new Set((avisados ?? []).map((a) => a.usuario_id as string));
+  let enviados = 0;
+  for (const id of ids) {
+    if (!temConta.has(id) || lancouRecente.has(id) || avisadoRecente.has(id)) continue;
+    enviados += await notificarUsuariosDoItem(
+      supabase,
+      "lembrete_lancar",
+      id,
+      id,
+      "💸 Gastou algo hoje? Toque pra lançar em segundos — assim a previsão do mês fica certinha.",
+      "/financas?gasto=1",
+      hoje
+    );
   }
   return enviados;
 }

@@ -22,6 +22,7 @@ import { preverFimDoMes } from "@/lib/financas/previsao";
 import { PrevisaoMes } from "@/components/PrevisaoMes";
 import { AlertasFinancas } from "@/components/AlertasFinancas";
 import { MetasResumo } from "@/components/MetasResumo";
+import { TetoMensal } from "@/components/TetoMensal";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -310,6 +311,7 @@ export default function FinancasPage() {
 
           <div className="lg:columns-2 lg:gap-6">
             {previsao && <PrevisaoMes previsao={previsao} />}
+            {snapshot && ehMesAtual && <TetoMensal snapshot={snapshot} hojeISO={hojeISOBr} />}
             <div className="lg:break-inside-avoid">
               <ListaContasComSaldo contas={contas as any} />
             </div>

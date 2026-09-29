@@ -6,13 +6,23 @@ import { hojeISO, calcularStreak } from "@/lib/habitos/streak";
 import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
 import { interpretarFala } from "@/lib/financas/parseFala";
+import { sugerirCategoria } from "@/lib/financas/sugestaoCategoria";
+import { assuntoDaFrase, contaDaFrase, dataDaFrase, limparDescricao, periodoDaFrase, semAcento } from "@/lib/assistente/entender";
 
 export type RespostaAssistente =
   | { tipo: "texto"; texto: string }
   | {
       tipo: "proposta_lancamento";
       texto: string;
-      dados: { tipo: "despesa" | "receita"; valor: string; descricao: string | null };
+      dados: {
+        tipo: "despesa" | "receita";
+        valor: string;
+        descricao: string | null;
+        /** Etapa 220 — o assistente já escolhe data, conta e categoria */
+        data?: string;
+        contaId?: string | null;
+        categoriaId?: string | null;
+      };
     };
 
 function normalizar(s: string) {
@@ -43,18 +53,77 @@ export function interpretarPergunta(textoOriginal: string, snapshot: SnapshotOff
   const mapaCategorias = new Map(snapshot.financas.categorias.map((c: any) => [c.id, c.nome]));
 
   // --- 1) Pedido pra lançar algo (mesmo interpretador da voz) ---
-  if (contemAlguma(texto, ["lanca", "lancar", "registra", "anota", "cadastra"]) || /\d+\s*(reais|r\$)/.test(texto) || contemAlguma(texto, ["gastei", "paguei", "comprei", "recebi", "ganhei"])) {
-    const resultado = interpretarFala(textoOriginal);
+  // Etapa 220 — entende data ("ontem", "dia 12"), conta ("no nubank") e
+  // escolhe a categoria pelo histórico. Pergunta ("quanto...") não é lançamento.
+  const ehPergunta = /\bquanto|\bquais?\b|\?/.test(texto);
+  if (
+    !ehPergunta &&
+    (contemAlguma(texto, ["lanca", "lancar", "registra", "anota", "cadastra"]) ||
+      /\d+\s*(reais|r\$)/.test(texto) ||
+      contemAlguma(texto, ["gastei", "paguei", "comprei", "recebi", "ganhei"]))
+  ) {
+    const semDatas = textoOriginal.replace(/\bdia\s+\d{1,2}\b/gi, " ").replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, " ");
+    const resultado = interpretarFala(semDatas);
     if (resultado.valor) {
       const tipoLancamento = resultado.tipo ?? "despesa";
+      const contas = (snapshot.financas.contas as any[]).filter((c) => c.tipo !== "investimento");
+      const conta = contaDaFrase(textoOriginal, contas);
+      const data = dataDaFrase(textoOriginal, hoje) ?? hoje;
+      const descricao = limparDescricao(resultado.descricao, conta?.nome ?? null);
+      const categoriaId = descricao
+        ? sugerirCategoria(descricao, tipoLancamento, transacoes as any[], snapshot.financas.categorias as any[])
+        : null;
+      const detalhes = [
+        descricao,
+        categoriaId ? mapaCategorias.get(categoriaId) : null,
+        conta?.nome,
+        data !== hoje ? data.split("-").reverse().slice(0, 2).join("/") : null,
+      ].filter(Boolean);
       return {
         tipo: "proposta_lancamento",
         texto: `Entendi: ${tipoLancamento === "receita" ? "receita" : "despesa"} de ${formatarMoeda(
           Number(resultado.valor.replace(",", "."))
-        )}${resultado.descricao ? ` (${resultado.descricao})` : ""}. Confirma?`,
-        dados: { tipo: tipoLancamento, valor: resultado.valor, descricao: resultado.descricao },
+        )}${detalhes.length ? ` — ${detalhes.join(" · ")}` : ""}. Confirma?`,
+        dados: { tipo: tipoLancamento, valor: resultado.valor, descricao, data, contaId: conta?.id ?? null, categoriaId },
       };
     }
+  }
+
+  // --- 1b) Etapa 220: "quanto gastei com uber em setembro?", "quanto recebi mês passado no nubank?" ---
+  if (/\bquanto\b/.test(texto) && /(gast|pagu|receb|ganh|entrou|entrada|saiu)/.test(texto)) {
+    const ehReceita = /(receb|ganh|entrou|entrada)/.test(texto);
+    const periodo = periodoDaFrase(textoOriginal, hoje) ?? { inicio: inicioMes, fim: fimMes, rotulo: "esse mês" };
+    const contas = snapshot.financas.contas as any[];
+    const conta = contaDaFrase(textoOriginal, contas);
+    const categoria = (snapshot.financas.categorias as any[]).find(
+      (c) => c.tipo === (ehReceita ? "receita" : "despesa") && texto.includes(semAcento(c.nome))
+    );
+    let assunto = categoria ? null : assuntoDaFrase(textoOriginal);
+    if (assunto && conta && semAcento(conta.nome).includes(assunto)) assunto = null;
+    const lista = (transacoes as any[]).filter((t) => {
+      if (t.tipo !== (ehReceita ? "receita" : "despesa") || t.transferencia_grupo) return false;
+      if (t.data < periodo.inicio || t.data > periodo.fim || (t.data > hoje && !t.pago_em)) return false;
+      if (conta && t.conta_id !== conta.id) return false;
+      if (categoria && t.categoria_id !== categoria.id) return false;
+      if (assunto) {
+        const alvo = semAcento(`${t.descricao ?? ""} ${mapaCategorias.get(t.categoria_id) ?? ""} ${(t.etiquetas ?? []).join(" ")}`);
+        if (!alvo.includes(assunto)) return false;
+      }
+      return true;
+    });
+    const total = lista.reduce((s, t) => s + Number(t.valor), 0);
+    const sobre = categoria ? ` com ${categoria.nome}` : assunto ? ` com "${assunto}"` : "";
+    const naConta = conta ? ` no ${conta.nome}` : "";
+    if (!lista.length) {
+      return { tipo: "texto", texto: `Não achei ${ehReceita ? "receitas" : "gastos"}${sobre}${naConta} ${periodo.rotulo}.` };
+    }
+    const maior = [...lista].sort((a, b) => Number(b.valor) - Number(a.valor))[0];
+    return {
+      tipo: "texto",
+      texto: `${ehReceita ? "Você recebeu" : "Você gastou"} ${formatarMoeda(total)}${sobre}${naConta} ${periodo.rotulo} (${lista.length} lançamento${
+        lista.length > 1 ? "s" : ""
+      }).${lista.length > 1 ? `\nO maior: ${formatarMoeda(Number(maior.valor))}${maior.descricao ? ` — ${maior.descricao}` : ""} em ${maior.data.split("-").reverse().slice(0, 2).join("/")}.` : ""}`,
+    };
   }
 
   // --- 2) Orçamento / estourou ---
@@ -240,6 +309,6 @@ export function interpretarPergunta(textoOriginal: string, snapshot: SnapshotOff
   return {
     tipo: "texto",
     texto:
-      "Não entendi essa pergunta ainda. Você pode perguntar sobre: gastos do mês (geral ou por categoria), previsão de fim do mês, orçamento, contas a pagar, recorrentes/assinaturas, saldo, resumo/comparação da semana, categoria que subiu muito, melhor sequência de hábito, hábitos/tarefas de hoje — ou me pedir pra lançar algo (ex: \"gastei 20 reais no mercado\").",
+      "Não entendi essa pergunta ainda. Exemplos do que eu entendo:\n• \"quanto gastei com uber em setembro?\"\n• \"quanto recebi mês passado?\"\n• \"lança 50 de gasolina ontem no nubank\"\n• previsão do fim do mês, orçamento, contas a pagar, saldo, resumo da semana, hábitos de hoje, melhor sequência.",
   };
 }

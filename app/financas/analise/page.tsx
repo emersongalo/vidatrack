@@ -14,6 +14,7 @@ import { MapaCalorGastos } from "@/components/MapaCalorGastos";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { gastosForaDoNormal } from "@/lib/financas/alertas";
 import { SugestoesRecorrentes } from "@/components/SugestoesRecorrentes";
+import { GraficoDozeMeses } from "@/components/GraficoDozeMeses";
 
 // Etapa 128 — o cálculo pesado (lib/financas/insights-calculo.ts) já
 // era puro; só precisava alimentar com as transações certas vindas
@@ -271,6 +272,12 @@ export default function AnaliseFinanceiraPage() {
           </div>
         </>
       )}
+      {snapshot && (
+        <div className="mt-6">
+          <GraficoDozeMeses contas={snapshot.financas.contas as any[]} transacoes={snapshot.financas.transacoes as any[]} hojeISO={hojeAgora} />
+        </div>
+      )}
+
       {snapshot && ehMesCorrente && (
         <div className="mt-6">
           <SugestoesRecorrentes snapshot={snapshot} hojeISO={hojeAgora} />

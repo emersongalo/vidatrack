@@ -12,6 +12,7 @@ import { MapaContribuicoes } from "@/components/MapaContribuicoes";
 import { calcularMapaContribuicoes } from "@/lib/habitos/mapa-contribuicoes";
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
 import { SugestoesLembrete } from "@/components/SugestoesLembrete";
+import { PadroesSemana } from "@/components/PadroesSemana";
 
 function ultimosNDias(n: number): string[] {
   const dias: string[] = [];
@@ -159,11 +160,15 @@ export default function EstatisticasHabitosPage() {
         <Link href="/habitos/metas" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
           🎯 Metas do ano
         </Link>
+        <Link href="/habitos/desafios" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
+          🤝 Desafios
+        </Link>
         <Link href="/retrospectiva" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-financa/60 transition">
           🎉 Retrospectiva do ano
         </Link>
       </div>
       {snapshot && <SugestoesLembrete snapshot={snapshot} hojeISO={hojeISO()} />}
+      {snapshot && <PadroesSemana snapshot={snapshot} hojeISO={hojeISO()} />}
 
       {habitos.length > 0 && (
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">

@@ -31,7 +31,7 @@ export async function GET() {
   ] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete, horarios_lembrete, vezes_semana, pausas")
+      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete, horarios_lembrete, vezes_semana, pausas, dono_id")
       .eq("arquivado", false),
     supabase
       .from("tarefas")
@@ -47,7 +47,7 @@ export async function GET() {
       .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido, conta_origem_id")
       .eq("arquivado", false),
     supabase.from("financa_recorrencias").select("id, tipo, valor, dia_mes, data_fim, data_inicio, ativo, descricao, conta_id, categoria_id"),
-    supabase.from("perfis").select("nome, foto_url, ordem_blocos_financas").eq("id", user.id).maybeSingle(),
+    supabase.from("perfis").select("nome, foto_url, ordem_blocos_financas, teto_mensal").eq("id", user.id).maybeSingle(),
   ]);
 
   const idsDesafios = (desafios ?? []).map((d) => d.id);
@@ -146,6 +146,7 @@ export async function GET() {
     perfil: {
       nome: perfil?.nome ?? null,
       email: user.email ?? null,
+      teto_mensal: (perfil as any)?.teto_mensal ?? null,
       id: user.id,
     },
   });

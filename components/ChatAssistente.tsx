@@ -10,8 +10,11 @@ type Mensagem =
   | { autor: "usuario"; texto: string }
   | { autor: "assistente"; resposta: RespostaAssistente; confirmado?: boolean };
 
+const CHAVE_CONVERSA = "vidatrack-conversa-assistente";
+
 const SUGESTOES = [
   "Como estão meus gastos esse mês?",
+  "Quanto gastei com mercado mês passado?",
   "Qual minha previsão pro fim do mês?",
   "Alguma categoria subiu muito?",
   "Qual minha melhor sequência de hábito?",
@@ -27,11 +30,29 @@ const SUGESTOES = [
 export function ChatAssistente() {
   const { snapshot } = useSnapshotOffline();
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
-  const [entrada, setEntrada] = useState("");
-  const fimDaLista = useRef<HTMLDivElement>(null);
+  const [carregou, setCarregou] = useState(false);
 
+  // Etapa 220 — a conversa fica guardada neste aparelho (últimas 40 mensagens)
   useEffect(() => {
-    fimDaLista.current?.scrollIntoView({ behavior: "smooth" });
+    try {
+      const salvas = JSON.parse(localStorage.getItem(CHAVE_CONVERSA) || "[]");
+      if (Array.isArray(salvas)) setMensagens(salvas);
+    } catch {}
+    setCarregou(true);
+  }, []);
+  useEffect(() => {
+    if (!carregou) return;
+    try {
+      localStorage.setItem(CHAVE_CONVERSA, JSON.stringify(mensagens.slice(-40)));
+    } catch {}
+  }, [mensagens, carregou]);
+  const [entrada, setEntrada] = useState("");
+  const lista = useRef<HTMLDivElement>(null);
+
+  // Etapa 219 — rola só a conversa (scrollIntoView rolava a página toda)
+  useEffect(() => {
+    const el = lista.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [mensagens]);
 
   function enviar(texto: string) {
@@ -41,8 +62,18 @@ export function ChatAssistente() {
     setEntrada("");
   }
 
-  function confirmarLancamento(indice: number, dados: { tipo: "despesa" | "receita"; valor: string; descricao: string | null }) {
-    const contaPadrao = snapshot?.financas.contas.find((c: any) => c.tipo !== "investimento");
+  function confirmarLancamento(
+    indice: number,
+    dados: { tipo: "despesa" | "receita"; valor: string; descricao: string | null; data?: string; contaId?: string | null; categoriaId?: string | null }
+  ) {
+    // conta citada na frase > última usada no Gasto rápido > primeira conta
+    let ultimaUsada: string | null = null;
+    try {
+      ultimaUsada = localStorage.getItem("vidatrack-gasto-rapido-conta");
+    } catch {}
+    const contas = (snapshot?.financas.contas ?? []).filter((c: any) => c.tipo !== "investimento");
+    const contaPadrao =
+      contas.find((c: any) => c.id === dados.contaId) ?? contas.find((c: any) => c.id === ultimaUsada) ?? contas[0];
     if (!contaPadrao) return;
 
     adicionarNaFila({
@@ -52,9 +83,9 @@ export function ChatAssistente() {
         tipo: dados.tipo,
         valor: dados.valor,
         contaId: contaPadrao.id,
-        categoriaId: "",
+        categoriaId: dados.categoriaId ?? "",
         descricao: dados.descricao ?? "",
-        data: new Date().toLocaleDateString("sv-SE"),
+        data: dados.data ?? new Date().toLocaleDateString("sv-SE"),
       },
     } as any);
     processarFilaSincronizacao().catch(() => {});
@@ -69,13 +100,20 @@ export function ChatAssistente() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)]">
-      <div className="flex-1 overflow-y-auto space-y-3 pb-4">
+    <div className="flex flex-col flex-1 min-h-0">
+      <div ref={lista} data-gesto-proprio="1" className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-3 pb-4">
+        {mensagens.length > 0 && (
+          <div className="flex justify-end">
+            <button type="button" onClick={() => setMensagens([])} className="text-[11px] text-ink-400 underline">
+              Limpar conversa
+            </button>
+          </div>
+        )}
         {mensagens.length === 0 && (
           <div>
             <p className="text-sm text-ink-400 mb-3">
               Pergunte sobre seus gastos, orçamento, contas a pagar ou pendências de hoje — ou peça pra eu
-              lançar algo, tipo "gastei 20 reais no mercado".
+              lançar algo, tipo "gastei 20 reais no mercado" ou "lança 50 de gasolina ontem no nubank".
             </p>
             <div className="flex flex-wrap gap-2">
               {SUGESTOES.map((s) => (
@@ -116,7 +154,6 @@ export function ChatAssistente() {
           </div>
         ))}
 
-        <div ref={fimDaLista} />
       </div>
 
       <form
@@ -124,7 +161,7 @@ export function ChatAssistente() {
           e.preventDefault();
           enviar(entrada);
         }}
-        className="flex gap-2 pt-3 border-t border-base-600"
+        className="flex gap-2 pt-3 pb-3 border-t border-base-600 shrink-0"
       >
         <input
           value={entrada}

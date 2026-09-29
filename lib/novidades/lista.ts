@@ -1,0 +1,52 @@
+// Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
+// em linguagem simples. Pra anunciar uma novidade nova, acrescente um
+// grupo no topo e troque VERSAO_NOVIDADES.
+export const VERSAO_NOVIDADES = "220";
+export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
+
+export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
+export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
+
+export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "220",
+    titulo: "Mais controle do dinheiro e um assistente mais esperto",
+    itens: [
+      { emoji: "💬", titulo: "Assistente entende mais", texto: "Pergunte \"quanto gastei com mercado mês passado?\" ou diga \"gastei 30 no Nubank ontem\" — ele pega a conta, a data e a categoria sozinho, e lembra a conversa.", href: "/financas/assistente" },
+      { emoji: "📅", titulo: "Calendário financeiro", texto: "Veja dia a dia o que entra, o que sai e como fica o saldo, com contas fixas e faturas já previstas.", href: "/financas/calendario" },
+      { emoji: "🎯", titulo: "Teto de gastos do mês", texto: "Diga quanto quer gastar no mês e acompanhe a barrinha. Avisamos aos 80% e se passar.", href: "/financas" },
+      { emoji: "📊", titulo: "Seus últimos 12 meses", texto: "Um gráfico com receitas, despesas e quanto sobrou em cada mês.", href: "/financas/analise" },
+      { emoji: "⏰", titulo: "Lembrete de lançar gastos", texto: "Se passar 2 dias sem lançar nada, lembramos às 21h. Dá pra desligar nos avisos.", href: "/notificacoes" },
+      { emoji: "📆", titulo: "Seus padrões da semana", texto: "Descubra em que dia da semana cada hábito costuma falhar, com uma dica pra ajustar.", href: "/habitos/estatisticas" },
+      { emoji: "⏭️", titulo: "Adiar tarefa num toque", texto: "Mande uma tarefa pra amanhã, sábado, segunda ou semana que vem direto da lista de hoje.", href: "/habitos" },
+      { emoji: "🤝", titulo: "Desafio com amigo", texto: "Compartilhe um hábito e veja quem está com a maior sequência.", href: "/habitos/desafios" },
+      { emoji: "🧩", titulo: "Painel do seu jeito", texto: "Escolha quais resumos aparecem no topo do Painel e em que ordem (botão ao lado dos cartões).", href: "/dashboard" },
+    ],
+  },
+  {
+    versao: "218",
+    titulo: "Metas longas, pausas e relatório",
+    itens: [
+      { emoji: "🏁", titulo: "Metas de longo prazo", texto: "Ler 12 livros no ano, correr 500 km… acompanhe metas maiores ligadas aos hábitos.", href: "/habitos/metas" },
+      { emoji: "🏖️", titulo: "Pausar um hábito", texto: "Vai viajar? Pause o hábito e a sequência não quebra." , href: "/habitos" },
+      { emoji: "🏷️", titulo: "Etiquetas nos gastos", texto: "Marque gastos com etiquetas (#viagem, #casa) pra somar depois.", href: "/financas/etiquetas" },
+      { emoji: "📄", titulo: "Relatório em PDF", texto: "Baixe um resumo do mês em PDF.", href: "/financas/relatorio" },
+      { emoji: "🎁", titulo: "Convide amigos", texto: "Mande seu link de convite pra quem também quer se organizar.", href: "/convidar" },
+    ],
+  },
+  {
+    versao: "215",
+    titulo: "Previsão e diário",
+    itens: [
+      { emoji: "📈", titulo: "Previsão do fim do mês", texto: "Quanto deve sobrar e quanto dá pra gastar por dia.", href: "/financas" },
+      { emoji: "🔎", titulo: "Busca geral", texto: "Ache qualquer gasto, tarefa ou hábito pela lupa do Painel.", href: "/buscar" },
+      { emoji: "🙂", titulo: "Diário do dia", texto: "Registre o humor e uma frase sobre o dia.", href: "/habitos/diario" },
+    ],
+  },
+];
+
+/** Mostra o aviso de novidades? Só pra quem já usa o app (tem hábito ou conta) e ainda não viu esta versão. */
+export function deveMostrarNovidades(vista: string | null, jaUsa: boolean): boolean {
+  if (!jaUsa) return false;
+  return vista !== VERSAO_NOVIDADES;
+}

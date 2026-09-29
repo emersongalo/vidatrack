@@ -9,6 +9,7 @@ import { CelebracaoConquista } from "@/components/CelebracaoConquista";
 import { alternarCheckin, ajustarQuantidadeHabito, salvarObservacaoCheckin } from "@/app/habitos/actions";
 import { alternarConclusaoTarefa } from "@/app/habitos/tarefas/actions";
 import { PRIORIDADES } from "@/lib/agenda/recorrencia";
+import { AdiarTarefa } from "@/components/AdiarTarefa";
 
 export type ItemAgenda = {
   id: string;
@@ -199,6 +200,8 @@ export function ItemLinhaAgenda({
               <Bell size={11} strokeWidth={2} /> {item.horarioLembrete.slice(0, 5)}
             </span>
           )}
+          {/* Etapa 220 — adiar tarefa única sem abrir */}
+          {item.tipo === "tarefa" && !item.repete && !item.feito && <AdiarTarefa tarefaId={item.id} aoAdiar={aoConcluirMutacao} />}
         </div>
 
         {item.participantes && item.participantes.length > 1 && (

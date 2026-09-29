@@ -31,7 +31,7 @@ export type SnapshotOffline = {
     recorrencias: { id: string; tipo: string; valor: number; dia_mes: number; data_fim: string | null; ativo: boolean; descricao: string | null; conta_id: string }[];
     ordemBlocosFinancas: string[] | null;
   };
-  perfil: { nome: string | null; email: string | null; id: string };
+  perfil: { nome: string | null; email: string | null; id: string; teto_mensal?: number | null };
   /** Etapa 215 — diário do dia (humor + frase). Campo novo: retrato antigo vem sem, lido como []. */
   diario?: { data: string; humor: number; texto: string | null }[];
   /** Etapa 218 — metas de longo prazo */
@@ -130,6 +130,7 @@ function normalizar(dados: any): SnapshotOffline | null {
         nome: dados.perfil?.nome ?? null,
         email: dados.perfil?.email ?? null,
         id: dados.perfil?.id ?? "",
+        teto_mensal: dados.perfil?.teto_mensal != null ? Number(dados.perfil.teto_mensal) : null,
       },
     };
   } catch {
