@@ -45,26 +45,44 @@ export async function confirmarImportacao(
     (existentes ?? []).map((t) => `${t.data}|${Number(t.valor).toFixed(2)}|${(t.descricao ?? "").trim().toLowerCase()}`)
   );
 
-  let importadas = 0;
+  // Etapa 221 — só aceita categoria que a pessoa enxerga (dela ou de quem compartilha)
+  const idsCategoria = [...new Set(transacoes.map((t) => t.categoriaId).filter(Boolean))] as string[];
+  const { data: categoriasOk } = idsCategoria.length
+    ? await supabase.from("financa_categorias").select("id").in("id", idsCategoria)
+    : { data: [] as { id: string }[] };
+  const validas = new Set((categoriasOk ?? []).map((c) => c.id));
+
   let ignoradasPorDuplicata = 0;
+  const novas: Record<string, unknown>[] = [];
 
   for (const t of transacoes) {
     const chave = `${t.data}|${t.valor.toFixed(2)}|${t.descricao.trim().toLowerCase()}`;
-    if (chavesExistentes.has(chave)) {
+    const chaveOriginal = t.descricaoOriginal
+      ? `${t.data}|${t.valor.toFixed(2)}|${t.descricaoOriginal.trim().toLowerCase()}`
+      : chave;
+    if (chavesExistentes.has(chave) || chavesExistentes.has(chaveOriginal)) {
       ignoradasPorDuplicata++;
       continue;
     }
-
-    const { error } = await supabase.from("financa_transacoes").insert({
+    chavesExistentes.add(chave);
+    novas.push({
       dono_id: user.id,
       conta_id: contaId,
       tipo: t.tipo,
       valor: t.valor,
       descricao: t.descricao,
       data: t.data,
+      categoria_id: t.categoriaId && validas.has(t.categoriaId) ? t.categoriaId : null,
     });
+  }
 
-    if (!error) importadas++;
+  // Etapa 221 — grava tudo de uma vez (antes era um por um)
+  let importadas = 0;
+  for (let i = 0; i < novas.length; i += 200) {
+    const lote = novas.slice(i, i + 200);
+    const { error } = await supabase.from("financa_transacoes").insert(lote);
+    if (error) return { importadas, ignoradasPorDuplicata, erro: "Parte não foi importada: " + error.message };
+    importadas += lote.length;
   }
 
   revalidatePath("/financas");

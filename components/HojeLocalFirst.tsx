@@ -133,7 +133,11 @@ function HojeConteudo() {
 
   return (
     <main className="max-w-2xl lg:max-w-5xl mx-auto px-6 md:px-12 pt-2">
-      <div className="flex items-center justify-end mb-1">
+      <div className="flex items-center justify-end gap-4 mb-1">
+        {/* Etapa 221 — rotina da manhã / da noite */}
+        <Link href="/habitos/rotina" className="text-sm text-ink-400 hover:text-ink-100 transition">
+          ☀️ Rotina
+        </Link>
         <Link
           href={`/habitos/planejador?data=${dataSelecionada}`}
           className="text-sm text-ink-400 hover:text-ink-100 transition"

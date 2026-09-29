@@ -7,6 +7,7 @@ import { formatarMoeda } from "@/lib/financas/formatacao";
 import type { TransacaoImportada } from "@/lib/financas/importar-extrato";
 import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 import { acharPossiveisDuplicados } from "@/lib/financas/duplicados";
+import { sugerirCategoria } from "@/lib/financas/sugestaoCategoria";
 
 export function ImportadorExtrato({ contas }: { contas: { id: string; nome: string }[] }) {
   const router = useRouter();
@@ -44,11 +45,24 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
         setTransacoes(null);
         return;
       }
-      setTransacoes(resposta.transacoes);
+      // Etapa 221 — já sugere a categoria de cada linha pelo que você costuma lançar
+      const snap = lerSnapshotOffline();
+      const historico = (snap?.financas.transacoes ?? []) as any[];
+      const cats = (snap?.financas.categorias ?? []) as any[];
+      setTransacoes(
+        resposta.transacoes.map((t) => ({ ...t, categoriaId: sugerirCategoria(t.descricao, t.tipo, historico, cats) }))
+      );
       // já vem desmarcado o que parece repetido
       const dup = acharPossiveisDuplicados(resposta.transacoes, (lerSnapshotOffline()?.financas.transacoes ?? []) as any[], contaId);
       setSelecionadas(new Set(resposta.transacoes.map((_, i) => i).filter((i) => !dup[i])));
     });
+  }
+
+  const categorias = ((lerSnapshotOffline()?.financas.categorias ?? []) as any[]).slice().sort((a, b) =>
+    String(a.nome).localeCompare(String(b.nome))
+  );
+  function mudarCategoria(indice: number, categoriaId: string) {
+    setTransacoes((atual) => atual && atual.map((t, i) => (i === indice ? { ...t, categoriaId: categoriaId || null } : t)));
   }
 
   function alternarSelecao(indice: number) {
@@ -158,6 +172,24 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate">{t.descricao}</p>
                   <p className="text-xs text-ink-400">{new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")}</p>
+                  {t.descricaoOriginal && t.descricaoOriginal !== t.descricao && (
+                    <p className="text-[11px] text-ink-400/70 truncate">No banco: {t.descricaoOriginal}</p>
+                  )}
+                  <select
+                    value={t.categoriaId ?? ""}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => mudarCategoria(i, e.target.value)}
+                    className="mt-1 max-w-full bg-base-900 border border-base-600 rounded-md px-2 py-1 text-xs text-ink-100"
+                  >
+                    <option value="">Sem categoria</option>
+                    {categorias
+                      .filter((c) => c.tipo === t.tipo)
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nome}
+                        </option>
+                      ))}
+                  </select>
                   {duplicados[i] && (
                     <p className="text-[11px] text-financa truncate">
                       Já lançado? “{duplicados[i]!.descricao || "sem descrição"}” em{" "}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeftRight, Tags, Hash, FileText, CalendarDays, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target, Upload, Users, TrendingUp, Grid3x3, Bot } from "lucide-react";
+import { ArrowLeftRight, Tags, Hash, FileText, CalendarDays, Repeat, BarChart3, ArrowUpDown, Download, Trash2, PiggyBank, Target, Upload, Users, TrendingUp, Grid3x3, Bot, Mail, CreditCard, Calculator } from "lucide-react";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { IconeInstagram } from "@/components/IconeInstagram";
 
@@ -9,7 +9,10 @@ const ITENS = [
   { href: "/financas/desafios", Icone: Grid3x3, titulo: "Desafios financeiros", texto: "Tipo o desafio dos 52 quadradinhos, dentro do app" },
   { href: "/financas/patrimonio", Icone: TrendingUp, titulo: "Patrimônio líquido", texto: "Evolução de tudo que você tem, mês a mês" },
   { href: "/financas/divisoes", Icone: Users, titulo: "Dividir despesas", texto: "Controle quem te deve e quem você deve" },
-  { href: "/financas/importar", Icone: Upload, titulo: "Importar extrato", texto: "Sobe um arquivo OFX ou CSV do seu banco" },
+  { href: "/financas/envelopes", Icone: Mail, titulo: "Envelopes", texto: "Limite por categoria, com a sobra passando pro mês seguinte" },
+  { href: "/financas/assinaturas", Icone: CreditCard, titulo: "Assinaturas", texto: "Cobranças que se repetem todo mês e quanto somam no ano" },
+  { href: "/financas/simulador", Icone: Calculator, titulo: "E se…?", texto: "Em quanto tempo chega na meta — e cortando um gasto" },
+  { href: "/financas/importar", Icone: Upload, titulo: "Importar extrato", texto: "OFX ou CSV do banco, já com categoria sugerida" },
   { href: "/financas/metas", Icone: Target, titulo: "Metas de economia", texto: "Guarde dinheiro pra um objetivo específico" },
   { href: "/financas/investir", Icone: PiggyBank, titulo: "Guardar em investimento", texto: "Separe dinheiro do seu saldo pra investimento" },
   { href: "/financas/calendario", Icone: CalendarDays, titulo: "Calendário", texto: "O mês dia a dia: o que vence, o que entra e o saldo previsto" },

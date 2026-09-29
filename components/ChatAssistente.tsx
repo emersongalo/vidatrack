@@ -5,6 +5,7 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { interpretarPergunta, type RespostaAssistente } from "@/lib/assistente/interpretar";
 import { adicionarNaFila } from "@/lib/offline/fila";
 import { processarFilaSincronizacao } from "@/lib/offline/processarFila";
+import { BotaoVoz } from "@/components/BotaoVoz";
 
 type Mensagem =
   | { autor: "usuario"; texto: string }
@@ -163,11 +164,18 @@ export function ChatAssistente() {
         }}
         className="flex gap-2 pt-3 pb-3 border-t border-base-600 shrink-0"
       >
+        {/* Etapa 221 — falar em vez de digitar */}
+        <BotaoVoz
+          aoOuvir={(t) => {
+            setEntrada("");
+            enviar(t);
+          }}
+        />
         <input
           value={entrada}
           onChange={(e) => setEntrada(e.target.value)}
-          placeholder="Pergunte algo sobre suas finanças..."
-          className="flex-1 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
+          placeholder="Pergunte ou diga: gastei 30 no mercado"
+          className="flex-1 min-w-0 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
         />
         <button
           type="submit"

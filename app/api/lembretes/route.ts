@@ -262,7 +262,13 @@ async function notificarUsuariosDoItem(
         try {
           await enviarPush(
             { endpoint: inscricao.endpoint, chaves: inscricao.chaves as any },
-            { titulo: "VidaTrack", corpo: texto, url }
+            {
+              titulo: "VidaTrack",
+              corpo: texto,
+              url,
+              // Etapa 221 — no navegador também dá pra marcar direto pela notificação
+              ...(lembreteHabito ? { habitoId: lembreteHabito.habitoId, data: lembreteHabito.data } : {}),
+            }
           );
           enviados++;
           await supabase.from("log_notificacoes").insert({
@@ -595,7 +601,7 @@ async function notificarResumoSemanal(
       usuarioId,
       usuarioId,
       texto,
-      "/habitos/estatisticas",
+      "/habitos/semana",
       hoje
     );
   }

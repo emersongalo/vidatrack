@@ -16,6 +16,7 @@ export const dynamic = "force-dynamic";
  * Hábito com meta numérica (ex: 8 copos): no widget, marcar = completar
  * a meta; na notificação (Etapa 216), "✓ Feito" soma 1 — com vários
  * lembretes de água no dia, cada toque é um copo.
+ * acao "completar" (Etapa 221, rotina): completa a meta do dia e nunca desmarca.
  */
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
 
   const habitoId = String(corpo.habitoId ?? "");
   const data = /^\d{4}-\d{2}-\d{2}$/.test(String(corpo.data ?? "")) ? String(corpo.data) : dataAtualNoFuso();
-  const acao = corpo.acao === "marcar" ? "marcar" : "alternar";
+  const acao = corpo.acao === "marcar" ? "marcar" : corpo.acao === "completar" ? "completar" : "alternar";
   if (!habitoId) return NextResponse.json({ erro: "habitoId obrigatório" }, { status: 400 });
 
   // RLS garante que a pessoa só enxerga hábito dela (ou compartilhado com ela)

@@ -14,7 +14,7 @@ function garantirConfigurado() {
 
 export async function enviarPush(
   inscricao: { endpoint: string; chaves: { p256dh: string; auth: string } },
-  payload: { titulo: string; corpo: string; url?: string }
+  payload: { titulo: string; corpo: string; url?: string; /** Etapa 221 — lembrete de hábito ganha o botão "✓ Feito" */ habitoId?: string; data?: string }
 ) {
   garantirConfigurado();
 

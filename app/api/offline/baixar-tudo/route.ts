@@ -31,7 +31,7 @@ export async function GET() {
   ] = await Promise.all([
     supabase
       .from("habitos")
-      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete, horarios_lembrete, vezes_semana, pausas, dono_id")
+      .select("id, nome, cor, icone, frequencia, dias_semana, meta_diaria, unidade, ordem, eh_negativo, criado_em, categoria_id, horario_lembrete, horarios_lembrete, vezes_semana, pausas, dono_id, rotina")
       .eq("arquivado", false),
     supabase
       .from("tarefas")
@@ -39,7 +39,7 @@ export async function GET() {
       .eq("arquivada", false),
     supabase.from("categorias_produtividade").select("id, nome, cor"),
     supabase.from("financa_contas").select("id, dono_id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),
-    supabase.from("financa_categorias").select("id, dono_id, nome, tipo, icone, cor, meta_mensal"),
+    supabase.from("financa_categorias").select("id, dono_id, nome, tipo, icone, cor, meta_mensal, envelope_desde, sobra_enviada_mes"),
     // Etapa 215 — meta arquivada não aparece mais na lista
     supabase.from("metas_financeiras").select("id, nome, valor_atual, valor_alvo, concluida, data_alvo").eq("arquivada", false),
     supabase

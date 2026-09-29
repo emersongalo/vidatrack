@@ -131,20 +131,55 @@ self.addEventListener("push", (event) => {
     // Se não vier JSON, usa os valores padrão acima.
   }
 
-  event.waitUntil(
-    self.registration.showNotification(dados.titulo, {
-      body: dados.corpo,
+  const opcoes = {
+    body: dados.corpo,
+    icon: "/icons/icon-192.png",
+    badge: "/icons/badge-notificacao.png",
+    vibrate: [200, 100, 200],
+    silent: false,
+    data: { url: dados.url, habitoId: dados.habitoId, dia: dados.data },
+  };
+  // Etapa 221 — lembrete de hábito: botão "✓ Feito" marca sem abrir o app
+  if (dados.habitoId) {
+    opcoes.actions = [{ action: "feito", title: "✓ Feito" }];
+    opcoes.tag = "habito-" + dados.habitoId;
+  }
+
+  event.waitUntil(self.registration.showNotification(dados.titulo, opcoes));
+});
+
+async function marcarHabitoPelaNotificacao(dados) {
+  try {
+    const resposta = await fetch("/api/widget/marcar", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ habitoId: dados.habitoId, data: dados.dia, acao: "marcar" }),
+    });
+    if (resposta.ok) return;
+    await self.registration.showNotification("VidaTrack", {
+      body: resposta.status === 401 ? "Não consegui marcar: entre no app de novo." : "Não consegui marcar agora. Toque para abrir.",
       icon: "/icons/icon-192.png",
       badge: "/icons/badge-notificacao.png",
-      vibrate: [200, 100, 200],
-      silent: false,
-      data: { url: dados.url },
-    })
-  );
-});
+      data: { url: dados.url || "/habitos" },
+    });
+  } catch {
+    await self.registration.showNotification("VidaTrack", {
+      body: "Sem conexão. Toque para abrir o app e marcar.",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/badge-notificacao.png",
+      data: { url: dados.url || "/habitos" },
+    });
+  }
+}
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url ?? "/habitos";
+  const dados = event.notification.data || {};
+  if (event.action === "feito" && dados.habitoId) {
+    event.waitUntil(marcarHabitoPelaNotificacao(dados));
+    return;
+  }
+  const url = dados.url ?? "/habitos";
   event.waitUntil(self.clients.openWindow(url));
 });

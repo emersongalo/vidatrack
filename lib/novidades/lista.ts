@@ -1,13 +1,29 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "220";
+export const VERSAO_NOVIDADES = "221";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "221",
+    titulo: "Envelopes, assinaturas e rotinas",
+    itens: [
+      { emoji: "✉️", titulo: "Envelopes", texto: "Cada categoria com limite vira um envelope. Ligue \"guardar a sobra\" e o que não gastar passa pro mês seguinte — ou mande pra uma meta.", href: "/financas/envelopes" },
+      { emoji: "🔁", titulo: "Assinaturas", texto: "O app acha sozinho as cobranças que se repetem todo mês, mostra quanto somam no ano e avisa quando alguma fica mais cara.", href: "/financas/assinaturas" },
+      { emoji: "🧮", titulo: "E se…?", texto: "Simule: cortando R$ 200 do delivery, em quanto tempo você bate a meta?", href: "/financas/simulador" },
+      { emoji: "📥", titulo: "Importar extrato mais esperto", texto: "Já sugere a categoria de cada linha, limpa a descrição do banco e lê o CSV da fatura do Nubank.", href: "/financas/importar" },
+      { emoji: "☀️", titulo: "Rotina da manhã e da noite", texto: "Junte hábitos numa rotina e faça um de cada vez, com um toque.", href: "/habitos/rotina" },
+      { emoji: "📊", titulo: "Sua semana", texto: "Resumo dos últimos 7 dias pra compartilhar como imagem. O aviso de domingo abre direto nele.", href: "/habitos/semana" },
+      { emoji: "🔔", titulo: "\"✓ Feito\" na notificação do navegador", texto: "Quem usa pelo navegador agora também marca o hábito direto no lembrete (no app Android isso já existia)." },
+      { emoji: "🎙️", titulo: "Falar com o assistente", texto: "No navegador, toque no microfone e diga \"gastei 30 no mercado\". No app, use o microfone do teclado.", href: "/financas/assistente" },
+      { emoji: "🏅", titulo: "Novas conquistas", texto: "Semana perfeita, dentro do teto, diário e mais — e um aviso no Painel quando você desbloqueia uma.", href: "/habitos/conquistas" },
+      { emoji: "📱", titulo: "Dica: widget de hábitos", texto: "No Android, segure um espaço vazio da tela inicial → Widgets → VidaTrack e escolha o de hábitos. Dá pra marcar direto dele." },
+    ],
+  },
   {
     versao: "220",
     titulo: "Mais controle do dinheiro e um assistente mais esperto",

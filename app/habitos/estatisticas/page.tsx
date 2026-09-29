@@ -163,6 +163,13 @@ export default function EstatisticasHabitosPage() {
         <Link href="/habitos/desafios" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
           🤝 Desafios
         </Link>
+        {/* Etapa 221 */}
+        <Link href="/habitos/semana" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
+          📊 Sua semana
+        </Link>
+        <Link href="/habitos/rotina" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition">
+          ☀️ Rotinas
+        </Link>
         <Link href="/retrospectiva" className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-financa/60 transition">
           🎉 Retrospectiva do ano
         </Link>
