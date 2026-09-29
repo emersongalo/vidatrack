@@ -19,6 +19,8 @@ export function HeroFinancas({
   aoMesAnterior,
   aoMesProximo,
   aoHoje,
+  nomeMesAnterior,
+  nomeMesProximo,
 }: {
   saldo: number;
   saldoPrevisto: number | null;
@@ -37,125 +39,94 @@ export function HeroFinancas({
   aoMesAnterior?: () => void;
   aoMesProximo?: () => void;
   aoHoje?: () => void;
+  /** Etapa 223 — nomes dos meses vizinhos na barra de meses */
+  nomeMesAnterior?: string;
+  nomeMesProximo?: string;
 }) {
+  // Etapa 223 — letras maiores e mais espaço (no estilo dos apps de banco)
+  const botaoMes =
+    "w-11 h-11 rounded-full border border-base-600 flex items-center justify-center text-xl text-ink-100 hover:bg-base-700 transition shrink-0";
+  const total = receitas + despesas;
   return (
-    <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-5 mb-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
+          <p className="text-base text-ink-400">Saldo atual</p>
           {pessoas && pessoas.length > 0 && <AvataresEmpilhados pessoas={pessoas} tamanho={24} />}
         </div>
         <BotaoOcultarValores />
       </div>
+      <p className="text-[2.6rem] leading-tight font-display font-bold font-mono tracking-tight mb-4 break-words">
+        <ValorMonetario valor={saldo} />
+      </p>
 
-      {/* Navegação por mês */}
-      <div className="flex items-center justify-center gap-4 mb-4">
-        {aoMesAnterior ? (
-          <button
-            onClick={aoMesAnterior}
-            aria-label="Mês anterior"
-            className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
-          >
-            ‹
-          </button>
-        ) : (
-          <Link
-            href={hrefMesAnterior}
-            aria-label="Mês anterior"
-            className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
-          >
-            ‹
-          </Link>
-        )}
-        <div className="text-center">
-          <p className="text-sm font-medium capitalize">{nomeMes}</p>
-          {!ehMesAtual &&
-            (aoHoje ? (
-              <button onClick={aoHoje} className="text-[11px] text-financa hover:underline">
-                Voltar pra hoje
-              </button>
-            ) : (
-              <Link href={hrefHoje} className="text-[11px] text-financa hover:underline">
-                Voltar pra hoje
-              </Link>
-            ))}
-        </div>
-        {aoMesProximo ? (
-          <button
-            onClick={aoMesProximo}
-            aria-label="Próximo mês"
-            className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
-          >
-            ›
-          </button>
-        ) : (
-          <Link
-            href={hrefMesProximo}
-            aria-label="Próximo mês"
-            className="w-7 h-7 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
-          >
-            ›
-          </Link>
-        )}
-      </div>
-
-      {/* Saldo atual — sozinho, com espaço de sobra pro número */}
-      <div className="mb-5">
-        <p className="text-xs text-ink-400 mb-1">Saldo em contas</p>
-        <p className="text-3xl font-display font-semibold font-mono">
-          <ValorMonetario valor={saldo} />
-        </p>
-      </div>
-
-      {/* Etapa 222 — barra receitas x despesas do mês */}
-      {receitas + despesas > 0 && (
-        <div className="flex h-2 overflow-hidden rounded-full bg-base-700 mb-3" aria-hidden>
-          <div className="bg-habito" style={{ width: `${(receitas / (receitas + despesas)) * 100}%` }} />
-          <div className="bg-red-400" style={{ width: `${(despesas / (receitas + despesas)) * 100}%` }} />
+      {total > 0 && (
+        <div className="flex h-2 overflow-hidden rounded-full bg-base-700 mb-4" aria-hidden>
+          <div className="bg-habito" style={{ width: `${(receitas / total) * 100}%` }} />
+          <div className="bg-red-400" style={{ width: `${(despesas / total) * 100}%` }} />
         </div>
       )}
 
-      {/* Etapa 173 — cada estatística no seu próprio cartão (como no
-         app do Despezzas), em vez de 3 colunas apertadas — isso
-         cortava valores maiores tipo "R$ 5.000,00" mesmo já tentando
-         só com fonte menor antes. Cada cartão cresce conforme
-         precisa, sem cortar nada. */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <Link
-          href="/financas/extrato?preset=este_mes"
-          className="bg-base-900/60 border border-base-600 rounded-lg px-2 py-2.5 flex flex-col items-center text-center gap-1 min-w-0"
-        >
-          <TrendingUp size={13} strokeWidth={2.5} className="text-habito shrink-0" />
-          <p className="text-[10px] text-ink-400">Receitas</p>
-          <p className="text-xs font-mono font-medium text-habito leading-tight break-words">
+      <div className="grid grid-cols-3 gap-2 mb-5">
+        <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0">
+          <p className="flex items-center gap-1 text-sm text-ink-400">
+            <TrendingUp size={15} strokeWidth={2.5} className="text-habito shrink-0" /> Receitas
+          </p>
+          <p className="text-base font-mono font-semibold text-habito mt-1 break-words leading-tight">
             <ValorMonetario valor={receitas} />
           </p>
         </Link>
-        <Link
-          href="/financas/extrato?preset=este_mes"
-          className="bg-base-900/60 border border-base-600 rounded-lg px-2 py-2.5 flex flex-col items-center text-center gap-1 min-w-0"
-        >
-          <TrendingDown size={13} strokeWidth={2.5} className="text-red-400 shrink-0" />
-          <p className="text-[10px] text-ink-400">Despesas</p>
-          <p className="text-xs font-mono font-medium text-red-400 leading-tight break-words">
+        <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0">
+          <p className="flex items-center gap-1 text-sm text-ink-400">
+            <TrendingDown size={15} strokeWidth={2.5} className="text-red-400 shrink-0" /> Despesas
+          </p>
+          <p className="text-base font-mono font-semibold text-red-400 mt-1 break-words leading-tight">
             <ValorMonetario valor={despesas} />
           </p>
         </Link>
-        <Link
-          href="/financas/investir"
-          className="bg-base-900/60 border border-base-600 rounded-lg px-2 py-2.5 flex flex-col items-center text-center gap-1 min-w-0"
-        >
-          <PiggyBank size={13} strokeWidth={2.5} className="text-financa shrink-0" />
-          <p className="text-[10px] text-ink-400">Investido</p>
-          <p className="text-xs font-mono font-medium text-financa leading-tight break-words">
+        <Link href="/financas/investir" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0">
+          <p className="flex items-center gap-1 text-sm text-ink-400">
+            <PiggyBank size={15} strokeWidth={2.5} className="text-financa shrink-0" /> Investido
+          </p>
+          <p className="text-base font-mono font-semibold text-financa mt-1 break-words leading-tight">
             <ValorMonetario valor={totalInvestido ?? 0} />
           </p>
         </Link>
       </div>
 
+      {/* Navegação por mês */}
+      <div className="flex items-center justify-between gap-2 bg-base-800 border border-base-600 rounded-full px-2 py-2">
+        {aoMesAnterior ? (
+          <button onClick={aoMesAnterior} aria-label="Mês anterior" className={botaoMes}>‹</button>
+        ) : (
+          <Link href={hrefMesAnterior} aria-label="Mês anterior" className={botaoMes}>‹</Link>
+        )}
+        {nomeMesAnterior && <span className="hidden min-[380px]:block text-sm text-ink-400 capitalize truncate">{nomeMesAnterior}</span>}
+        <div className="text-center min-w-0">
+          <p className="text-lg font-semibold capitalize truncate">{nomeMes}</p>
+          {!ehMesAtual &&
+            (aoHoje ? (
+              <button onClick={aoHoje} className="text-xs text-financa hover:underline">
+                Voltar pra hoje
+              </button>
+            ) : (
+              <Link href={hrefHoje} className="text-xs text-financa hover:underline">
+                Voltar pra hoje
+              </Link>
+            ))}
+        </div>
+        {nomeMesProximo && <span className="hidden min-[380px]:block text-sm text-ink-400 capitalize truncate">{nomeMesProximo}</span>}
+        {aoMesProximo ? (
+          <button onClick={aoMesProximo} aria-label="Próximo mês" className={botaoMes}>›</button>
+        ) : (
+          <Link href={hrefMesProximo} aria-label="Próximo mês" className={botaoMes}>›</Link>
+        )}
+      </div>
+
       {saldoPrevisto !== null && (
-        <div className="flex items-center justify-between pt-3 border-t border-base-600">
-          <p className="text-xs text-ink-400">Previsto p/ fim do mês</p>
-          <p className="text-sm font-mono font-medium text-ink-100">
+        <div className="flex items-center justify-between mt-3 px-1">
+          <p className="text-sm text-ink-400">Previsto p/ fim do mês</p>
+          <p className="text-base font-mono font-semibold text-ink-100">
             <ValorMonetario valor={saldoPrevisto} />
           </p>
         </div>

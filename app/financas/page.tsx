@@ -212,13 +212,13 @@ export default function FinancasPage() {
   const blocoGrafico =
     dadosGrafico.length > 0 ? (
       <div key="grafico" className="mb-6 lg:break-inside-avoid">
-        <p className="text-sm text-ink-400 mb-3 capitalize">Despesas por categoria · {nomeDoMesSelecionado}</p>
+        <h2 className="text-xl font-semibold mb-3">Despesas por categoria</h2>
         <GraficoDespesasCategoria dados={dadosGrafico} mapaCategoriaInfo={mapaCategoriaInfo} />
 
         {/* Etapa 176 — mapa de calor logo abaixo do gráfico de
            categorias, a pedido: mesma ideia da Análise, só que aqui
            na Início pra não precisar navegar pra ver. */}
-        <p className="text-sm text-ink-400 mb-3 mt-6">Mapa de calor — gasto por dia</p>
+        <h2 className="text-xl font-semibold mb-3 mt-6">Gasto por dia</h2>
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
           <MapaCalorGastos
             anoMesISO={mesSelecionado}
@@ -232,9 +232,9 @@ export default function FinancasPage() {
   const blocoLancamentos = (
     <div key="lancamentos" className="mb-6 lg:break-inside-avoid">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-ink-400">Lançamentos do mês</p>
-        <Link href={`/financas/extrato?mes=${mesSelecionado}`} className="text-xs text-ink-400 hover:text-ink-100 transition">
-          Ver extrato completo →
+        <h2 className="text-xl font-semibold">Lançamentos do mês</h2>
+        <Link href={`/financas/extrato?mes=${mesSelecionado}`} className="text-base text-ink-400 hover:text-ink-100 transition">
+          Ver tudo ›
         </Link>
       </div>
       {ultimasTransacoes.length === 0 ? (
@@ -244,10 +244,10 @@ export default function FinancasPage() {
           {ultimasTransacoes.map((t: any) => {
             const catInfo = mapaCategoriaInfo.get(t.categoria_id) as any;
             return (
-              <li key={t.id} className="bg-base-800 border border-base-600 rounded-lg p-3">
+              <li key={t.id} className="bg-base-800 border border-base-600 rounded-2xl p-4">
                 <div className="flex items-center gap-3">
                   <span
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(
+                    className={`w-11 h-11 rounded-xl flex items-center justify-center text-base shrink-0 ${classeFundoSuave(
                       catInfo?.cor ?? "financa"
                     )}`}
                   >
@@ -259,14 +259,14 @@ export default function FinancasPage() {
                       <TrendingDown size={16} strokeWidth={2} />
                     )}
                   </span>
-                  <p className="text-sm truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
-                  <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
+                  <p className="text-base font-medium truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
+                  <span className={`font-mono text-base font-semibold shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
                     {t.tipo === "receita" ? "+" : "-"}
                     <ValorMonetario valor={t.valor} />
                   </span>
                 </div>
-                <div className="flex items-center justify-between gap-2 mt-1.5 pl-12">
-                  <p className="text-xs text-ink-400 truncate min-w-0">
+                <div className="flex items-center justify-between gap-2 mt-1.5 pl-14">
+                  <p className="text-sm text-ink-400 truncate min-w-0">
                     {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
                     {t.recorrencia_id && <span className="text-financa"> · ↻ todo mês</span>}
                     <span className="block mt-1 empty:hidden">
@@ -304,7 +304,7 @@ export default function FinancasPage() {
     orcamento: (
       categoriasComMeta.length > 0 ? (
               <div className="mb-6 lg:break-inside-avoid">
-                <p className="text-sm text-ink-400 mb-3">Orçamento do mês</p>
+                <h2 className="text-xl font-semibold mb-3">Orçamento do mês</h2>
                 <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 space-y-4">
                   {categoriasComMeta.map((cat: any) => (
                     <BarraOrcamento
@@ -330,7 +330,7 @@ export default function FinancasPage() {
                 <Bot size={18} strokeWidth={2} />
               </span>
               <div className="flex-1 min-w-0">
-                <p className="font-medium">Assistente</p>
+                <p className="text-lg font-medium">Assistente</p>
                 <p className="text-xs text-ink-400 mt-0.5">Pergunte sobre seus gastos ou peça pra lançar algo</p>
               </div>
               <span className="text-ink-400 text-sm shrink-0">Abrir →</span>
@@ -343,7 +343,7 @@ export default function FinancasPage() {
                 <PieChart size={18} strokeWidth={2} />
               </span>
               <div className="flex-1 min-w-0">
-                <p className="font-medium">Para onde vai seu dinheiro</p>
+                <p className="text-lg font-medium">Para onde vai seu dinheiro</p>
                 <p className="text-xs text-ink-400 mt-0.5">Mapa de gastos, comparação com o mês passado e dicas automáticas</p>
               </div>
               <span className="text-ink-400 text-sm shrink-0">Ver →</span>
@@ -378,7 +378,9 @@ export default function FinancasPage() {
             receitas={receitasDoMes}
             despesas={despesasDoMes}
             totalInvestido={totalInvestido}
-            nomeMes={nomeDoMesSelecionado}
+            nomeMes={anoSel === hoje.getFullYear() ? new Date(anoSel, mesSelNum - 1, 1).toLocaleDateString("pt-BR", { month: "long" }) : nomeDoMesSelecionado}
+            nomeMesAnterior={dataMesAnterior.toLocaleDateString("pt-BR", { month: "long" })}
+            nomeMesProximo={dataMesProximo.toLocaleDateString("pt-BR", { month: "long" })}
             pessoas={pessoas}
             hrefMesAnterior={`/financas?mes=${mesAnteriorISO}`}
             hrefMesProximo={`/financas?mes=${mesProximoISO}`}

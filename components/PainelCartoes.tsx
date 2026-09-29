@@ -56,21 +56,21 @@ export function PainelCartoes() {
             <Link
               key={v.id}
               href={v.href}
-              className={`snap-start shrink-0 w-[9.5rem] bg-base-800 border rounded-xl2 p-3 hover:border-ink-400 transition ${
+              className={`snap-start shrink-0 w-[11rem] bg-base-800 border rounded-2xl p-4 hover:border-ink-400 transition ${
                 v.alerta ? "border-red-400/60" : "border-base-600"
               }`}
             >
-              <p className="text-[11px] text-ink-400 truncate">
+              <p className="text-sm text-ink-400 truncate">
                 {CARTOES.find((c) => c.id === v.id)?.emoji} {v.titulo}
               </p>
-              <p className={`text-base font-mono font-semibold truncate mt-0.5 ${v.alerta ? "text-red-400" : ""}`}>{v.valor}</p>
-              {v.detalhe && <p className="text-[11px] text-ink-400 truncate">{v.detalhe}</p>}
+              <p className={`text-xl font-mono font-semibold truncate mt-1 ${v.alerta ? "text-red-400" : ""}`}>{v.valor}</p>
+              {v.detalhe && <p className="text-sm text-ink-400 truncate">{v.detalhe}</p>}
             </Link>
           ))}
           <button
             onClick={() => setEditando(true)}
             aria-label="Personalizar o painel"
-            className="snap-start shrink-0 w-12 rounded-xl2 border border-dashed border-base-600 text-ink-400 hover:text-ink-100 flex items-center justify-center"
+            className="snap-start shrink-0 w-14 rounded-2xl border border-dashed border-base-600 text-ink-400 hover:text-ink-100 flex items-center justify-center"
           >
             <SlidersHorizontal size={16} />
           </button>

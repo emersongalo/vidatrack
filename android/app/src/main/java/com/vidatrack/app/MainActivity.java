@@ -31,6 +31,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(GoogleIdTokenPlugin.class);
         // Etapa 195 — ponte dos widgets.
         registerPlugin(WidgetHojePlugin.class);
+        // Etapa 223 — cor da barra de status (verde/vermelho no lançamento).
+        registerPlugin(BarraStatusPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Etapa 215 — downloads (planilha CSV, backup) dentro do app. A

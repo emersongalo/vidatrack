@@ -16,6 +16,11 @@ import { sugerirDescricoes, descricoesFrequentes, type DescricaoSugerida } from 
 import { ChipsDescricao } from "@/components/ChipsDescricao";
 import { CampoEtiquetas } from "@/components/CampoEtiquetas";
 import { formatarValorDigitado } from "@/components/CampoValorMonetario";
+import { definirCorBarraStatus } from "@/lib/app/barraStatus";
+import { ChevronLeft } from "lucide-react";
+
+// Etapa 223 — cor do topo (e da barra de status do celular) por tipo
+const COR_TIPO = { receita: "#059669", despesa: "#DC2626" } as const;
 
 type Conta = { id: string; nome: string };
 type Categoria = { id: string; nome: string; tipo: "receita" | "despesa"; icone?: string };
@@ -59,6 +64,12 @@ export function FormularioTransacao({
 }) {
   const [tipo, setTipo] = useState<"despesa" | "receita">(valoresIniciais?.tipo ?? tipoInicial ?? "despesa");
   const [recorrente, setRecorrente] = useState(false);
+
+  // Etapa 223 — barra de status do celular acompanha a cor (verde/vermelho)
+  useEffect(() => {
+    definirCorBarraStatus(COR_TIPO[tipo]);
+  }, [tipo]);
+  useEffect(() => () => definirCorBarraStatus(null), []);
   // Etapa 210 — compra parcelada
   const [parcelado, setParcelado] = useState(false);
   const [numParcelas, setNumParcelas] = useState(2);
@@ -199,18 +210,7 @@ export function FormularioTransacao({
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href={voltarHref} className="text-ink-400 text-sm hover:text-ink-100 transition">
-        ← Finanças
-      </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">{titulo}</h1>
-
-      {erro && (
-        <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(erro)}
-        </p>
-      )}
-
+    <main className="min-h-screen pagina-form">
       <form
         action={action}
         onSubmit={aoSubmeter}
@@ -219,56 +219,68 @@ export function FormularioTransacao({
           if (alvo.name === "valor") setValorDigitado(alvo.value);
         }}
       >
-        <div className="form-colunas">
-        <div className="form-coluna">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setTipo("despesa");
-              setCategoriaSelecionada("");
-            }}
-            className={`flex-1 rounded-lg py-2 text-sm border transition ${
-              tipo === "despesa"
-                ? "bg-red-400/15 border-red-400 text-red-400"
-                : "border-base-600 text-ink-400 hover:text-ink-100"
-            }`}
-          >
-            Despesa
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setTipo("receita");
-              setCategoriaSelecionada("");
-            }}
-            className={`flex-1 rounded-lg py-2 text-sm border transition ${
-              tipo === "receita"
-                ? "bg-habito-soft border-habito text-habito"
-                : "border-base-600 text-ink-400 hover:text-ink-100"
-            }`}
-          >
-            Receita
-          </button>
-        </div>
-        <input type="hidden" name="tipo" value={tipo} />
+        {/* Etapa 223 — topo colorido (verde receita / vermelho despesa) com o valor em destaque */}
+        <div
+          className="px-6 pt-5 pb-12 md:rounded-b-3xl text-white transition-colors duration-300"
+          style={{ backgroundColor: COR_TIPO[tipo] }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href={voltarHref}
+              aria-label="Voltar"
+              className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center shrink-0 hover:bg-white/25 transition"
+            >
+              <ChevronLeft size={22} />
+            </Link>
+            <div className="flex bg-black/25 rounded-full p-1">
+              {(["despesa", "receita"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => {
+                    if (tipo === t) return;
+                    setTipo(t);
+                    setCategoriaSelecionada("");
+                  }}
+                  className={`rounded-full px-5 py-2 text-base font-medium transition ${
+                    tipo === t ? "bg-white text-base-900" : "text-white/80"
+                  }`}
+                >
+                  {t === "despesa" ? "Despesa" : "Receita"}
+                </button>
+              ))}
+            </div>
+            <span className="w-11 shrink-0" />
+          </div>
+          <input type="hidden" name="tipo" value={tipo} />
 
-        <div>
-          <label htmlFor="valor" className="block text-sm text-ink-400 mb-1">
+          <p className="text-sm text-white/80 mt-6">{titulo}</p>
+          <label htmlFor="valor" className="block text-base text-white/90 mt-1">
             Valor
           </label>
-          <CampoValorMonetario
-            key={chaveValor}
-            id="valor"
-            name="valor"
-            valorInicial={valorPreenchido ?? valoresIniciais?.valor}
-            required
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
-          />
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-semibold">R$</span>
+            <CampoValorMonetario
+              key={chaveValor}
+              id="valor"
+              name="valor"
+              valorInicial={valorPreenchido ?? valoresIniciais?.valor}
+              required
+              className="flex-1 min-w-0 bg-transparent text-5xl font-semibold text-white placeholder:text-white/60 outline-none font-mono tracking-tight"
+            />
+          </div>
         </div>
 
+        <div className="relative -mt-6 bg-base-900 rounded-t-3xl px-6 pt-7 pb-6 md:px-12">
+      {erro && (
+        <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
+          {decodeURIComponent(erro)}
+        </p>
+      )}
+        <div className="form-colunas">
+        <div className="form-coluna">
         <div>
-          <label htmlFor="contaId" className="block text-sm text-ink-400 mb-1">
+          <label htmlFor="contaId" className="block text-base font-medium mb-2">
             Conta
           </label>
           <select
@@ -276,7 +288,7 @@ export function FormularioTransacao({
             name="contaId"
             required
             defaultValue={valoresIniciais?.contaId}
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-base text-ink-100 focus:border-ink-100 outline-none transition"
           >
             {contas.map((conta) => (
               <option key={conta.id} value={conta.id}>
@@ -287,14 +299,14 @@ export function FormularioTransacao({
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <label htmlFor="categoriaId" className="block text-sm text-ink-400">
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="categoriaId" className="block text-base font-medium">
               Categoria
             </label>
             <button
               type="button"
               onClick={abrirNovaCategoria}
-              className="text-xs text-financa hover:underline"
+              className="text-sm text-financa hover:underline"
             >
               + Nova categoria
             </button>
@@ -308,7 +320,7 @@ export function FormularioTransacao({
               setCategoriaTocada(true);
               setCategoriaSugerida(false);
             }}
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-base text-ink-100 focus:border-ink-100 outline-none transition"
           >
             <option value="">Sem categoria</option>
             {categoriasFiltradas.map((cat) => (
@@ -372,9 +384,36 @@ export function FormularioTransacao({
 
         <div className="form-coluna">
         <div>
-          <label htmlFor="data" className="block text-sm text-ink-400 mb-1">
+          <label htmlFor="data" className="block text-base font-medium mb-2">
             Data
           </label>
+          {(() => {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            const ontem = d.toLocaleDateString("sv-SE");
+            const escolher = (v: string) => {
+              setDataLancamento(v);
+              if (!diaMesEditado) setDiaMesRecorrencia(diaDaData(v));
+            };
+            const chip = (ativo: boolean) =>
+              `rounded-full px-5 py-2.5 text-base border transition ${
+                ativo ? "border-2 font-medium" : "border-base-600 text-ink-100"
+              }`;
+            const outra = dataLancamento !== hoje && dataLancamento !== ontem;
+            return (
+              <div className="flex flex-wrap gap-2 mb-2">
+                <button type="button" onClick={() => escolher(hoje)} className={chip(dataLancamento === hoje)} style={dataLancamento === hoje ? { borderColor: COR_TIPO[tipo], color: COR_TIPO[tipo] } : undefined}>
+                  Hoje
+                </button>
+                <button type="button" onClick={() => escolher(ontem)} className={chip(dataLancamento === ontem)} style={dataLancamento === ontem ? { borderColor: COR_TIPO[tipo], color: COR_TIPO[tipo] } : undefined}>
+                  Ontem
+                </button>
+                <span className={`${chip(outra)} text-ink-400`} style={outra ? { borderColor: COR_TIPO[tipo], color: COR_TIPO[tipo] } : undefined}>
+                  {outra ? new Date(dataLancamento + "T00:00:00").toLocaleDateString("pt-BR") : "Outra data ↓"}
+                </span>
+              </div>
+            );
+          })()}
           <input
             id="data"
             name="data"
@@ -385,12 +424,12 @@ export function FormularioTransacao({
               if (!diaMesEditado && e.target.value) setDiaMesRecorrencia(diaDaData(e.target.value));
             }}
             required
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-base text-ink-100 focus:border-ink-100 outline-none transition"
           />
         </div>
 
         <div>
-          <label htmlFor="descricao" className="block text-sm text-ink-400 mb-1">
+          <label htmlFor="descricao" className="block text-base font-medium mb-2">
             Descrição (opcional)
           </label>
           <input
@@ -404,7 +443,7 @@ export function FormularioTransacao({
               sugerirPelaDescricao(e.target.value);
             }}
             placeholder="Ex: Supermercado, Uber, Freelance"
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-base text-ink-100 focus:border-ink-100 outline-none transition"
           />
           {descricaoTexto.trim().length >= 2 ? (
             <ChipsDescricao sugestoes={sugestoesDescricao} aoEscolher={escolherDescricao} />
@@ -653,7 +692,13 @@ export function FormularioTransacao({
         </div>
 
         <div className="form-rodape">
-          <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>
+          <BotaoSalvarFormulario
+            className="w-full text-white text-lg font-semibold rounded-2xl py-4 hover:opacity-90 transition disabled:opacity-50"
+            estilo={{ backgroundColor: COR_TIPO[tipo] }}
+          >
+            {textoBotao}
+          </BotaoSalvarFormulario>
+        </div>
         </div>
       </form>
 

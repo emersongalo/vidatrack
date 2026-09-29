@@ -12,14 +12,17 @@ export function BotaoSalvarFormulario({
   children,
   textoEnviando = "Salvando...",
   className = "w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition disabled:opacity-50",
+  estilo,
 }: {
   children: React.ReactNode;
   textoEnviando?: string;
   className?: string;
+  /** Etapa 223 — cor dinâmica (ex: verde/vermelho do lançamento) */
+  estilo?: React.CSSProperties;
 }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className={className}>
+    <button type="submit" disabled={pending} className={className} style={estilo}>
       {pending ? textoEnviando : children}
     </button>
   );
