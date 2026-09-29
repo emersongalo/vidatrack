@@ -18,10 +18,10 @@ export default function PatrimonioPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Patrimônio líquido</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Patrimônio líquido</h1>
       <p className="text-ink-400 text-sm mb-6">
         Tudo que você tem somado — contas, investimentos e desafios em andamento — ao longo dos últimos 12 meses.
       </p>

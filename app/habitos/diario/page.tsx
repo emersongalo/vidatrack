@@ -48,10 +48,10 @@ export default function DiarioPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina pb-16">
-      <Link href="/habitos" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Hoje
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Diário</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Diário</h1>
       <p className="text-ink-400 text-sm mb-6">Marque como foi seu dia na tela Hoje — aqui aparece o histórico.</p>
 
       {diario.length === 0 ? (
@@ -66,13 +66,13 @@ export default function DiarioPage() {
             <div className="grid grid-cols-2 gap-3 mb-6">
               <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
                 <p className="text-xs text-ink-400">Humor médio no mês</p>
-                <p className="text-2xl font-display font-semibold">
+                <p className="text-3xl font-display font-bold">
                   {mediaMes !== null ? `${emojiDoHumor(mediaMes)} ${mediaMes.toFixed(1).replace(".", ",")}` : "—"}
                 </p>
               </div>
               <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
                 <p className="text-xs text-ink-400">Mês passado</p>
-                <p className="text-2xl font-display font-semibold text-ink-400">
+                <p className="text-3xl font-display font-bold text-ink-400">
                   {mediaMesPassado !== null ? `${emojiDoHumor(mediaMesPassado)} ${mediaMesPassado.toFixed(1).replace(".", ",")}` : "—"}
                 </p>
               </div>
@@ -122,7 +122,7 @@ export default function DiarioPage() {
                       <strong>{r.diferenca > 0 ? "melhor" : "pior"}</strong>: {emojiDoHumor(r.mediaFeito)}{" "}
                       {r.mediaFeito.toFixed(1).replace(".", ",")} contra {emojiDoHumor(r.mediaNaoFeito)}{" "}
                       {r.mediaNaoFeito.toFixed(1).replace(".", ",")}.
-                      <span className="block text-[11px] text-ink-400 mt-1">
+                      <span className="block text-xs text-ink-400 mt-1">
                         {r.diasFeito} dias feitos x {r.diasNaoFeito} sem fazer
                       </span>
                     </li>
@@ -142,7 +142,7 @@ export default function DiarioPage() {
                 .filter((d) => d.texto)
                 .slice(0, 30)
                 .map((d) => (
-                  <li key={d.data} className="flex gap-3 bg-base-800 border border-base-600 rounded-lg p-3">
+                  <li key={d.data} className="flex gap-3 bg-base-800 border border-base-600 rounded-2xl p-4">
                     <span className="text-xl">{emojiDoHumor(d.humor)}</span>
                     <div className="min-w-0">
                       <p className="text-xs text-ink-400">

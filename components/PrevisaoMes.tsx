@@ -55,15 +55,15 @@ export function PrevisaoMes({ previsao }: { previsao: TipoPrevisao }) {
 
       <div className="grid grid-cols-3 gap-2 mt-3 text-center">
         <div className="bg-base-900/60 rounded-lg py-2">
-          <p className="text-[10px] text-ink-400">Hoje</p>
+          <p className="text-xs text-ink-400">Hoje</p>
           <p className="text-xs font-mono"><ValorMonetario valor={saldoHoje} /></p>
         </div>
         <div className="bg-base-900/60 rounded-lg py-2">
-          <p className="text-[10px] text-ink-400">Vai entrar</p>
+          <p className="text-xs text-ink-400">Vai entrar</p>
           <p className="text-xs font-mono text-habito">+<ValorMonetario valor={entradas} /></p>
         </div>
         <div className="bg-base-900/60 rounded-lg py-2">
-          <p className="text-[10px] text-ink-400">Vai sair</p>
+          <p className="text-xs text-ink-400">Vai sair</p>
           <p className="text-xs font-mono text-red-400">-<ValorMonetario valor={saidas} /></p>
         </div>
       </div>

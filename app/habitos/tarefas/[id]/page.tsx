@@ -38,7 +38,7 @@ function DetalheTarefaConteudo() {
   if (!tarefa) {
     return (
       <main className="pagina-form px-6 md:px-12 pt-6">
-        <Link href="/habitos/tarefas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+        <Link href="/habitos/tarefas" className="text-ink-400 text-base hover:text-ink-100 transition">
           ← Tarefas
         </Link>
         <p className="text-ink-400 text-sm mt-6">
@@ -67,11 +67,11 @@ function DetalheTarefaConteudo() {
   return (
     <main className="pagina-form px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-6">
-        <Link href="/habitos/tarefas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+        <Link href="/habitos/tarefas" className="text-ink-400 text-base hover:text-ink-100 transition">
           ← Tarefas
         </Link>
         <div className="flex items-center gap-4">
-          <Link href={`/habitos/tarefas/${tarefa.id}/editar`} className="text-ink-400 text-sm hover:text-ink-100 transition">
+          <Link href={`/habitos/tarefas/${tarefa.id}/editar`} className="text-ink-400 text-base hover:text-ink-100 transition">
             Editar
           </Link>
           <BotaoComConfirmacao
@@ -126,7 +126,7 @@ function DetalheTarefaConteudo() {
       {tarefa.repetir === "nenhuma" && (
         <button
           onClick={alternarConcluida}
-          className={`w-full rounded-lg py-2.5 text-sm font-medium border transition mb-6 ${
+          className={`w-full rounded-2xl py-3.5 text-sm font-medium border transition mb-6 ${
             tarefa.concluida ? "border-nota text-nota bg-nota-soft" : "bg-ink-100 text-base-900 border-ink-100"
           }`}
         >
@@ -164,7 +164,7 @@ function DetalheTarefaConteudo() {
       )}
 
       <div className="pt-6 border-t border-base-600">
-        <p className="text-sm text-ink-400 mb-3">Compartilhar</p>
+        <h2 className="text-lg font-semibold mb-3">Compartilhar</h2>
         <PainelCompartilhamentoCliente
           tipoItem="tarefa"
           itemId={tarefa.id}

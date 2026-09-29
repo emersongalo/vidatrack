@@ -90,12 +90,12 @@ export default function AnaliseFinanceiraPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
 
       <div className="flex items-center justify-between mt-4 mb-6">
-        <h1 className="text-2xl font-display font-semibold">Para onde vai seu dinheiro</h1>
+        <h1 className="text-3xl font-display font-bold">Para onde vai seu dinheiro</h1>
       </div>
 
       <div className="flex items-center justify-center gap-4 mb-6">
@@ -142,7 +142,7 @@ export default function AnaliseFinanceiraPage() {
                         <span className="shrink-0 text-right">
                           <span className="font-mono">{formatarMoeda(g.gastoMes)}</span>
                           <span className="text-xs text-red-400 ml-2">+{g.percentualAcima}%</span>
-                          <span className="block text-[11px] text-ink-400">média {formatarMoeda(g.media)}</span>
+                          <span className="block text-xs text-ink-400">média {formatarMoeda(g.media)}</span>
                         </span>
                       </Link>
                     </li>
@@ -179,7 +179,7 @@ export default function AnaliseFinanceiraPage() {
              ao mês sendo navegado na tela) — por isso fica numa
              comparação separada da "este mês x mês passado" acima. */}
           <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-5 mb-6">
-            <p className="text-sm text-ink-400 mb-3">Essa semana x semana passada</p>
+            <h2 className="text-lg font-semibold mb-3">Essa semana x semana passada</h2>
             <div className="flex items-end gap-6">
               <div>
                 <p className="text-2xl font-display font-bold font-mono">{formatarMoeda(gastoSemanaAtual)}</p>
@@ -208,21 +208,21 @@ export default function AnaliseFinanceiraPage() {
           </div>
 
           <div className="mb-6">
-            <p className="text-sm text-ink-400 mb-3">Este mês x mês passado, por categoria</p>
+            <h2 className="text-lg font-semibold mb-3">Este mês x mês passado, por categoria</h2>
             <GraficoComparacaoMensal
               dados={categorias.map((c) => ({ nome: c.nome, valor: c.valor, valorMesAnterior: c.valorMesAnterior, href: hrefCategoria(c.nome) }))}
             />
           </div>
 
           <div className="mb-6">
-            <p className="text-sm text-ink-400 mb-3">Ritmo de gasto — este mês x mês passado</p>
+            <h2 className="text-lg font-semibold mb-3">Ritmo de gasto — este mês x mês passado</h2>
             <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
               <GraficoAcumulado dados={acumulado} dadosMesAnterior={acumuladoMesAnterior} />
             </div>
           </div>
 
           <div className="mb-6">
-            <p className="text-sm text-ink-400 mb-3">Mapa de calor — gasto por dia</p>
+            <h2 className="text-lg font-semibold mb-3">Mapa de calor — gasto por dia</h2>
             <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
               <MapaCalorGastos
                 anoMesISO={mesVisto}
@@ -234,7 +234,7 @@ export default function AnaliseFinanceiraPage() {
 
           {orcamentoComparado.length >= 3 && (
             <div className="mb-6">
-              <p className="text-sm text-ink-400 mb-3">Orçamento planejado x realizado</p>
+              <h2 className="text-lg font-semibold mb-3">Orçamento planejado x realizado</h2>
               <div className="bg-base-800 border border-base-600 rounded-xl2 p-4">
                 <RadarOrcamento dados={orcamentoComparado} />
               </div>
@@ -242,7 +242,7 @@ export default function AnaliseFinanceiraPage() {
           )}
 
           <div className="mb-6">
-            <p className="text-sm text-ink-400 mb-3">Ranking do mês</p>
+            <h2 className="text-lg font-semibold mb-3">Ranking do mês</h2>
             <div className="bg-base-800 border border-base-600 rounded-xl2 divide-y divide-base-600">
               {categorias.map((c, i) => {
                 const percentual = totalDespesasMes > 0 ? (c.valor / totalDespesasMes) * 100 : 0;

@@ -105,10 +105,10 @@ export default function SemanaPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href="/habitos/estatisticas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/estatisticas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Estatísticas
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-2">Sua semana</h1>
+      <h1 className="text-3xl font-display font-bold mt-2">Sua semana</h1>
       <p className="text-sm text-ink-400 mb-5">
         {ddmm(r.inicio)} a {ddmm(r.fim)}
       </p>

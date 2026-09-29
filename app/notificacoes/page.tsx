@@ -32,7 +32,7 @@ export default function NotificacoesPage() {
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
       <LinkVoltar href="/dashboard" texto="Painel" />
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Notificações</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-6">Notificações</h1>
 
       {temAlgumPendente && (
         <div className="space-y-2 mb-8">

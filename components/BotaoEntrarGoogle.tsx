@@ -315,7 +315,7 @@ export function BotaoEntrarGoogle() {
         type="button"
         onClick={aoClicar}
         disabled={carregando}
-        className="w-full flex items-center justify-center gap-2 border border-base-600 rounded-lg py-2.5 hover:bg-base-800 transition text-sm disabled:opacity-60"
+        className="w-full flex items-center justify-center gap-2 border border-base-600 rounded-2xl py-3.5 hover:bg-base-800 transition text-sm disabled:opacity-60"
       >
         <GoogleIcon />
         {carregando ? "Abrindo..." : "Continuar com Google"}

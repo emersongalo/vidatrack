@@ -23,6 +23,7 @@ import { PrevisaoMes } from "@/components/PrevisaoMes";
 import { AlertasFinancas } from "@/components/AlertasFinancas";
 import { MetasResumo } from "@/components/MetasResumo";
 import { TetoMensal } from "@/components/TetoMensal";
+import { ListaLancamentosPorDia } from "@/components/ListaLancamentosPorDia";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { salvarOrdemBlocosFinancas } from "./actions";
 import {
@@ -240,56 +241,19 @@ export default function FinancasPage() {
       {ultimasTransacoes.length === 0 ? (
         <p className="text-ink-400 text-sm">🧾 Nenhum lançamento nesse mês.</p>
       ) : (
-        <ul className="space-y-2">
-          {ultimasTransacoes.map((t: any) => {
-            const catInfo = mapaCategoriaInfo.get(t.categoria_id) as any;
-            return (
-              <li key={t.id} className="bg-base-800 border border-base-600 rounded-2xl p-4">
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center text-base shrink-0 ${classeFundoSuave(
-                      catInfo?.cor ?? "financa"
-                    )}`}
-                  >
-                    {catInfo?.icone ? (
-                      <IconeCategoria icone={catInfo.icone} />
-                    ) : t.tipo === "receita" ? (
-                      <TrendingUp size={16} strokeWidth={2} />
-                    ) : (
-                      <TrendingDown size={16} strokeWidth={2} />
-                    )}
-                  </span>
-                  <p className="text-base font-medium truncate flex-1 min-w-0">{t.descricao || mapaContas.get(t.conta_id)}</p>
-                  <span className={`font-mono text-base font-semibold shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
-                    {t.tipo === "receita" ? "+" : "-"}
-                    <ValorMonetario valor={t.valor} />
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2 mt-1.5 pl-14">
-                  <p className="text-sm text-ink-400 truncate min-w-0">
-                    {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} · {mapaContas.get(t.conta_id)}
-                    {t.recorrencia_id && <span className="text-financa"> · ↻ todo mês</span>}
-                    <span className="block mt-1 empty:hidden">
-                      <BotaoPaguei transacao={t} compacto />
-                    </span>
-                  </p>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Link href={`/financas/${t.id}/editar`} className="text-ink-400 hover:text-ink-100 transition text-xs shrink-0">
-                      Editar
-                    </Link>
-                    <BotaoRemoverTransacao transacaoId={t.id} aoConcluir={recarregar} />
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        // Etapa 226 — mesma lista do Extrato (por dia, verde/vermelho)
+        <ListaLancamentosPorDia
+          lista={ultimasTransacoes as any[]}
+          mapaCategorias={mapaCategoriaInfo as Map<string, any>}
+          mapaContas={mapaContas as Map<string, any>}
+          recarregar={recarregar}
+        />
       )}
       {lancamentosEscondidos > 0 && (
         <button
           type="button"
           onClick={() => setMostrarTodosLancamentos(true)}
-          className="w-full mt-2 text-sm text-financa border border-financa/30 rounded-lg py-2.5 hover:bg-financa/10 transition"
+          className="w-full mt-2 text-sm text-financa border border-financa/30 rounded-2xl py-3.5 hover:bg-financa/10 transition"
         >
           Ver todos os {transacoesDoMes.length} lançamentos do mês
         </button>
@@ -357,7 +321,7 @@ export default function FinancasPage() {
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
       <LinkVoltar href="/dashboard" texto="Painel" />
-      <h1 className="text-2xl font-display font-semibold mt-2 mb-6">Finanças</h1>
+      <h1 className="text-3xl font-display font-bold mt-2 mb-6">Finanças</h1>
 
       {!contas.length ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-8 text-center">

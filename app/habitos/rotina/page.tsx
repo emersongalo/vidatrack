@@ -73,7 +73,7 @@ function RotinaConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href="/habitos" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Hoje
       </Link>
       <div className="flex gap-2 mt-3 mb-4">
@@ -92,7 +92,7 @@ function RotinaConteudo() {
           </button>
         ))}
       </div>
-      <h1 className="text-2xl font-display font-semibold mb-1">
+      <h1 className="text-3xl font-display font-bold mb-1">
         {info.emoji} {info.nome}
       </h1>
 
@@ -111,7 +111,7 @@ function RotinaConteudo() {
                 const outra = h.rotina && h.rotina !== rotina;
                 return (
                   <li key={h.id}>
-                    <label className={`flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 ${minha ? "cursor-pointer" : "opacity-50"}`}>
+                    <label className={`flex items-center gap-3 bg-base-800 border border-base-600 rounded-2xl p-4 ${minha ? "cursor-pointer" : "opacity-50"}`}>
                       <input
                         type="checkbox"
                         disabled={!minha}
@@ -119,14 +119,14 @@ function RotinaConteudo() {
                         onChange={(e) => definirRotina(h.id, e.target.checked ? rotina : null)}
                       />
                       <span className="text-sm flex-1 truncate">{h.nome}</span>
-                      {outra && <span className="text-[11px] text-ink-400">{NOMES_ROTINA[h.rotina as Rotina].emoji} na outra</span>}
+                      {outra && <span className="text-xs text-ink-400">{NOMES_ROTINA[h.rotina as Rotina].emoji} na outra</span>}
                     </label>
                   </li>
                 );
               })}
           </ul>
           {naRotina.length > 0 && (
-            <button onClick={() => setEditando(false)} className="mt-4 w-full bg-habito text-base-900 font-medium rounded-lg py-2.5">
+            <button onClick={() => setEditando(false)} className="mt-4 w-full bg-habito text-base-900 font-medium rounded-2xl py-3.5">
               Começar a rotina
             </button>
           )}

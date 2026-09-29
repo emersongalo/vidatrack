@@ -16,7 +16,7 @@ export default function NovidadesPage() {
       <Link href="/dashboard" className="text-sm text-ink-400 hover:text-ink-100">
         ← Painel
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-3 mb-1">O que há de novo</h1>
+      <h1 className="text-3xl font-display font-bold mt-3 mb-1">O que há de novo</h1>
       <p className="text-sm text-ink-400 mb-6">As últimas melhorias do VidaTrack. Toque num item pra experimentar.</p>
 
       {NOVIDADES.map((g, gi) => (

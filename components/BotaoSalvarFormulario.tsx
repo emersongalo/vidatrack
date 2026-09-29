@@ -11,7 +11,7 @@ import { useFormStatus } from "react-dom";
 export function BotaoSalvarFormulario({
   children,
   textoEnviando = "Salvando...",
-  className = "w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition disabled:opacity-50",
+  className = "w-full bg-ink-100 text-base-900 font-medium rounded-2xl py-3.5 hover:opacity-90 transition disabled:opacity-50",
   estilo,
 }: {
   children: React.ReactNode;

@@ -16,7 +16,7 @@ export default function ExcluirContaPage({
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
       <LinkVoltar href="/perfil" texto="Perfil" />
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-2 text-red-400">Excluir conta</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-2 text-red-400">Excluir conta</h1>
 
       {searchParams.erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
@@ -44,13 +44,13 @@ export default function ExcluirContaPage({
         value={confirmacao}
         onChange={(e) => setConfirmacao(e.target.value)}
         placeholder="EXCLUIR"
-        className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-red-400 outline-none transition mb-5"
+        className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-red-400 outline-none transition mb-5"
       />
 
       <button
         onClick={() => podeExcluir && iniciarTransicao(() => excluirContaPermanentemente())}
         disabled={!podeExcluir || pendente}
-        className="w-full bg-red-400 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full bg-red-400 text-base-900 font-medium rounded-2xl py-3.5 hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {pendente ? "Excluindo..." : "Excluir minha conta permanentemente"}
       </button>

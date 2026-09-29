@@ -153,7 +153,7 @@ export function TelaBoasVindas() {
 
         {passo === 1 && (
           <div>
-            <h1 className="text-2xl font-display font-semibold mb-1.5">Quais hábitos você quer acompanhar?</h1>
+            <h1 className="text-3xl font-display font-bold mb-1.5">Quais hábitos você quer acompanhar?</h1>
             <p className="text-ink-400 text-sm mb-5">Escolha quantos quiser. Dá pra mudar tudo depois.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {SUGESTOES.map((s) => {
@@ -220,7 +220,7 @@ export function TelaBoasVindas() {
 
         {passo === 2 && (
           <div>
-            <h1 className="text-2xl font-display font-semibold mb-1.5">Onde fica o seu dinheiro?</h1>
+            <h1 className="text-3xl font-display font-bold mb-1.5">Onde fica o seu dinheiro?</h1>
             <p className="text-ink-400 text-sm mb-5">
               Marque seus bancos pra já criarmos as contas. O saldo você ajusta depois, em Finanças → Contas.
             </p>
@@ -250,7 +250,7 @@ export function TelaBoasVindas() {
                     }`}
                   >
                     <span
-                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold text-white"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold text-white"
                       style={{ background: b.cor }}
                     >
                       {b.nome.charAt(0)}
@@ -266,7 +266,7 @@ export function TelaBoasVindas() {
 
         {passo === 3 && (
           <div>
-            <h1 className="text-2xl font-display font-semibold mb-1.5">Quando quer ser lembrado?</h1>
+            <h1 className="text-3xl font-display font-bold mb-1.5">Quando quer ser lembrado?</h1>
             <p className="text-ink-400 text-sm mb-5">
               A gente te avisa no horário escolhido pra você não esquecer dos seus hábitos.
             </p>

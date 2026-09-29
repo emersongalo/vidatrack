@@ -32,10 +32,10 @@ function PerfilConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
-      <Link href="/dashboard" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/dashboard" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Painel
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Seu perfil</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-6">Seu perfil</h1>
 
       {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
@@ -77,17 +77,17 @@ function PerfilConteudo() {
             type="text"
             required
             defaultValue={nome}
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
           <p className="text-xs text-ink-400 mt-1.5">Esse é o nome que aparece pra quem você compartilha hábitos ou contas.</p>
         </div>
 
         <div>
           <label className="block text-sm text-ink-400 mb-1">E-mail</label>
-          <p className="text-sm text-ink-100 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5">{email}</p>
+          <p className="text-sm text-ink-100 bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5">{email}</p>
         </div>
 
-        <button type="submit" className="w-full lg:w-auto lg:px-10 bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition">
+        <button type="submit" className="w-full lg:w-auto lg:px-10 bg-ink-100 text-base-900 font-medium rounded-2xl py-3.5 hover:opacity-90 transition">
           Salvar
         </button>
         </div>

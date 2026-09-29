@@ -140,11 +140,11 @@ export default function EstatisticasHabitosPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina pb-16">
-      <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/lista" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Hábitos
       </Link>
       <div className="flex items-center justify-between gap-3 mt-4 mb-6">
-        <h1 className="text-2xl font-display font-semibold">Estatísticas</h1>
+        <h1 className="text-3xl font-display font-bold">Estatísticas</h1>
         <Link
           href="/habitos/conquistas"
           className="text-sm px-3 py-1.5 rounded-lg bg-base-800 border border-base-600 hover:border-habito/60 transition"
@@ -179,7 +179,7 @@ export default function EstatisticasHabitosPage() {
 
       {habitos.length > 0 && (
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
-          <p className="text-sm text-ink-400 mb-3">Resumo da semana</p>
+          <h2 className="text-lg font-semibold mb-3">Resumo da semana</h2>
           <div className="flex items-end gap-6 mb-4">
             <div>
               <p className="text-3xl font-display font-bold">{resumoAtual.percentual}%</p>
@@ -213,14 +213,14 @@ export default function EstatisticasHabitosPage() {
 
       {habitos.length > 0 && (
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
-          <p className="text-sm text-ink-400 mb-3">Mapa de contribuições · último ano</p>
+          <h2 className="text-lg font-semibold mb-3">Mapa de contribuições · último ano</h2>
           <MapaContribuicoes pontos={mapaContribuicoes} />
         </div>
       )}
 
       {comparacaoOrdenada.length > 1 && (
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 mb-6">
-          <p className="text-sm text-ink-400 mb-3">Comparação entre hábitos · essa semana</p>
+          <h2 className="text-lg font-semibold mb-3">Comparação entre hábitos · essa semana</h2>
           <div className="space-y-3">
             {comparacaoOrdenada.map((c) => (
               <div key={c.habito.id}>

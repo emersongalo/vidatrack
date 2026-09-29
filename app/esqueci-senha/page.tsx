@@ -37,12 +37,12 @@ export default function EsqueciSenhaPage({
                 name="email"
                 type="email"
                 required
-                className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+                className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
               />
             </div>
             <button
               type="submit"
-              className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
+              className="w-full bg-ink-100 text-base-900 font-medium rounded-2xl py-3.5 hover:opacity-90 transition"
             >
               Enviar link de redefinição
             </button>

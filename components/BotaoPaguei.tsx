@@ -44,7 +44,7 @@ export function BotaoPaguei({
 
   if (pagoEm) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[11px]">
+      <span className="inline-flex items-center gap-1.5 text-xs">
         <span className="px-1.5 py-0.5 rounded bg-habito/15 text-habito font-medium">
           {receita ? "Recebido" : "Pago"} {new Date(pagoEm + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
         </span>
@@ -62,7 +62,7 @@ export function BotaoPaguei({
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11px]">
+    <span className="inline-flex items-center gap-1.5 text-xs">
       <span className="px-1.5 py-0.5 rounded bg-financa/15 text-financa font-medium">
         {receita ? "A receber" : "A pagar"}
       </span>

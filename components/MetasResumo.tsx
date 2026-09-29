@@ -32,7 +32,7 @@ export function MetasResumo({ metas, hojeISO }: { metas: any[]; hojeISO: string 
                 <div className="h-full bg-financa rounded-full" style={{ width: `${p.percentual}%` }} />
               </div>
               {p.porMes !== null && (
-                <p className="text-[11px] text-ink-400 mt-1">
+                <p className="text-xs text-ink-400 mt-1">
                   Guarde <ValorMonetario valor={p.porMes} />/mês pra chegar no prazo
                 </p>
               )}

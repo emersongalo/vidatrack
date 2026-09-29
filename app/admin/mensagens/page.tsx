@@ -52,11 +52,11 @@ export default async function MensagensPage({ searchParams }: { searchParams: { 
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/dashboard" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/dashboard" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Painel
       </Link>
       <div className="flex items-center justify-between mt-4 mb-6">
-        <h1 className="text-2xl font-display font-semibold">Fale conosco</h1>
+        <h1 className="text-3xl font-display font-bold">Fale conosco</h1>
         <Link href={todas ? "/admin/mensagens" : "/admin/mensagens?todas=1"} className="text-sm text-ink-400 underline">
           {todas ? "Só não respondidas" : "Ver todas"}
         </Link>

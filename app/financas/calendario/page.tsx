@@ -78,10 +78,10 @@ export default function CalendarioFinanceiroPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina pb-16">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-4">Calendário</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-4">Calendário</h1>
 
       <div className="flex items-center justify-center gap-4 mb-4">
         <button onClick={() => mudarMes(-1)} aria-label="Mês anterior" className="w-8 h-8 rounded-full text-ink-400 hover:bg-base-800">
@@ -97,7 +97,7 @@ export default function CalendarioFinanceiroPage() {
         <div>
           <div className="grid grid-cols-7 gap-1 mb-1">
             {DIAS.map((d, i) => (
-              <p key={i} className="text-center text-[11px] text-ink-400">
+              <p key={i} className="text-center text-xs text-ink-400">
                 {d}
               </p>
             ))}
@@ -120,7 +120,7 @@ export default function CalendarioFinanceiroPage() {
                     dia === diaSel ? "border-financa bg-financa/10" : negativo ? "border-red-400/50 bg-red-400/5" : "border-base-600 bg-base-800"
                   } ${dia === hoje ? "ring-1 ring-ink-100" : ""}`}
                 >
-                  <span className={`text-[11px] ${futuro ? "text-ink-100" : "text-ink-400"}`}>{Number(dia.slice(8))}</span>
+                  <span className={`text-xs ${futuro ? "text-ink-100" : "text-ink-400"}`}>{Number(dia.slice(8))}</span>
                   {!ocultos && entra > 0 && <span className="text-[10px] leading-tight text-habito font-mono">+{compacto(entra)}</span>}
                   {!ocultos && sai > 0 && <span className="text-[10px] leading-tight text-red-400 font-mono">-{compacto(sai)}</span>}
                   {ocultos && evs.length > 0 && <span className="text-[10px] text-ink-400">•</span>}
@@ -128,7 +128,7 @@ export default function CalendarioFinanceiroPage() {
               );
             })}
           </div>
-          <p className="text-[11px] text-ink-400 mt-2">
+          <p className="text-xs text-ink-400 mt-2">
             Dias em vermelho: o saldo previsto fica negativo. Considera contas (sem cartão e investimento), agendados, contas fixas e
             faturas.
           </p>
@@ -148,7 +148,7 @@ export default function CalendarioFinanceiroPage() {
           ) : (
             <ul className="space-y-2">
               {doDia.map((e, i) => (
-                <li key={i} className="flex items-center gap-2 bg-base-800 border border-base-600 rounded-lg p-3 text-sm">
+                <li key={i} className="flex items-center gap-2 bg-base-800 border border-base-600 rounded-2xl p-4 text-sm">
                   <span className="flex-1 min-w-0 truncate">
                     {e.descricao}
                     {ROTULO_ORIGEM[e.origem] && <span className="text-[10px] text-ink-400 ml-1.5">{ROTULO_ORIGEM[e.origem]}</span>}

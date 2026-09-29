@@ -105,7 +105,7 @@ export function ChatAssistente() {
       <div ref={lista} data-gesto-proprio="1" className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-3 pb-4">
         {mensagens.length > 0 && (
           <div className="flex justify-end">
-            <button type="button" onClick={() => setMensagens([])} className="text-[11px] text-ink-400 underline">
+            <button type="button" onClick={() => setMensagens([])} className="text-xs text-ink-400 underline">
               Limpar conversa
             </button>
           </div>
@@ -175,7 +175,7 @@ export function ChatAssistente() {
           value={entrada}
           onChange={(e) => setEntrada(e.target.value)}
           placeholder="Pergunte ou diga: gastei 30 no mercado"
-          className="flex-1 min-w-0 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
+          className="flex-1 min-w-0 bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
         />
         <button
           type="submit"

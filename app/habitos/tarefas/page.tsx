@@ -13,7 +13,7 @@ export default function TarefasPage() {
   return (
     <main className="pagina px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-3">
-        <h1 className="text-2xl font-display font-semibold">Tarefas</h1>
+        <h1 className="text-3xl font-display font-bold">Tarefas</h1>
         <Link
           href="/habitos/tarefas/nova"
           className="bg-ink-100 text-base-900 text-sm font-medium rounded-lg px-4 py-2 hover:opacity-90 transition"

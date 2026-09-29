@@ -28,10 +28,10 @@ export default function LixeiraHabitosPage() {
 
   return (
     <main className="pagina px-6 md:px-12 pt-2 pb-20">
-      <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/lista" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Hábitos
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Lixeira de hábitos</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-6">Lixeira de hábitos</h1>
 
       {!habitos || habitos.length === 0 ? (
         <p className="text-ink-400 text-sm">{habitos === null ? "Carregando..." : "Nenhum hábito arquivado."}</p>

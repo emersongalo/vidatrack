@@ -103,7 +103,7 @@ export default function LoginPage({
             </div>
             <button
               type="submit"
-              className="w-full mt-1 bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
+              className="w-full mt-1 bg-ink-100 text-base-900 font-medium rounded-2xl py-3.5 hover:opacity-90 transition"
             >
               Entrar
             </button>
@@ -119,7 +119,7 @@ export default function LoginPage({
               <Campo id="senha-cad" name="senha" tipo="password" rotulo="Senha (mín. 6 caracteres)" />
               <button
                 type="submit"
-                className="w-full border border-base-600 rounded-lg py-2.5 hover:bg-base-800 transition"
+                className="w-full border border-base-600 rounded-2xl py-3.5 hover:bg-base-800 transition"
               >
                 Criar conta
               </button>
@@ -177,7 +177,7 @@ function Campo({
         name={name}
         type={tipo}
         required
-        className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+        className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
       />
     </div>
   );

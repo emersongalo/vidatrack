@@ -54,11 +54,11 @@ export default function DivisoesPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
       <div className="flex items-center justify-between mt-4 mb-6">
-        <h1 className="text-2xl font-display font-semibold">Divisões</h1>
+        <h1 className="text-3xl font-display font-bold">Divisões</h1>
         <Link
           href="/financas/dividir"
           className="flex items-center gap-1.5 bg-financa text-base-900 text-sm font-medium rounded-lg px-3 py-2 hover:opacity-90 transition"
@@ -78,12 +78,12 @@ export default function DivisoesPage() {
         </div>
       </div>
 
-      <p className="text-sm text-ink-400 mb-3">Devem pra você</p>
+      <h2 className="text-lg font-semibold mb-3">Devem pra você</h2>
       <ul className="space-y-2 mb-8">
         {(devemPraMim ?? []).map((d) => (
           <li
             key={d.id}
-            className={`flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 ${d.pago ? "opacity-50" : ""}`}
+            className={`flex items-center gap-3 bg-base-800 border border-base-600 rounded-2xl p-4 ${d.pago ? "opacity-50" : ""}`}
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm truncate">{d.participante_email}</p>
@@ -112,10 +112,10 @@ export default function DivisoesPage() {
         )}
       </ul>
 
-      <p className="text-sm text-ink-400 mb-3">Você deve</p>
+      <h2 className="text-lg font-semibold mb-3">Você deve</h2>
       <ul className="space-y-2">
         {(euDevo ?? []).map((d) => (
-          <li key={d.id} className={`flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 ${d.pago ? "opacity-50" : ""}`}>
+          <li key={d.id} className={`flex items-center gap-3 bg-base-800 border border-base-600 rounded-2xl p-4 ${d.pago ? "opacity-50" : ""}`}>
             <div className="flex-1 min-w-0">
               <p className="text-sm truncate">
                 {d.financa_transacoes?.descricao || "Despesa"} ·{" "}

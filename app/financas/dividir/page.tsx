@@ -36,10 +36,10 @@ function DividirConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href="/financas/divisoes" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/divisoes" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Divisões
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Dividir despesa</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Dividir despesa</h1>
       <p className="text-ink-400 text-sm mb-6">
         Escolhe um lançamento já existente e quanto a outra pessoa deve te pagar dessa despesa.
       </p>
@@ -62,7 +62,7 @@ function DividirConteudo() {
             <select
               name="transacaoId"
               required
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
               {transacoes.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -80,7 +80,7 @@ function DividirConteudo() {
               type="email"
               required
               placeholder="pessoa@exemplo.com"
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
           </div>
 
@@ -90,7 +90,7 @@ function DividirConteudo() {
               name="valor"
               required
               placeholder="0,00"
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 font-mono focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 font-mono focus:border-ink-100 outline-none transition"
             />
           </div>
 

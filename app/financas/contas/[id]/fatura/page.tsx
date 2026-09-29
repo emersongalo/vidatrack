@@ -7,6 +7,7 @@ import { calcularPeriodoFatura, calcularVencimentoFatura, periodoFaturaAdjacente
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { ListaLancamentosPorDia } from "@/components/ListaLancamentosPorDia";
 
 function formatarPeriodo(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
@@ -26,7 +27,7 @@ export default function FaturaCartaoPage() {
   if (!conta || !conta.dia_fechamento || !conta.dia_vencimento) {
     return (
       <main className="min-h-screen p-6 md:p-12 pagina-form">
-        <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+        <Link href="/financas/contas" className="text-ink-400 text-base hover:text-ink-100 transition">
           ← Contas
         </Link>
         <p className="text-ink-400 text-sm mt-6">
@@ -57,10 +58,10 @@ export default function FaturaCartaoPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/contas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Contas
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Fatura · {conta.nome}</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Fatura · {conta.nome}</h1>
       <p className="text-ink-400 text-sm mb-6">
         {formatarPeriodo(periodo.inicio)} a {formatarPeriodo(periodo.fim)}
       </p>
@@ -91,7 +92,7 @@ export default function FaturaCartaoPage() {
             href={`/financas/transferir?para=${conta.id}&valor=${total.toFixed(2)}&data=${vencimento < hoje ? hoje : vencimento}&descricao=${encodeURIComponent(
               `Pagamento fatura ${conta.nome}`
             )}`}
-            className="mt-4 block text-center bg-financa text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
+            className="mt-4 block text-center bg-financa text-base-900 font-medium rounded-2xl py-3.5 hover:opacity-90 transition"
           >
             Pagar fatura
           </Link>
@@ -102,33 +103,23 @@ export default function FaturaCartaoPage() {
           depois do fechamento só é cobrado na fatura seguinte.
         </p>
         <p className="text-xs text-ink-400 mt-1">🔔 Você recebe um aviso 3 dias antes, na véspera e no dia do vencimento.</p>
-        <p className="text-[11px] text-ink-400 mt-3">
+        <p className="text-xs text-ink-400 mt-3">
           Gastos no cartão não saem do seu saldo na hora — só quando você paga a fatura (sai da conta do banco).
         </p>
       </div>
 
-      <p className="text-sm text-ink-400 mb-3">Lançamentos dessa fatura</p>
-      <ul className="space-y-2">
-        {transacoes.map((t: any) => {
-          const cat = mapaCategorias.get(t.categoria_id);
-          return (
-            <li key={t.id} className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3">
-              <span className="w-8 h-8 rounded-lg bg-base-700 flex items-center justify-center shrink-0">
-                <IconeCategoria icone={cat?.icone} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm truncate">{t.descricao || cat?.nome || "Sem descrição"}</p>
-                <p className="text-xs text-ink-400">{new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")}</p>
-              </div>
-              <span className={`font-mono text-sm shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-ink-100"}`}>
-                {t.tipo === "receita" ? "-" : ""}
-                {formatarMoeda(t.valor)}
-              </span>
-            </li>
-          );
-        })}
-        {transacoes.length === 0 && <p className="text-sm text-ink-400">🧾 Nenhum lançamento nessa fatura.</p>}
-      </ul>
+      <h2 className="text-xl font-semibold mb-3">Lançamentos dessa fatura</h2>
+      {transacoes.length === 0 ? (
+        <p className="text-sm text-ink-400">🧾 Nenhum lançamento nessa fatura.</p>
+      ) : (
+        // Etapa 226 — mesma lista do Extrato
+        <ListaLancamentosPorDia
+          lista={transacoes as any[]}
+          mapaCategorias={mapaCategorias as Map<string, any>}
+          mapaContas={new Map([[conta.id, conta.nome]])}
+          mostrarSaldoDoDia={false}
+        />
+      )}
     </main>
   );
 }

@@ -37,7 +37,7 @@ function EditarContaConteudo() {
   if (!conta) {
     return (
       <main className="min-h-screen p-6 md:p-12 pagina-form">
-        <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+        <Link href="/financas/contas" className="text-ink-400 text-base hover:text-ink-100 transition">
           ← Contas
         </Link>
         <p className="text-ink-400 text-sm mt-6">
@@ -50,10 +50,10 @@ function EditarContaConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href="/financas/contas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/contas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Contas
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Editar conta</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-6">Editar conta</h1>
 
       {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
@@ -69,7 +69,7 @@ function EditarContaConteudo() {
           type="text"
           required
           defaultValue={conta.nome}
-          className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+          className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
         />
         <SeletorTipoConta
           tipoInicial={conta.tipo}
@@ -83,7 +83,7 @@ function EditarContaConteudo() {
           <select
             name="banco"
             defaultValue={conta.banco ?? "outro"}
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
           >
             {BANCOS.map((b) => (
               <option key={b.id} value={b.id}>
@@ -99,7 +99,7 @@ function EditarContaConteudo() {
             type="text"
             inputMode="decimal"
             defaultValue={String(conta.saldo_inicial).replace(".", ",")}
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
           />
         </div>
         </div>

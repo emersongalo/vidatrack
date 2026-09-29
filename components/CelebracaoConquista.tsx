@@ -31,7 +31,7 @@ export function CelebracaoConquista({
         <p className="text-sm mb-6">{MENSAGENS[marco] ?? "Sequência incrível!"}</p>
         <button
           onClick={onFechar}
-          className="w-full bg-habito text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
+          className="w-full bg-habito text-base-900 font-medium rounded-2xl py-3.5 hover:opacity-90 transition"
         >
           Continuar
         </button>

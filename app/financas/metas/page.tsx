@@ -23,10 +23,10 @@ export default function MetasPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Metas de economia</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Metas de economia</h1>
       <p className="text-ink-400 text-sm mb-6">
         Separe um valor pra alcançar, tipo "Viagem" ou "Reserva de emergência", e vá guardando aos poucos.
       </p>
@@ -40,27 +40,27 @@ export default function MetasPage() {
       )}
 
       <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
-        <p className="text-sm text-ink-400 mb-3">Nova meta</p>
+        <h2 className="text-lg font-semibold mb-3">Nova meta</h2>
         <FormularioAcao acao={criarMeta} aoSucesso={recarregar} mensagemSucesso="Meta criada!" className="space-y-3">
           <input
             name="nome"
             type="text"
             placeholder="Nome (ex: Viagem, Reserva de emergência)"
             required
-            className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
           <CampoValorMonetario
             name="valorAlvo"
             placeholder="Valor alvo (ex: 5.000,00)"
             required
-            className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 font-mono focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 font-mono focus:border-ink-100 outline-none transition"
           />
           <div>
             <label className="block text-xs text-ink-400 mb-1.5">Data alvo (opcional)</label>
             <input
               name="dataAlvo"
               type="date"
-              className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
           </div>
           <BotaoSalvarFormulario>Criar meta</BotaoSalvarFormulario>

@@ -67,7 +67,7 @@ export default function CategoriasPage() {
         </span>
         <p className="text-sm font-medium truncate max-w-full px-1">{cat.nome}</p>
         {cat.meta_mensal && (
-          <p className="text-[11px] text-ink-400 mt-0.5 break-words max-w-full px-1">
+          <p className="text-xs text-ink-400 mt-0.5 break-words max-w-full px-1">
             até {formatarMoeda(Number(cat.meta_mensal))}
           </p>
         )}
@@ -79,10 +79,10 @@ export default function CategoriasPage() {
     <main className="min-h-screen p-6 md:p-12 pagina">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+          <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
             ← Finanças
           </Link>
-          <h1 className="text-2xl font-display font-semibold mt-2">Categorias</h1>
+          <h1 className="text-3xl font-display font-bold mt-2">Categorias</h1>
         </div>
         <Link
           href="/financas/categorias/nova"

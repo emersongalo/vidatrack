@@ -60,10 +60,10 @@ export default function EnvelopesPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas/mais" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/mais" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Mais
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-2 mb-1">Envelopes</h1>
+      <h1 className="text-3xl font-display font-bold mt-2 mb-1">Envelopes</h1>
       <p className="text-sm text-ink-400 mb-5">
         Cada categoria com limite vira um envelope. Ligue “guardar a sobra” pra o que não gastar passar pro mês seguinte.
       </p>
@@ -155,7 +155,7 @@ export default function EnvelopesPage() {
               );
             })}
           </ul>
-          <p className="text-[11px] text-ink-400 mt-4">
+          <p className="text-xs text-ink-400 mt-4">
             Mandar pra meta só soma o valor na meta — não mexe no saldo das contas.
           </p>
         </>

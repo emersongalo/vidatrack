@@ -13,10 +13,10 @@ export default function EtiquetasPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas/mais" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/mais" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Mais
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Etiquetas</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Etiquetas</h1>
       <p className="text-ink-400 text-sm mb-6">
         Junte gastos de categorias diferentes num assunto só — tipo #viagem-praia ou #reforma. Adicione etiquetas ao lançar
         ou editar um lançamento.

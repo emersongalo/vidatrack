@@ -37,7 +37,7 @@ const OPCOES_REPETICAO: { valor: TipoRepeticao; rotulo: string }[] = [
 ];
 
 const classeCampo =
-  "w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition";
+  "w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition";
 
 function classeOpcao(ativo: boolean) {
   return `rounded-lg py-2 px-2 text-sm border transition ${
@@ -127,10 +127,10 @@ export function FormularioTarefa({
 
   return (
     <main className="pagina-form px-6 md:px-12 pt-2 pb-10">
-      <Link href={voltarHref} className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href={voltarHref} className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Tarefas
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">{tituloTela}</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-6">{tituloTela}</h1>
 
       {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
@@ -359,7 +359,7 @@ export function FormularioTarefa({
             </div>
 
             {/* Etapa 194 — vincular a finanças */}
-            <div className="bg-base-800 border border-base-600 rounded-lg p-3">
+            <div className="bg-base-800 border border-base-600 rounded-2xl p-4">
               <label className="flex items-center gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
@@ -428,7 +428,7 @@ export function FormularioTarefa({
                           </option>
                         ))}
                     </select>
-                    <p className="text-[11px] text-ink-400">
+                    <p className="text-xs text-ink-400">
                       Quando você marcar a tarefa como feita, o lançamento é criado sozinho (na data em que marcar
                       {repetir !== "nenhuma" ? ", a cada vez que ela repetir" : ""}). Desmarcou? O lançamento some.
                     </p>

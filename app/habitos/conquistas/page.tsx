@@ -39,10 +39,10 @@ export default function ConquistasPage() {
 
   return (
     <main className="pagina px-6 md:px-12 pt-2 pb-16">
-      <Link href="/habitos/estatisticas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/estatisticas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Estatísticas
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Conquistas</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Conquistas</h1>
       <p className="text-ink-400 text-sm mb-6">
         {ganhas} de {lista.length} desbloqueadas
       </p>
@@ -60,7 +60,7 @@ export default function ConquistasPage() {
             >
               <p className={`text-4xl mb-2 ${ganhou ? "" : "grayscale opacity-40"}`}>{c.emoji}</p>
               <p className={`text-sm font-medium ${ganhou ? "" : "text-ink-400"}`}>{c.titulo}</p>
-              <p className="text-[11px] text-ink-400 mt-0.5 leading-snug">{c.texto}</p>
+              <p className="text-xs text-ink-400 mt-0.5 leading-snug">{c.texto}</p>
               {!ganhou && (
                 <div className="mt-3">
                   <div className="h-1 bg-base-600 rounded-full overflow-hidden">

@@ -28,7 +28,7 @@ export default function DesafioDetalhePage() {
   if (!desafio) {
     return (
       <main className="min-h-screen p-6 md:p-12 pagina-form">
-        <Link href="/financas/desafios" className="text-ink-400 text-sm hover:text-ink-100 transition">
+        <Link href="/financas/desafios" className="text-ink-400 text-base hover:text-ink-100 transition">
           ← Desafios
         </Link>
         <p className="text-ink-400 text-sm mt-6">Não encontrei esse desafio no que está salvo no aparelho.</p>
@@ -59,7 +59,7 @@ export default function DesafioDetalhePage() {
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
       <div className="flex items-center justify-between mb-4">
-        <Link href="/financas/desafios" className="text-ink-400 text-sm hover:text-ink-100 transition">
+        <Link href="/financas/desafios" className="text-ink-400 text-base hover:text-ink-100 transition">
           ← Desafios
         </Link>
         <BotaoComConfirmacao
@@ -70,7 +70,7 @@ export default function DesafioDetalhePage() {
         />
       </div>
 
-      <h1 className="text-2xl font-display font-semibold mb-1">{desafio.nome}</h1>
+      <h1 className="text-3xl font-display font-bold mb-1">{desafio.nome}</h1>
       <p className="text-ink-400 text-sm mb-6">
         Saindo de {contaOrigem?.nome ?? "conta removida"} · {quantidadeFeitos} de {quadrados.length} quadrados
       </p>

@@ -17,13 +17,13 @@ export default function DoacaoPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
-      <Link href="/dashboard" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/dashboard" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Painel
       </Link>
 
       <div className="text-center mt-8">
         <p className="text-3xl mb-3">💛</p>
-        <h1 className="text-2xl font-display font-semibold mb-2">Apoie o VidaTrack</h1>
+        <h1 className="text-3xl font-display font-bold mb-2">Apoie o VidaTrack</h1>
         <p className="text-ink-400 text-sm mb-8">
           O app é e sempre vai ser gratuito. Se ele te ajuda no dia a dia
           e você quiser contribuir com os custos de manter tudo no ar,

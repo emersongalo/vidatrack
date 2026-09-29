@@ -30,7 +30,7 @@ export function AdiarTarefa({ tarefaId, aoAdiar }: { tarefaId: string; aoAdiar?:
           e.stopPropagation();
           setAberto(true);
         }}
-        className="text-[11px] px-1.5 py-0.5 rounded bg-base-700 text-ink-400 hover:text-ink-100"
+        className="text-xs px-1.5 py-0.5 rounded bg-base-700 text-ink-400 hover:text-ink-100"
       >
         ⏭ Adiar
       </button>
@@ -48,7 +48,7 @@ export function AdiarTarefa({ tarefaId, aoAdiar }: { tarefaId: string; aoAdiar?:
             e.stopPropagation();
             adiar(o.data);
           }}
-          className="text-[11px] px-2 py-0.5 rounded-full border border-financa/40 text-financa disabled:opacity-50"
+          className="text-xs px-2 py-0.5 rounded-full border border-financa/40 text-financa disabled:opacity-50"
         >
           {o.rotulo}
         </button>
@@ -60,12 +60,12 @@ export function AdiarTarefa({ tarefaId, aoAdiar }: { tarefaId: string; aoAdiar?:
           e.stopPropagation();
           setAberto(false);
         }}
-        className="text-[11px] text-ink-400 px-1"
+        className="text-xs text-ink-400 px-1"
         aria-label="Cancelar"
       >
         ✕
       </button>
-      {estado === "erro" && <span className="text-[11px] text-red-400">sem internet?</span>}
+      {estado === "erro" && <span className="text-xs text-red-400">sem internet?</span>}
     </span>
   );
 }

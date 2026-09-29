@@ -55,7 +55,7 @@ export function ConfigAparencia() {
               fonte === t.valor ? "border-ink-100 bg-base-700" : "border-base-600 text-ink-400"
             }`}
           >
-            Aa <span className="block text-[11px]">{t.rotulo}</span>
+            Aa <span className="block text-xs">{t.rotulo}</span>
           </button>
         ))}
       </div>

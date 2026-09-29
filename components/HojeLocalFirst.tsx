@@ -145,7 +145,7 @@ function HojeConteudo() {
           🕐 Blocos de tempo
         </Link>
       </div>
-      <h1 className="text-2xl font-display font-semibold mb-4">Hoje</h1>
+      <h1 className="text-3xl font-display font-bold mb-4">Hoje</h1>
 
       <div className="lg:grid lg:grid-cols-[1fr_260px] lg:gap-6 lg:items-start">
         <div>

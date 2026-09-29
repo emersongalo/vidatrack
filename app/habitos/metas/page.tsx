@@ -75,10 +75,10 @@ export default function MetasLongasPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina pb-16">
-      <Link href="/habitos/estatisticas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/estatisticas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Estatísticas
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Metas de longo prazo</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Metas de longo prazo</h1>
       <p className="text-ink-400 text-sm mb-6">
         Objetivos maiores, tipo “Ler 12 livros no ano” ou “Correr 500 km”. Ligue a um hábito pra contar sozinho, ou some na mão.
       </p>
@@ -172,7 +172,7 @@ export default function MetasLongasPage() {
               ))}
           </select>
         </label>
-        <button type="submit" disabled={criando} className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 disabled:opacity-50">
+        <button type="submit" disabled={criando} className="w-full bg-ink-100 text-base-900 font-medium rounded-2xl py-3.5 disabled:opacity-50">
           {criando ? "Criando..." : "Criar meta"}
         </button>
       </form>

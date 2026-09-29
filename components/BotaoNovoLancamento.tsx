@@ -324,14 +324,14 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
                       >
                         <IconeCategoria icone={c.icone ?? null} />
                       </span>
-                      <span className="text-[11px] leading-tight text-center line-clamp-2">{c.nome}</span>
+                      <span className="text-xs leading-tight text-center line-clamp-2">{c.nome}</span>
                     </button>
                   );
                 })}
               </div>
             )}
 
-            {categoriaSugerida && <p className="text-[11px] text-financa -mt-1 mb-2">✨ Categoria sugerida pela descrição</p>}
+            {categoriaSugerida && <p className="text-xs text-financa -mt-1 mb-2">✨ Categoria sugerida pela descrição</p>}
             <div className="flex gap-2 mb-3">
               <input
                 value={descricao}

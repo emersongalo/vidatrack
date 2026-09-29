@@ -47,10 +47,10 @@ function PlanejadorConteudo() {
     <main className="pagina px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <Link href="/habitos" className="text-ink-400 text-sm hover:text-ink-100 transition">
+          <Link href="/habitos" className="text-ink-400 text-base hover:text-ink-100 transition">
             ← Hoje
           </Link>
-          <h1 className="text-2xl font-display font-semibold mt-2">Planejador</h1>
+          <h1 className="text-3xl font-display font-bold mt-2">Planejador</h1>
         </div>
       </div>
 

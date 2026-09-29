@@ -85,7 +85,7 @@ export function FormularioHabito({
           required
           defaultValue={valoresIniciais?.nome}
           placeholder="Ex: Beber água, Ler 10 páginas, Meditar"
-          className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+          className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
         />
       </div>
 
@@ -95,7 +95,7 @@ export function FormularioHabito({
           <button
             type="button"
             onClick={() => setEhNegativo(false)}
-            className={`rounded-lg py-2.5 text-sm border transition ${
+            className={`rounded-2xl py-3.5 text-sm border transition ${
               !ehNegativo ? "bg-habito text-base-900 border-habito font-medium" : "border-base-600 text-ink-400"
             }`}
           >
@@ -104,7 +104,7 @@ export function FormularioHabito({
           <button
             type="button"
             onClick={() => setEhNegativo(true)}
-            className={`rounded-lg py-2.5 text-sm border transition ${
+            className={`rounded-2xl py-3.5 text-sm border transition ${
               ehNegativo ? "bg-red-400 text-base-900 border-red-400 font-medium" : "border-base-600 text-ink-400"
             }`}
           >
@@ -170,7 +170,7 @@ export function FormularioHabito({
             id="categoriaId"
             name="categoriaId"
             defaultValue={valoresIniciais?.categoriaId ?? ""}
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
           >
             <option value="">Sem categoria</option>
             {categorias.map((cat) => (

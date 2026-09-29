@@ -95,11 +95,11 @@ export default function ContasPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
       <div className="flex items-center justify-between mt-4 mb-6">
-        <h1 className="text-2xl font-display font-semibold">Contas</h1>
+        <h1 className="text-3xl font-display font-bold">Contas</h1>
         <Link href="/financas/contas/lixeira" className="text-ink-400 text-xs hover:text-ink-100 transition">
           Lixeira
         </Link>
@@ -116,7 +116,7 @@ export default function ContasPage() {
                 icone={<Archive size={18} className="text-base-900" />}
                 corFundo="bg-financa"
               >
-              <div className="bg-base-800 border border-base-600 rounded-lg p-3">
+              <div className="bg-base-800 border border-base-600 rounded-2xl p-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <SeloBanco bancoId={conta.banco} nome={conta.nome} tipo={conta.tipo} />
@@ -184,7 +184,7 @@ export default function ContasPage() {
         </ul>
       )}
 
-      <p className="text-sm text-ink-400 mb-3">Nova conta</p>
+      <h2 className="text-lg font-semibold mb-3">Nova conta</h2>
       {erro && (
         <p className="mb-3 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">{erro}</p>
       )}
@@ -199,14 +199,14 @@ export default function ContasPage() {
           type="text"
           required
           placeholder="Ex: Carteira, Nubank, Cartão Inter"
-          className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+          className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
         />
         <SeletorTipoConta />
         <div>
           <label className="block text-xs text-ink-400 mb-1.5">Banco (pra mostrar o selo certo)</label>
           <select
             name="banco"
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
           >
             {BANCOS.map((b) => (
               <option key={b.id} value={b.id}>
@@ -220,7 +220,7 @@ export default function ContasPage() {
           type="text"
           inputMode="decimal"
           placeholder="Saldo inicial (opcional, ex: 150,00)"
-          className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
+          className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
         />
         <BotaoSalvarFormulario textoEnviando="Criando...">Criar conta</BotaoSalvarFormulario>
       </form>

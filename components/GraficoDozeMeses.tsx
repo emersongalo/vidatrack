@@ -35,7 +35,7 @@ export function GraficoDozeMeses({ contas, transacoes, hojeISO }: { contas: any[
           </div>
         ))}
       </div>
-      <div className="flex gap-4 mt-3 text-[11px] text-ink-400">
+      <div className="flex gap-4 mt-3 text-xs text-ink-400">
         <span className="flex items-center gap-1">
           <span className="w-2.5 h-2.5 rounded-sm bg-habito" /> Receitas
         </span>

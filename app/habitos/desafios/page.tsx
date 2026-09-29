@@ -67,10 +67,10 @@ export default function DesafiosPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina pb-16">
-      <Link href="/habitos/estatisticas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/estatisticas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Estatísticas
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Desafios</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Desafios</h1>
       <p className="text-ink-400 text-sm mb-6">
         Faça um hábito junto com alguém: cada um marca o seu e vocês veem a sequência um do outro.
       </p>
@@ -122,7 +122,7 @@ export default function DesafiosPage() {
               </Link>
             ))}
           </div>
-          <p className="text-[11px] text-ink-400 mt-2">A pessoa recebe o hábito na conta dela e vocês passam a ver o placar aqui.</p>
+          <p className="text-xs text-ink-400 mt-2">A pessoa recebe o hábito na conta dela e vocês passam a ver o placar aqui.</p>
         </div>
       )}
     </main>

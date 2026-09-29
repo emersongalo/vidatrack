@@ -42,10 +42,10 @@ function RecorrentesConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Recorrentes</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Recorrentes</h1>
       <p className="text-ink-400 text-sm mb-6">Lançamentos que se repetem todo mês, como aluguel ou salário.</p>
 
       {erro && (
@@ -64,7 +64,7 @@ function RecorrentesConteudo() {
                 aoConcluir={recarregar}
               >
               <div
-                className={`flex items-center justify-between bg-base-800 border border-base-600 rounded-lg p-3 ${!r.ativo ? "opacity-50" : ""}`}
+                className={`flex items-center justify-between bg-base-800 border border-base-600 rounded-2xl p-4 ${!r.ativo ? "opacity-50" : ""}`}
               >
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">{r.descricao || mapaContas.get(r.conta_id)}</p>
@@ -96,11 +96,11 @@ function RecorrentesConteudo() {
         <p className="text-ink-400 text-sm">Crie uma conta primeiro para adicionar recorrências.</p>
       ) : (
         <>
-          <p className="text-sm text-ink-400 mb-3">Nova recorrência</p>
+          <h2 className="text-lg font-semibold mb-3">Nova recorrência</h2>
           <FormularioAcao acao={criarRecorrencia} aoSucesso={recarregar} mensagemSucesso="Recorrência criada!" className="space-y-3">
             <select
               name="tipo"
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
               <option value="despesa">Despesa</option>
               <option value="receita">Receita</option>
@@ -111,12 +111,12 @@ function RecorrentesConteudo() {
               inputMode="decimal"
               required
               placeholder="Valor (ex: 1500,00)"
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
             />
             <select
               name="contaId"
               required
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
               {contas.map((c: any) => (
                 <option key={c.id} value={c.id}>
@@ -126,7 +126,7 @@ function RecorrentesConteudo() {
             </select>
             <select
               name="categoriaId"
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
               <option value="">Sem categoria</option>
               {categorias.map((c: any) => (
@@ -147,7 +147,7 @@ function RecorrentesConteudo() {
                 min={1}
                 max={28}
                 defaultValue={5}
-                className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
+                className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
               />
             </div>
             <div>
@@ -158,14 +158,14 @@ function RecorrentesConteudo() {
                 id="dataFim"
                 name="dataFim"
                 type="date"
-                className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+                className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
               />
             </div>
             <input
               name="descricao"
               type="text"
               placeholder="Descrição (ex: Aluguel, Salário)"
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
             <BotaoSalvarFormulario>Criar recorrência</BotaoSalvarFormulario>
           </FormularioAcao>

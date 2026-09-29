@@ -93,7 +93,7 @@ export function MapaCalorGastos({
           );
         })}
       </div>
-      <div className="flex items-center gap-1.5 mt-3 text-[11px] text-ink-400">
+      <div className="flex items-center gap-1.5 mt-3 text-xs text-ink-400">
         <span>menos</span>
         {NIVEIS.map((cor, i) => (
           <span key={i} className={`w-3.5 h-3.5 rounded-sm ${cor}`} />

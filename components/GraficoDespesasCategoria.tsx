@@ -141,7 +141,7 @@ export function GraficoDespesasCategoria({
 
       {/* Legenda em lista de 1 coluna — cada nome tem a linha inteira
           pra si, nunca mais cortando com "..." por falta de espaço. */}
-      {clicavel && <p className="text-[11px] text-ink-400 mt-2 text-center">Toque numa categoria pra ver os lançamentos</p>}
+      {clicavel && <p className="text-xs text-ink-400 mt-2 text-center">Toque numa categoria pra ver os lançamentos</p>}
       <div className={`${clicavel ? "space-y-0.5" : "space-y-2"} mt-3`}>
         {dados.map((d, i) => {
           const percentual = totalDados > 0 ? (d.valor / totalDados) * 100 : 0;
@@ -152,7 +152,7 @@ export function GraficoDespesasCategoria({
             <>
               {info ? (
                 <span
-                  className={`w-6 h-6 rounded-md flex items-center justify-center text-[11px] shrink-0 ${classeFundoSuave(info.cor)}`}
+                  className={`w-6 h-6 rounded-md flex items-center justify-center text-xs shrink-0 ${classeFundoSuave(info.cor)}`}
                 >
                   {info.icone ? <IconeCategoria icone={info.icone} /> : d.nome.charAt(0)}
                 </span>

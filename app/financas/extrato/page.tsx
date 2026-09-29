@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { X, ChevronLeft, ChevronRight, CalendarDays, ChevronDown, Search } from "lucide-react";
 import { TrendingUp, TrendingDown, Scale, ArrowUp, ArrowDown, ArrowLeftRight } from "lucide-react";
-import { agruparPorDia } from "@/lib/financas/agruparPorDia";
+import { ListaLancamentosPorDia } from "@/components/ListaLancamentosPorDia";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { BotaoPaguei } from "@/components/BotaoPaguei";
 import { calcularPeriodo, formatarMoeda, primeiroDiaDoMes, ultimoDiaDoMes, type PresetPeriodo } from "@/lib/financas/formatacao";
@@ -197,11 +197,11 @@ function ExtratoConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
       <div className="flex items-center justify-between mt-4 mb-5">
-        <h1 className="text-2xl font-display font-semibold">Extrato</h1>
+        <h1 className="text-3xl font-display font-bold">Extrato</h1>
         <BotaoOcultarValores />
       </div>
 
@@ -319,7 +319,7 @@ function ExtratoConteudo() {
           </div>
           <p className="text-xs text-ink-400 mt-3 mb-1.5">Escolher datas</p>
           <div className="grid grid-cols-2 gap-2">
-            <label className="text-[11px] text-ink-400 min-w-0">
+            <label className="text-xs text-ink-400 min-w-0">
               De
               <input
                 type="date"
@@ -328,7 +328,7 @@ function ExtratoConteudo() {
                 className="mt-0.5 w-full min-w-0 bg-base-900 border border-base-600 rounded-lg px-2 py-2 text-sm text-ink-100 outline-none focus:border-ink-100"
               />
             </label>
-            <label className="text-[11px] text-ink-400 min-w-0">
+            <label className="text-xs text-ink-400 min-w-0">
               Até
               <input
                 type="date"
@@ -473,119 +473,13 @@ function ExtratoConteudo() {
         </p>
       ) : (
         // Etapa 225 — agrupado por dia, linhas maiores e receita/despesa bem marcadas
-        <div className="space-y-5">
-          {agruparPorDia(lista as any[], hojeParaPendencia).map((g) => (
-            <section key={g.dia}>
-              <div className="flex items-baseline justify-between px-1 mb-2">
-                <h3 className="text-base font-semibold">{g.rotulo}</h3>
-                <span className={`text-sm font-mono ${g.saldoDia > 0 ? "text-habito" : g.saldoDia < 0 ? "text-ink-400" : "text-ink-400"}`}>
-                  {g.saldoDia > 0 ? "+" : g.saldoDia < 0 ? "−" : ""}
-                  <ValorMonetario valor={Math.abs(g.saldoDia)} />
-                </span>
-              </div>
-              <ul className="bg-base-800 border border-base-600 rounded-2xl overflow-hidden divide-y divide-base-600">
-                {g.itens.map((t: any) => {
-                  const catInfo = mapaCategorias.get(t.categoria_id) as any;
-                  const ehTransf = !!t.transferencia_grupo;
-                  const ehReceita = t.tipo === "receita";
-                  const corValor = ehTransf ? "text-ink-400" : ehReceita ? "text-habito" : "text-red-400";
-                  const agendado = t.data > hojeParaPendencia && !t.pago_em;
-                  return (
-                    <li key={t.id}>
-                      <LinhaComDeslizar
-                        acao={removerTransacao.bind(null, t.id)}
-                        textoConfirmacao="Excluir esse lançamento? Não tem volta."
-                        aoConcluir={recarregar}
-                      >
-                        <div className="relative flex items-center gap-3 bg-base-800 pl-4 pr-1 py-3.5">
-                          {/* faixa lateral: verde = entrou, vermelho = saiu */}
-                          <span
-                            className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${
-                              ehTransf ? "bg-base-600" : ehReceita ? "bg-habito" : "bg-red-400"
-                            }`}
-                            aria-hidden
-                          />
-                          <Link href={`/financas/${t.id}/editar`} className="flex items-center gap-3 flex-1 min-w-0">
-                            <span className="relative shrink-0">
-                              <span
-                                className={`w-11 h-11 rounded-full flex items-center justify-center text-base ${classeFundoSuave(
-                                  catInfo?.cor ?? "financa"
-                                )}`}
-                              >
-                                {catInfo?.icone ? (
-                                  <IconeCategoria icone={catInfo.icone} />
-                                ) : ehReceita ? (
-                                  <TrendingUp size={18} strokeWidth={2} />
-                                ) : (
-                                  <TrendingDown size={18} strokeWidth={2} />
-                                )}
-                              </span>
-                              <span
-                                className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-base-800 flex items-center justify-center text-white ${
-                                  ehTransf ? "bg-ink-400" : ehReceita ? "bg-habito" : "bg-red-400"
-                                }`}
-                                aria-label={ehTransf ? "Transferência" : ehReceita ? "Receita" : "Despesa"}
-                              >
-                                {ehTransf ? <ArrowLeftRight size={10} strokeWidth={3} /> : ehReceita ? <ArrowUp size={11} strokeWidth={3} /> : <ArrowDown size={11} strokeWidth={3} />}
-                              </span>
-                            </span>
-                            <span className="flex-1 min-w-0">
-                              <span className="block text-base font-medium truncate">{t.descricao || mapaContas.get(t.conta_id)}</span>
-                              <span className="block text-sm text-ink-400 truncate">
-                                {ehTransf ? "Transferência" : catInfo?.nome ?? "Sem categoria"} · {mapaContas.get(t.conta_id)}
-                                {t.recorrencia_id && <span className="text-financa"> · ↻</span>}
-                                {agendado && <span className="text-financa"> · agendado</span>}
-                              </span>
-                            </span>
-                            <span className={`font-mono text-base font-semibold shrink-0 ${corValor}`}>
-                              {ehTransf ? "" : ehReceita ? "+" : "−"}
-                              <ValorMonetario valor={t.valor} />
-                            </span>
-                          </Link>
-                          <MenuAcoes>
-                            {(fecharMenu) => (
-                              <>
-                                <ItemMenuAcoes href={`/financas/${t.id}/editar`}>
-                                  <Pencil size={15} strokeWidth={2} /> Editar
-                                </ItemMenuAcoes>
-                                <BotaoComConfirmacao
-                                  acao={removerTransacao.bind(null, t.id)}
-                                  textoBotao={
-                                    <span className="flex items-center gap-2.5">
-                                      <Trash2 size={15} strokeWidth={2} /> Excluir
-                                    </span>
-                                  }
-                                  textoConfirmacao="Excluir esse lançamento? Não tem volta."
-                                  classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-red-400 hover:bg-base-700 transition"
-                                  aoConcluir={() => {
-                                    recarregar();
-                                    fecharMenu();
-                                  }}
-                                />
-                              </>
-                            )}
-                          </MenuAcoes>
-                        </div>
-                        {((t.etiquetas ?? []).length > 0 || t.data > hojeParaPendencia) && (
-                          <div className="flex flex-wrap items-center gap-2 bg-base-800 pl-[4.5rem] pr-4 pb-3 -mt-1.5 text-sm">
-                            {(t.etiquetas ?? []).map((e: string) => (
-                              <button key={e} type="button" onClick={() => setEtiquetaFiltro(e)} className="text-nota">
-                                #{e}
-                              </button>
-                            ))}
-                            <span className="empty:hidden">
-                              <BotaoPaguei transacao={t} />
-                            </span>
-                          </div>
-                        )}
-                      </LinhaComDeslizar>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
+        <ListaLancamentosPorDia
+          lista={lista as any[]}
+          mapaCategorias={mapaCategorias as Map<string, any>}
+          mapaContas={mapaContas as Map<string, any>}
+          recarregar={recarregar}
+          aoEscolherEtiqueta={setEtiquetaFiltro}
+        />
       )}
       {(snapshot?.financas.transacoes.length ?? 0) >= 3000 && (
         <p className="text-xs text-ink-400 mt-4">Mostrando as 3.000 transações mais recentes guardadas offline.</p>
@@ -671,7 +565,7 @@ function VisaoPorCategoria({
                 style={{ width: `${percentual}%` }}
               />
             </div>
-            <p className="text-[11px] text-ink-400 mt-1">de {formatarMoeda(item.meta!)}</p>
+            <p className="text-xs text-ink-400 mt-1">de {formatarMoeda(item.meta!)}</p>
           </div>
         )}
       </button>

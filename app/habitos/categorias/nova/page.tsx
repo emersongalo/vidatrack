@@ -15,10 +15,10 @@ export default function NovaCategoriaPage({
 
   return (
     <main className="pagina-form px-6 md:px-12 pt-2">
-      <Link href="/habitos/categorias" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/categorias" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Categorias
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Nova categoria</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-6">Nova categoria</h1>
 
       {searchParams.erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
@@ -38,7 +38,7 @@ export default function NovaCategoriaPage({
             type="text"
             required
             placeholder="Ex: Trabalho, Saúde, Casa"
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
         </div>
 

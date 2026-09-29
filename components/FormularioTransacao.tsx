@@ -330,11 +330,11 @@ export function FormularioTransacao({
             ))}
           </select>
           {categoriaSugerida && (
-            <p className="text-[11px] text-financa mt-1">✨ Sugerida pela descrição — pode trocar se quiser</p>
+            <p className="text-xs text-financa mt-1">✨ Sugerida pela descrição — pode trocar se quiser</p>
           )}
 
           {mostrarNovaCategoria && (
-            <div className="mt-2 bg-base-800 border border-base-600 rounded-lg p-3 space-y-2.5">
+            <div className="mt-2 bg-base-800 border border-base-600 rounded-2xl p-4 space-y-2.5">
               <input
                 type="text"
                 value={nomeNovaCategoria}
@@ -457,7 +457,7 @@ export function FormularioTransacao({
         {/* Etapa 208 — editando um lançamento que repete: escolhe se a
            mudança vale só pra este ou também pros próximos meses. */}
         {recorrenciaExistente && (
-          <div className="bg-base-800 border border-financa/40 rounded-lg p-3 space-y-2.5">
+          <div className="bg-base-800 border border-financa/40 rounded-2xl p-4 space-y-2.5">
             <p className="text-sm">
               <span className="text-financa">↻</span> Esse lançamento repete todo mês (dia {recorrenciaExistente.diaMes})
             </p>
@@ -484,7 +484,7 @@ export function FormularioTransacao({
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-ink-400">
+            <p className="text-xs text-ink-400">
               {escopoRecorrencia === "proximos"
                 ? `Valor, conta, categoria e descrição valem daqui pra frente. Mudou a data? Os próximos passam a cair no dia ${diaDaData(dataLancamento)}.`
                 : "Muda só este lançamento; os próximos meses continuam como estavam."}
@@ -504,7 +504,7 @@ export function FormularioTransacao({
 
         {/* Etapa 210 — compra parcelada (só ao criar) */}
         {!ehEdicao && (
-          <div className="bg-base-800 border border-base-600 rounded-lg p-3">
+          <div className="bg-base-800 border border-base-600 rounded-2xl p-4">
             <label className="flex items-center gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
@@ -563,7 +563,7 @@ export function FormularioTransacao({
                       </button>
                     ))}
                   </div>
-                  <p className="text-[11px] text-ink-400">
+                  <p className="text-xs text-ink-400">
                     {valorNum > 0 ? (
                       <>
                         <span className="text-ink-100 font-mono">
@@ -583,7 +583,7 @@ export function FormularioTransacao({
 
         {/* Etapa 210 — editando uma parcela */}
         {valoresIniciais?.parcela && (
-          <div className="bg-base-800 border border-financa/40 rounded-lg p-3 space-y-2">
+          <div className="bg-base-800 border border-financa/40 rounded-2xl p-4 space-y-2">
             <p className="text-sm">
               💳 Parcela {valoresIniciais.parcela.numero} de {valoresIniciais.parcela.total}
             </p>
@@ -599,7 +599,7 @@ export function FormularioTransacao({
         )}
 
         {!recorrenciaExistente && !parcelado && !valoresIniciais?.parcela && (
-          <div className="bg-base-800 border border-base-600 rounded-lg p-3">
+          <div className="bg-base-800 border border-base-600 rounded-2xl p-4">
             <label className="flex items-center gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
@@ -632,7 +632,7 @@ export function FormularioTransacao({
                     }}
                     className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition font-mono"
                   />
-                  <p className="text-[11px] text-ink-400 mt-1">
+                  <p className="text-xs text-ink-400 mt-1">
                     Ex: 5 = todo dia 5 de cada mês. Máximo 28, pra funcionar em
                     fevereiro também.
                   </p>
@@ -675,7 +675,7 @@ export function FormularioTransacao({
                   )}
                 </div>
 
-                <p className="text-[11px] text-ink-400">
+                <p className="text-xs text-ink-400">
                   Começa em{" "}
                   <span className="text-ink-100">
                     {dataLancamento ? new Date(dataLancamento + "T00:00:00").toLocaleDateString("pt-BR") : "--"}

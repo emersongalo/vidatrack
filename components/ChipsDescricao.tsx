@@ -16,7 +16,7 @@ export function ChipsDescricao({
   if (!sugestoes.length) return null;
   return (
     <div className="mt-2">
-      {titulo && <p className="text-[11px] text-ink-400 mb-1">{titulo}</p>}
+      {titulo && <p className="text-xs text-ink-400 mb-1">{titulo}</p>}
       <div className="flex flex-wrap gap-1.5">
         {sugestoes.map((s) => (
           <button

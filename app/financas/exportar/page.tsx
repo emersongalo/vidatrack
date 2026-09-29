@@ -11,10 +11,10 @@ const PERIODOS = [
 export default function ExportarPage() {
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Exportar</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Exportar</h1>
       <p className="text-ink-400 text-sm mb-6">Planilha (.csv) que abre no Excel, Google Planilhas ou Numbers.</p>
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">

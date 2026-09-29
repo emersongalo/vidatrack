@@ -83,7 +83,7 @@ function Conteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina pb-16">
-      <Link href="/habitos/estatisticas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/estatisticas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Estatísticas
       </Link>
 

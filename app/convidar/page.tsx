@@ -46,12 +46,12 @@ export default function ConvidarPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
-      <Link href="/perfil" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/perfil" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Perfil
       </Link>
       <div className="mt-4 mb-6 rounded-xl2 p-6 bg-gradient-to-br from-habito/20 to-financa/20 border border-base-600 text-center">
         <p className="text-4xl mb-2">🎁</p>
-        <h1 className="text-2xl font-display font-semibold mb-1">Convide seus amigos</h1>
+        <h1 className="text-3xl font-display font-bold mb-1">Convide seus amigos</h1>
         <p className="text-sm text-ink-400">Ajude o VidaTrack a crescer — ele continua de graça e fica melhor com mais gente usando.</p>
       </div>
 
@@ -60,7 +60,7 @@ export default function ConvidarPage() {
       {codigo && (
         <>
           <p className="text-sm text-ink-400 mb-1">Seu link</p>
-          <p className="font-mono text-sm bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 break-all select-all mb-3">{link}</p>
+          <p className="font-mono text-sm bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 break-all select-all mb-3">{link}</p>
           <div className="grid grid-cols-3 gap-2 mb-3">
             <button type="button" onClick={compartilhar} className="flex flex-col items-center gap-1 bg-ink-100 text-base-900 rounded-xl py-3 text-xs font-medium">
               <Share2 size={18} /> Compartilhar

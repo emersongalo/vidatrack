@@ -140,25 +140,25 @@ export function ItemLinhaAgenda({
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className={`font-medium truncate ${item.feito ? "line-through text-ink-400" : ""}`}>
+        <p className={`text-[1.0625rem] font-medium truncate ${item.feito ? "line-through text-ink-400" : ""}`}>
           {item.titulo}
         </p>
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           <span
-            className={`text-[11px] px-1.5 py-0.5 rounded font-medium ${classeFundoSuave(
+            className={`text-xs px-1.5 py-0.5 rounded font-medium ${classeFundoSuave(
               item.cor
             )} ${classeTextoCor(item.cor)}`}
           >
             {item.tipo === "habito" ? "Hábito" : "Tarefa"}
           </span>
           {item.atrasadaDesde && !item.feito && (
-            <span className="text-[11px] px-1.5 py-0.5 rounded font-medium bg-red-400/15 text-red-400">
+            <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-red-400/15 text-red-400">
               Atrasada desde {new Date(item.atrasadaDesde + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
             </span>
           )}
           {item.semana && (
             <span
-              className={`text-[11px] px-1.5 py-0.5 rounded font-medium ${
+              className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                 item.semana.feitos >= item.semana.meta ? "bg-habito/15 text-habito" : "bg-base-700 text-ink-400"
               }`}
             >
@@ -167,7 +167,7 @@ export function ItemLinhaAgenda({
           )}
           {item.financa && (
             <span
-              className={`text-[11px] px-1.5 py-0.5 rounded font-medium font-mono ${
+              className={`text-xs px-1.5 py-0.5 rounded font-medium font-mono ${
                 item.financa.tipo === "receita" ? "bg-habito/15 text-habito" : "bg-financa/15 text-financa"
               }`}
             >
@@ -175,18 +175,18 @@ export function ItemLinhaAgenda({
             </span>
           )}
           {!!item.prioridade && item.prioridade > 0 && (
-            <span className={`text-[11px] flex items-center gap-1 ${PRIORIDADES[item.prioridade].classe}`}>
+            <span className={`text-xs flex items-center gap-1 ${PRIORIDADES[item.prioridade].classe}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${PRIORIDADES[item.prioridade].fundo}`} />
               {PRIORIDADES[item.prioridade].rotulo}
             </span>
           )}
           {item.progressoSubtarefas && (
-            <span className="text-[11px] text-ink-400">
+            <span className="text-xs text-ink-400">
               {item.progressoSubtarefas.feitas}/{item.progressoSubtarefas.total}
             </span>
           )}
           {ehNumerico && item.meta && (
-            <span className="text-[11px] text-ink-400 font-mono">
+            <span className="text-xs text-ink-400 font-mono">
               {item.meta.atual}/{item.meta.alvo} {item.meta.unidade ?? ""}
             </span>
           )}
@@ -196,7 +196,7 @@ export function ItemLinhaAgenda({
             </span>
           )}
           {item.horarioLembrete && (
-            <span className="text-[11px] text-ink-400 flex items-center gap-1">
+            <span className="text-xs text-ink-400 flex items-center gap-1">
               <Bell size={11} strokeWidth={2} /> {item.horarioLembrete.slice(0, 5)}
             </span>
           )}
@@ -209,7 +209,7 @@ export function ItemLinhaAgenda({
             {item.participantes.map((p, i) => (
               <span
                 key={i}
-                className={`inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-full ${
+                className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full ${
                   p.feito ? "bg-habito-soft text-habito" : "bg-base-600 text-ink-400"
                 }`}
               >
@@ -231,7 +231,7 @@ export function ItemLinhaAgenda({
         onFechar={() => setMarcoAtingido(null)}
       />
     )}
-    <li className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-xl2 p-3">
+    <li className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-2xl p-4">
       {item.tipo === "tarefa" && item.progressoSubtarefas ? (
         <Link href={`/habitos/tarefas/${item.id}`} className="flex items-center gap-3 flex-1 min-w-0">
           {conteudo}
@@ -267,7 +267,7 @@ export function ItemLinhaAgenda({
           disabled={pendente}
           aria-pressed={item.feito}
           aria-label={item.feito ? "Desmarcar" : "Marcar como feito"}
-          className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
+          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
             item.feito ? `${classeCor(item.cor)} border-transparent` : "border-base-600 hover:border-ink-400"
           } ${pendente ? "opacity-60" : ""}`}
         >
@@ -287,7 +287,7 @@ export function ItemLinhaAgenda({
     </li>
 
     {mostrarNota && (
-      <li className="bg-base-800 border border-base-600 rounded-xl2 p-3 -mt-1">
+      <li className="bg-base-800 border border-base-600 rounded-2xl p-4 -mt-1">
         <textarea
           value={textoNota}
           onChange={(e) => setTextoNota(e.target.value)}

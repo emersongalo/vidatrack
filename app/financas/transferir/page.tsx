@@ -24,7 +24,7 @@ export default function TransferirPage() {
 }
 
 const classeCampo =
-  "w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition";
+  "w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition";
 
 function TransferirConteudo() {
   const params = useSearchParams();
@@ -40,10 +40,10 @@ function TransferirConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href="/financas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Transferir entre contas</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Transferir entre contas</h1>
       <p className="text-ink-400 text-sm mb-6">
         Sai de uma conta e entra na outra. Não conta como gasto nem receita — é o mesmo dinheiro mudando de lugar.
       </p>

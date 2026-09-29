@@ -8,7 +8,7 @@ import { gerarHorariosIntervalo, normalizarHorarios } from "@/lib/habitos/horari
 type Modo = "nenhum" | "um" | "varios" | "intervalo";
 
 const classeCampo =
-  "bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition";
+  "bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition";
 
 export function CampoLembretesHabito({ iniciais, ehContador, unidade }: { iniciais: string[]; ehContador: boolean; unidade?: string }) {
   const [modo, setModo] = useState<Modo>(iniciais.length === 0 ? "nenhum" : iniciais.length === 1 ? "um" : "varios");

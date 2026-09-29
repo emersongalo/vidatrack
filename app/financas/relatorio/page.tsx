@@ -18,10 +18,10 @@ export default function RelatorioPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
-      <Link href="/financas/mais" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/mais" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Mais
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Relatório do mês</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Relatório do mês</h1>
       <p className="text-ink-400 text-sm mb-6">
         Um PDF com receitas, despesas, gastos por categoria e todos os lançamentos do mês — pra guardar ou mandar pro contador.
         Ele é montado na hora; nada fica guardado no servidor.
@@ -31,7 +31,7 @@ export default function RelatorioPage() {
       <select
         value={mes}
         onChange={(e) => setMes(e.target.value)}
-        className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 outline-none focus:border-ink-100 capitalize mb-4"
+        className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 outline-none focus:border-ink-100 capitalize mb-4"
       >
         {opcoes.map((o) => (
           <option key={o.valor} value={o.valor}>

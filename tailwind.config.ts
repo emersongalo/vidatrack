@@ -33,6 +33,11 @@ const config: Config = {
         body: ["var(--font-inter)", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },
+      // Etapa 226 — letras um pouco maiores no app todo (antes 12px e 14px)
+      fontSize: {
+        xs: ["0.8125rem", { lineHeight: "1.15rem" }],
+        sm: ["0.9375rem", { lineHeight: "1.4rem" }],
+      },
       borderRadius: {
         xl2: "1.25rem",
       },

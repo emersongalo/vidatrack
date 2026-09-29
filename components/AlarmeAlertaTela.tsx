@@ -146,14 +146,14 @@ export function AlarmeAlertaTela() {
         <div className="flex gap-2">
           <button
             onClick={() => setAlerta(null)}
-            className="flex-1 border border-base-600 rounded-lg py-2.5 hover:bg-base-700 transition"
+            className="flex-1 border border-base-600 rounded-2xl py-3.5 hover:bg-base-700 transition"
           >
             Dispensar
           </button>
           <a
             href={alerta.href}
             onClick={() => setAlerta(null)}
-            className="flex-1 bg-habito text-base-900 font-medium rounded-lg py-2.5 hover:opacity-90 transition"
+            className="flex-1 bg-habito text-base-900 font-medium rounded-2xl py-3.5 hover:opacity-90 transition"
           >
             Ver
           </a>

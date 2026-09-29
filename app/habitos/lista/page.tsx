@@ -17,12 +17,12 @@ export default function ListaHabitosPage() {
   return (
     <main className="pagina px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-3">
-        <h1 className="text-2xl font-display font-semibold">Hábitos</h1>
+        <h1 className="text-3xl font-display font-bold">Hábitos</h1>
         <div className="flex items-center gap-3">
-          <Link href="/habitos/estatisticas" className="text-ink-400 text-sm hover:text-ink-100 transition">
+          <Link href="/habitos/estatisticas" className="text-ink-400 text-base hover:text-ink-100 transition">
             Estatísticas
           </Link>
-          <Link href="/habitos/lixeira" className="text-ink-400 text-sm hover:text-ink-100 transition">
+          <Link href="/habitos/lixeira" className="text-ink-400 text-base hover:text-ink-100 transition">
             Lixeira
           </Link>
           <BotaoNovoHabitoOffline />

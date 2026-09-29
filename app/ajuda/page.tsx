@@ -45,10 +45,10 @@ export default function AjudaPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta pb-16">
-      <Link href="/perfil" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/perfil" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Perfil
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Ajuda</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-6">Ajuda</h1>
 
       <div className="space-y-2 mb-10">
         {PERGUNTAS.map((q) => (
@@ -92,10 +92,10 @@ export default function AjudaPage() {
             rows={5}
             required
             placeholder="Conte com detalhes (em qual tela, o que você fez...)"
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-sm text-ink-100 outline-none focus:border-ink-100"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-sm text-ink-100 outline-none focus:border-ink-100"
           />
           {estado === "erro" && <p className="text-sm text-red-400">Não consegui enviar. Verifique a internet e tente de novo.</p>}
-          <button type="submit" disabled={estado === "enviando"} className="w-full bg-ink-100 text-base-900 font-medium rounded-lg py-2.5 disabled:opacity-50">
+          <button type="submit" disabled={estado === "enviando"} className="w-full bg-ink-100 text-base-900 font-medium rounded-2xl py-3.5 disabled:opacity-50">
             {estado === "enviando" ? "Enviando..." : "Enviar mensagem"}
           </button>
         </form>

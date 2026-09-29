@@ -24,13 +24,13 @@ function CompartilharHabitoConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
-      <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/lista" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Hábitos
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Compartilhar</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Compartilhar</h1>
       <p className="text-ink-400 text-sm mb-4">{habito?.nome ?? "..."}</p>
 
-      <p className="text-xs text-ink-400 bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 mb-6">
+      <p className="text-xs text-ink-400 bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 mb-6">
         💡 Ótimo pra hábitos em conjunto (ex: "ler a Bíblia juntos") — cada pessoa marca seu próprio check-in, e
         na agenda "Hoje" vocês veem o status um do outro lado a lado, pra se motivarem.
       </p>

@@ -34,10 +34,10 @@ export function FormularioCategoria({
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href={voltarHref} className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href={voltarHref} className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Categorias
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">{titulo}</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-6">{titulo}</h1>
 
       {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
@@ -59,7 +59,7 @@ export function FormularioCategoria({
             required
             defaultValue={valoresIniciais?.nome}
             placeholder="Ex: Assinaturas, Educação"
-            className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
         </div>
 
@@ -104,7 +104,7 @@ export function FormularioCategoria({
               inputMode="decimal"
               defaultValue={valoresIniciais?.metaMensal ?? ""}
               placeholder="Ex: 400,00"
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
             />
           </div>
         )}

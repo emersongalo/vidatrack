@@ -23,7 +23,7 @@ function textoMeses(n: number) {
   return `${anos} ${anos === 1 ? "ano" : "anos"}${resto ? ` e ${resto} ${resto === 1 ? "mês" : "meses"}` : ""}`;
 }
 
-const CAMPO = "w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none";
+const CAMPO = "w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none";
 
 export default function SimuladorPage() {
   const { snapshot } = useSnapshotOffline();
@@ -56,10 +56,10 @@ export default function SimuladorPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href="/financas/mais" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/mais" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Mais
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-2 mb-1">E se…?</h1>
+      <h1 className="text-3xl font-display font-bold mt-2 mb-1">E se…?</h1>
       <p className="text-sm text-ink-400 mb-5">Veja em quanto tempo você chega num objetivo — e quanto antes, cortando um gasto.</p>
 
       <div className="space-y-4">
@@ -92,7 +92,7 @@ export default function SimuladorPage() {
             onChange={(e) => setAporteManual(e.target.value)}
             className={`${CAMPO} font-mono`}
           />
-          <p className="text-[11px] text-ink-400 mt-1">
+          <p className="text-xs text-ink-400 mt-1">
             {aporteManual === null
               ? `Média do que sobrou nos últimos 3 meses: ${formatarMoeda(sobraMedia)}.`
               : "Valor que você digitou."}
@@ -110,7 +110,7 @@ export default function SimuladorPage() {
             ))}
           </select>
           {categoriaId && (
-            <p className="text-[11px] text-ink-400 mt-1">Você gasta em média {formatarMoeda(gastoCategoria)}/mês aqui.</p>
+            <p className="text-xs text-ink-400 mt-1">Você gasta em média {formatarMoeda(gastoCategoria)}/mês aqui.</p>
           )}
           <input
             inputMode="decimal"
@@ -165,7 +165,7 @@ export default function SimuladorPage() {
           )}
         </div>
       )}
-      <p className="text-[11px] text-ink-400 mt-4">É só uma conta pra ajudar a decidir — nada é salvo nem lançado.</p>
+      <p className="text-xs text-ink-400 mt-4">É só uma conta pra ajudar a decidir — nada é salvo nem lançado.</p>
     </main>
   );
 }

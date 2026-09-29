@@ -50,7 +50,7 @@ export function SugestoesRecorrentes({ snapshot, hojeISO }: { snapshot: Snapshot
         {visiveis.map((s) => {
           const inicio = inicioDaRecorrenciaSugerida(s, hojeISO);
           return (
-            <li key={s.chave} className="bg-base-800 border border-financa/30 rounded-lg p-3">
+            <li key={s.chave} className="bg-base-800 border border-financa/30 rounded-2xl p-4">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="font-medium truncate">{s.descricao}</p>
                 <p className="font-mono text-sm shrink-0">{formatarMoeda(s.valorMedio)}</p>

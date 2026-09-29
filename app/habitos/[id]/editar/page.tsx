@@ -40,7 +40,7 @@ function EditarHabitoConteudo() {
   if (!habito) {
     return (
       <main className="pagina-form px-6 md:px-12 pt-2">
-        <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
+        <Link href="/habitos/lista" className="text-ink-400 text-base hover:text-ink-100 transition">
           ← Hábitos
         </Link>
         <p className="text-ink-400 text-sm mt-6">
@@ -53,10 +53,10 @@ function EditarHabitoConteudo() {
 
   return (
     <main className="pagina-form px-6 md:px-12 pt-2">
-      <Link href="/habitos/lista" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/habitos/lista" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Hábitos
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-6">Editar hábito</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-6">Editar hábito</h1>
 
       {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">

@@ -12,10 +12,10 @@ export default async function ImportarExtratoPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
-      <Link href="/financas/mais" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/mais" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Mais
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Importar extrato</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Importar extrato</h1>
       <p className="text-ink-400 text-sm mb-6">
         Sobe um arquivo OFX (o formato padrão da maioria dos bancos) ou CSV com Data, Descrição e Valor.
       </p>

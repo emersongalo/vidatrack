@@ -105,7 +105,7 @@ export function CalendarioGastos({
         })}
       </div>
 
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-base-600 text-[11px] text-ink-400">
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-base-600 text-xs text-ink-400">
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-full bg-red-400/25 ring-1 ring-red-400/60" /> Dia com gasto
         </span>

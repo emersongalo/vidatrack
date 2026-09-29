@@ -47,10 +47,10 @@ export default async function PainelErrosPage({ searchParams }: { searchParams: 
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/dashboard" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/dashboard" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Painel
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Painel de erros</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Painel de erros</h1>
       <p className="text-ink-400 text-sm mb-5">
         Erros que apareceram pra alguém no app (anônimos). {eventos?.length ?? 0} no período.
       </p>
@@ -77,7 +77,7 @@ export default async function PainelErrosPage({ searchParams }: { searchParams: 
       ) : (
         <ul className="space-y-2">
           {lista.map(([chave, g]) => (
-            <li key={chave} className="bg-base-800 border border-base-600 rounded-lg p-3 flex items-start gap-3">
+            <li key={chave} className="bg-base-800 border border-base-600 rounded-2xl p-4 flex items-start gap-3">
               <span className="font-mono text-sm bg-red-400/15 text-red-400 rounded-md px-2 py-0.5 shrink-0">{g.total}×</span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm break-words">{g.exemplo}</p>

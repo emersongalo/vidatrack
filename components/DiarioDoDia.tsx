@@ -112,7 +112,7 @@ export function DiarioDoDia({ snapshot, dataISO, hojeISO }: { snapshot: Snapshot
           </button>
         </div>
       )}
-      <p className="text-[11px] mt-2 h-4 text-ink-400">
+      <p className="text-xs mt-2 h-4 text-ink-400">
         {estado === "salvando" ? "Salvando…" : estado === "salvo" ? "✓ Guardado no seu diário" : estado === "erro" ? <span className="text-red-400">{erro}</span> : ""}
       </p>
     </section>

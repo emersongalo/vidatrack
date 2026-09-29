@@ -19,7 +19,7 @@ export function SeletorTipoConta({
         name="tipo"
         value={tipo}
         onChange={(e) => setTipo(e.target.value)}
-        className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+        className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
       >
         <option value="banco">Banco</option>
         <option value="carteira">Carteira</option>
@@ -46,7 +46,7 @@ export function SeletorTipoConta({
               max={28}
               placeholder="Ex: 5"
               defaultValue={diaFechamentoInicial ?? ""}
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
           </div>
           <div>
@@ -58,7 +58,7 @@ export function SeletorTipoConta({
               max={28}
               placeholder="Ex: 12"
               defaultValue={diaVencimentoInicial ?? ""}
-              className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
           </div>
         </div>

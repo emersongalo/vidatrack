@@ -17,10 +17,10 @@ export default function AssinaturasPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas/mais" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/mais" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Mais
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-2 mb-1">Assinaturas</h1>
+      <h1 className="text-3xl font-display font-bold mt-2 mb-1">Assinaturas</h1>
       <p className="text-sm text-ink-400 mb-5">
         Gastos que se repetem todo mês com valor parecido — achados nos seus lançamentos dos últimos meses.
       </p>
@@ -62,7 +62,7 @@ export default function AssinaturasPage() {
                       Subiu de {formatarMoeda(a.aumento.de)} pra {formatarMoeda(a.aumento.para)}
                     </p>
                   )}
-                  {a.jaEhContaFixa && <p className="text-[11px] text-ink-400">Já está nas contas fixas</p>}
+                  {a.jaEhContaFixa && <p className="text-xs text-ink-400">Já está nas contas fixas</p>}
                 </div>
                 <span className="font-mono text-sm shrink-0">{formatarMoeda(a.valorAtual)}</span>
               </li>

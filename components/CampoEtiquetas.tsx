@@ -68,7 +68,7 @@ export function CampoEtiquetas({ iniciais }: { iniciais?: string[] | null }) {
               type="button"
               onMouseDown={(ev) => ev.preventDefault()}
               onClick={() => adicionar(s)}
-              className="text-[11px] text-ink-400 border border-base-600 rounded-full px-2 py-0.5 hover:text-nota hover:border-nota/50"
+              className="text-xs text-ink-400 border border-base-600 rounded-full px-2 py-0.5 hover:text-nota hover:border-nota/50"
             >
               #{s}
             </button>

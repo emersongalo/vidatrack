@@ -71,7 +71,7 @@ export function PreferenciasAvisos() {
 
   return (
     <div className="mt-6">
-      <p className="text-sm text-ink-400 mb-3">Avisos automáticos</p>
+      <h2 className="text-lg font-semibold mb-3">Avisos automáticos</h2>
       <div className="space-y-2">
         {ITENS.map(({ chave, titulo, texto, Icone }) => {
           const ligado = valores?.[chave] ?? true;

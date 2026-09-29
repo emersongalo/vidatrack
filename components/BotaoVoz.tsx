@@ -65,7 +65,7 @@ export function BotaoVoz({ aoOuvir }: { aoOuvir: (texto: string) => void }) {
         {ouvindo ? <MicOff size={18} /> : <Mic size={18} />}
       </button>
       {erro && (
-        <span className="absolute bottom-full mb-2 right-0 whitespace-nowrap text-[11px] bg-base-700 border border-base-600 rounded px-2 py-1">
+        <span className="absolute bottom-full mb-2 right-0 whitespace-nowrap text-xs bg-base-700 border border-base-600 rounded px-2 py-1">
           {erro}
         </span>
       )}

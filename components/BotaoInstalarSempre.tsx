@@ -55,7 +55,7 @@ export function BotaoInstalarSempre() {
     <div className="mb-6">
       <button
         onClick={clicar}
-        className="w-full flex items-center justify-center gap-2 bg-base-800 border border-base-600 rounded-lg py-2.5 text-sm hover:border-habito transition"
+        className="w-full flex items-center justify-center gap-2 bg-base-800 border border-base-600 rounded-2xl py-3.5 text-sm hover:border-habito transition"
       >
         📲 Instalar o VidaTrack no iPhone
       </button>

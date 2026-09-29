@@ -31,7 +31,7 @@ export default function BuscarPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
-      <Link href="/dashboard" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/dashboard" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Painel
       </Link>
       <div className="relative mt-4 mb-4">
@@ -59,7 +59,7 @@ export default function BuscarPage() {
         <ul className="space-y-2">
           {resultados.map((r, i) => (
             <li key={i}>
-              <Link href={r.href} className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-lg p-3 hover:border-ink-400 transition">
+              <Link href={r.href} className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-2xl p-4 hover:border-ink-400 transition">
                 <span className="text-lg w-7 text-center shrink-0">{ICONE[r.tipo]}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate">{r.titulo}</p>

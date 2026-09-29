@@ -56,7 +56,7 @@ export function SubmenuFinancas() {
     <div className="flex flex-col gap-4 mt-1">
       {GRUPOS_DESKTOP.map((grupo) => (
         <div key={grupo.titulo}>
-          <p className="px-3 mb-1 text-[11px] uppercase tracking-wide text-ink-400/70">{grupo.titulo}</p>
+          <p className="px-3 mb-1 text-xs uppercase tracking-wide text-ink-400/70">{grupo.titulo}</p>
           <div className="flex flex-col gap-0.5">
             {grupo.itens.map((item) => (
               <Link

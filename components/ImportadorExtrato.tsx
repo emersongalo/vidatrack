@@ -121,7 +121,7 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
               setSelecionadas(new Set(transacoes.map((_, i) => i).filter((i) => !dup[i])));
             }
           }}
-          className="w-full bg-base-800 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+          className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
         >
           {contas.map((c) => (
             <option key={c.id} value={c.id}>
@@ -164,7 +164,7 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
               <li
                 key={i}
                 onClick={() => alternarSelecao(i)}
-                className={`flex items-center gap-3 rounded-lg p-3 border cursor-pointer transition ${
+                className={`flex items-center gap-3 rounded-2xl p-4 border cursor-pointer transition ${
                   selecionadas.has(i) ? "bg-base-800 border-base-600" : "bg-base-900 border-base-700 opacity-50"
                 }`}
               >
@@ -173,7 +173,7 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
                   <p className="text-sm truncate">{t.descricao}</p>
                   <p className="text-xs text-ink-400">{new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")}</p>
                   {t.descricaoOriginal && t.descricaoOriginal !== t.descricao && (
-                    <p className="text-[11px] text-ink-400/70 truncate">No banco: {t.descricaoOriginal}</p>
+                    <p className="text-xs text-ink-400/70 truncate">No banco: {t.descricaoOriginal}</p>
                   )}
                   <select
                     value={t.categoriaId ?? ""}
@@ -191,7 +191,7 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
                       ))}
                   </select>
                   {duplicados[i] && (
-                    <p className="text-[11px] text-financa truncate">
+                    <p className="text-xs text-financa truncate">
                       Já lançado? “{duplicados[i]!.descricao || "sem descrição"}” em{" "}
                       {new Date(duplicados[i]!.data + "T00:00:00").toLocaleDateString("pt-BR")}
                     </p>
@@ -207,14 +207,14 @@ export function ImportadorExtrato({ contas }: { contas: { id: string; nome: stri
           <div className="flex gap-2">
             <button
               onClick={() => setTransacoes(null)}
-              className="flex-1 border border-base-600 rounded-lg py-2.5 hover:bg-base-800 transition"
+              className="flex-1 border border-base-600 rounded-2xl py-3.5 hover:bg-base-800 transition"
             >
               Cancelar
             </button>
             <button
               onClick={confirmar}
               disabled={pendente || selecionadas.size === 0}
-              className="flex-1 bg-financa text-base-900 font-semibold rounded-lg py-2.5 hover:opacity-90 transition disabled:opacity-50"
+              className="flex-1 bg-financa text-base-900 font-semibold rounded-2xl py-3.5 hover:opacity-90 transition disabled:opacity-50"
             >
               {pendente ? "Importando..." : `Importar ${selecionadas.size}`}
             </button>

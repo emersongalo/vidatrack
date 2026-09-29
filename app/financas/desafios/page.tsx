@@ -31,10 +31,10 @@ function DesafiosConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas/mais" className="text-ink-400 text-sm hover:text-ink-100 transition">
+      <Link href="/financas/mais" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Mais
       </Link>
-      <h1 className="text-2xl font-display font-semibold mt-4 mb-1">Desafios financeiros</h1>
+      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Desafios financeiros</h1>
       <p className="text-ink-400 text-sm mb-6">
         Tipo aquele desafio de guardar valores crescentes — só que aqui o app monta os quadradinhos e já
         tira o dinheiro certinho do seu saldo quando você marca.
@@ -74,7 +74,7 @@ function DesafiosConteudo() {
         <p className="text-sm text-ink-400">Crie uma conta (não-investimento) antes de montar um desafio.</p>
       ) : (
         <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
-          <p className="text-sm text-ink-400 mb-3">Novo desafio</p>
+          <h2 className="text-lg font-semibold mb-3">Novo desafio</h2>
           {erro && (
             <p className="mb-3 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
               {decodeURIComponent(erro)}
@@ -86,7 +86,7 @@ function DesafiosConteudo() {
               type="text"
               placeholder="Nome (ex: Viagem de fim de ano)"
               required
-              className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+              className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
             <div>
               <label className="block text-xs text-ink-400 mb-1.5">Quanto quer guardar no total</label>
@@ -94,7 +94,7 @@ function DesafiosConteudo() {
                 name="valorTotal"
                 placeholder="Ex: 2.000,00"
                 required
-                className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 font-mono focus:border-ink-100 outline-none transition"
+                className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 font-mono focus:border-ink-100 outline-none transition"
               />
             </div>
             <div>
@@ -102,7 +102,7 @@ function DesafiosConteudo() {
               <select
                 name="prazoQuantidade"
                 defaultValue="52"
-                className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+                className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
               >
                 <option value="30">1 mês (30 quadrados, 1 por dia)</option>
                 <option value="12">3 meses (12 quadrados, 1 por semana)</option>
@@ -118,7 +118,7 @@ function DesafiosConteudo() {
               <label className="block text-xs text-ink-400 mb-1.5">Como distribuir</label>
               <select
                 name="tipoProgressao"
-                className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+                className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
               >
                 <option value="crescente">Crescente (começa pequeno, cresce a cada quadrado)</option>
                 <option value="fixo">Fixo (mesmo valor sempre)</option>
@@ -129,7 +129,7 @@ function DesafiosConteudo() {
               <select
                 name="contaOrigemId"
                 required
-                className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2.5 text-ink-100 focus:border-ink-100 outline-none transition"
+                className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
               >
                 {contas.map((c: any) => (
                   <option key={c.id} value={c.id}>
