@@ -1,11 +1,14 @@
 "use client";
 
+import { EstadoVazio } from "@/components/EstadoVazio";
+import { Esqueleto } from "@/components/Esqueleto";
 import Link from "next/link";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { ListaHabitosArrastavel } from "@/components/ListaHabitosArrastavel";
 import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
 import { AlternadorHabitosTarefas } from "@/components/AlternadorHabitosTarefas";
-import { calcularStreak, calcularMelhorStreak, calcularStreakNegativo } from "@/lib/habitos/streak";
+import { calcularStreak, calcularMelhorStreak, calcularStreakNegativo, hojeISO } from "@/lib/habitos/streak";
+import { ultimosDias } from "@/lib/habitos/detalhe";
 import { pausasDe } from "@/lib/habitos/pausa";
 import { ModoFerias } from "@/components/ControlePausa";
 
@@ -32,16 +35,14 @@ export default function ListaHabitosPage() {
       <AlternadorHabitosTarefas ativo="habitos" />
 
       {snapshot === undefined ? (
-        <div className="space-y-2 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-base-800 border border-base-600 rounded-xl2" />
-          ))}
-        </div>
+        <Esqueleto linhas={4} comTopo={false} />
       ) : !snapshot || snapshot.habitos.length === 0 ? (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
-          <p className="font-display font-semibold mb-1">Nenhum hábito ainda</p>
-          <p className="text-ink-400 text-sm">Crie o primeiro na aba "Hoje" ou aqui mesmo.</p>
-        </div>
+        <EstadoVazio
+          emoji="🌱"
+          titulo="Nenhum hábito ainda"
+          texto="Comece com um pequeno — beber água, ler 10 páginas, caminhar."
+          acao={{ rotulo: "+ Criar hábito", href: "/habitos/novo" }}
+        />
       ) : (
         <ListaComStreak snapshot={snapshot} aoMudar={recarregar} />
       )}
@@ -82,6 +83,7 @@ function ListaComStreak({
     }
     return {
       ...base,
+      ultimos7: ultimosDias(h, snapshot.habitoCheckins, hojeISO()),
       streakAtual: calcularStreak(datas, pausasDe(h)),
       melhorStreak: calcularMelhorStreak(datas, pausasDe(h)),
     };

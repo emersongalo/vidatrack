@@ -1,3 +1,7 @@
+"use client";
+
+import { useContagem } from "@/components/NumeroAnimado";
+
 // Etapa 227 — anel de progresso (usado no topo do Hoje e no detalhe do hábito)
 export function AnelProgresso({
   valor,
@@ -14,7 +18,8 @@ export function AnelProgresso({
 }) {
   const r = 34;
   const c = 2 * Math.PI * r;
-  const pct = total > 0 ? Math.min(1, valor / total) : 0;
+  // Etapa 230 — o anel "enche" ao abrir a tela e quando o valor muda
+  const pct = useContagem(total > 0 ? Math.min(1, valor / total) : 0, 700);
   return (
     <div className="relative shrink-0" style={{ width: tamanho, height: tamanho }}>
       <svg viewBox="0 0 84 84" className="w-full h-full -rotate-90">
@@ -26,7 +31,7 @@ export function AnelProgresso({
           fill="none"
           strokeWidth="9"
           strokeLinecap="round"
-          className={`${classeCor} transition-all duration-500`}
+          className={classeCor}
           strokeDasharray={c}
           strokeDashoffset={c * (1 - pct)}
         />

@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { atualizarPerfil } from "./actions";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { FotoPerfil } from "@/components/FotoPerfil";
+import { BarraInferiorApp } from "@/components/BarraInferiorApp";
 import { IconeInstagram } from "@/components/IconeInstagram";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
 import { ConfigBloqueioPin } from "@/components/ConfigBloqueioPin";
@@ -31,7 +32,7 @@ function PerfilConteudo() {
   const sucesso = searchParams.get("sucesso");
 
   return (
-    <main className="min-h-screen p-6 md:p-12 pagina-curta">
+    <main className="min-h-screen p-6 pb-28 md:p-12 md:pb-28 lg:pb-12 pagina-curta">
       <Link href="/dashboard" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Painel
       </Link>
@@ -140,6 +141,7 @@ function PerfilConteudo() {
           Excluir minha conta permanentemente
         </Link>
       </div>
+      <BarraInferiorApp />
     </main>
   );
 }

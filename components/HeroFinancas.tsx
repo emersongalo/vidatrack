@@ -57,7 +57,7 @@ export function HeroFinancas({
         <BotaoOcultarValores />
       </div>
       <p className="text-[2.6rem] leading-tight font-display font-bold font-mono tracking-tight mb-4 break-words">
-        <ValorMonetario valor={saldo} />
+        <ValorMonetario valor={saldo} animado />
       </p>
 
       {total > 0 && (
@@ -73,7 +73,7 @@ export function HeroFinancas({
             <TrendingUp size={15} strokeWidth={2.5} className="text-habito shrink-0" /> Receitas
           </p>
           <p className="text-base font-mono font-semibold text-habito mt-1 break-words leading-tight">
-            <ValorMonetario valor={receitas} />
+            <ValorMonetario valor={receitas} animado />
           </p>
         </Link>
         <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0">
@@ -81,7 +81,7 @@ export function HeroFinancas({
             <TrendingDown size={15} strokeWidth={2.5} className="text-red-400 shrink-0" /> Despesas
           </p>
           <p className="text-base font-mono font-semibold text-red-400 mt-1 break-words leading-tight">
-            <ValorMonetario valor={despesas} />
+            <ValorMonetario valor={despesas} animado />
           </p>
         </Link>
         <Link href="/financas/investir" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0">

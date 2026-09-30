@@ -81,3 +81,35 @@ export function resumoDoHabito(
     meses,
   };
 }
+
+export type EstadoDia = "feito" | "falhou" | "folga";
+
+/**
+ * Etapa 230 — "semana na linha": os últimos `n` dias até `ate` (inclusive),
+ * do mais antigo pro mais novo. Dia antes da criação do hábito conta como folga.
+ */
+export function ultimosDias(
+  habito: any,
+  checkins: { habito_id: string; data: string; quantidade?: number | null }[],
+  ate: string,
+  n = 7
+): { dia: string; estado: EstadoDia }[] {
+  const meta = Math.max(1, Number(habito.meta_diaria) || 1);
+  const inicio = somarDias(ate, -(n - 1));
+  const qtd = new Map<string, number>();
+  for (const c of checkins) {
+    if (c.habito_id !== habito.id || c.data < inicio || c.data > ate) continue;
+    qtd.set(c.data, (qtd.get(c.data) ?? 0) + Number(c.quantidade ?? 1));
+  }
+  const criado = String(habito.criado_em ?? "").slice(0, 10) || "0000-00-00";
+  const saida: { dia: string; estado: EstadoDia }[] = [];
+  for (let i = 0; i < n; i++) {
+    const dia = somarDias(inicio, i);
+    let estado: EstadoDia;
+    if ((qtd.get(dia) ?? 0) >= meta) estado = "feito";
+    else if (dia < criado || !habitoDevidoNoDia(habito, dia)) estado = "folga";
+    else estado = "falhou";
+    saida.push({ dia, estado });
+  }
+  return saida;
+}

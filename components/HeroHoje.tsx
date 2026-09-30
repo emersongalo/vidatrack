@@ -4,6 +4,7 @@
 // anel do dia, sequência, semana e a barra de dias ‹ Ontem · Hoje · Amanhã ›.
 import { useState } from "react";
 import { AnelProgresso } from "@/components/AnelProgresso";
+import { NumeroAnimado } from "@/components/NumeroAnimado";
 import { TiraDeDiasAgenda } from "@/components/TiraDeDiasAgenda";
 import { rotuloDoDia } from "@/lib/financas/agruparPorDia";
 
@@ -54,12 +55,12 @@ export function HeroHoje({
         <div className="bg-base-800 border border-base-600 rounded-2xl px-3.5 py-3">
           <p className="text-sm text-ink-400">🔥 Maior sequência</p>
           <p className="text-lg font-semibold mt-0.5">
-            {sequencia} {sequencia === 1 ? "dia" : "dias"}
+            <NumeroAnimado valor={sequencia} /> {sequencia === 1 ? "dia" : "dias"}
           </p>
         </div>
         <div className="bg-base-800 border border-base-600 rounded-2xl px-3.5 py-3">
           <p className="text-sm text-ink-400">📈 Últimos 7 dias</p>
-          <p className="text-lg font-semibold mt-0.5">{taxaSemana === null ? "—" : `${taxaSemana}%`}</p>
+          <p className="text-lg font-semibold mt-0.5">{taxaSemana === null ? "—" : <NumeroAnimado valor={taxaSemana} sufixo="%" />}</p>
         </div>
       </div>
 

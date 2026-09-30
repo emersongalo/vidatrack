@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { RefreshCw, Bell } from "lucide-react";
 import { classeCor, classeFundoSuave, classeTextoCor } from "@/lib/agenda/estilo";
 import { IconeHabito } from "@/components/IconeHabito";
@@ -10,6 +10,17 @@ import { alternarCheckin, ajustarQuantidadeHabito, salvarObservacaoCheckin } fro
 import { alternarConclusaoTarefa } from "@/app/habitos/tarefas/actions";
 import { PRIORIDADES } from "@/lib/agenda/recorrencia";
 import { AdiarTarefa } from "@/components/AdiarTarefa";
+import { createClient } from "@/lib/supabase/client";
+import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
+
+// Etapa 230 — vibraçãozinha ao marcar (no celular)
+export function vibrar(padrao: number | number[] = 15) {
+  try {
+    (navigator as any).vibrate?.(padrao);
+  } catch {
+    /* sem vibração */
+  }
+}
 
 export type ItemAgenda = {
   id: string;
@@ -36,6 +47,8 @@ export type ItemAgenda = {
   semana?: { feitos: number; meta: number } | null;
   /** Etapa 194 — tarefa que lança em Finanças ao concluir */
   financa?: { tipo: string; valor: number } | null;
+  /** Etapa 230 — últimos 7 dias do hábito (bolinhas na linha) */
+  ultimos7?: { dia: string; estado: "feito" | "falhou" | "folga" }[] | null;
 };
 
 /** Etapa 193 — pendentes primeiro; entre elas, atrasadas, depois
@@ -84,8 +97,61 @@ export function ItemLinhaAgenda({
   const [mostrarNota, setMostrarNota] = useState(false);
   const [textoNota, setTextoNota] = useState("");
   const ehNumerico = item.tipo === "habito" && item.meta && item.meta.alvo > 1;
+  // Etapa 230 — animação ao marcar e gesto de arrastar a linha
+  const [pulsar, setPulsar] = useState(0);
+  const [arrasto, setArrasto] = useState(0);
+  const toque = useRef<{ x: number; y: number; decidido: boolean; horizontal: boolean } | null>(null);
+  const arrastou = useRef(false);
+  const podeAdiar = item.tipo === "tarefa" && !item.repete && !item.feito;
+  const LIMIAR = 80;
+
+  function aoTocar(e: React.TouchEvent) {
+    toque.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, decidido: false, horizontal: false };
+    arrastou.current = false;
+  }
+  function aoMover(e: React.TouchEvent) {
+    const t = toque.current;
+    if (!t) return;
+    const dx = e.touches[0].clientX - t.x;
+    const dy = e.touches[0].clientY - t.y;
+    if (!t.decidido) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      t.decidido = true;
+      t.horizontal = Math.abs(dx) > Math.abs(dy);
+    }
+    if (!t.horizontal) return;
+    arrastou.current = true;
+    const limite = dx < 0 && !podeAdiar ? 0 : 140;
+    setArrasto(Math.max(-limite, Math.min(140, dx)));
+  }
+  function aoSoltar() {
+    const dx = arrasto;
+    toque.current = null;
+    setArrasto(0);
+    if (dx > LIMIAR) {
+      if (ehNumerico) ajustar(1);
+      else alternar();
+    } else if (dx < -LIMIAR && podeAdiar) {
+      adiarParaAmanha();
+    }
+  }
+  async function adiarParaAmanha() {
+    const d = new Date(dataISO + "T12:00:00");
+    d.setDate(d.getDate() + 1);
+    const amanha = d.toLocaleDateString("sv-SE");
+    vibrar(10);
+    const { error } = await createClient().from("tarefas").update({ data: amanha }).eq("id", item.id);
+    if (!error) {
+      atualizarSnapshotEmTodasAsTelas();
+      aoConcluirMutacao?.();
+    }
+  }
 
   function alternar() {
+    if (!item.feito) {
+      vibrar(15);
+      setPulsar((n) => n + 1);
+    }
     aoAlternarLocal?.();
 
     if (typeof navigator !== "undefined" && !navigator.onLine && aoClicarOffline) {
@@ -117,6 +183,10 @@ export function ItemLinhaAgenda({
   }
 
   function ajustar(delta: number) {
+    if (delta > 0) {
+      vibrar(10);
+      setPulsar((n) => n + 1);
+    }
     aoAjustarLocal?.(delta);
 
     if (typeof navigator !== "undefined" && !navigator.onLine && aoAjustarOffline) {
@@ -208,6 +278,40 @@ export function ItemLinhaAgenda({
           )}
         </div>
 
+        {/* Etapa 230 — barra do contador (ex: 3 de 8 copos) */}
+        {ehNumerico && item.meta && (
+          <div className="h-1.5 bg-base-700 rounded-full overflow-hidden mt-1.5 max-w-[12rem]">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${classeCor(item.cor)}`}
+              style={{ width: `${Math.min(100, (item.meta.atual / item.meta.alvo) * 100)}%` }}
+            />
+          </div>
+        )}
+        {/* Etapa 230 — semana na linha: os últimos 7 dias */}
+        {item.ultimos7 && item.ultimos7.length > 0 && (
+          <div className="flex items-center gap-1 mt-1.5" aria-label="Últimos 7 dias">
+            {item.ultimos7.map((d, i) => {
+              const ultimo = i === item.ultimos7!.length - 1;
+              const feito = ultimo ? item.feito : d.estado === "feito";
+              return (
+                <span
+                  key={d.dia}
+                  title={d.dia.split("-").reverse().slice(0, 2).join("/")}
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    feito
+                      ? classeCor(item.cor)
+                      : ultimo
+                        ? "border border-ink-400"
+                        : d.estado === "falhou"
+                          ? "bg-base-600"
+                          : "border border-base-600"
+                  }`}
+                />
+              );
+            })}
+          </div>
+        )}
+
         {item.participantes && item.participantes.length > 1 && (
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             {item.participantes.map((p, i) => (
@@ -237,7 +341,33 @@ export function ItemLinhaAgenda({
     )}
     {/* Etapa 227 — linha no estilo do Extrato: faixa lateral (verde feito,
        vermelho atrasada, cinza pendente) e toque abre o detalhe */}
-    <li data-item className="relative flex items-center gap-3 bg-base-800 pl-4 pr-3 py-3.5">
+    <li data-item className="relative overflow-hidden">
+      {/* Etapa 230 — arrastar: → marca (ou +1), ← adia a tarefa pra amanhã */}
+      {arrasto !== 0 && (
+        <div
+          aria-hidden
+          className={`absolute inset-0 flex items-center px-5 text-base font-semibold ${
+            arrasto > 0 ? `justify-start ${classeCor(item.cor)} text-base-900` : "justify-end bg-[#4C8FCC] text-white"
+          }`}
+        >
+          {arrasto > 0 ? (ehNumerico ? "+1" : item.feito ? "Desmarcar" : "✓ Feito") : "Amanhã →"}
+        </div>
+      )}
+      <div
+        data-gesto-proprio="1"
+        onTouchStart={aoTocar}
+        onTouchMove={aoMover}
+        onTouchEnd={aoSoltar}
+        onClickCapture={(e) => {
+          if (arrastou.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            arrastou.current = false;
+          }
+        }}
+        className="relative flex items-center gap-3 bg-base-800 pl-4 pr-3 py-3.5"
+        style={{ transform: arrasto ? `translateX(${arrasto}px)` : undefined, transition: arrasto ? "none" : "transform 200ms" }}
+      >
       <span
         aria-hidden
         className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${
@@ -265,7 +395,8 @@ export function ItemLinhaAgenda({
             onClick={() => ajustar(1)}
             disabled={pendente}
             aria-label="Aumentar"
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition text-lg ${
+            key={`mais-${pulsar}`}
+            className={`${pulsar ? "animate-pop" : ""} w-10 h-10 rounded-full flex items-center justify-center transition text-lg ${
               item.feito ? `${classeCor(item.cor)} text-base-900` : "border border-base-600 hover:border-ink-400"
             }`}
           >
@@ -278,7 +409,8 @@ export function ItemLinhaAgenda({
           disabled={pendente}
           aria-pressed={item.feito}
           aria-label={item.feito ? "Desmarcar" : "Marcar como feito"}
-          className={`w-11 h-11 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
+          key={`chk-${pulsar}`}
+          className={`${pulsar ? "animate-pop" : ""} w-11 h-11 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
             item.feito ? `${classeCor(item.cor)} border-transparent` : "border-base-600 hover:border-ink-400"
           } ${pendente ? "opacity-60" : ""}`}
         >
@@ -295,6 +427,7 @@ export function ItemLinhaAgenda({
           )}
         </button>
       )}
+      </div>
     </li>
 
     {mostrarNota && (

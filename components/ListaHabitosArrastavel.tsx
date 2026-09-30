@@ -5,7 +5,7 @@ import { Pencil, Share2, Archive } from "lucide-react";
 import { ListaArrastavel } from "@/components/ListaArrastavel";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
-import { classeFundoSuave } from "@/lib/agenda/estilo";
+import { classeCor, classeFundoSuave } from "@/lib/agenda/estilo";
 import { IconeHabito } from "@/components/IconeHabito";
 import { arquivarHabito, reordenarHabitos } from "@/app/habitos/actions";
 
@@ -25,6 +25,7 @@ type Habito = {
   streakAtual?: number;
   melhorStreak?: number;
   eh_negativo?: boolean;
+  ultimos7?: { dia: string; estado: "feito" | "falhou" | "folga" }[];
 };
 
 export function ListaHabitosArrastavel({ habitos, aoMudar }: { habitos: Habito[]; aoMudar?: () => void }) {
@@ -52,6 +53,19 @@ export function ListaHabitosArrastavel({ habitos, aoMudar }: { habitos: Habito[]
                 {RÓTULOS_FREQUENCIA[habito.frequencia] ?? "Personalizado"}
                 {habito.categorias_produtividade?.nome && ` · ${habito.categorias_produtividade.nome}`}
               </span>
+              {/* Etapa 230 — semana na linha */}
+              {habito.ultimos7 && (
+                <span className="flex items-center gap-1 mt-1.5" aria-label="Últimos 7 dias">
+                  {habito.ultimos7.map((d) => (
+                    <span
+                      key={d.dia}
+                      className={`w-2.5 h-2.5 rounded-full ${
+                        d.estado === "feito" ? classeCor(habito.cor) : d.estado === "falhou" ? "bg-base-600" : "border border-base-600"
+                      }`}
+                    />
+                  ))}
+                </span>
+              )}
             </span>
             <span className="text-right shrink-0">
               {habito.eh_negativo ? (

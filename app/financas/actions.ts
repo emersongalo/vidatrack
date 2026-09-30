@@ -12,6 +12,7 @@ import {
   esquemaCategoria,
   primeiroErro,
 } from "@/lib/validacao/financas";
+import { lerLimite } from "@/lib/financas/limite";
 
 /**
  * Etapa 199 — versão usada pela tela Contas: em vez de redirecionar
@@ -43,6 +44,8 @@ export async function criarContaNaTela(formData: FormData): Promise<{ erro?: str
     saldo_inicial: resultado.data.saldoInicial,
     dia_fechamento: resultado.data.diaFechamento,
     dia_vencimento: resultado.data.diaVencimento,
+    // Etapa 230 — limite do cartão
+    limite: resultado.data.tipo === "cartao" ? lerLimite(formData.get("limite")) : null,
   });
   if (error) return { erro: error.message };
 
@@ -78,6 +81,8 @@ export async function criarConta(formData: FormData) {
     saldo_inicial: resultado.data.saldoInicial,
     dia_fechamento: resultado.data.diaFechamento,
     dia_vencimento: resultado.data.diaVencimento,
+    // Etapa 230 — limite do cartão
+    limite: resultado.data.tipo === "cartao" ? lerLimite(formData.get("limite")) : null,
   });
 
   if (error) {
@@ -121,6 +126,7 @@ export async function atualizarConta(contaId: string, formData: FormData) {
       saldo_inicial: resultado.data.saldoInicial,
       dia_fechamento: resultado.data.diaFechamento,
       dia_vencimento: resultado.data.diaVencimento,
+      limite: resultado.data.tipo === "cartao" ? lerLimite(formData.get("limite")) : null,
     })
     .eq("id", contaId);
 

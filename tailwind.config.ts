@@ -38,6 +38,21 @@ const config: Config = {
         xs: ["0.8125rem", { lineHeight: "1.15rem" }],
         sm: ["0.9375rem", { lineHeight: "1.4rem" }],
       },
+      // Etapa 230 — animações curtas (marcar hábito, comemoração, números)
+      keyframes: {
+        pop: { "0%": { transform: "scale(1)" }, "40%": { transform: "scale(1.25)" }, "100%": { transform: "scale(1)" } },
+        subir: {
+          "0%": { transform: "translateY(0) scale(0.6)", opacity: "0" },
+          "15%": { opacity: "1" },
+          "100%": { transform: "translateY(-70vh) scale(1.1)", opacity: "0" },
+        },
+        surgir: { "0%": { transform: "scale(0.85)", opacity: "0" }, "100%": { transform: "scale(1)", opacity: "1" } },
+      },
+      animation: {
+        pop: "pop 0.35s ease-out",
+        subir: "subir 1.8s ease-out forwards",
+        surgir: "surgir 0.25s ease-out",
+      },
       borderRadius: {
         xl2: "1.25rem",
       },

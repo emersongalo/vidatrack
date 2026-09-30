@@ -8,6 +8,7 @@ import { arquivarConta, excluirContaDefinitivamente } from "../actions";
 import { createClient } from "@/lib/supabase/client";
 import { esquemaConta, primeiroErro } from "@/lib/validacao/financas";
 import { SeletorTipoConta } from "@/components/SeletorTipoConta";
+import { lerLimite } from "@/lib/financas/limite";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
 import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
@@ -81,6 +82,8 @@ export default function ContasPage() {
         saldo_inicial: resultado.data.saldoInicial,
         dia_fechamento: resultado.data.diaFechamento,
         dia_vencimento: resultado.data.diaVencimento,
+        // Etapa 230 — limite do cartão
+        limite: resultado.data.tipo === "cartao" ? lerLimite(formData.get("limite")) : null,
       });
       if (error) return falhar(error.message);
 
@@ -95,7 +98,7 @@ export default function ContasPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
+      <Link href="/financas" className="hidden lg:inline text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
       <div className="flex items-center justify-between mt-4 mb-6">

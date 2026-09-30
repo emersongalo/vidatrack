@@ -13,6 +13,7 @@ import { calcularMapaContribuicoes } from "@/lib/habitos/mapa-contribuicoes";
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
 import { SugestoesLembrete } from "@/components/SugestoesLembrete";
 import { PadroesSemana } from "@/components/PadroesSemana";
+import { SemanaPorHabito } from "@/components/SemanaPorHabito";
 
 function ultimosNDias(n: number): string[] {
   const dias: string[] = [];
@@ -204,6 +205,9 @@ export default function EstatisticasHabitosPage() {
           🎉 Retrospectiva do ano
         </Link>
       </div>
+      {/* Etapa 230 — semana por hábito, na cor de cada um */}
+      {snapshot && <SemanaPorHabito habitos={habitos as any[]} checkins={checkins as any[]} hoje={hojeISO()} />}
+
       {snapshot && <SugestoesLembrete snapshot={snapshot} hojeISO={hojeISO()} />}
       {snapshot && <PadroesSemana snapshot={snapshot} hojeISO={hojeISO()} />}
 

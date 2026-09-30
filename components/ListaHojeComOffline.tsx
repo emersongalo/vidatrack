@@ -5,6 +5,8 @@ import { ItemLinhaAgenda, ItemAgenda } from "@/components/ItemLinhaAgenda";
 import { adicionarNaFila, salvarCacheHoje } from "@/lib/offline/fila";
 import { EVENTO_SINCRONIZACAO_CONCLUIDA } from "@/components/GerenciadorSincronizacaoOffline";
 import { agruparItensHoje } from "@/lib/habitos/gruposHoje";
+import { ComemoracaoDia } from "@/components/ComemoracaoDia";
+import { vibrar } from "@/components/ItemLinhaAgenda";
 
 export function ListaHojeComOffline({
   itensServidor,
@@ -18,6 +20,17 @@ export function ListaHojeComOffline({
 }) {
   const [itens, setItens] = useState(itensServidor);
   const [offline, setOffline] = useState(false);
+  // Etapa 230 — comemoração quando o dia fecha 100% (só quando muda na hora, não ao abrir)
+  const [comemorar, setComemorar] = useState(false);
+  const tudoFeito = itens.length > 0 && itens.every((i) => i.feito);
+  const marcouAgora = useRef(false);
+  useEffect(() => {
+    if (marcouAgora.current && tudoFeito) {
+      setComemorar(true);
+      vibrar([20, 60, 20, 60, 40]);
+    }
+    marcouAgora.current = false;
+  }, [tudoFeito, itens]);
   const refLista = useRef<HTMLDivElement>(null);
 
   // Sempre que os dados do servidor mudam (nova renderização, revalidação),
@@ -77,10 +90,12 @@ export function ListaHojeComOffline({
   }, []);
 
   function atualizarVisualmente(item: ItemAgenda) {
+    marcouAgora.current = !item.feito;
     setItens((atual) => atual.map((it) => (it.id === item.id ? { ...it, feito: !it.feito } : it)));
   }
 
   function ajustarVisualmente(item: ItemAgenda, delta: number) {
+    marcouAgora.current = delta > 0;
     setItens((atual) =>
       atual.map((it) => {
         if (it.id !== item.id || !it.meta) return it;
@@ -104,6 +119,7 @@ export function ListaHojeComOffline({
 
   return (
     <div>
+      {comemorar && <ComemoracaoDia aoFechar={() => setComemorar(false)} />}
       {offline && (
         <p className="mb-3 text-xs bg-financa-soft text-financa border border-financa/30 rounded-lg px-3 py-2">
           Sem conexão — suas marcações estão sendo guardadas e vão

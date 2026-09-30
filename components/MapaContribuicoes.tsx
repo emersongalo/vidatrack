@@ -29,28 +29,52 @@ export function MapaContribuicoes({ pontos }: { pontos: PontoMapaContribuicoes[]
     semanas.push(celulas.slice(i, i + 7));
   }
 
+  // Etapa 230 — quadrados maiores, nome do mês em cima e começa mostrando o fim (hoje)
+  const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  const rotulos = semanas.map((semana, i) => {
+    const primeiro = semana.find((p) => p)?.data;
+    if (!primeiro) return "";
+    const mes = Number(primeiro.slice(5, 7)) - 1;
+    const anterior = i > 0 ? semanas[i - 1].find((p) => p)?.data : null;
+    return !anterior || Number(anterior.slice(5, 7)) - 1 !== mes ? MESES[mes] : "";
+  });
   return (
-    <div className="overflow-x-auto pb-2">
-      <div className="flex gap-1" style={{ minWidth: `${semanas.length * 14}px` }}>
+    <div
+      className="overflow-x-auto pb-2"
+      ref={(el) => {
+        if (el && !el.dataset.rolado) {
+          el.scrollLeft = el.scrollWidth;
+          el.dataset.rolado = "1";
+        }
+      }}
+    >
+      <div className="flex gap-1 mb-1" style={{ minWidth: `${semanas.length * 18}px` }}>
+        {rotulos.map((r, i) => (
+          <span key={i} className="w-3.5 text-xs text-ink-400 overflow-visible whitespace-nowrap">
+            {r}
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-1" style={{ minWidth: `${semanas.length * 18}px` }}>
         {semanas.map((semana, i) => (
           <div key={i} className="flex flex-col gap-1">
             {semana.map((ponto, j) => (
               <div
                 key={j}
                 title={ponto ? `${new Date(ponto.data + "T00:00:00").toLocaleDateString("pt-BR")} — ${ponto.percentual ?? "sem hábitos"}${ponto.percentual !== null ? "%" : ""}` : ""}
-                className={`w-2.5 h-2.5 rounded-sm ${ponto ? corDoQuadrado(ponto.percentual) : "opacity-0"}`}
+                className={`w-3.5 h-3.5 rounded ${ponto ? corDoQuadrado(ponto.percentual) : "opacity-0"}`}
               />
             ))}
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-1.5 mt-3 text-[11px] text-ink-400">
+      <div className="flex items-center gap-1.5 mt-3 text-xs text-ink-400">
         Menos
-        <span className="w-2.5 h-2.5 rounded-sm bg-base-700" />
-        <span className="w-2.5 h-2.5 rounded-sm bg-habito/25" />
-        <span className="w-2.5 h-2.5 rounded-sm bg-habito/50" />
-        <span className="w-2.5 h-2.5 rounded-sm bg-habito/75" />
-        <span className="w-2.5 h-2.5 rounded-sm bg-habito" />
+        <span className="w-3 h-3 rounded bg-base-700" />
+        <span className="w-3 h-3 rounded bg-habito/25" />
+        <span className="w-3 h-3 rounded bg-habito/50" />
+        <span className="w-3 h-3 rounded bg-habito/75" />
+        <span className="w-3 h-3 rounded bg-habito" />
         Mais
       </div>
     </div>

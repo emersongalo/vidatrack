@@ -2,6 +2,8 @@ import Link from "next/link";
 import { PiggyBank } from "lucide-react";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { SeloBanco } from "@/components/SeloBanco";
+import { bancoPorId, siglaDoSelo } from "@/lib/financas/bancos";
+import { usoDoLimite } from "@/lib/financas/limite";
 import type { ContaComSaldo } from "@/lib/financas/consulta";
 
 const RÓTULOS_TIPO: Record<string, string> = {
@@ -56,31 +58,59 @@ export function ListaContasComSaldo({ contas }: { contas: ContaComSaldo[] }) {
         </div>
       )}
 
+      {/* Etapa 230 — cartão de crédito com cara de cartão: cor do banco, fatura e limite */}
       {cartoes.length > 0 && (
-        <div className="mb-6 bg-base-800 border border-base-600 rounded-3xl p-5">
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-semibold">Cartões</h2>
             <Link href="/financas/contas" className="text-base text-ink-400 hover:text-ink-100 transition">
               Ver mais ›
             </Link>
           </div>
-          <ul className="divide-y divide-base-600">
+          <ul className="flex gap-3 overflow-x-auto snap-x snap-mandatory -mx-1 px-1 pb-1">
             {cartoes.map((cartao) => {
               const devendo = Math.max(0, -cartao.saldo);
+              const banco = bancoPorId(cartao.banco);
+              const limite = usoDoLimite(devendo, Number((cartao as any).limite) || null);
+              const vence = (cartao as any).dia_vencimento as number | null | undefined;
               return (
-                <li key={cartao.id}>
-                  <Link href={`/financas/contas/${cartao.id}/fatura`} className="flex items-center gap-4 py-3.5">
-                    <SeloBanco bancoId={cartao.banco} nome={cartao.nome} tipo={cartao.tipo} tamanho={48} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-lg font-medium truncate">{cartao.nome}</p>
-                      <p className="text-sm text-ink-400">Ver fatura ›</p>
+                <li key={cartao.id} className={`snap-start shrink-0 ${cartoes.length > 1 ? "w-[85%] sm:w-80" : "w-full"}`}>
+                  <Link
+                    href={`/financas/contas/${cartao.id}/fatura`}
+                    className="block rounded-3xl p-5 shadow-lg active:scale-[0.99] transition"
+                    style={{
+                      background: `linear-gradient(135deg, ${banco.cor} 0%, ${banco.cor}CC 55%, #16161c 140%)`,
+                      color: banco.texto,
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-lg font-semibold truncate">{cartao.nome}</p>
+                        <p className="text-sm opacity-80">{vence ? `Vence dia ${vence}` : "Cartão de crédito"}</p>
+                      </div>
+                      <span className="text-sm font-bold tracking-wider px-2 py-1 rounded-lg bg-black/20">
+                        {siglaDoSelo(cartao.banco, cartao.nome, cartao.tipo) || "💳"}
+                      </span>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs text-ink-400">A pagar</p>
-                      <p className={`font-mono text-lg font-semibold ${devendo > 0 ? "text-red-400" : "text-ink-100"}`}>
-                        <ValorMonetario valor={devendo} />
-                      </p>
-                    </div>
+                    <p className="text-xs opacity-80 mt-5">Fatura a pagar</p>
+                    <p className="font-mono text-3xl font-bold">
+                      <ValorMonetario valor={devendo} />
+                    </p>
+                    {limite ? (
+                      <div className="mt-4">
+                        <div className="h-2 rounded-full bg-black/25 overflow-hidden">
+                          <div className="h-full rounded-full bg-white/90" style={{ width: `${limite.pct}%` }} />
+                        </div>
+                        <div className="flex justify-between text-xs mt-1.5 opacity-90">
+                          <span>{limite.pct}% do limite</span>
+                          <span>
+                            Disponível <ValorMonetario valor={limite.disponivel} />
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs opacity-75 mt-4">Ver fatura ›</p>
+                    )}
                   </Link>
                 </li>
               );

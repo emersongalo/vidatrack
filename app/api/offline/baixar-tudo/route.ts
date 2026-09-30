@@ -38,7 +38,7 @@ export async function GET() {
       .select("id, titulo, icone, repetir, dias_semana, data, concluida, ordem, subtarefas, categoria_id, horario_lembrete, observacoes, dia_mes, mes, intervalo_dias, prioridade, financa_tipo, financa_valor, financa_conta_id, financa_categoria_id")
       .eq("arquivada", false),
     supabase.from("categorias_produtividade").select("id, nome, cor"),
-    supabase.from("financa_contas").select("id, dono_id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento").eq("arquivado", false),
+    supabase.from("financa_contas").select("id, dono_id, nome, banco, tipo, saldo_inicial, dia_fechamento, dia_vencimento, limite").eq("arquivado", false),
     supabase.from("financa_categorias").select("id, dono_id, nome, tipo, icone, cor, meta_mensal, envelope_desde, sobra_enviada_mes"),
     // Etapa 215 — meta arquivada não aparece mais na lista
     supabase.from("metas_financeiras").select("id, nome, valor_atual, valor_alvo, concluida, data_alvo").eq("arquivada", false),

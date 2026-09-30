@@ -1,13 +1,27 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "221";
+export const VERSAO_NOVIDADES = "230";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "230",
+    titulo: "Visual novo, mais rápido de usar",
+    itens: [
+      { emoji: "➕", titulo: "Um + pra tudo", texto: "A barra de baixo agora é uma só: Início, Hábitos, Finanças e Perfil. O + do meio lança gasto, receita, transferência, hábito ou tarefa de qualquer tela." },
+      { emoji: "👉", titulo: "Arraste pra marcar", texto: "Na lista de hoje, arraste um hábito pra direita pra marcar (ou somar +1). Arraste uma tarefa pra esquerda pra passar pra amanhã.", href: "/habitos" },
+      { emoji: "🟢", titulo: "Sua semana em bolinhas", texto: "Cada hábito mostra os últimos 7 dias, e as Estatísticas ganharam a semana de todos os hábitos juntos.", href: "/habitos/estatisticas" },
+      { emoji: "🏆", titulo: "Dia completo!", texto: "Marcou tudo do dia? Tem comemoração." },
+      { emoji: "💳", titulo: "Cartão com cara de cartão", texto: "Fatura, vencimento e quanto do limite você já usou. Informe o limite ao editar o cartão.", href: "/financas/contas" },
+      { emoji: "🎯", titulo: "Metas com anel", texto: "Veja a % no anel, quanto falta e quanto guardar por mês pra chegar no prazo.", href: "/financas/metas" },
+      { emoji: "🍩", titulo: "Gastos por categoria", texto: "Gráfico de rosca com o total no meio e cada categoria com sua fatia.", href: "/financas" },
+      { emoji: "🔍", titulo: "Extrato mais limpo", texto: "Mês e filtros ficam presos no topo ao rolar; a busca fica na lupa.", href: "/financas/extrato" },
+    ],
+  },
   {
     versao: "221",
     titulo: "Envelopes, assinaturas e rotinas",

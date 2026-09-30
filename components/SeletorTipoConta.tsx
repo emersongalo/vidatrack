@@ -6,7 +6,10 @@ export function SeletorTipoConta({
   tipoInicial = "banco",
   diaFechamentoInicial,
   diaVencimentoInicial,
+  limiteInicial,
 }: {
+  /** Etapa 230 */
+  limiteInicial?: number | null;
   tipoInicial?: string;
   diaFechamentoInicial?: number | null;
   diaVencimentoInicial?: number | null;
@@ -61,6 +64,21 @@ export function SeletorTipoConta({
               className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             />
           </div>
+        </div>
+      )}
+
+      {/* Etapa 230 — limite: mostra quanto do cartão já foi usado */}
+      {tipo === "cartao" && (
+        <div>
+          <label className="block text-sm text-ink-400 mb-1.5">Limite do cartão (opcional)</label>
+          <input
+            name="limite"
+            type="text"
+            inputMode="decimal"
+            placeholder="Ex: 5.000,00"
+            defaultValue={limiteInicial ? String(limiteInicial).replace(".", ",") : ""}
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 font-mono focus:border-ink-100 outline-none transition"
+          />
         </div>
       )}
     </>

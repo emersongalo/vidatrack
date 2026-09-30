@@ -17,6 +17,7 @@ import { AvisoConquista } from "@/components/AvisoConquista";
 import { SeuDia } from "@/components/SeuDia";
 import { AtalhosPainel } from "@/components/AtalhosPainel";
 import { ModulosPainel } from "@/components/ModulosPainel";
+import { BarraInferiorApp } from "@/components/BarraInferiorApp";
 import { resumoDoDia, saudacao } from "@/lib/painel/seuDia";
 import { hojeISO } from "@/lib/habitos/streak";
 
@@ -52,7 +53,7 @@ export default function DashboardPage() {
   const resumoHoje = snapshot ? resumoDoDia(snapshot, hojeISO()) : null;
 
   return (
-    <main className="min-h-screen min-h-[100dvh] p-6 md:p-12 max-w-lg lg:max-w-5xl mx-auto flex flex-col">
+    <main className="min-h-screen min-h-[100dvh] p-6 pb-28 md:p-12 md:pb-28 lg:pb-12 max-w-lg lg:max-w-5xl mx-auto flex flex-col">
       <header className="flex items-center justify-between mb-2 gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/perfil" className="shrink-0">
@@ -175,6 +176,8 @@ export default function DashboardPage() {
           Privacidade
         </Link>
       </div>
+      {/* Etapa 230 — barra de baixo única */}
+      <BarraInferiorApp />
     </main>
   );
 }

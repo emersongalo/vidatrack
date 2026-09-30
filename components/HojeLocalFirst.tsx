@@ -16,10 +16,13 @@ import { ListaHojeComOffline } from "@/components/ListaHojeComOffline";
 import { ordenarItensAgenda, type ItemAgenda } from "@/components/ItemLinhaAgenda";
 import { useSnapshotOffline, atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { HeroHoje } from "@/components/HeroHoje";
+import { ultimosDias } from "@/lib/habitos/detalhe";
 import { calcularStreak } from "@/lib/habitos/streak";
 import { pausasDe } from "@/lib/habitos/pausa";
 import { resumoDaSemana } from "@/lib/geral/semana";
 import { createClient } from "@/lib/supabase/client";
+import { EstadoVazio } from "@/components/EstadoVazio";
+import { Esqueleto } from "@/components/Esqueleto";
 import { Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff } from "lucide-react";
 import {
   NOMES_BLOCOS_HOJE,
@@ -106,6 +109,8 @@ function HojeConteudo() {
         meta: meta > 1 ? { atual: quantidadeAtual, alvo: meta, unidade: h.unidade } : null,
         semana,
         ordem: h.ordem ?? 0,
+        // Etapa 230 — bolinhas dos últimos 7 dias
+        ultimos7: h.eh_negativo ? null : ultimosDias(h, snapshot.habitoCheckins, dataSelecionada),
       });
     }
 
@@ -232,11 +237,7 @@ function HojeConteudo() {
           </div>
 
           {carregando ? (
-            <div className="space-y-2 animate-pulse">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-base-800 border border-base-600 rounded-xl2" />
-              ))}
-            </div>
+            <Esqueleto linhas={4} comTopo={false} />
           ) : itens!.length === 0 && !temAlgumItemCadastrado ? (
             <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-8 text-center">
               <p className="font-display font-semibold mb-1">Vamos começar?</p>
@@ -259,10 +260,7 @@ function HojeConteudo() {
               </div>
             </div>
           ) : itens!.length === 0 ? (
-            <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
-              <p className="font-display font-semibold mb-1">Nada por aqui</p>
-              <p className="text-ink-400 text-sm">✅ Nenhum hábito ou tarefa cai neste dia.</p>
-            </div>
+            <EstadoVazio emoji="🌤️" titulo="Dia livre" texto="Nenhum hábito ou tarefa cai neste dia." />
           ) : (
             <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />
           )}

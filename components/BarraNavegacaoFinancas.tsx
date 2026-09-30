@@ -8,13 +8,8 @@ import {
 } from "lucide-react";
 import { BotaoNovoLancamento } from "@/components/BotaoNovoLancamento";
 import { BotaoAssistenteFlutuante } from "@/components/BotaoAssistenteFlutuante";
+import { BarraInferiorApp } from "@/components/BarraInferiorApp";
 
-const ABAS = [
-  { href: "/financas", rotulo: "Início", Icone: Home },
-  { href: "/financas/contas", rotulo: "Contas", Icone: Landmark },
-  { href: "/financas/extrato", rotulo: "Extrato", Icone: Receipt },
-  { href: "/financas/mais", rotulo: "Mais", Icone: MoreHorizontal },
-];
 
 // Etapa 160 — só pro menu lateral do desktop: em vez de repetir as
 // mesmas 4 abas do celular (deixando um monte de tela boa escondida
@@ -111,22 +106,8 @@ export function BarraNavegacaoFinancas() {
         </>
       )}
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-base-800 border-t border-base-600 z-10">
-        <div className="max-w-2xl mx-auto grid grid-cols-4">
-          {ABAS.map((aba) => (
-            <Link
-              key={aba.href}
-              href={aba.href}
-              className={`flex flex-col items-center gap-1 py-2.5 text-xs transition ${
-                ehAtiva(pathname, aba.href) ? "text-financa" : "text-ink-400 hover:text-ink-100"
-              }`}
-            >
-              <aba.Icone size={20} strokeWidth={2} />
-              {aba.rotulo}
-            </Link>
-          ))}
-        </div>
-      </nav>
+      {/* Etapa 230 — barra única do app no celular */}
+      <BarraInferiorApp />
     </>
   );
 }

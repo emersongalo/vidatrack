@@ -12,6 +12,8 @@ import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { Trash2, Archive, Pencil } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { AnelProgresso } from "@/components/AnelProgresso";
+import { EstadoVazio } from "@/components/EstadoVazio";
 
 // Etapa 127: a lista abre com o que já tinha salvo. Guardar progresso
 // numa meta, criar, arquivar ou excluir continuam precisando de
@@ -30,6 +32,10 @@ export default function MetasPage() {
       <p className="text-ink-400 text-sm mb-6">
         Separe um valor pra alcançar, tipo "Viagem" ou "Reserva de emergência", e vá guardando aos poucos.
       </p>
+
+      {metas.length === 0 && snapshot && (
+        <EstadoVazio emoji="🎯" titulo="Nenhuma meta ainda" texto="Crie a primeira aqui embaixo — viagem, reserva, um celular novo…" />
+      )}
 
       {metas.length > 0 && (
         <ul className="space-y-3 mb-8 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
@@ -79,33 +85,46 @@ function CartaoMeta({ meta, aoMudar }: { meta: any; aoMudar: () => void }) {
     "w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition";
 
   return (
-    <li className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
-      <div className="flex items-baseline justify-between mb-2">
-        <span className="font-medium">{meta.nome}</span>
-        {meta.concluida && <span className="text-xs text-habito font-medium">Concluída 🎉</span>}
-      </div>
-      <div className="h-2 bg-base-600 rounded-full overflow-hidden mb-2">
-        <div className={`h-full rounded-full ${meta.concluida ? "bg-habito" : "bg-financa"}`} style={{ width: `${plano.percentual}%` }} />
-      </div>
-      <div className="flex items-baseline justify-between text-sm mb-2">
-        <span className="font-mono">
-          {formatarMoeda(Number(meta.valor_atual))} / {formatarMoeda(Number(meta.valor_alvo))}
-        </span>
-        <span className="text-ink-400 text-xs">{plano.percentual}%</span>
+    <li className="bg-base-800 border border-base-600 rounded-3xl p-5">
+      {/* Etapa 230 — anel com a % no meio, quanto falta e o ritmo pra chegar */}
+      <div className="flex items-center gap-4 mb-4">
+        <AnelProgresso
+          valor={plano.percentual}
+          total={100}
+          tamanho={88}
+          texto={`${plano.percentual}%`}
+          classeCor={meta.concluida ? "stroke-habito" : "stroke-financa"}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-semibold truncate">{meta.nome}</p>
+          <p className="font-mono text-base">
+            {formatarMoeda(Number(meta.valor_atual))}
+            <span className="text-ink-400"> de {formatarMoeda(Number(meta.valor_alvo))}</span>
+          </p>
+          {meta.concluida ? (
+            <p className="text-sm text-habito font-medium mt-0.5">Concluída 🎉</p>
+          ) : (
+            <p className="text-sm text-ink-400 mt-0.5">
+              Faltam <span className="text-ink-100 font-mono">{formatarMoeda(plano.falta)}</span>
+            </p>
+          )}
+        </div>
       </div>
 
       {!meta.concluida && (
-        <p className="text-xs text-ink-400 mb-3">
-          Faltam <span className="text-ink-100 font-mono">{formatarMoeda(plano.falta)}</span>
-          {plano.porMes !== null && meta.data_alvo && (
+        <div className="text-sm rounded-2xl bg-base-900/60 border border-base-600 px-3 py-2.5 mb-4">
+          {plano.prazoPassou ? (
+            <span className="text-red-400">O prazo passou — que tal ajustar a data?</span>
+          ) : plano.porMes !== null && meta.data_alvo ? (
             <>
-              {" "}· guarde <span className="text-financa font-mono">{formatarMoeda(plano.porMes)}/mês</span> até{" "}
-              {new Date(meta.data_alvo + "T00:00:00").toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}
+              Guarde <span className="text-financa font-mono font-semibold">{formatarMoeda(plano.porMes)}/mês</span> até{" "}
+              {new Date(meta.data_alvo + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
+              <span className="text-ink-400"> ({plano.meses} {plano.meses === 1 ? "mês" : "meses"})</span>
             </>
+          ) : (
+            <span className="text-ink-400">Sem prazo — defina uma data no lápis pra ver quanto guardar por mês.</span>
           )}
-          {plano.prazoPassou && <span className="text-red-400"> · o prazo passou — que tal ajustar a data?</span>}
-          {!meta.data_alvo && <> · sem prazo definido</>}
-        </p>
+        </div>
       )}
 
       {editando ? (

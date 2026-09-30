@@ -29,6 +29,9 @@ type Categoria = { id: string; nome: string; tipo: string; icone?: string | null
  * Etapa 214 — "Ler cupom": tira foto do cupom/nota e preenche valor,
  * data e descrição (OCR no próprio aparelho).
  */
+// Etapa 230 — no celular o + fica na barra de baixo (BarraInferiorApp);
+// este botão flutuante só aparece no desktop, mas continua montado pra
+// abrir a folha pelo atalho ?gasto=1.
 export function BotaoNovoLancamento() {
   const [aberto, setAberto] = useState(false);
 
@@ -50,7 +53,7 @@ export function BotaoNovoLancamento() {
       <button
         onClick={() => setAberto(true)}
         aria-label="Novo lançamento"
-        className="fixed bottom-24 right-5 lg:bottom-8 lg:right-8 z-20 w-14 h-14 rounded-full bg-financa text-base-900 flex items-center justify-center shadow-lg shadow-financa/30 hover:opacity-90 active:scale-95 transition"
+        className="hidden fixed bottom-24 right-5 lg:bottom-8 lg:right-8 z-20 w-14 h-14 rounded-full bg-financa text-base-900 lg:flex items-center justify-center shadow-lg shadow-financa/30 hover:opacity-90 active:scale-95 transition"
       >
         <Plus size={26} strokeWidth={2.5} />
       </button>
@@ -60,7 +63,7 @@ export function BotaoNovoLancamento() {
   );
 }
 
-function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
+export function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
   const snapshot = useMemo(() => lerSnapshotOffline(), []);
   const meuId = snapshot?.perfil.id;
 

@@ -29,7 +29,9 @@ const ITENS = [
 export default function MaisFinancasPage() {
   return (
     <main className="min-h-screen p-6 pb-24 pagina">
-      <LinkVoltar href="/financas" texto="Finanças" />
+      <div className="hidden lg:block">
+        <LinkVoltar href="/financas" texto="Finanças" />
+      </div>
       <h1 className="text-3xl font-display font-bold mt-4 mb-6">Mais</h1>
 
       <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">

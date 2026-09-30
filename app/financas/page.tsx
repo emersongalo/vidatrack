@@ -13,6 +13,8 @@ import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { GraficoDespesasCategoriaLazy as GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoriaLazy";
 import { MapaCalorGastos } from "@/components/MapaCalorGastos";
 import { LinkVoltar } from "@/components/LinkVoltar";
+import { EstadoVazio } from "@/components/EstadoVazio";
+import { Esqueleto } from "@/components/Esqueleto";
 import { HeroFinancas } from "@/components/HeroFinancas";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { ValorMonetario } from "@/components/ValorMonetario";
@@ -320,20 +322,21 @@ export default function FinancasPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <LinkVoltar href="/dashboard" texto="Painel" />
+      {/* Etapa 230 — no celular o voltar e as abas ficam no topo (AbasArea) */}
+      <div className="hidden lg:block">
+        <LinkVoltar href="/dashboard" texto="Painel" />
+      </div>
       <h1 className="text-3xl font-display font-bold mt-2 mb-6">Finanças</h1>
 
-      {!contas.length ? (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-8 text-center">
-          <p className="font-display font-semibold mb-1">Nenhuma conta ainda</p>
-          <p className="text-ink-400 text-sm mb-4">Crie sua primeira conta (carteira, banco ou cartão) para começar.</p>
-          <Link
-            href="/financas/contas"
-            className="inline-block bg-ink-100 text-base-900 text-sm font-medium rounded-lg px-4 py-2 hover:opacity-90 transition"
-          >
-            Criar conta
-          </Link>
-        </div>
+      {snapshot === undefined ? (
+        <Esqueleto linhas={3} />
+      ) : !contas.length ? (
+        <EstadoVazio
+          emoji="🏦"
+          titulo="Nenhuma conta ainda"
+          texto="Adicione sua carteira, banco ou cartão pra começar."
+          acao={{ rotulo: "+ Adicionar conta", href: "/financas/contas" }}
+        />
       ) : (
         <>
           <HeroFinancas

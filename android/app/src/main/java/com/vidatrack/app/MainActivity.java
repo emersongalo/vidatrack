@@ -44,6 +44,11 @@ public class MainActivity extends BridgeActivity {
             webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) ->
                 baixarArquivo(url, userAgent, contentDisposition, mimetype));
         }
+
+        // Etapa 229 — app fechado de vez: abre direto na tela do widget.
+        // (Se o Capacitor já tiver repassado pelo onNewIntent, o extra já
+        // foi removido e isso não faz nada.)
+        abrirRota(getIntent());
     }
 
     private void baixarArquivo(String url, String userAgent, String contentDisposition, String mimetype) {
@@ -97,7 +102,10 @@ public class MainActivity extends BridgeActivity {
         while (base.endsWith("/")) base = base.substring(0, base.length() - 1);
         final String url = base + rota;
 
+        // Etapa 229 — com o app em segundo plano, a tela que estava aberta
+        // recarregava ao voltar e "atropelava" essa navegação. Um pequeno
+        // atraso garante que a rota do widget/notificação seja a última.
         final WebView webView = bridge.getWebView();
-        if (webView != null) webView.post(() -> webView.loadUrl(url));
+        if (webView != null) webView.postDelayed(() -> webView.loadUrl(url), 350);
     }
 }

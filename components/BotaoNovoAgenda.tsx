@@ -19,7 +19,7 @@ export function BotaoNovoAgenda() {
       <button
         onClick={() => setAberto(true)}
         aria-label="Adicionar"
-        className="fixed bottom-24 right-5 lg:bottom-8 lg:right-8 z-20 w-14 h-14 rounded-full bg-habito text-base-900 flex items-center justify-center shadow-lg shadow-habito/30 hover:opacity-90 active:scale-95 transition"
+        className="hidden fixed bottom-24 right-5 lg:bottom-8 lg:right-8 z-20 w-14 h-14 rounded-full bg-habito text-base-900 lg:flex items-center justify-center shadow-lg shadow-habito/30 hover:opacity-90 active:scale-95 transition"
       >
         <Plus size={26} strokeWidth={2.5} />
       </button>

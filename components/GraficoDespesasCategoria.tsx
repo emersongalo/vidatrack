@@ -37,7 +37,7 @@ export function GraficoDespesasCategoria({
   if (dados.length === 0) return null;
 
   return (
-    <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
+    <div className="bg-base-800 border border-base-600 rounded-3xl p-5">
       <div className="flex justify-end gap-1.5 mb-2">
         <button
           onClick={() => setTipoGrafico("pizza")}
@@ -60,15 +60,20 @@ export function GraficoDespesasCategoria({
       </div>
 
       {tipoGrafico === "pizza" ? (
-        <div className="h-56">
+        <div className="h-60 relative">
+          {/* Etapa 230 — rosca com o total no meio */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className="text-sm text-ink-400">Total</span>
+            <span className="text-xl font-mono font-semibold">{ocultos ? "R$ •••" : formatarMoeda(totalDados)}</span>
+          </div>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={dados}
                 dataKey="valor"
                 nameKey="nome"
-                innerRadius={50}
-                outerRadius={80}
+                innerRadius={68}
+                outerRadius={96}
                 paddingAngle={2}
                 onClick={(_: unknown, i: number) => abrir(i)}
                 cursor={clicavel ? "pointer" : undefined}
@@ -139,45 +144,41 @@ export function GraficoDespesasCategoria({
         </div>
       )}
 
-      {/* Legenda em lista de 1 coluna — cada nome tem a linha inteira
-          pra si, nunca mais cortando com "..." por falta de espaço. */}
-      {clicavel && <p className="text-xs text-ink-400 mt-2 text-center">Toque numa categoria pra ver os lançamentos</p>}
-      <div className={`${clicavel ? "space-y-0.5" : "space-y-2"} mt-3`}>
+      {/* Etapa 230 — legenda maior: ícone, nome, % e valor, com barra da proporção */}
+      {clicavel && <p className="text-sm text-ink-400 mt-2 text-center">Toque numa categoria pra ver os lançamentos</p>}
+      <div className="mt-3 divide-y divide-base-600">
         {dados.map((d, i) => {
           const percentual = totalDados > 0 ? (d.valor / totalDados) * 100 : 0;
+          const cor = PALETA[i % PALETA.length];
           const info = mapaCategoriaInfo
             ? Array.from(mapaCategoriaInfo.values()).find((c: any) => c.nome === d.nome)
             : null;
           const conteudo = (
             <>
-              {info ? (
-                <span
-                  className={`w-6 h-6 rounded-md flex items-center justify-center text-xs shrink-0 ${classeFundoSuave(info.cor)}`}
-                >
-                  {info.icone ? <IconeCategoria icone={info.icone} /> : d.nome.charAt(0)}
-                </span>
-              ) : (
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: PALETA[i % PALETA.length] }}
-                />
-              )}
-              <span className="text-ink-400 flex-1 min-w-0 truncate">{d.nome}</span>
-              {mapaCategoriaInfo && <span className="text-ink-400 shrink-0 w-8 text-right">{percentual.toFixed(0)}%</span>}
-              <span className="font-mono shrink-0">{ocultos ? "R$ ••••••" : formatarMoeda(d.valor)}</span>
-              {d.href && <span className="text-ink-400 shrink-0">›</span>}
+              <div className="flex items-center gap-3">
+                {info ? (
+                  <span className={`w-9 h-9 rounded-full flex items-center justify-center text-sm shrink-0 ${classeFundoSuave(info.cor)}`}>
+                    {info.icone ? <IconeCategoria icone={info.icone} /> : d.nome.charAt(0)}
+                  </span>
+                ) : (
+                  <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: cor }} />
+                )}
+                <span className="text-base flex-1 min-w-0 truncate">{d.nome}</span>
+                <span className="text-sm text-ink-400 shrink-0">{percentual.toFixed(0)}%</span>
+                <span className="text-base font-mono font-semibold shrink-0">{ocultos ? "R$ •••" : formatarMoeda(d.valor)}</span>
+                {d.href && <span className="text-ink-400 shrink-0">›</span>}
+              </div>
+              <div className="h-1.5 bg-base-700 rounded-full overflow-hidden mt-2 ml-12">
+                <div className="h-full rounded-full" style={{ width: `${percentual}%`, backgroundColor: cor }} />
+              </div>
             </>
           );
           return d.href ? (
-            <Link
-              key={d.nome}
-              href={d.href}
-              className="flex items-center gap-2 text-xs rounded-lg -mx-2 px-2 py-1 hover:bg-base-700 transition"
-            >
+            <Link key={d.nome} href={d.href} className="block py-3 hover:bg-base-700/40 transition -mx-2 px-2 rounded-lg">
               {conteudo}
             </Link>
           ) : (
-            <div key={d.nome} className="flex items-center gap-2 text-xs">
+            <div key={d.nome} className="py-3">
               {conteudo}
             </div>
           );

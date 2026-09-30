@@ -180,8 +180,8 @@ describe("conquistas", () => {
 });
 
 describe("novidades 221", () => {
-  it("versão nova no topo", () => {
-    expect(VERSAO_NOVIDADES).toBe("221");
-    expect(NOVIDADES[0].versao).toBe("221");
+  it("grupo da 221 continua na lista e a versão do topo é a atual", () => {
+    expect(NOVIDADES.some((g) => g.versao === "221")).toBe(true);
+    expect(NOVIDADES[0].versao).toBe(VERSAO_NOVIDADES);
   });
 });

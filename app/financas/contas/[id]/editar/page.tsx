@@ -75,6 +75,7 @@ function EditarContaConteudo() {
           tipoInicial={conta.tipo}
           diaFechamentoInicial={conta.dia_fechamento}
           diaVencimentoInicial={conta.dia_vencimento}
+          limiteInicial={(conta as any).limite ?? null}
         />
         </div>
         <div className="form-coluna">

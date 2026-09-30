@@ -18,6 +18,8 @@ import { removerTransacao } from "../actions";
 import { Pencil, Trash2 } from "lucide-react";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { EstadoVazio } from "@/components/EstadoVazio";
+import { Esqueleto } from "@/components/Esqueleto";
 
 const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "este_mes", rotulo: "Este mês" },
@@ -130,6 +132,8 @@ function ExtratoConteudo() {
   const [visualizacao, setVisualizacao] = useState<"transacoes" | "categorias">("transacoes");
   // Etapa 212 — busca por texto (descrição, categoria, conta ou valor)
   const [busca, setBusca] = useState(params.get("busca") ?? "");
+  // Etapa 230 — busca fica escondida atrás da lupa
+  const [buscaAberta, setBuscaAberta] = useState(!!params.get("busca"));
 
   // mantém a URL igual aos filtros (voltar/atualizar a página não perde o filtro)
   useEffect(() => {
@@ -197,7 +201,7 @@ function ExtratoConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
+      <Link href="/financas" className="hidden lg:inline text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>
       <div className="flex items-center justify-between mt-4 mb-5">
@@ -261,6 +265,8 @@ function ExtratoConteudo() {
         </div>
       )}
 
+      {/* Etapa 230 — período, busca e filtros ficam presos no topo ao rolar */}
+      <div className="sticky top-0 z-20 -mx-6 px-6 md:-mx-12 md:px-12 pt-3 pb-1 mb-3 bg-base-900/95 backdrop-blur border-b border-base-600/60" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
       {/* Etapa 208 — período: setas navegam mês a mês; tocar no nome abre
          os atalhos e a escolha de datas. Tudo cabe na tela. */}
       <div className="flex items-stretch gap-2 mb-3">
@@ -295,6 +301,19 @@ function ExtratoConteudo() {
             <ChevronRight size={18} />
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => {
+            if (buscaAberta) setBusca("");
+            setBuscaAberta((v) => !v);
+          }}
+          aria-label={buscaAberta ? "Fechar busca" : "Buscar"}
+          className={`w-11 shrink-0 rounded-xl border flex items-center justify-center transition ${
+            buscaAberta || busca ? "border-financa bg-financa/10 text-financa" : "border-base-600 bg-base-800 text-ink-400 hover:text-ink-100"
+          }`}
+        >
+          {buscaAberta ? <X size={18} /> : <Search size={18} />}
+        </button>
       </div>
 
       {painelPeriodo && (
@@ -355,13 +374,15 @@ function ExtratoConteudo() {
         </div>
       )}
 
-      <div className="flex gap-2 mb-3">
+      {buscaAberta && (
+      <div className="flex gap-2 mb-3 animate-surgir">
         <div className="relative flex-1 min-w-0">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
           <input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar (ex: mercado, luz, 150)"
+            autoFocus
             className="w-full bg-base-800 border border-base-600 rounded-xl pl-9 pr-8 py-3 text-base text-ink-100 outline-none focus:border-ink-100"
           />
           {busca && (
@@ -375,12 +396,27 @@ function ExtratoConteudo() {
             </button>
           )}
         </div>
+      </div>
+      )}
+
+      <div className="flex gap-2 mb-2">
+        {(["todos", "receita", "despesa"] as const).map((opcao) => (
+          <button
+            key={opcao}
+            onClick={() => setTipo(opcao)}
+            className={`flex-1 min-w-0 text-base rounded-full px-2 py-2 border transition ${
+              tipo === opcao ? "bg-ink-100 text-base-900 border-ink-100" : "border-base-600 text-ink-400 hover:text-ink-100"
+            }`}
+          >
+            {opcao === "todos" ? "Todos" : opcao === "receita" ? "Receitas" : "Despesas"}
+          </button>
+        ))}
         {contas.length > 1 && (
           <select
             value={contaFiltro ?? ""}
             onChange={(e) => setContaFiltro(e.target.value || null)}
             aria-label="Filtrar por conta"
-            className="w-32 shrink-0 bg-base-800 border border-base-600 rounded-xl px-2 text-sm text-ink-100 outline-none"
+            className="w-28 shrink-0 bg-base-800 border border-base-600 rounded-full px-2 text-sm text-ink-100 outline-none"
           >
             <option value="">Todas as contas</option>
             {contas.map((c: any) => (
@@ -391,19 +427,6 @@ function ExtratoConteudo() {
           </select>
         )}
       </div>
-
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        {(["todos", "receita", "despesa"] as const).map((opcao) => (
-          <button
-            key={opcao}
-            onClick={() => setTipo(opcao)}
-            className={`text-base rounded-full px-2 py-2 border transition ${
-              tipo === opcao ? "bg-ink-100 text-base-900 border-ink-100" : "border-base-600 text-ink-400 hover:text-ink-100"
-            }`}
-          >
-            {opcao === "todos" ? "Todos" : opcao === "receita" ? "Receitas" : "Despesas"}
-          </button>
-        ))}
       </div>
 
       {(categoriaFiltro || contaFiltro || etiquetaFiltro) && (
@@ -462,15 +485,13 @@ function ExtratoConteudo() {
           }}
         />
       ) : snapshot === undefined ? (
-        <div className="space-y-2 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-base-800 border border-base-600 rounded-lg" />
-          ))}
-        </div>
+        <Esqueleto linhas={4} comTopo={false} />
       ) : lista.length === 0 ? (
-        <p className="text-ink-400 text-sm">
-          🧾 Nenhum lançamento {categoriaFiltro || contaFiltro ? "com esse filtro " : ""}nesse período.
-        </p>
+        <EstadoVazio
+          emoji="🧾"
+          titulo={busca || categoriaFiltro || contaFiltro || etiquetaFiltro ? "Nada com esse filtro" : "Nenhum lançamento nesse período"}
+          texto={busca || categoriaFiltro || contaFiltro || etiquetaFiltro ? "Tente limpar a busca ou os filtros." : "Use o + lá embaixo pra lançar um gasto ou receita."}
+        />
       ) : (
         // Etapa 225 — agrupado por dia, linhas maiores e receita/despesa bem marcadas
         <ListaLancamentosPorDia
