@@ -118,12 +118,18 @@ export function FormularioTransacao({
 
   function escolherDescricao(s: DescricaoSugerida) {
     setDescricaoTexto(s.descricao);
-    if (s.categoriaId && categoriasFiltradas.some((c) => c.id === s.categoriaId)) {
-      setCategoriaSelecionada(s.categoriaId);
+    // Etapa 228 — tocar na sugestão já deixa a categoria marcada (o valor a pessoa coloca).
+    const todas = (lerSnapshotOffline()?.financas.categorias ?? []) as any[];
+    const nomeOrigem = todas.find((c) => c.id === s.categoriaId)?.nome?.toLowerCase().trim();
+    const alvo =
+      categoriasFiltradas.find((c) => c.id === s.categoriaId) ??
+      (nomeOrigem ? categoriasFiltradas.find((c) => c.nome.toLowerCase().trim() === nomeOrigem) : undefined);
+    const id = alvo?.id ?? sugerirCategoria(s.descricao, tipo, historicoLocal, categoriasFiltradas);
+    if (id) {
+      setCategoriaSelecionada(id);
       setCategoriaTocada(true);
       setCategoriaSugerida(false);
     }
-    // Etapa 228 — não preenche mais o valor: a pessoa coloca
   }
 
   function sugerirPelaDescricao(texto: string) {

@@ -120,13 +120,20 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
 
   function escolherDescricao(s: DescricaoSugerida) {
     setDescricao(s.descricao);
-    if (s.categoriaId && todasDespesa.some((c) => c.id === s.categoriaId)) {
-      setCategoriaId(s.categoriaId);
+    // Etapa 228 — tocar na sugestão já deixa a categoria marcada (o valor a pessoa coloca).
+    // A categoria pode ser da outra pessoa que divide as finanças: aí usa a sua de mesmo nome;
+    // sem nenhuma, tenta adivinhar pela descrição.
+    const nomeDe = (id: string | null) =>
+      ((snapshot?.financas.categorias ?? []) as any[]).find((c) => c.id === id)?.nome?.toLowerCase().trim();
+    const alvo =
+      todasDespesa.find((c) => c.id === s.categoriaId) ??
+      (s.categoriaId ? todasDespesa.find((c) => c.nome.toLowerCase().trim() === nomeDe(s.categoriaId)) : undefined);
+    const id = alvo?.id ?? sugerirCategoria(s.descricao, "despesa", historico, todasDespesa);
+    if (id) {
+      setCategoriaId(id);
       setCategoriaTocada(true);
       setCategoriaSugerida(false);
     }
-    // Etapa 228 — não preenche mais o valor: a pessoa coloca
-    if (s.contaId && contas.some((c) => c.id === s.contaId)) setContaId(s.contaId);
   }
 
   function mudarDescricao(texto: string) {
