@@ -56,6 +56,24 @@ export function ChatAssistente() {
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [mensagens]);
 
+  // Etapa 232 — frase vinda da caixa do Painel (?texto=...): envia uma vez
+  const jaEnviouDaUrl = useRef(false);
+  useEffect(() => {
+    if (!carregou || !snapshot || jaEnviouDaUrl.current) return;
+    jaEnviouDaUrl.current = true;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const frase = params.get("texto");
+      if (frase) {
+        params.delete("texto");
+        const resto = params.toString();
+        window.history.replaceState(window.history.state, "", window.location.pathname + (resto ? `?${resto}` : ""));
+        enviar(frase);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carregou, snapshot]);
+
   function enviar(texto: string) {
     if (!texto.trim() || !snapshot) return;
     const resposta = interpretarPergunta(texto, snapshot);

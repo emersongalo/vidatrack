@@ -14,6 +14,8 @@ import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 
 // Etapa 230 — vibraçãozinha ao marcar (no celular)
+const LIMITE_NOTA = 1000;
+
 export function vibrar(padrao: number | number[] = 15) {
   try {
     (navigator as any).vibrate?.(padrao);
@@ -432,28 +434,33 @@ export function ItemLinhaAgenda({
 
     {mostrarNota && (
       <li className="bg-base-800 px-4 pb-4 pt-1">
+        {/* Etapa 232 — campo maior (até 1000 letras), com contador */}
         <textarea
           value={textoNota}
           onChange={(e) => setTextoNota(e.target.value)}
           placeholder="Quer anotar algo sobre hoje? (opcional)"
-          rows={2}
+          rows={4}
+          maxLength={LIMITE_NOTA}
           autoFocus
-          className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition resize-none mb-2"
+          className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3 text-base text-ink-100 focus:border-ink-100 outline-none transition resize-y min-h-[6.5rem] max-h-72"
         />
+        <p className={`text-xs text-right mb-2 ${textoNota.length > LIMITE_NOTA - 50 ? "text-red-400" : "text-ink-400"}`}>
+          {textoNota.length}/{LIMITE_NOTA}
+        </p>
         <div className="flex gap-2">
           <button
             onClick={() => {
               setMostrarNota(false);
               setTextoNota("");
             }}
-            className="flex-1 text-xs text-ink-400 hover:text-ink-100 transition py-1.5"
+            className="flex-1 text-sm text-ink-400 hover:text-ink-100 transition py-2.5"
           >
             Pular
           </button>
           <button
             onClick={salvarNota}
             disabled={!textoNota.trim()}
-            className="flex-1 bg-habito text-base-900 text-xs font-medium rounded-lg py-1.5 hover:opacity-90 transition disabled:opacity-40"
+            className="flex-1 bg-habito text-base-900 text-sm font-semibold rounded-xl py-2.5 hover:opacity-90 transition disabled:opacity-40"
           >
             Salvar nota
           </button>

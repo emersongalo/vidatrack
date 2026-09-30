@@ -43,7 +43,7 @@ export function DiarioDoDia({ snapshot, dataISO, hojeISO }: { snapshot: Snapshot
           dono_id: snapshot.perfil.id,
           data: dataISO,
           humor: novoHumor,
-          texto: novoTexto.trim() ? novoTexto.trim().slice(0, 500) : null,
+          texto: novoTexto.trim() ? novoTexto.trim().slice(0, 1000) : null,
           atualizado_em: new Date().toISOString(),
         },
         { onConflict: "dono_id,data" }
@@ -94,22 +94,27 @@ export function DiarioDoDia({ snapshot, dataISO, hojeISO }: { snapshot: Snapshot
         </button>
       )}
       {humor !== null && mostrarTexto && (
-        <div className="mt-3 flex gap-2">
-          <input
+        <div className="mt-3">
+          {/* Etapa 232 — caixa maior pra escrever sobre o dia (até 1000 letras) */}
+          <textarea
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             onBlur={() => texto !== (salvo?.texto ?? "") && salvar(humor, texto)}
-            maxLength={500}
+            maxLength={1000}
+            rows={4}
             placeholder="Ex: treinei cedo e rendi muito no trabalho"
-            className="flex-1 min-w-0 bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm outline-none focus:border-ink-100"
+            className="w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3 text-base outline-none focus:border-ink-100 resize-y min-h-[6.5rem] max-h-72"
           />
-          <button
-            type="button"
-            onClick={() => salvar(humor, texto)}
-            className="text-xs px-3 rounded-lg bg-nota text-base-900 font-medium"
-          >
-            Salvar
-          </button>
+          <div className="flex items-center justify-between mt-1.5">
+            <span className={`text-xs ${texto.length > 950 ? "text-red-400" : "text-ink-400"}`}>{texto.length}/1000</span>
+            <button
+              type="button"
+              onClick={() => salvar(humor, texto)}
+              className="text-sm px-4 py-2 rounded-xl bg-nota text-base-900 font-semibold"
+            >
+              Salvar
+            </button>
+          </div>
         </div>
       )}
       <p className="text-xs mt-2 h-4 text-ink-400">

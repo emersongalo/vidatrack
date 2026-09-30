@@ -15,8 +15,8 @@ import { NovidadesApp } from "@/components/NovidadesApp";
 import { PainelCartoes } from "@/components/PainelCartoes";
 import { AvisoConquista } from "@/components/AvisoConquista";
 import { SeuDia } from "@/components/SeuDia";
-import { AtalhosPainel } from "@/components/AtalhosPainel";
-import { ModulosPainel } from "@/components/ModulosPainel";
+import { CaixaAssistente } from "@/components/CaixaAssistente";
+import { ProximosPainel } from "@/components/ProximosPainel";
 import { BarraInferiorApp } from "@/components/BarraInferiorApp";
 import { resumoDoDia, saudacao } from "@/lib/painel/seuDia";
 import { hojeISO } from "@/lib/habitos/streak";
@@ -156,8 +156,10 @@ export default function DashboardPage() {
       <div className="flex-1 mt-4 space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 lg:items-start">
         <div className="space-y-6">
           {resumoHoje && <SeuDia resumo={resumoHoje} />}
-          <AtalhosPainel />
-          <ModulosPainel />
+          {/* Etapa 232 — os atalhos (Gasto, Receita, Hábitos, Finanças…) repetiam a
+             barra de baixo; no lugar: falar com o assistente e o que vem pela frente */}
+          <CaixaAssistente />
+          <ProximosPainel snapshot={snapshot} hoje={hojeISO()} />
         </div>
         <PainelCartoes />
       </div>
