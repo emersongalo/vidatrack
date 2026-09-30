@@ -61,6 +61,10 @@ const config: Config = {
         "mao-dir": { "0%": { transform: "translateX(60vw) rotate(20deg) scaleX(-1)" }, "60%": { transform: "translateX(8px) rotate(0) scaleX(-1)" }, "75%": { transform: "translateX(-4px) scaleX(-1)" }, "100%": { transform: "translateX(0) scaleX(-1)" } },
         estouro: { "0%": { transform: "scale(0)", opacity: "1" }, "100%": { transform: "scale(2.6)", opacity: "0" } },
         descer: { "0%": { transform: "translateY(-120%)", opacity: "0" }, "100%": { transform: "translateY(0)", opacity: "1" } },
+        // Etapa 234 — cena do "Juntos" no Painel
+        nuvem: { "0%": { transform: "translateX(-40px)" }, "100%": { transform: "translateX(calc(100vw))" } },
+        boiar: { "0%, 100%": { transform: "translateY(0)" }, "50%": { transform: "translateY(-5px)" } },
+        girar: { "0%": { transform: "rotate(0deg)" }, "100%": { transform: "rotate(360deg)" } },
       },
       animation: {
         pop: "pop 0.35s ease-out",
@@ -78,6 +82,9 @@ const config: Config = {
         "mao-dir": "mao-dir 0.7s cubic-bezier(.2,.9,.3,1.2) forwards",
         estouro: "estouro 0.8s ease-out forwards",
         descer: "descer 0.35s ease-out",
+        nuvem: "nuvem 38s linear infinite",
+        boiar: "boiar 2.6s ease-in-out infinite",
+        girar: "girar 24s linear infinite",
       },
       borderRadius: {
         xl2: "1.25rem",

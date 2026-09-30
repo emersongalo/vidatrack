@@ -187,3 +187,19 @@ export function primeiroNome(bruto: string | null | undefined): string {
 }
 
 export const REACOES = ["❤️", "🔥", "👏", "🙏", "💪", "😍"] as const;
+
+/** Etapa 234 — todos os hábitos em dupla do retrato local, já calculados */
+export function duplasDoRetrato(s: any, hoje: string, hora: number): { habito: any; info: InfoDupla }[] {
+  if (!s) return [];
+  const porHabito = new Map<string, Parceiro[]>();
+  for (const p of (s.parceiros ?? []) as { habito_id: string; usuario_id: string; nome: string }[]) {
+    const l = porHabito.get(p.habito_id) ?? [];
+    l.push({ id: p.usuario_id, nome: p.nome });
+    porHabito.set(p.habito_id, l);
+  }
+  if (!porHabito.size) return [];
+  const checkins = [...(s.habitoCheckins ?? []), ...(s.checkinsCompartilhados ?? [])];
+  return ((s.habitos ?? []) as any[])
+    .filter((h) => porHabito.has(h.id) && !h.eh_negativo)
+    .map((h) => ({ habito: h, info: infoDupla(h, checkins, s.perfil?.id ?? "", porHabito.get(h.id)!, hoje, hora) }));
+}
