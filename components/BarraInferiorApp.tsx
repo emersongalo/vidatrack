@@ -71,9 +71,9 @@ export function BarraInferiorApp() {
       </nav>
 
       {menu && (
-        <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/60" onClick={() => setMenu(false)}>
+        <div className="animate-fundo fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={() => setMenu(false)}>
           <div
-            className="animate-subir w-full max-w-md bg-base-800 border-t border-base-600 rounded-t-3xl p-5"
+            className="animate-folha w-full max-w-md bg-base-800 border-t border-base-600 rounded-t-3xl p-5"
             style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >

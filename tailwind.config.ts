@@ -47,11 +47,16 @@ const config: Config = {
           "100%": { transform: "translateY(-70vh) scale(1.1)", opacity: "0" },
         },
         surgir: { "0%": { transform: "scale(0.85)", opacity: "0" }, "100%": { transform: "scale(1)", opacity: "1" } },
+        // Etapa 231 — folha que sobe de baixo e fica parada
+        folha: { "0%": { transform: "translateY(100%)" }, "100%": { transform: "translateY(0)" } },
+        fundo: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
       },
       animation: {
         pop: "pop 0.35s ease-out",
         subir: "subir 1.8s ease-out forwards",
         surgir: "surgir 0.25s ease-out",
+        folha: "folha 0.25s ease-out",
+        fundo: "fundo 0.2s ease-out",
       },
       borderRadius: {
         xl2: "1.25rem",
