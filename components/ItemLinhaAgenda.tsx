@@ -12,6 +12,10 @@ import { PRIORIDADES } from "@/lib/agenda/recorrencia";
 import { AdiarTarefa } from "@/components/AdiarTarefa";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
+import { FaixaDupla } from "@/components/FaixaDupla";
+import { ToqueDuplo } from "@/components/ToqueDuplo";
+import { avisarDupla } from "@/lib/habitos/avisarDupla";
+import type { InfoDupla } from "@/lib/habitos/dupla";
 
 // Etapa 230 — vibraçãozinha ao marcar (no celular)
 const LIMITE_NOTA = 1000;
@@ -51,6 +55,9 @@ export type ItemAgenda = {
   financa?: { tipo: string; valor: number } | null;
   /** Etapa 230 — últimos 7 dias do hábito (bolinhas na linha) */
   ultimos7?: { dia: string; estado: "feito" | "falhou" | "folga" }[] | null;
+  /** Etapa 233 — hábito feito em dupla: carinha, quem já fez, sequência juntos */
+  dupla?: InfoDupla | null;
+  ehHoje?: boolean;
 };
 
 /** Etapa 193 — pendentes primeiro; entre elas, atrasadas, depois
@@ -106,6 +113,15 @@ export function ItemLinhaAgenda({
   const arrastou = useRef(false);
   const podeAdiar = item.tipo === "tarefa" && !item.repete && !item.feito;
   const LIMIAR = 80;
+  // Etapa 233 — toque duplo quando os dois completam no mesmo dia
+  const [toqueDuplo, setToqueDuplo] = useState<{ sequencia: number } | null>(null);
+
+  async function completouEmDupla() {
+    if (!item.dupla) return;
+    const r = await avisarDupla("feito", item.id, { data: dataISO });
+    const todos = r ? r.tipo === "dupla" : item.dupla.parceiros.every((p) => p.feito);
+    if (todos) setToqueDuplo({ sequencia: item.dupla.sequencia + 1 });
+  }
 
   function aoTocar(e: React.TouchEvent) {
     toque.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, decidido: false, horizontal: false };
@@ -169,6 +185,7 @@ export function ItemLinhaAgenda({
         // desmarca) — não faz sentido pedir nota de algo que a
         // pessoa acabou de dizer que não fez.
         if (!feitoAntes && !resultado?.marcoAtingido) setMostrarNota(true);
+        if (!feitoAntes && item.dupla) void completouEmDupla();
       } else {
         await alternarConclusaoTarefa(item.id, dataISO);
       }
@@ -195,9 +212,11 @@ export function ItemLinhaAgenda({
       aoAjustarOffline(delta);
       return;
     }
+    const completou = !!item.meta && item.meta.atual < item.meta.alvo && item.meta.atual + delta >= item.meta.alvo;
     iniciarTransicao(async () => {
       await ajustarQuantidadeHabito(item.id, dataISO, delta);
       aoConcluirMutacao?.();
+      if (completou && item.dupla) void completouEmDupla();
     });
   }
 
@@ -314,7 +333,7 @@ export function ItemLinhaAgenda({
           </div>
         )}
 
-        {item.participantes && item.participantes.length > 1 && (
+        {!item.dupla && item.participantes && item.participantes.length > 1 && (
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             {item.participantes.map((p, i) => (
               <span
@@ -334,6 +353,14 @@ export function ItemLinhaAgenda({
 
   return (
     <>
+    {toqueDuplo && item.dupla && (
+      <ToqueDuplo
+        habito={item.titulo}
+        parceiro={item.dupla.parceiros.map((p) => p.nome).join(" e ")}
+        sequencia={toqueDuplo.sequencia}
+        aoFechar={() => setToqueDuplo(null)}
+      />
+    )}
     {marcoAtingido && (
       <CelebracaoConquista
         marco={marcoAtingido}
@@ -431,6 +458,12 @@ export function ItemLinhaAgenda({
       )}
       </div>
     </li>
+
+    {item.dupla && (
+      <li className="list-none" style={{ borderTopWidth: 0 }}>
+        <FaixaDupla habitoId={item.id} dupla={item.dupla} dataISO={dataISO} ehHoje={item.ehHoje ?? true} />
+      </li>
+    )}
 
     {mostrarNota && (
       <li className="bg-base-800 px-4 pb-4 pt-1">

@@ -103,6 +103,41 @@ export async function GET() {
 
   const todasTransacoes = transacoes ?? [];
 
+  // Etapa 233 — hábitos em dupla: meus check-ins ficam separados dos do
+  // parceiro (antes vinham misturados e o do outro contava como meu), e
+  // vem junto quem participa de cada hábito compartilhado.
+  const meusCheckins = (checkins ?? []).filter((c: any) => !c.usuario_id || c.usuario_id === user.id);
+  const checkinsCompartilhados = (checkins ?? []).filter((c: any) => c.usuario_id && c.usuario_id !== user.id);
+  let parceiros: { habito_id: string; usuario_id: string; nome: string }[] = [];
+  if (idsHabitos.length) {
+    const { data: convites } = await supabase
+      .from("compartilhamentos")
+      .select("item_id, dono_id, usuario_convidado_id")
+      .eq("tipo_item", "habito")
+      .in("item_id", idsHabitos);
+    const porHabito = new Map<string, Set<string>>();
+    const juntar = (h: string, u: string | null | undefined) => {
+      if (!u || u === user.id) return;
+      if (!porHabito.has(h)) porHabito.set(h, new Set());
+      porHabito.get(h)!.add(u);
+    };
+    for (const c of convites ?? []) {
+      juntar(c.item_id as string, c.dono_id as string);
+      juntar(c.item_id as string, c.usuario_convidado_id as string);
+    }
+    // hábito que me convidaram: o dono é meu par
+    for (const h of habitos ?? []) if (porHabito.has(h.id) || (h as any).dono_id !== user.id) juntar(h.id, (h as any).dono_id);
+    const ids = [...new Set([...porHabito.values()].flatMap((s) => [...s]))];
+    const nomes = new Map<string, string>();
+    await Promise.all(
+      ids.map(async (u) => {
+        const { data } = await supabase.rpc("nome_do_usuario", { p_user_id: u });
+        nomes.set(u, String(data ?? "Seu par").split("@")[0].split(" ")[0]);
+      })
+    );
+    parceiros = [...porHabito.entries()].flatMap(([h, us]) => [...us].map((u) => ({ habito_id: h, usuario_id: u, nome: nomes.get(u) ?? "Seu par" })));
+  }
+
   // Etapa 203 — saldo de HOJE (lançamento com data futura não sai ainda)
   const hojeBrasil = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
   const contasComSaldo = calcularSaldoPorConta(contas ?? [], todasTransacoes, hojeBrasil);
@@ -126,7 +161,9 @@ export async function GET() {
   return NextResponse.json({
     baixadoEm: new Date().toISOString(),
     habitos: habitos ?? [],
-    habitoCheckins: checkins ?? [],
+    habitoCheckins: meusCheckins,
+    checkinsCompartilhados,
+    parceiros,
     tarefas: tarefas ?? [],
     conclusoesTarefas: conclusoesTarefas ?? [],
     categoriasProdutividade: categoriasProdutividade ?? [],

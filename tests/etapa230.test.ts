@@ -53,8 +53,8 @@ describe("contagem animada", () => {
 });
 
 describe("novidades 230", () => {
-  it("versão nova no topo", () => {
-    expect(VERSAO_NOVIDADES).toBe("230");
-    expect(NOVIDADES[0].versao).toBe("230");
+  it("grupo da 230 continua na lista e o topo é a versão atual", () => {
+    expect(NOVIDADES.some((g) => g.versao === "230")).toBe(true);
+    expect(NOVIDADES[0].versao).toBe(VERSAO_NOVIDADES);
   });
 });

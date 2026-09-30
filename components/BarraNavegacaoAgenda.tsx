@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarCheck, Repeat, LayoutGrid, Timer, CheckSquare, BarChart3, Clock } from "lucide-react";
+import { CalendarCheck, Repeat, LayoutGrid, Timer, CheckSquare, BarChart3, Clock, HeartHandshake } from "lucide-react";
 import { BotaoNovoAgenda } from "@/components/BotaoNovoAgenda";
 import { BarraInferiorApp } from "@/components/BarraInferiorApp";
 
@@ -30,6 +30,7 @@ const GRUPOS_DESKTOP = [
     titulo: "Acompanhamento",
     itens: [
       { href: "/habitos/estatisticas", rotulo: "Estatísticas", Icone: BarChart3 },
+      { href: "/habitos/juntos", rotulo: "Juntos", Icone: HeartHandshake },
       { href: "/habitos/planejador", rotulo: "Planejador", Icone: Clock },
       { href: "/habitos/timer", rotulo: "Timer", Icone: Timer },
     ],

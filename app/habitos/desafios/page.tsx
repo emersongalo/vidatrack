@@ -16,7 +16,11 @@ export default function DesafiosPage() {
   const eu = snapshot?.perfil.id ?? "";
 
   const habitos = (snapshot?.habitos ?? []) as any[];
-  const checkins = (snapshot?.habitoCheckins ?? []) as any[];
+  // Etapa 233 — os check-ins do parceiro agora vêm separados dos meus
+  const checkins = [
+    ...((snapshot?.habitoCheckins ?? []) as any[]).map((c) => ({ ...c, usuario_id: c.usuario_id ?? eu })),
+    ...((snapshot?.checkinsCompartilhados ?? []) as any[]),
+  ];
 
   // quem participa de cada hábito (online: convites; offline: quem já marcou)
   useEffect(() => {
@@ -74,6 +78,14 @@ export default function DesafiosPage() {
       <p className="text-ink-400 text-sm mb-6">
         Faça um hábito junto com alguém: cada um marca o seu e vocês veem a sequência um do outro.
       </p>
+      <Link href="/habitos/juntos" className="flex items-center gap-3 mb-6 rounded-3xl p-4 border border-habito/40 bg-habito/10 hover:border-habito transition">
+        <span className="text-3xl">🌱</span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-base font-semibold">Jardim da dupla</span>
+          <span className="block text-sm text-ink-400">Plantinhas que crescem com os dias que vocês fazem juntos</span>
+        </span>
+        <span className="text-ink-400">›</span>
+      </Link>
 
       {snapshot === undefined ? null : desafios.length === 0 ? (
         <div className="bg-base-800 border border-base-600 rounded-xl2 p-6 text-center mb-6">

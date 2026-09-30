@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { dataAtualNoFuso } from "@/lib/tempo/fuso";
+import { processarDupla } from "@/lib/habitos/duplaServidor";
 
 export const dynamic = "force-dynamic";
 
@@ -70,5 +71,13 @@ export async function POST(request: Request) {
   }
 
   revalidatePath("/habitos");
+  // Etapa 233 — marcou pelo widget/notificação um hábito em dupla: avisa o par
+  if (feito) {
+    try {
+      await processarDupla(supabase, user.id, { acao: "feito", habitoId, data });
+    } catch {
+      /* aviso é bônus */
+    }
+  }
   return NextResponse.json({ ok: true, feito });
 }

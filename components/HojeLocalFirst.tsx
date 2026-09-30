@@ -22,6 +22,7 @@ import { pausasDe } from "@/lib/habitos/pausa";
 import { resumoDaSemana } from "@/lib/geral/semana";
 import { createClient } from "@/lib/supabase/client";
 import { EstadoVazio } from "@/components/EstadoVazio";
+import { infoDupla, type Parceiro } from "@/lib/habitos/dupla";
 import { Esqueleto } from "@/components/Esqueleto";
 import { Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff } from "lucide-react";
 import {
@@ -84,6 +85,17 @@ function HojeConteudo() {
 
     const lista: ItemAgenda[] = [];
 
+    // Etapa 233 — hábitos em dupla
+    const parceirosPorHabito = new Map<string, Parceiro[]>();
+    for (const p of snapshot.parceiros ?? []) {
+      const l = parceirosPorHabito.get(p.habito_id) ?? [];
+      l.push({ id: p.usuario_id, nome: p.nome });
+      parceirosPorHabito.set(p.habito_id, l);
+    }
+    const checkinsDeTodos = [...snapshot.habitoCheckins, ...(snapshot.checkinsCompartilhados ?? [])];
+    const eu = snapshot.perfil.id;
+    const horaDoDia = dataSelecionada === hoje ? new Date().getHours() : dataSelecionada < hoje ? 23 : 0;
+
     for (const h of snapshot.habitos as any[]) {
       if (!habitoDevidoNoDia(h, dataSelecionada)) continue;
       if (categoriaFiltro && h.categoria_id !== categoriaFiltro) continue;
@@ -111,6 +123,11 @@ function HojeConteudo() {
         ordem: h.ordem ?? 0,
         // Etapa 230 — bolinhas dos últimos 7 dias
         ultimos7: h.eh_negativo ? null : ultimosDias(h, snapshot.habitoCheckins, dataSelecionada),
+        dupla:
+          !h.eh_negativo && parceirosPorHabito.has(h.id)
+            ? infoDupla(h, checkinsDeTodos, eu, parceirosPorHabito.get(h.id)!, dataSelecionada, horaDoDia)
+            : null,
+        ehHoje: dataSelecionada === hoje,
       });
     }
 
@@ -262,7 +279,20 @@ function HojeConteudo() {
           ) : itens!.length === 0 ? (
             <EstadoVazio emoji="🌤️" titulo="Dia livre" texto="Nenhum hábito ou tarefa cai neste dia." />
           ) : (
-            <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />
+            <>
+              <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />
+              {/* Etapa 233 — atalho pro jardim quando tem hábito em dupla */}
+              {itens!.some((i) => i.dupla) && (
+                <Link
+                  href="/habitos/juntos"
+                  className="mt-3 flex items-center gap-3 rounded-2xl px-4 py-3 border border-habito/30 bg-habito/10 hover:border-habito transition"
+                >
+                  <span className="text-2xl">🌱</span>
+                  <span className="flex-1 text-base font-medium">Jardim da dupla</span>
+                  <span className="text-ink-400">›</span>
+                </Link>
+              )}
+            </>
           )}
       </div>
     ),

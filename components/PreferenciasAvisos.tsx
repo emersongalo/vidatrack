@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon, BarChart3, Sun, Wallet } from "lucide-react";
+import { Moon, BarChart3, Sun, Wallet, HeartHandshake } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-type Chave = "resumo_manha" | "aviso_noite" | "resumo_semanal" | "lembrete_lancar";
+type Chave = "resumo_manha" | "aviso_noite" | "resumo_semanal" | "lembrete_lancar" | "avisos_dupla";
 
 const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }[] = [
   {
@@ -31,6 +31,12 @@ const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }
     texto: "Domingo às 19:00: hábitos, tarefas e gastos da semana. Dia 1 às 09:00: quanto entrou e saiu no mês.",
     Icone: BarChart3,
   },
+  {
+    chave: "avisos_dupla",
+    titulo: "Hábitos em dupla",
+    texto: "Quando seu par fizer um hábito de vocês, te cutucar ou reagir ao seu.",
+    Icone: HeartHandshake,
+  },
 ];
 
 /** Etapa 202 — ligar/desligar os avisos automáticos (padrão: ligados). */
@@ -42,12 +48,13 @@ export function PreferenciasAvisos() {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal, resumo_manha, lembrete_lancar").eq("id", user.id).maybeSingle();
+      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal, resumo_manha, lembrete_lancar, avisos_dupla").eq("id", user.id).maybeSingle();
       setValores({
         resumo_manha: (data as any)?.resumo_manha ?? true,
         aviso_noite: data?.aviso_noite ?? true,
         resumo_semanal: data?.resumo_semanal ?? true,
         lembrete_lancar: (data as any)?.lembrete_lancar ?? true,
+        avisos_dupla: (data as any)?.avisos_dupla ?? true,
       });
     });
   }, []);

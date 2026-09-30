@@ -1,13 +1,24 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "230";
+export const VERSAO_NOVIDADES = "233";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "233",
+    titulo: "Hábitos em dupla ganharam vida",
+    itens: [
+      { emoji: "💚", titulo: "Aviso quando seu par faz", texto: "Compartilhou um hábito? Quando a outra pessoa fizer, chega um aviso — e, com o app aberto, aparece na hora.", href: "/habitos" },
+      { emoji: "😄", titulo: "Carinha do dia", texto: "Cada hábito em dupla tem uma carinha que muda: festa quando os dois fazem, esperando, preocupada à noite e triste se a sequência quebrar." },
+      { emoji: "👉", titulo: "Cutucar e reagir", texto: "Cutuque quem ainda não fez (uma vez por dia) e reaja com ❤️🔥👏 quando fizer. A reação chega como uma chuva de emojis." },
+      { emoji: "🙌", titulo: "Toque duplo", texto: "Quando os dois completam no mesmo dia, duas mãos batem na tela. E a sequência de vocês conta junto." },
+      { emoji: "🌱", titulo: "Jardim da dupla", texto: "Uma plantinha por hábito que cresce com os dias que vocês fazem juntos — de semente até árvore. Se ninguém fizer, ela murcha um pouco.", href: "/habitos/juntos" },
+    ],
+  },
   {
     versao: "230",
     titulo: "Visual novo, mais rápido de usar",

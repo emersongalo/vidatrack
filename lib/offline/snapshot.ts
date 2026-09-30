@@ -16,7 +16,11 @@ export type SnapshotOffline = {
   versao: number;
   baixadoEm: string;
   habitos: any[];
-  habitoCheckins: { habito_id: string; data: string; quantidade: number }[];
+  habitoCheckins: { habito_id: string; data: string; quantidade: number; usuario_id?: string }[];
+  /** Etapa 233 — check-ins das outras pessoas nos hábitos compartilhados */
+  checkinsCompartilhados?: { habito_id: string; data: string; quantidade: number; usuario_id: string }[];
+  /** Etapa 233 — quem faz cada hábito junto comigo */
+  parceiros?: { habito_id: string; usuario_id: string; nome: string }[];
   tarefas: any[];
   conclusoesTarefas: { tarefa_id: string; data: string }[];
   categoriasProdutividade: any[];
@@ -109,7 +113,16 @@ function normalizar(dados: any): SnapshotOffline | null {
       versao: dados.versao,
       baixadoEm: dados.baixadoEm ?? new Date().toISOString(),
       habitos: dados.habitos ?? [],
-      habitoCheckins: dados.habitoCheckins ?? [],
+      // Etapa 233 — retrato antigo (antes da separação) vinha misturado:
+      // separa aqui também, pro check-in do parceiro não contar como meu.
+      habitoCheckins: (dados.habitoCheckins ?? []).filter(
+        (c: any) => !c.usuario_id || !dados.perfil?.id || c.usuario_id === dados.perfil.id
+      ),
+      checkinsCompartilhados: [
+        ...(Array.isArray(dados.checkinsCompartilhados) ? dados.checkinsCompartilhados : []),
+        ...(dados.habitoCheckins ?? []).filter((c: any) => c.usuario_id && dados.perfil?.id && c.usuario_id !== dados.perfil.id),
+      ],
+      parceiros: Array.isArray(dados.parceiros) ? dados.parceiros : [],
       tarefas: dados.tarefas ?? [],
       conclusoesTarefas: dados.conclusoesTarefas ?? [],
       categoriasProdutividade: dados.categoriasProdutividade ?? [],

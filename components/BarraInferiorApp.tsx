@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import { Home, Repeat, Wallet, User, Plus, X, TrendingDown, TrendingUp, ArrowLeftRight, CheckSquare } from "lucide-react";
 import { FolhaLancamento } from "@/components/BotaoNovoLancamento";
 import { vibrar } from "@/components/ItemLinhaAgenda";
+import { AvisosDupla } from "@/components/AvisosDupla";
 
 const ITENS = [
   { href: "/dashboard", rotulo: "Início", Icone: Home, cor: "text-ink-100" },
@@ -108,6 +109,8 @@ export function BarraInferiorApp() {
       )}
 
       {gasto && <FolhaLancamento aoFechar={() => setGasto(false)} />}
+      {/* Etapa 233 — avisos da dupla (fez, cutucou, reagiu) com animação */}
+      <AvisosDupla />
     </>
   );
 }

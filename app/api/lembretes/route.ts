@@ -173,6 +173,13 @@ export async function GET(request: Request) {
     enviados += await notificarResumoSemanal(supabase, hoje);
   }
 
+  // Etapa 233 — recados da dupla (cutucar/reagir) com mais de 30 dias
+  // não servem pra nada: apaga uma vez por dia, de madrugada.
+  if (horaAtual >= "03:00" && horaAtual <= "03:05") {
+    const limite = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    await supabase.from("habito_interacoes").delete().lt("criado_em", limite);
+  }
+
   // Modo de depuração (?debug=1) — mostra exatamente o que o servidor
   // está calculando, pra comparar com o que você espera. Ajuda a achar
   // qualquer diferença de horário/fuso sem precisar adivinhar.
