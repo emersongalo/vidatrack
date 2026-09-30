@@ -49,7 +49,15 @@ export function PlantaDupla({
   return (
     <svg width={tamanho} height={tamanho * 1.2} viewBox="0 0 80 96" role="img" aria-label="Plantinha da dupla" className={className}>
       <g className={saude === 2 && estagio > 0 ? "animate-balancar" : ""} style={CAIXA}>
-        {estagio === 0 && <ellipse cx="40" cy="63.5" rx="5" ry="3.5" fill="#8B5A2B" />}
+        {/* Etapa 236 — semente mais visível: montinho de terra, semente e um brilho */}
+        {estagio === 0 && (
+          <g>
+            <ellipse cx="40" cy="66" rx="11" ry="4.5" fill="#6B4226" />
+            <ellipse cx="40" cy="61.5" rx="5.5" ry="4" fill="#A0673A" />
+            <ellipse cx="38.3" cy="60.3" rx="1.6" ry="1" fill="#E6B98A" opacity="0.8" />
+            <path d="M40 57.8 Q41.5 55 43.5 55.5" stroke="#6DBE6B" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+          </g>
+        )}
 
         {estagio >= 1 && estagio <= 5 && (
           <g style={{ ...CAIXA, transform: murcha === 2 ? "rotate(8deg)" : undefined }}>

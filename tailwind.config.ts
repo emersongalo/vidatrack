@@ -65,6 +65,24 @@ const config: Config = {
         nuvem: { "0%": { transform: "translateX(-40px)" }, "100%": { transform: "translateX(calc(100vw))" } },
         boiar: { "0%, 100%": { transform: "translateY(0)" }, "50%": { transform: "translateY(-5px)" } },
         girar: { "0%": { transform: "rotate(0deg)" }, "100%": { transform: "rotate(360deg)" } },
+        // Etapa 236 — céu do "Juntos" conforme a hora
+        cintilar: { "0%, 100%": { opacity: "0.25" }, "50%": { opacity: "1" } },
+        vagalume: {
+          "0%": { transform: "translate(0, 0)", opacity: "0" },
+          "20%": { opacity: "1" },
+          "50%": { transform: "translate(14px, -10px)", opacity: "0.4" },
+          "80%": { opacity: "1" },
+          "100%": { transform: "translate(-6px, -18px)", opacity: "0" },
+        },
+        passaro: { "0%": { transform: "translateX(-30px) translateY(0)" }, "50%": { transform: "translateX(50vw) translateY(-8px)" }, "100%": { transform: "translateX(100vw) translateY(4px)" } },
+        asas: { "0%, 100%": { transform: "scaleY(1)" }, "50%": { transform: "scaleY(-0.6)" } },
+        cadente: {
+          "0%": { transform: "translate(0, 0)", opacity: "0" },
+          "2%": { opacity: "1" },
+          "9%": { transform: "translate(-160px, 70px)", opacity: "0" },
+          "100%": { transform: "translate(-160px, 70px)", opacity: "0" },
+        },
+        brilhar: { "0%, 100%": { boxShadow: "0 0 18px 4px rgba(255,244,200,0.35)" }, "50%": { boxShadow: "0 0 30px 10px rgba(255,244,200,0.55)" } },
       },
       animation: {
         pop: "pop 0.35s ease-out",
@@ -85,6 +103,12 @@ const config: Config = {
         nuvem: "nuvem 38s linear infinite",
         boiar: "boiar 2.6s ease-in-out infinite",
         girar: "girar 24s linear infinite",
+        cintilar: "cintilar 2.4s ease-in-out infinite",
+        vagalume: "vagalume 4.5s ease-in-out infinite",
+        passaro: "passaro 16s linear infinite",
+        asas: "asas 0.5s ease-in-out infinite",
+        cadente: "cadente 9s ease-out infinite",
+        brilhar: "brilhar 4s ease-in-out infinite",
       },
       borderRadius: {
         xl2: "1.25rem",
