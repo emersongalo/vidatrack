@@ -68,8 +68,8 @@ describe("hábito em dupla", () => {
     expect(primeiroNome("")).toBe("Seu par");
   });
 
-  it("novidades 233 no topo", () => {
-    expect(VERSAO_NOVIDADES).toBe("233");
-    expect(NOVIDADES[0].versao).toBe("233");
+  it("grupo da 233 continua e o topo é a versão atual", () => {
+    expect(NOVIDADES.some((g) => g.versao === "233")).toBe(true);
+    expect(NOVIDADES[0].versao).toBe(VERSAO_NOVIDADES);
   });
 });

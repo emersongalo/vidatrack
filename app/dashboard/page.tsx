@@ -11,14 +11,11 @@ import { Bell, Search } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
+import { BlocosInicio } from "@/components/inicio/BlocosInicio";
 import { NovidadesApp } from "@/components/NovidadesApp";
-import { PainelCartoes } from "@/components/PainelCartoes";
 import { AvisoConquista } from "@/components/AvisoConquista";
-import { SeuDia } from "@/components/SeuDia";
-import { JuntosPainel } from "@/components/JuntosPainel";
-import { ProximosPainel } from "@/components/ProximosPainel";
 import { BarraInferiorApp } from "@/components/BarraInferiorApp";
-import { resumoDoDia, saudacao } from "@/lib/painel/seuDia";
+import { saudacao } from "@/lib/painel/seuDia";
 import { hojeISO } from "@/lib/habitos/streak";
 
 // Etapa 133 — o Painel é pra onde todo botão "← Painel" do app aponta,
@@ -50,7 +47,6 @@ export default function DashboardPage() {
 
   const contas = snapshot?.financas.contas ?? [];
   // Etapa 224 — "Seu dia" (hábitos e tarefas de hoje)
-  const resumoHoje = snapshot ? resumoDoDia(snapshot, hojeISO()) : null;
 
   return (
     <main className="min-h-screen min-h-[100dvh] p-6 pb-28 md:p-12 md:pb-28 lg:pb-12 max-w-lg lg:max-w-5xl mx-auto flex flex-col">
@@ -153,16 +149,9 @@ export default function DashboardPage() {
       {/* Etapa 224 — Painel novo: seu dia, atalhos, resumo e as áreas do app
          (o "trilho" vertical deixava metade da tela vazia no celular) */}
       <ConfirmarSaidaApp />
-      <div className="flex-1 mt-4 space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 lg:items-start">
-        <div className="space-y-6">
-          {resumoHoje && <SeuDia resumo={resumoHoje} />}
-          {/* Etapa 232 — os atalhos (Gasto, Receita, Hábitos, Finanças…) repetiam a
-             barra de baixo; no lugar: falar com o assistente e o que vem pela frente */}
-          {/* Etapa 234 — no lugar do assistente: a cena dos hábitos em dupla */}
-          <JuntosPainel snapshot={snapshot} hoje={hojeISO()} />
-          <ProximosPainel snapshot={snapshot} hoje={hojeISO()} />
-        </div>
-        <PainelCartoes />
+      {/* Etapa 235 — Início personalizável: hábitos, finanças ou os dois */}
+      <div className="flex-1 mt-4">
+        <BlocosInicio snapshot={snapshot} hoje={hojeISO()} />
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-x-2 mt-8">

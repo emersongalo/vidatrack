@@ -1,13 +1,22 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "233";
+export const VERSAO_NOVIDADES = "235";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "235",
+    titulo: "Monte o seu Início",
+    itens: [
+      { emoji: "🧩", titulo: "Início do seu jeito", texto: "Toque em \"Personalizar Início\" e escolha: só hábitos, só finanças ou os dois. Dá pra ligar, desligar e mudar a ordem de cada bloco — vale em todos os seus aparelhos.", href: "/dashboard" },
+      { emoji: "📉", titulo: "Blocos novos", texto: "Gastos da semana, medidor do teto do mês, onde foi o dinheiro, cartões, sequências, semana dos hábitos e o humor do dia." },
+      { emoji: "🤝", titulo: "Compartilhar sem digitar e-mail", texto: "Quem você já compartilhou aparece pra escolher com um toque." },
+    ],
+  },
   {
     versao: "233",
     titulo: "Hábitos em dupla ganharam vida",
