@@ -114,7 +114,7 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
     [historico]
   );
   const sugestoesDescricao = useMemo(
-    () => (descricao.trim().length >= 2 ? sugerirDescricoes(descricao, "despesa", historico) : []),
+    () => (descricao.trim().length >= 1 ? sugerirDescricoes(descricao, "despesa", historico) : []),
     [descricao, historico]
   );
 
@@ -125,7 +125,7 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
       setCategoriaTocada(true);
       setCategoriaSugerida(false);
     }
-    if (!valor && s.ultimoValor > 0) setValor(formatarValorDigitado(s.ultimoValor.toFixed(2).replace(".", "")));
+    // Etapa 228 — não preenche mais o valor: a pessoa coloca
     if (s.contaId && contas.some((c) => c.id === s.contaId)) setContaId(s.contaId);
   }
 
@@ -355,12 +355,9 @@ function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
               )}
             </div>
 
-            <div className="-mt-1 mb-3">
-              {descricao.trim().length >= 2 ? (
-                <ChipsDescricao sugestoes={sugestoesDescricao} aoEscolher={escolherDescricao} />
-              ) : (
-                <ChipsDescricao sugestoes={frequentes} titulo="Frequentes — toque pra preencher" aoEscolher={escolherDescricao} />
-              )}
+            {/* Etapa 228 — sugestões só aparecem enquanto digita, sem valor */}
+            <div className="-mt-2 mb-3 empty:hidden">
+              <ChipsDescricao sugestoes={sugestoesDescricao} aoEscolher={escolherDescricao} textoAtual={descricao} />
             </div>
 
             {erro && <p className="text-sm text-red-400 mb-3">{erro}</p>}

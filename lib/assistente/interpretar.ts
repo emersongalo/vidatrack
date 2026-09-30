@@ -7,6 +7,7 @@ import { diaBateComFrequencia } from "@/lib/agenda/dias";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
 import { interpretarFala } from "@/lib/financas/parseFala";
 import { sugerirCategoria } from "@/lib/financas/sugestaoCategoria";
+import { acharCategoria, contemParecido, gastosPorCategoria } from "@/lib/assistente/categorias";
 import { assuntoDaFrase, contaDaFrase, dataDaFrase, limparDescricao, periodoDaFrase, semAcento } from "@/lib/assistente/entender";
 
 export type RespostaAssistente =
@@ -89,40 +90,118 @@ export function interpretarPergunta(textoOriginal: string, snapshot: SnapshotOff
     }
   }
 
-  // --- 1b) Etapa 220: "quanto gastei com uber em setembro?", "quanto recebi mês passado no nubank?" ---
+  // --- 1b) Etapa 228: categorias — "quais minhas categorias?", "onde mais gastei mês passado?",
+  //         "quanto ainda posso gastar com mercado?" ---
+  const periodoFrase = periodoDaFrase(textoOriginal, hoje);
+  const periodoPadrao = periodoFrase ?? { inicio: inicioMes, fim: fimMes, rotulo: "esse mês" };
+  const listaRanking = (ranking: { nome: string; valor: number }[], n = 5) =>
+    ranking
+      .slice(0, n)
+      .map((r, i) => `${i + 1}. ${r.nome}: ${formatarMoeda(r.valor)}`)
+      .join("\n");
+
+  if (/\bcategorias?\b/.test(texto) && /(quais|minhas|lista|mostra|tenho|todas)/.test(texto) && !/(mais|maior)/.test(texto)) {
+    const despesas = (snapshot.financas.categorias as any[]).filter((c) => c.tipo === "despesa");
+    const receitas = (snapshot.financas.categorias as any[]).filter((c) => c.tipo === "receita");
+    const ranking = gastosPorCategoria(transacoes as any[], snapshot.financas.categorias as any[], inicioMes, fimMes, hoje);
+    const gastoDe = (nome: string) => ranking.find((r) => semAcento(r.nome) === semAcento(nome))?.valor ?? 0;
+    const unicos = (l: any[]) => [...new Map(l.map((c) => [semAcento(c.nome), c])).values()];
+    const linhas = unicos(despesas).map((c) => {
+      const meta = Number(c.meta_mensal) || 0;
+      return `• ${c.nome}: ${formatarMoeda(gastoDe(c.nome))}${meta ? ` de ${formatarMoeda(meta)}` : ""}`;
+    });
+    return {
+      tipo: "texto",
+      texto: `Suas categorias de despesa (gasto esse mês):\n${linhas.join("\n") || "nenhuma ainda"}${
+        receitas.length ? `\n\nDe receita: ${unicos(receitas).map((c) => c.nome).join(", ")}` : ""
+      }`,
+    };
+  }
+
+  if (/(onde|em que|com que|qual categoria|quais categorias|categoria que|mais gastei|maior gasto|maiores gastos|por categoria|ranking)/.test(texto) && /(gast|despes|categoria)/.test(texto)) {
+    const ranking = gastosPorCategoria(transacoes as any[], snapshot.financas.categorias as any[], periodoPadrao.inicio, periodoPadrao.fim, hoje);
+    if (!ranking.length) return { tipo: "texto", texto: `Não achei gastos ${periodoPadrao.rotulo}.` };
+    const total = ranking.reduce((s, r) => s + r.valor, 0);
+    const pct = Math.round((ranking[0].valor / total) * 100);
+    return {
+      tipo: "texto",
+      texto: `Onde mais foi dinheiro ${periodoPadrao.rotulo} (total ${formatarMoeda(total)}):\n${listaRanking(ranking)}\n\n${ranking[0].nome} levou ${pct}% dos gastos.`,
+    };
+  }
+
+  if (/(quanto (ainda )?(posso|da pra|consigo) gastar|quanto (me )?(falta|sobra|resta)|quanto tenho (pra|para) gastar)/.test(texto)) {
+    const cat = acharCategoria(textoOriginal, snapshot.financas.categorias as any[], "despesa");
+    if (cat) {
+      if (!cat.meta) return { tipo: "texto", texto: `${cat.nome} não tem limite mensal. Dá pra definir em Finanças → Categorias.` };
+      const gasto = (transacoes as any[])
+        .filter((t) => t.tipo === "despesa" && cat.ids.includes(t.categoria_id) && t.data >= inicioMes && t.data <= fimMes && (t.data <= hoje || t.pago_em))
+        .reduce((s, t) => s + Number(t.valor), 0);
+      const resta = cat.meta - gasto;
+      return {
+        tipo: "texto",
+        texto:
+          resta >= 0
+            ? `Em ${cat.nome} ainda dá pra gastar ${formatarMoeda(resta)} esse mês (já foi ${formatarMoeda(gasto)} de ${formatarMoeda(cat.meta)}).`
+            : `${cat.nome} já passou ${formatarMoeda(-resta)} do limite (${formatarMoeda(gasto)} de ${formatarMoeda(cat.meta)}).`,
+      };
+    }
+  }
+
+  // --- 1c) Etapa 220/228: "quanto gastei com uber em setembro?", "quanto gastei de moradia?" ---
   if (/\bquanto\b/.test(texto) && /(gast|pagu|receb|ganh|entrou|entrada|saiu)/.test(texto)) {
     const ehReceita = /(receb|ganh|entrou|entrada)/.test(texto);
-    const periodo = periodoDaFrase(textoOriginal, hoje) ?? { inicio: inicioMes, fim: fimMes, rotulo: "esse mês" };
+    const tipoAlvo = ehReceita ? "receita" : "despesa";
+    const periodo = periodoPadrao;
     const contas = snapshot.financas.contas as any[];
     const conta = contaDaFrase(textoOriginal, contas);
-    const categoria = (snapshot.financas.categorias as any[]).find(
-      (c) => c.tipo === (ehReceita ? "receita" : "despesa") && texto.includes(semAcento(c.nome))
-    );
+    const categoria = acharCategoria(textoOriginal, snapshot.financas.categorias as any[], tipoAlvo);
     let assunto = categoria ? null : assuntoDaFrase(textoOriginal);
     if (assunto && conta && semAcento(conta.nome).includes(assunto)) assunto = null;
-    const lista = (transacoes as any[]).filter((t) => {
-      if (t.tipo !== (ehReceita ? "receita" : "despesa") || t.transferencia_grupo) return false;
-      if (t.data < periodo.inicio || t.data > periodo.fim || (t.data > hoje && !t.pago_em)) return false;
+    const noPeriodo = (transacoes as any[]).filter((t) => {
+      if (t.tipo !== tipoAlvo || t.transferencia_grupo) return false;
+      if (t.data < periodo.inicio || t.data > periodo.fim) return false;
       if (conta && t.conta_id !== conta.id) return false;
-      if (categoria && t.categoria_id !== categoria.id) return false;
+      if (categoria && !categoria.ids.includes(t.categoria_id)) return false;
       if (assunto) {
-        const alvo = semAcento(`${t.descricao ?? ""} ${mapaCategorias.get(t.categoria_id) ?? ""} ${(t.etiquetas ?? []).join(" ")}`);
-        if (!alvo.includes(assunto)) return false;
+        const alvo = `${t.descricao ?? ""} ${mapaCategorias.get(t.categoria_id) ?? ""} ${(t.etiquetas ?? []).join(" ")}`;
+        if (!contemParecido(alvo, assunto)) return false;
       }
       return true;
     });
+    const lista = noPeriodo.filter((t) => t.data <= hoje || t.pago_em);
+    const agendados = noPeriodo.filter((t) => t.data > hoje && !t.pago_em);
     const total = lista.reduce((s, t) => s + Number(t.valor), 0);
+    const totalAgendado = agendados.reduce((s, t) => s + Number(t.valor), 0);
     const sobre = categoria ? ` com ${categoria.nome}` : assunto ? ` com "${assunto}"` : "";
     const naConta = conta ? ` no ${conta.nome}` : "";
+    const textoAgendado = agendados.length
+      ? `\nAinda tem ${formatarMoeda(totalAgendado)} agendado${agendados.length > 1 ? "s" : ""} pra cair${sobre}${naConta} ${periodo.rotulo}.`
+      : "";
     if (!lista.length) {
-      return { tipo: "texto", texto: `Não achei ${ehReceita ? "receitas" : "gastos"}${sobre}${naConta} ${periodo.rotulo}.` };
+      // ajuda: mostra onde teve gasto nesse período
+      const ranking = gastosPorCategoria(transacoes as any[], snapshot.financas.categorias as any[], periodo.inicio, periodo.fim, hoje, tipoAlvo);
+      const dica = ranking.length
+        ? `\n\n${ehReceita ? "Receitas" : "Gastos"} ${periodo.rotulo} por categoria:\n${listaRanking(ranking, 4)}`
+        : "";
+      return {
+        tipo: "texto",
+        texto: `Não achei ${ehReceita ? "receitas" : "gastos"} já lançados${sobre}${naConta} ${periodo.rotulo}.${textoAgendado}${dica}`,
+      };
     }
     const maior = [...lista].sort((a, b) => Number(b.valor) - Number(a.valor))[0];
+    // sem categoria nem assunto: mostra também as principais categorias
+    const resumoCategorias =
+      !categoria && !assunto
+        ? (() => {
+            const r = gastosPorCategoria(lista, snapshot.financas.categorias as any[], periodo.inicio, periodo.fim, hoje, tipoAlvo);
+            return r.length > 1 ? `\n\nPor categoria:\n${listaRanking(r, 4)}` : "";
+          })()
+        : "";
     return {
       tipo: "texto",
       texto: `${ehReceita ? "Você recebeu" : "Você gastou"} ${formatarMoeda(total)}${sobre}${naConta} ${periodo.rotulo} (${lista.length} lançamento${
         lista.length > 1 ? "s" : ""
-      }).${lista.length > 1 ? `\nO maior: ${formatarMoeda(Number(maior.valor))}${maior.descricao ? ` — ${maior.descricao}` : ""} em ${maior.data.split("-").reverse().slice(0, 2).join("/")}.` : ""}`,
+      }).${lista.length > 1 ? `\nO maior: ${formatarMoeda(Number(maior.valor))}${maior.descricao ? ` — ${maior.descricao}` : ""} em ${maior.data.split("-").reverse().slice(0, 2).join("/")}.` : ""}${textoAgendado}${resumoCategorias}`,
     };
   }
 
@@ -309,6 +388,6 @@ export function interpretarPergunta(textoOriginal: string, snapshot: SnapshotOff
   return {
     tipo: "texto",
     texto:
-      "Não entendi essa pergunta ainda. Exemplos do que eu entendo:\n• \"quanto gastei com uber em setembro?\"\n• \"quanto recebi mês passado?\"\n• \"lança 50 de gasolina ontem no nubank\"\n• previsão do fim do mês, orçamento, contas a pagar, saldo, resumo da semana, hábitos de hoje, melhor sequência.",
+      "Não entendi essa pergunta ainda. Exemplos do que eu entendo:\n• \"quanto gastei com mercado mês passado?\"\n• \"onde mais gastei esse mês?\"\n• \"quais minhas categorias?\"\n• \"quanto ainda posso gastar com alimentação?\"\n• \"lança 50 de gasolina ontem no nubank\"\n• previsão do fim do mês, orçamento, contas a pagar, saldo, resumo da semana, hábitos de hoje, melhor sequência.",
   };
 }

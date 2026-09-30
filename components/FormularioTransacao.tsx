@@ -108,7 +108,7 @@ export function FormularioTransacao({
   }, []);
   const ehNovo = !valoresIniciais;
   const sugestoesDescricao = useMemo(
-    () => (ehNovo && descricaoTexto.trim().length >= 2 ? sugerirDescricoes(descricaoTexto, tipo, historicoLocal) : []),
+    () => (ehNovo && descricaoTexto.trim().length >= 1 ? sugerirDescricoes(descricaoTexto, tipo, historicoLocal) : []),
     [ehNovo, descricaoTexto, tipo, historicoLocal]
   );
   const frequentes = useMemo(
@@ -123,12 +123,7 @@ export function FormularioTransacao({
       setCategoriaTocada(true);
       setCategoriaSugerida(false);
     }
-    if (!valorDigitado && s.ultimoValor > 0) {
-      const texto = formatarValorDigitado(s.ultimoValor.toFixed(2).replace(".", ""));
-      setValorPreenchido(s.ultimoValor.toFixed(2));
-      setValorDigitado(texto);
-      setChaveValor((k) => k + 1);
-    }
+    // Etapa 228 — não preenche mais o valor: a pessoa coloca
   }
 
   function sugerirPelaDescricao(texto: string) {
@@ -445,11 +440,8 @@ export function FormularioTransacao({
             placeholder="Ex: Supermercado, Uber, Freelance"
             className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-base text-ink-100 focus:border-ink-100 outline-none transition"
           />
-          {descricaoTexto.trim().length >= 2 ? (
-            <ChipsDescricao sugestoes={sugestoesDescricao} aoEscolher={escolherDescricao} />
-          ) : (
-            <ChipsDescricao sugestoes={frequentes} titulo="Frequentes — toque pra preencher" aoEscolher={escolherDescricao} />
-          )}
+          {/* Etapa 228 — sugestões só enquanto digita, sem valor */}
+          <ChipsDescricao sugestoes={sugestoesDescricao} aoEscolher={escolherDescricao} textoAtual={descricaoTexto} />
         </div>
 
         <CampoEtiquetas iniciais={valoresIniciais?.etiquetas ?? null} />

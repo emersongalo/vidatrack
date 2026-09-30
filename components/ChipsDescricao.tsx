@@ -1,36 +1,47 @@
 "use client";
 
-import { formatarMoeda } from "@/lib/financas/formatacao";
 import type { DescricaoSugerida } from "@/lib/financas/sugestaoDescricao";
 
-// Etapa 217 — sugestões de descrição (toque = preenche tudo)
+function normalizar(s: string) {
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+}
+
+// Etapa 217 — sugestões de descrição.
+// Etapa 228 — viram uma listinha logo abaixo da caixa, só enquanto a
+// pessoa digita; tocar preenche a descrição (e a categoria), mas NÃO o
+// valor — o valor a pessoa coloca.
 export function ChipsDescricao({
   sugestoes,
   titulo,
   aoEscolher,
+  textoAtual,
 }: {
   sugestoes: DescricaoSugerida[];
   titulo?: string;
   aoEscolher: (s: DescricaoSugerida) => void;
+  /** esconde a sugestão que já é igual ao que está escrito */
+  textoAtual?: string;
 }) {
-  if (!sugestoes.length) return null;
+  const atual = normalizar(textoAtual ?? "");
+  const lista = sugestoes.filter((s) => normalizar(s.descricao) !== atual).slice(0, 5);
+  if (!lista.length) return null;
   return (
-    <div className="mt-2">
-      {titulo && <p className="text-xs text-ink-400 mb-1">{titulo}</p>}
-      <div className="flex flex-wrap gap-1.5">
-        {sugestoes.map((s) => (
-          <button
-            key={s.descricao}
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => aoEscolher(s)}
-            className="text-xs rounded-full border border-financa/40 bg-financa/10 text-ink-100 px-2.5 py-1 hover:border-financa transition max-w-full truncate"
-          >
-            {s.descricao}
-            <span className="text-ink-400 ml-1.5 font-mono">{formatarMoeda(s.ultimoValor)}</span>
-          </button>
+    <div className="mt-1.5 bg-base-800 border border-base-600 rounded-2xl overflow-hidden">
+      {titulo && <p className="text-xs text-ink-400 px-4 pt-2">{titulo}</p>}
+      <ul className="divide-y divide-base-600">
+        {lista.map((s) => (
+          <li key={s.descricao}>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => aoEscolher(s)}
+              className="w-full text-left px-4 py-3 text-base text-ink-100 hover:bg-base-700 transition truncate"
+            >
+              {s.descricao}
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
