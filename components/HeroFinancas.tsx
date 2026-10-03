@@ -92,28 +92,34 @@ export function HeroFinancas({
           <p className="text-sm text-ink-400 mb-4">Nenhuma receita lançada em {nomeMes.toLowerCase()} ainda — por isso não dá pra comparar.</p>
         ))}
 
-      <div className="grid grid-cols-3 gap-2 mb-5">
-        <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0 [container-type:inline-size]">
-          <p className="flex items-center gap-1 text-sm text-ink-400">
-            <TrendingUp size={15} strokeWidth={2.5} className="text-habito shrink-0" /> Receitas
+      {/* Etapa 244 — Receitas e Despesas lado a lado (2 colunas) e Investido
+         numa linha inteira embaixo: dá espaço pra letra grande sem quebrar
+         o número (em 3 colunas não cabia "R$ 150.000,00"). */}
+      <div className="grid grid-cols-2 gap-2 mb-5">
+        <Link href="/financas/extrato?preset=este_mes&tipo=receita" className="bg-base-800 border border-base-600 rounded-2xl px-4 py-3 min-w-0">
+          <p className="flex items-center gap-1.5 text-sm text-ink-400">
+            <TrendingUp size={16} strokeWidth={2.5} className="text-habito shrink-0" /> Receitas
           </p>
-          <p className="text-[min(1rem,12cqw)] font-mono font-semibold text-habito mt-1 whitespace-nowrap leading-tight tracking-tight">
+          <p className="text-xl font-mono font-semibold text-habito mt-1 whitespace-nowrap leading-tight tracking-tight truncate">
             <ValorMonetario valor={receitas} animado />
           </p>
         </Link>
-        <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0 [container-type:inline-size]">
-          <p className="flex items-center gap-1 text-sm text-ink-400">
-            <TrendingDown size={15} strokeWidth={2.5} className="text-red-400 shrink-0" /> Despesas
+        <Link href="/financas/extrato?preset=este_mes&tipo=despesa" className="bg-base-800 border border-base-600 rounded-2xl px-4 py-3 min-w-0">
+          <p className="flex items-center gap-1.5 text-sm text-ink-400">
+            <TrendingDown size={16} strokeWidth={2.5} className="text-red-400 shrink-0" /> Despesas
           </p>
-          <p className="text-[min(1rem,12cqw)] font-mono font-semibold text-red-400 mt-1 whitespace-nowrap leading-tight tracking-tight">
+          <p className="text-xl font-mono font-semibold text-red-400 mt-1 whitespace-nowrap leading-tight tracking-tight truncate">
             <ValorMonetario valor={despesas} animado />
           </p>
         </Link>
-        <Link href="/financas/investir" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0 [container-type:inline-size]">
-          <p className="flex items-center gap-1 text-sm text-ink-400">
-            <PiggyBank size={15} strokeWidth={2.5} className="text-financa shrink-0" /> Investido
+        <Link
+          href="/financas/investir"
+          className="col-span-2 flex items-center justify-between gap-3 bg-base-800 border border-base-600 rounded-2xl px-4 py-3 min-w-0"
+        >
+          <p className="flex items-center gap-1.5 text-sm text-ink-400 shrink-0">
+            <PiggyBank size={16} strokeWidth={2.5} className="text-financa shrink-0" /> Investido
           </p>
-          <p className="text-[min(1rem,12cqw)] font-mono font-semibold text-financa mt-1 whitespace-nowrap leading-tight tracking-tight">
+          <p className="text-xl font-mono font-semibold text-financa whitespace-nowrap leading-tight tracking-tight truncate">
             <ValorMonetario valor={totalInvestido ?? 0} />
           </p>
         </Link>
