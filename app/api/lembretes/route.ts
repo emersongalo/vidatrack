@@ -131,6 +131,8 @@ export async function GET(request: Request) {
   // mandar lembrete de conta a cada poucos minutos o dia inteiro.
   if (horaAtual >= "08:00" && horaAtual <= "08:05") {
     enviados += await notificarContasAPagar(supabase, hoje);
+    // Etapa 252 — despesas agendadas (lançamento único com data) vencendo hoje/amanhã
+    enviados += await notificarDespesasAgendadas(supabase, hoje);
   }
 
   // --- Orçamento estourado (categorias com meta mensal) ---
@@ -403,6 +405,54 @@ async function notificarContasAPagar(
     );
   }
 
+  return enviados;
+}
+
+/**
+ * Etapa 252 — despesas AGENDADAS (lançamento único com data futura, ex:
+ * um boleto marcado pro dia 15) que ainda não foram marcadas como pagas:
+ * avisa na véspera e no dia, às 8h. Um aviso por pessoa (junta tudo).
+ * Ficam de fora: contas fixas (já têm aviso próprio), compras no cartão
+ * (entram na fatura, que tem aviso próprio), investimento e transferências.
+ */
+async function notificarDespesasAgendadas(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+  const amanha = somarDias(hoje, 1);
+  const { data: transacoes } = await supabase
+    .from("financa_transacoes")
+    .select("id, dono_id, descricao, valor, data, financa_contas(nome, tipo)")
+    .eq("tipo", "despesa")
+    .in("data", [hoje, amanha])
+    .is("pago_em", null)
+    .is("recorrencia_id", null)
+    .is("transferencia_grupo", null);
+
+  type Item = { nome: string; valor: number };
+  const grupos = new Map<string, { hoje: Item[]; amanha: Item[] }>();
+  for (const t of transacoes ?? []) {
+    const conta = (t as any).financa_contas;
+    if (conta?.tipo === "cartao" || conta?.tipo === "investimento") continue;
+    const dono = t.dono_id as string;
+    if (!grupos.has(dono)) grupos.set(dono, { hoje: [], amanha: [] });
+    const item = { nome: ((t.descricao as string) || "Despesa").trim(), valor: Number(t.valor) };
+    (t.data === hoje ? grupos.get(dono)!.hoje : grupos.get(dono)!.amanha).push(item);
+  }
+
+  const texto = (itens: Item[], quando: "HOJE" | "AMANHÃ") => {
+    if (itens.length === 1) return `💸 Vence ${quando}: ${itens[0].nome} — ${formatarMoeda(itens[0].valor)}. Já pagou? Toque pra marcar.`;
+    const total = itens.reduce((s, i) => s + i.valor, 0);
+    const nomes = itens.slice(0, 3).map((i) => i.nome);
+    const mais = itens.length > 3 ? ` e mais ${itens.length - 3}` : "";
+    return `💸 ${itens.length} despesas vencem ${quando} (${formatarMoeda(total)}): ${nomes.join(", ")}${mais}.`;
+  };
+
+  let enviados = 0;
+  for (const [dono, g] of grupos) {
+    // usa o tipo "conta_a_pagar" com o id da pessoa e uma "hora" própria pra não repetir no mesmo dia
+    if (g.hoje.length)
+      enviados += await notificarUsuariosDoItem(supabase, "conta_a_pagar", dono, dono, texto(g.hoje, "HOJE"), "/financas/extrato?tipo=despesa", hoje, undefined, "agendado-hoje");
+    if (g.amanha.length)
+      enviados += await notificarUsuariosDoItem(supabase, "conta_a_pagar", dono, dono, texto(g.amanha, "AMANHÃ"), "/financas/extrato?tipo=despesa", hoje, undefined, "agendado-amanha");
+  }
   return enviados;
 }
 
