@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { entrarComoDemonstracao } from "./actions";
 import { AoRolar } from "@/components/AoRolar";
+import { DemoJuntos } from "@/components/DemoJuntos";
 
 export const metadata = {
   title: "VidaTrack — Hábitos e finanças, num único lugar",
@@ -25,7 +26,7 @@ function BotaoDemonstracao({ className = "" }: { className?: string }) {
 function Print({ src, alt }: { src: string; alt: string }) {
   return (
     <div className="rounded-xl2 overflow-hidden border border-base-700 shadow-2xl shadow-black/40">
-      <Image src={src} alt={alt} width={968} height={2376} className="w-full h-auto" />
+      <Image src={src} alt={alt} width={968} height={2155} className="w-full h-auto" />
     </div>
   );
 }
@@ -69,18 +70,18 @@ export default function ApresentacaoPage() {
         </div>
       </section>
 
-      {/* Etapa 178 — celular na frente com outras telas espiando atrás,
-         inspirado no jeito que o Despezzas mostra o app na home deles. */}
+      {/* Celular na frente com outras telas espiando atrás.
+         Prints atualizados com o layout novo (Início, Finanças e Hábitos). */}
       <section className="max-w-3xl mx-auto px-6 pb-24">
         <div className="relative flex items-center justify-center py-6">
           <div className="hidden sm:block absolute left-1/2 -translate-x-[190px] -rotate-6 w-[220px] opacity-60 blur-[0.5px]">
-            <Print src="/apresentacao/painel-financas.jpg" alt="Saldo em contas e investido" />
+            <Print src="/apresentacao/financas.jpg" alt="Resumo de Finanças com saldo e previsão do mês" />
           </div>
           <div className="hidden sm:block absolute left-1/2 translate-x-[30px] rotate-6 w-[220px] opacity-60 blur-[0.5px]">
-            <Print src="/apresentacao/estatisticas.jpg" alt="Resumo semanal e mapa de contribuições" />
+            <Print src="/apresentacao/habitos.jpg" alt="Lista de hábitos com sequência e recorde" />
           </div>
           <div className="relative w-[260px] sm:w-[280px] z-10">
-            <Print src="/apresentacao/hoje.jpg" alt="Tela Hoje com hábitos e tarefas do dia" />
+            <Print src="/apresentacao/inicio.jpg" alt="Tela inicial do VidaTrack" />
           </div>
         </div>
       </section>
@@ -106,28 +107,28 @@ export default function ApresentacaoPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <AoRolar>
             <div>
-              <Print src="/apresentacao/hoje.jpg" alt="Tela Hoje com hábitos e tarefas do dia" />
-              <p className="font-medium mt-4 mb-1">Tudo num lugar só</p>
+              <Print src="/apresentacao/hoje.jpg" alt="Tela Hoje com hábitos separados por período" />
+              <p className="font-medium mt-4 mb-1">Seu dia numa tela só</p>
               <p className="text-sm text-ink-400">
-                Hábitos e tarefas do dia, lado a lado. Marca com um toque.
+                Hábitos e tarefas separados por período, com lembrete e progresso do dia.
               </p>
             </div>
             </AoRolar>
             <AoRolar atraso={150}>
             <div>
-              <Print src="/apresentacao/estatisticas.jpg" alt="Resumo semanal e mapa de contribuições" />
-              <p className="font-medium mt-4 mb-1">Mapa do ano inteiro</p>
+              <Print src="/apresentacao/habitos.jpg" alt="Lista de hábitos com sequência atual e recorde" />
+              <p className="font-medium mt-4 mb-1">Sequência e recorde</p>
               <p className="text-sm text-ink-400">
-                Igual o de contribuições do GitHub — só que da sua constância.
+                Cada hábito mostra a sequência atual, o recorde e os últimos 7 dias.
               </p>
             </div>
             </AoRolar>
             <AoRolar atraso={300}>
             <div>
-              <Print src="/apresentacao/comparacao.jpg" alt="Comparação entre hábitos" />
-              <p className="font-medium mt-4 mb-1">Comparação entre hábitos</p>
+              <Print src="/apresentacao/timer.jpg" alt="Timer de foco com Pomodoro e tempo livre" />
+              <p className="font-medium mt-4 mb-1">Timer de foco</p>
               <p className="text-sm text-ink-400">
-                Vê de cara qual hábito está indo bem, e qual precisa de atenção.
+                Pomodoro ou tempo livre, ligado a um hábito se você quiser.
               </p>
             </div>
             </AoRolar>
@@ -139,7 +140,9 @@ export default function ApresentacaoPage() {
               "Sequência atual e recorde em cada hábito",
               "Conquistas ao bater 7, 30, 100 ou 365 dias",
               "Hábitos negativos, pra quem quer parar de fazer algo",
-              "Tarefas, categorias e timer de foco, no mesmo lugar",
+              "Modo férias: pausa tudo sem perder as sequências",
+              "Mapa do ano inteiro e comparação entre hábitos",
+              "Arraste pro lado pra marcar, com vibração e comemoração do dia",
             ].map((texto) => (
               <li key={texto} className="flex gap-2.5 bg-base-800 border border-base-700 rounded-lg px-4 py-3">
                 <span className="text-habito shrink-0">＋</span>
@@ -147,6 +150,43 @@ export default function ApresentacaoPage() {
               </li>
             ))}
           </ul>
+          </AoRolar>
+        </div>
+      </section>
+
+      {/* JUNTOS — hábitos em dupla (Etapa 239) */}
+      <section id="juntos" className="border-t border-base-700">
+        <div className="max-w-5xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
+          <AoRolar>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="w-3 h-3 rounded-full bg-habito shrink-0" />
+              <span className="text-xs uppercase tracking-widest text-habito font-medium">Hábitos em dupla</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4 max-w-lg">
+              Façam juntos. Vejam crescer.
+            </h2>
+            <p className="text-ink-400 leading-relaxed max-w-lg mb-8 text-lg">
+              Compartilhe um hábito com quem você ama. Cada dia que os dois fazem, a plantinha de vocês cresce — de
+              semente até árvore. Se ninguém fizer, ela murcha um pouco (e volta quando vocês retomam).
+            </p>
+            <ul className="space-y-3 text-base">
+              {[
+                ["💚", "Aviso na hora quando seu par faz o hábito"],
+                ["😄", "Uma carinha que muda: festa, esperando, preocupada, triste"],
+                ["👉", "Cutucar quem ainda não fez e reagir com ❤️🔥👏"],
+                ["🙌", "Toque duplo quando os dois completam no mesmo dia"],
+                ["🌙", "O céu acompanha a hora: amanhecer, dia, fim de tarde e noite estrelada"],
+              ].map(([emoji, texto]) => (
+                <li key={texto} className="flex gap-3 items-start">
+                  <span className="text-xl shrink-0">{emoji}</span>
+                  <span className="text-ink-400">{texto}</span>
+                </li>
+              ))}
+            </ul>
+          </AoRolar>
+          <AoRolar atraso={150}>
+            <DemoJuntos />
+            <p className="text-center text-sm text-ink-400 mt-3">Isso aqui é ao vivo — o céu é o da sua hora agora.</p>
           </AoRolar>
         </div>
       </section>
@@ -172,16 +212,16 @@ export default function ApresentacaoPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <AoRolar>
             <div>
-              <Print src="/apresentacao/painel-financas.jpg" alt="Saldo em contas e investido" />
-              <p className="font-medium mt-4 mb-1">Saldo, num golpe de vista</p>
+              <Print src="/apresentacao/financas.jpg" alt="Previsão de quanto vai sobrar no fim do mês" />
+              <p className="font-medium mt-4 mb-1">Quanto vai sobrar no mês</p>
               <p className="text-sm text-ink-400">
-                Contas e investido separados — sabe sempre quanto pode gastar.
+                O app soma o que ainda vai entrar e sair e mostra quanto dá pra gastar por dia.
               </p>
             </div>
             </AoRolar>
             <AoRolar atraso={150}>
             <div>
-              <Print src="/apresentacao/analise.jpg" alt="Dicas automáticas sobre os gastos" />
+              <Print src="/apresentacao/analise.jpg" alt="Para onde vai seu dinheiro, com dicas automáticas" />
               <p className="font-medium mt-4 mb-1">Dicas automáticas</p>
               <p className="text-sm text-ink-400">
                 O app aponta sozinho onde seu dinheiro está concentrado.
@@ -190,26 +230,40 @@ export default function ApresentacaoPage() {
             </AoRolar>
             <AoRolar atraso={300}>
             <div>
-              <Print src="/apresentacao/despesas-categoria.jpg" alt="Despesas por categoria" />
-              <p className="font-medium mt-4 mb-1">Gastos por categoria</p>
+              <Print src="/apresentacao/graficos.jpg" alt="Gastos por categoria e ritmo de gasto comparados ao mês passado" />
+              <p className="font-medium mt-4 mb-1">Este mês x mês passado</p>
               <p className="text-sm text-ink-400">
-                Alimentação, moradia, lazer — visual, sem planilha nenhuma.
+                Gastos por categoria e ritmo do mês, lado a lado com o mês anterior.
               </p>
             </div>
             </AoRolar>
           </div>
 
           <AoRolar>
-          <div className="mt-14 max-w-xs mx-auto">
-            <Print src="/apresentacao/recursos.jpg" alt="Recursos avançados de Finanças" />
-            <p className="text-center text-sm text-ink-400 mt-4">
-              E ainda mais: metas de economia, importar extrato, dividir despesas, patrimônio líquido...
-            </p>
+          <div className="grid sm:grid-cols-2 gap-6 mt-14 max-w-2xl mx-auto">
+            <div>
+              <Print src="/apresentacao/contas.jpg" alt="Contas com saldo e total investido" />
+              <p className="font-medium mt-4 mb-1">Contas e investimentos</p>
+              <p className="text-sm text-ink-400">
+                Saldo de cada conta, com o investido separado do dinheiro do dia a dia.
+              </p>
+            </div>
+            <div>
+              <Print src="/apresentacao/mapa-calor.jpg" alt="Mapa de calor de gastos por dia e ranking de categorias" />
+              <p className="font-medium mt-4 mb-1">Mapa de calor dos gastos</p>
+              <p className="text-sm text-ink-400">
+                Os dias em que você mais gastou saltam aos olhos, junto com o ranking do mês.
+              </p>
+            </div>
           </div>
+          <p className="text-center text-sm text-ink-400 mt-10">
+            E ainda mais: metas de economia, importar extrato, dividir despesas, patrimônio líquido...
+          </p>
 
           <ul className="grid sm:grid-cols-2 gap-3 mt-8 text-sm">
             {[
-              "Fatura de cartão de crédito de verdade, com vencimento",
+              "Fatura de cartão de verdade, com aviso no dia de pagar",
+              "Gráfico do que saiu e do que entrou, lado a lado",
               "Metas de economia e aviso de orçamento estourado",
               "Divide despesa com outra pessoa, sem planilha",
               "Importa extrato do banco (OFX ou CSV)",
@@ -223,6 +277,28 @@ export default function ApresentacaoPage() {
             ))}
           </ul>
           </AoRolar>
+        </div>
+      </section>
+
+      {/* Tema claro ou escuro */}
+      <section className="border-t border-base-700">
+        <div className="max-w-5xl mx-auto px-6 py-20">
+          <AoRolar>
+          <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4 text-center">
+            Claro ou escuro, do seu jeito
+          </h2>
+          <p className="text-ink-400 leading-relaxed max-w-md mx-auto mb-14 text-lg text-center">
+            Troca o tema com um toque. E o Início é montado por você: só hábitos, só finanças ou os dois.
+          </p>
+          </AoRolar>
+          <div className="grid grid-cols-2 gap-4 sm:gap-8 max-w-xl mx-auto">
+            <AoRolar>
+              <Print src="/apresentacao/inicio-claro.jpg" alt="Tela inicial no tema claro" />
+            </AoRolar>
+            <AoRolar atraso={150}>
+              <Print src="/apresentacao/inicio.jpg" alt="Tela inicial no tema escuro" />
+            </AoRolar>
+          </div>
         </div>
       </section>
 
@@ -258,7 +334,7 @@ export default function ApresentacaoPage() {
                 {
                   pergunta: "Dá pra usar com outra pessoa?",
                   resposta:
-                    "Sim. Você pode compartilhar contas e hábitos com quem quiser — cada um entra com a própria conta.",
+                    "Sim. Você compartilha contas e hábitos com quem quiser — cada um entra com a própria conta. Nos hábitos em dupla, vocês recebem aviso quando o outro faz, se cutucam e cuidam juntos de uma plantinha.",
                 },
               ].map((item) => (
                 <details key={item.pergunta} className="group bg-base-800 border border-base-700 rounded-xl2 px-5 py-4">
@@ -299,6 +375,7 @@ export default function ApresentacaoPage() {
               <p className="text-xs uppercase tracking-widest text-ink-400/70 mb-3">Produto</p>
               <div className="flex flex-col gap-2 text-sm text-ink-400">
                 <Link href="#hábitos" className="hover:text-ink-100 transition">Hábitos</Link>
+                <Link href="#juntos" className="hover:text-ink-100 transition">Juntos</Link>
                 <Link href="#finanças" className="hover:text-ink-100 transition">Finanças</Link>
                 <Link href="#faq" className="hover:text-ink-100 transition">Perguntas frequentes</Link>
               </div>
