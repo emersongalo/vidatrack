@@ -5,6 +5,7 @@ import { removerCategoriaProdutividade } from "./actions";
 import { classeCor } from "@/lib/agenda/estilo";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { EstadoVazio } from "@/components/EstadoVazio";
 
 // Etapa 127
 export default function CategoriasProdutividadePage() {
@@ -24,10 +25,7 @@ export default function CategoriasProdutividadePage() {
       </div>
 
       {snapshot !== undefined && categorias.length === 0 ? (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
-          <p className="font-display font-semibold mb-1">Nenhuma categoria ainda</p>
-          <p className="text-ink-400 text-sm">Categorias funcionam como listas — ex: "Trabalho", "Saúde", "Casa".</p>
-        </div>
+        <EstadoVazio tom="habito" emoji="🗂️" titulo="Nenhuma categoria ainda" texto='Categorias funcionam como listas — ex: "Trabalho", "Saúde", "Casa".' />
       ) : (
         <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-2 lg:space-y-0">
           {categorias.map((cat: any) => (

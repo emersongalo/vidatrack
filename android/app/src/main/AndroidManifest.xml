@@ -188,4 +188,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Etapa 248: vibração curtinha ao concluir hábito / salvar gasto -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 </manifest>

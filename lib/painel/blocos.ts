@@ -12,6 +12,8 @@ export type IdBloco =
   | "semanaHabitos"
   | "humor"
   | "saldo"
+  | "podeGastar"
+  | "lancarRapido"
   | "gastosSemana"
   | "teto"
   | "categorias"
@@ -28,6 +30,8 @@ export const BLOCOS: { id: IdBloco; nome: string; emoji: string; area: AreaBloco
   { id: "semanaHabitos", nome: "Semana dos hábitos", emoji: "📊", area: "habitos", texto: "Quanto você fez em cada dia dos últimos 7" },
   { id: "humor", nome: "Como está seu dia?", emoji: "🙂", area: "habitos", texto: "Registrar o humor com um toque" },
   { id: "saldo", nome: "Saldo", emoji: "💰", area: "financas", texto: "Saldo em contas e o que entrou e saiu no mês" },
+  { id: "podeGastar", nome: "Quanto posso gastar hoje", emoji: "👛", area: "financas", texto: "Um número só, já descontando contas e faturas do mês" },
+  { id: "lancarRapido", nome: "Lançar rápido", emoji: "⚡", area: "financas", texto: "Seus gastos mais repetidos, lançados em 2 toques" },
   { id: "gastosSemana", nome: "Gastos da semana", emoji: "📉", area: "financas", texto: "Gasto de cada dia e comparação com a semana passada" },
   { id: "teto", nome: "Teto do mês", emoji: "🎯", area: "financas", texto: "Medidor de quanto do teto de gastos já foi" },
   { id: "categorias", nome: "Onde foi o dinheiro", emoji: "🍩", area: "financas", texto: "As categorias com mais gasto no mês" },

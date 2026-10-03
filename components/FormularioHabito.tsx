@@ -16,6 +16,7 @@ function ehCorClara(hex: string) {
   return 0.299 * r + 0.587 * g + 0.114 * b > 150;
 }
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
+import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { CampoLembretesHabito } from "@/components/CampoLembretesHabito";
 
 type Categoria = { id: string; nome: string };
@@ -36,7 +37,10 @@ export function FormularioHabito({
   valoresIniciais,
   textoBotao,
   topo,
+  outrosHabitos = [],
 }: {
+  /** Etapa 249 — pra escolher "fazer logo depois de…" */
+  outrosHabitos?: { id: string; nome: string }[];
   /** Etapa 227 — topo colorido (na cor do hábito) com o nome em destaque */
   topo?: { titulo: string; voltarHref: string };
   action: (formData: FormData) => void;
@@ -55,6 +59,8 @@ export function FormularioHabito({
     metaDiaria: number;
     unidade: string | null;
     ehNegativo?: boolean;
+    economiaDia?: number | null;
+    depoisDe?: string | null;
   };
   textoBotao: string;
 }) {
@@ -175,6 +181,19 @@ export function FormularioHabito({
           </p>
         )}
         <input type="hidden" name="ehNegativo" value={ehNegativo ? "true" : "false"} />
+        {/* Etapa 249 — quanto economiza por dia sem esse hábito */}
+        {ehNegativo && (
+          <div className="mt-4">
+            <label className="block text-base font-medium mb-1">Quanto você gastava com isso por dia? (opcional)</label>
+            <p className="text-xs text-ink-400 mb-2">Ex: um maço por dia ≈ R$ 12,00. A tela do hábito mostra quanto você já economizou.</p>
+            <CampoValorMonetario
+              name="economiaDia"
+              valorInicial={valoresIniciais?.economiaDia ?? undefined}
+              placeholder="0,00"
+              className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 font-mono text-ink-100 focus:border-ink-100 outline-none transition"
+            />
+          </div>
+        )}
       </div>
 
       <div>
@@ -217,6 +236,29 @@ export function FormularioHabito({
       </div>
 
       <div className="form-coluna">
+
+      {/* Etapa 249 — encadear: "depois do café → ler 10 min" */}
+      {!ehNegativo && outrosHabitos.length > 0 && (
+        <div>
+          <label htmlFor="depoisDe" className="block text-base font-medium mb-1">
+            Fazer logo depois de… (opcional)
+          </label>
+          <p className="text-xs text-ink-400 mb-2">Quando você marcar o outro, este aparece em destaque como o próximo.</p>
+          <select
+            id="depoisDe"
+            name="depoisDe"
+            defaultValue={valoresIniciais?.depoisDe ?? ""}
+            className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
+          >
+            <option value="">Nenhum</option>
+            {outrosHabitos.map((h) => (
+              <option key={h.id} value={h.id}>
+                {h.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {categorias.length > 0 && (
         <div>

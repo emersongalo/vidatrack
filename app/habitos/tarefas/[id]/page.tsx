@@ -11,6 +11,7 @@ import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { descreverRepeticao, tarefaAtrasada, PRIORIDADES } from "@/lib/agenda/recorrencia";
 import { hojeISO } from "@/lib/habitos/streak";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 134
 export default function DetalheTarefaPage() {
@@ -31,7 +32,7 @@ function DetalheTarefaConteudo() {
   // dados da tarefa (que a essa altura ainda não sabemos se existe).
   const [subtarefasSobrepostas, setSubtarefasSobrepostas] = useState<Record<string, boolean>>({});
 
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela linhas={3} />;
 
   const tarefa = (snapshot?.tarefas ?? []).find((t: any) => t.id === params.id);
 

@@ -17,6 +17,8 @@ import { CaixaAssistente } from "@/components/CaixaAssistente";
 import { DiarioDoDia } from "@/components/DiarioDoDia";
 import { MetasResumo } from "@/components/MetasResumo";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
+import { PodeGastarHoje } from "@/components/PodeGastarHoje";
+import { GastosRapidos } from "@/components/GastosRapidos";
 import { PersonalizarInicio } from "@/components/inicio/PersonalizarInicio";
 import {
   CartaoInicio,
@@ -88,6 +90,9 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
         </Link>
       </CartaoInicio>
     ),
+    // Etapa 247
+    podeGastar: <PodeGastarHoje snapshot={snapshot} hojeISO={hoje} noInicio />,
+    lancarRapido: <GastosRapidos snapshot={snapshot} hojeISO={hoje} noInicio />,
     gastosSemana: <GastosSemanaInicio s={snapshot} hoje={hoje} />,
     teto: <TetoInicio s={snapshot} hoje={hoje} />,
     categorias: <CategoriasInicio s={snapshot} hoje={hoje} />,

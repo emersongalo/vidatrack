@@ -13,6 +13,10 @@ import { resumoDoHabito } from "@/lib/habitos/detalhe";
 import { definirCorBarraStatus } from "@/lib/app/barraStatus";
 import { IconeHabito } from "@/components/IconeHabito";
 import { AnelProgresso } from "@/components/AnelProgresso";
+import { CarregandoTela } from "@/components/Esqueleto";
+import { CartaoParar } from "@/components/CartaoParar";
+import { MelhorHorario } from "@/components/MelhorHorario";
+import { Dica } from "@/components/Dica";
 
 const DIAS_SEMANA = ["D", "S", "T", "Q", "Q", "S", "S"];
 
@@ -39,7 +43,7 @@ export default function DetalheHabitoPage() {
   }, [hex, habito]);
   useEffect(() => () => definirCorBarraStatus(null), []);
 
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela cartoes={2} linhas={3} />;
   if (!habito) {
     return (
       <main className="pagina px-6 pt-6">
@@ -86,6 +90,10 @@ export default function DetalheHabitoPage() {
       </div>
 
       <div className="relative -mt-6 bg-base-900 rounded-t-3xl px-6 pt-6 md:px-12">
+        {/* Etapa 249 — parar de fazer algo: dias limpos + economia + marcos */}
+        {habito.eh_negativo && <CartaoParar habito={habito} checkins={snapshot!.habitoCheckins as any[]} hoje={hoje} hex={hex} />}
+        {habito.eh_negativo && <Dica contexto="habitoParar" />}
+{!habito.eh_negativo && (
         <div className="bg-base-800 border border-base-600 rounded-3xl p-5 mb-6">
           <div className="flex items-center gap-4">
             <AnelProgresso valor={r.taxa30 ?? 0} total={100} texto={r.taxa30 === null ? "—" : `${r.taxa30}%`} />
@@ -109,6 +117,12 @@ export default function DetalheHabitoPage() {
             </div>
           </div>
         </div>
+        )}
+
+        {/* Etapa 249 — melhor horário */}
+        {!habito.eh_negativo && (
+          <MelhorHorario habitoId={habito.id} checkins={snapshot!.habitoCheckins as any[]} hex={hex} lembrete={habito.horario_lembrete} />
+        )}
 
         <h2 className="text-xl font-semibold mb-3">Histórico</h2>
         <div className="space-y-4">

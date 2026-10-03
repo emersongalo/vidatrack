@@ -40,6 +40,8 @@ const config: Config = {
       },
       // Etapa 230 — animações curtas (marcar hábito, comemoração, números)
       keyframes: {
+        // Etapa 248 — brilho que passa no "carregando"
+        reluzir: { "0%": { backgroundPosition: "200% 0" }, "100%": { backgroundPosition: "-200% 0" } },
         pop: { "0%": { transform: "scale(1)" }, "40%": { transform: "scale(1.25)" }, "100%": { transform: "scale(1)" } },
         subir: {
           "0%": { transform: "translateY(0) scale(0.6)", opacity: "0" },
@@ -85,6 +87,7 @@ const config: Config = {
         brilhar: { "0%, 100%": { boxShadow: "0 0 18px 4px rgba(255,244,200,0.35)" }, "50%": { boxShadow: "0 0 30px 10px rgba(255,244,200,0.55)" } },
       },
       animation: {
+        reluzir: "reluzir 1.6s ease-in-out infinite",
         pop: "pop 0.35s ease-out",
         subir: "subir 1.8s ease-out forwards",
         surgir: "surgir 0.25s ease-out",
@@ -111,7 +114,8 @@ const config: Config = {
         brilhar: "brilhar 4s ease-in-out infinite",
       },
       borderRadius: {
-        xl2: "1.25rem",
+        // Etapa 250 — cantos iguais aos cartões novos (rounded-3xl) em todo o app
+        xl2: "1.5rem",
       },
     },
   },

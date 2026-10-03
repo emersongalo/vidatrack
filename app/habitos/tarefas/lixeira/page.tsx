@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AcoesLixeiraTarefa } from "@/components/AcoesLixeiraTarefa";
 import { IconeHabito } from "@/components/IconeHabito";
+import { Esqueleto } from "@/components/Esqueleto";
 
 // Etapa 129
 export default function LixeiraTarefasPage() {
@@ -31,7 +32,7 @@ export default function LixeiraTarefasPage() {
       <h1 className="text-3xl font-display font-bold mt-4 mb-6">Lixeira de tarefas</h1>
 
       {!tarefas || tarefas.length === 0 ? (
-        <p className="text-ink-400 text-sm">{tarefas === null ? "Carregando..." : "Nenhuma tarefa arquivada."}</p>
+        <>{tarefas === null ? <Esqueleto linhas={2} comTopo={false} /> : <p className="text-ink-400 text-sm">{"Nenhuma tarefa arquivada."}</p>}</>
       ) : (
         <ul className="space-y-2">
           {tarefas.map((t) => (

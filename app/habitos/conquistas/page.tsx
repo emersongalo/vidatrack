@@ -5,6 +5,7 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { useEffect } from "react";
 import { hojeISO } from "@/lib/habitos/streak";
 import { CHAVE_CONQUISTAS_VISTAS, calcularConquistas, ganhou } from "@/lib/habitos/conquistas";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 /**
  * Etapa 214 — Conquistas: selos calculados na hora a partir do que já
@@ -26,7 +27,7 @@ export default function ConquistasPage() {
     }
   }, [lista.length, lista.filter(ganhou).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela comTopo={false} cartoes={6} linhas={0} />;
   if (!snapshot) {
     return (
       <main className="pagina px-6 md:px-12 pt-6">

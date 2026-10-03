@@ -14,6 +14,7 @@ import type { SnapshotOffline } from "@/lib/offline/snapshot";
 import { SugestoesLembrete } from "@/components/SugestoesLembrete";
 import { PadroesSemana } from "@/components/PadroesSemana";
 import { SemanaPorHabito } from "@/components/SemanaPorHabito";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 function ultimosNDias(n: number): string[] {
   const dias: string[] = [];
@@ -33,13 +34,7 @@ function ultimosNDias(n: number): string[] {
 export default function EstatisticasHabitosPage() {
   const { snapshot } = useSnapshotOffline();
 
-  if (snapshot === undefined) {
-    return (
-      <main className="min-h-screen p-6 md:p-12 pagina pb-16 animate-pulse">
-        <div className="h-40 bg-base-800 border border-base-600 rounded-xl2" />
-      </main>
-    );
-  }
+  if (snapshot === undefined) return <CarregandoTela cartoes={4} linhas={2} />;
 
   const habitos = snapshot?.habitos ?? [];
   const checkins = snapshot?.habitoCheckins ?? [];

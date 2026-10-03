@@ -6,6 +6,7 @@ import { hojeISO } from "@/lib/habitos/streak";
 import { atualizarTarefa } from "../../actions";
 import { FormularioTarefa, type TipoRepeticao } from "@/components/FormularioTarefa";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 134
 export default function EditarTarefaPage() {
@@ -21,7 +22,7 @@ function EditarTarefaConteudo() {
   const searchParams = useSearchParams();
   const { snapshot } = useSnapshotOffline();
 
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={4} />;
 
   const tarefa = (snapshot?.tarefas ?? []).find((t: any) => t.id === params.id);
   const categorias = snapshot?.categoriasProdutividade ?? [];

@@ -8,6 +8,7 @@ import { BANCOS } from "@/lib/financas/bancos";
 import { SeletorTipoConta } from "@/components/SeletorTipoConta";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 128
 export default function EditarContaPage() {
@@ -24,13 +25,7 @@ function EditarContaConteudo() {
   const erro = searchParams.get("erro");
   const { snapshot } = useSnapshotOffline();
 
-  if (snapshot === undefined) {
-    return (
-      <main className="min-h-screen p-6 md:p-12 pagina-form animate-pulse">
-        <div className="h-64 bg-base-800 border border-base-600 rounded-xl2 mt-6" />
-      </main>
-    );
-  }
+  if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={5} />;
 
   const conta = (snapshot?.financas.contas ?? []).find((c: any) => c.id === params.id);
 

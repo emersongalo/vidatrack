@@ -489,6 +489,7 @@ function ExtratoConteudo() {
       ) : lista.length === 0 ? (
         <EstadoVazio
           emoji="🧾"
+          tom="financa"
           titulo={busca || categoriaFiltro || contaFiltro || etiquetaFiltro ? "Nada com esse filtro" : "Nenhum lançamento nesse período"}
           texto={busca || categoriaFiltro || contaFiltro || etiquetaFiltro ? "Tente limpar a busca ou os filtros." : "Use o + lá embaixo pra lançar um gasto ou receita."}
         />

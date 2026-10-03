@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { atualizarCategoria } from "@/app/financas/actions";
 import { FormularioCategoria } from "@/components/FormularioCategoria";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 133
 export default function EditarCategoriaPage() {
@@ -20,7 +21,7 @@ function EditarCategoriaConteudo() {
   const searchParams = useSearchParams();
   const { snapshot } = useSnapshotOffline();
 
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={3} />;
 
   const categoria = (snapshot?.financas.categorias ?? []).find((c: any) => c.id === params.id);
 

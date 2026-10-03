@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { totaisPorEtiqueta } from "@/lib/financas/etiquetas";
 import { ValorMonetario } from "@/components/ValorMonetario";
+import { EstadoVazio } from "@/components/EstadoVazio";
 
 // Etapa 218 — quanto foi em cada etiqueta (ex: "viagem praia"), misturando categorias
 export default function EtiquetasPage() {
@@ -23,11 +24,7 @@ export default function EtiquetasPage() {
       </p>
 
       {snapshot === undefined ? null : grupos.length === 0 ? (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
-          <p className="text-3xl mb-2">🏷️</p>
-          <p className="font-display font-semibold mb-1">Nenhuma etiqueta ainda</p>
-          <p className="text-ink-400 text-sm">No formulário de lançamento, use o campo “Etiquetas”.</p>
-        </div>
+        <EstadoVazio tom="financa" emoji="🏷️" titulo="Nenhuma etiqueta ainda" texto="No formulário de lançamento, use o campo “Etiquetas” (ex: viagem, casa)." />
       ) : (
         <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {grupos.map((g) => (

@@ -1,13 +1,26 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "235";
+export const VERSAO_NOVIDADES = "250";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "250",
+    titulo: "Mais rápido no dia a dia",
+    itens: [
+      { emoji: "👛", titulo: "Quanto posso gastar hoje", texto: "Opcional: ligue em Finanças → Personalizar. Um número só que já desconta contas fixas, agendados e faturas até o fim do mês (e respeita seu teto).", href: "/financas" },
+      { emoji: "⚡", titulo: "Lançar em 2 toques", texto: "Opcional: ligue em Finanças → Personalizar. Seus gastos mais repetidos (padaria, gasolina…) viram botões com categoria e conta prontas — é só digitar o valor.", href: "/financas" },
+      { emoji: "🟠", titulo: "Aviso antes de estourar", texto: "Teto do mês e orçamento das categorias avisam aos 80%, ainda com tempo de segurar." },
+      { emoji: "🛡️", titulo: "Hábito de parar", texto: "Dias limpos num contador grande, marcos (3 dias, 1 semana, 1 mês…) e quanto você já economizou. Informe o valor por dia ao editar o hábito." },
+      { emoji: "🔗", titulo: "Hábitos encadeados", texto: "\"Depois do café → ler\": marque o primeiro e o próximo sobe pro topo com \"Agora!\". Escolha em Editar hábito." },
+      { emoji: "🕐", titulo: "Seu melhor horário", texto: "Cada hábito mostra em que horário você mais faz — ótimo pra acertar o lembrete." },
+      { emoji: "✨", titulo: "Carregamento e telas vazias novas", texto: "Nada de tela em branco enquanto carrega, e telas vazias com ilustração e um atalho do que fazer." },
+    ],
+  },
   {
     versao: "235",
     titulo: "Monte o seu Início",

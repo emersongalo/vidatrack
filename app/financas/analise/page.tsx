@@ -15,6 +15,7 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { gastosForaDoNormal } from "@/lib/financas/alertas";
 import { SugestoesRecorrentes } from "@/components/SugestoesRecorrentes";
 import { GraficoDozeMeses } from "@/components/GraficoDozeMeses";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 128 — o cálculo pesado (lib/financas/insights-calculo.ts) já
 // era puro; só precisava alimentar com as transações certas vindas
@@ -23,13 +24,7 @@ export default function AnaliseFinanceiraPage() {
   const { snapshot } = useSnapshotOffline();
   const [mesReferencia, setMesReferencia] = useState(hojeISO());
 
-  if (snapshot === undefined) {
-    return (
-      <main className="min-h-screen p-6 md:p-12 pagina animate-pulse">
-        <div className="h-40 bg-base-800 border border-base-600 rounded-xl2" />
-      </main>
-    );
-  }
+  if (snapshot === undefined) return <CarregandoTela cartoes={2} linhas={3} />;
 
   const mapaCategorias = new Map((snapshot?.financas.categorias ?? []).map((c: any) => [c.id, c.nome]));
   // Etapa 217 — mês atual/passado: só o que já foi gasto (data até hoje

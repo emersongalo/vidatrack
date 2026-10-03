@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormularioTransacao } from "@/components/FormularioTransacao";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 128 — essa é provavelmente a tela mais importante de deixar
 // funcionando offline (lançar uma despesa/receita no meio do dia).
@@ -23,7 +24,7 @@ function NovaTransacaoConteudo() {
   const searchParams = useSearchParams();
   const { snapshot } = useSnapshotOffline();
 
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={5} />;
 
   const contas = snapshot?.financas.contas ?? [];
   // Etapa 151: categorias de quem compartilha uma conta com você

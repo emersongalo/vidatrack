@@ -50,6 +50,36 @@ import {
  * calcular "o que aparece hoje" na hora, pra qualquer dia, sem
  * precisar ter visitado esse dia exato antes.
  */
+/**
+ * Etapa 249 — encadear hábitos ("depois do café → ler"): o hábito que
+ * vem depois aparece logo abaixo do primeiro e, quando o primeiro é
+ * feito, sobe pro topo com o selo "Agora!".
+ */
+export function encadearHabitos(lista: ItemAgenda[], habitos: { id: string; depois_de?: string | null }[]) {
+  const porId = new Map(lista.map((i) => [i.id, i]));
+  const filhos: ItemAgenda[] = [];
+  for (const h of habitos) {
+    if (!h.depois_de) continue;
+    const item = porId.get(h.id);
+    const pai = porId.get(h.depois_de);
+    if (!item || !pai || item.tipo !== "habito" || pai.tipo !== "habito") continue;
+    item.encadeado = { depoisDe: pai.titulo, paiId: pai.id, liberado: pai.feito };
+    if (!item.feito) filhos.push(item);
+  }
+  if (!filhos.length) return;
+  // tira os filhos pendentes e recoloca no lugar certo
+  const resto = lista.filter((i) => !filhos.includes(i));
+  const liberados = filhos.filter((f) => f.encadeado!.liberado);
+  const esperando = filhos.filter((f) => !f.encadeado!.liberado);
+  const saida: ItemAgenda[] = [...liberados];
+  for (const i of resto) {
+    saida.push(i);
+    for (const f of esperando) if (f.encadeado!.paiId === i.id) saida.push(f);
+  }
+  for (const f of esperando) if (!saida.includes(f)) saida.push(f);
+  lista.splice(0, lista.length, ...saida);
+}
+
 export function HojeLocalFirst() {
   return (
     <Suspense fallback={null}>
@@ -161,6 +191,7 @@ function HojeConteudo() {
     }
 
     lista.sort(ordenarItensAgenda);
+    encadearHabitos(lista, snapshot.habitos as any[]);
 
     return {
       itens: lista,
@@ -277,7 +308,7 @@ function HojeConteudo() {
               </div>
             </div>
           ) : itens!.length === 0 ? (
-            <EstadoVazio emoji="🌤️" titulo="Dia livre" texto="Nenhum hábito ou tarefa cai neste dia." />
+            <EstadoVazio tom="habito" emoji="🌤️" titulo="Dia livre" texto="Nenhum hábito ou tarefa cai neste dia." />
           ) : (
             <>
               <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />

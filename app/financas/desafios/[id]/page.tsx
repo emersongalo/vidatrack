@@ -8,6 +8,7 @@ import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { Trash2 } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 132 — a leitura (progresso, grid) já funciona offline, lendo
 // do retrato. Marcar um quadrado continua exigindo internet de
@@ -21,7 +22,7 @@ export default function DesafioDetalhePage() {
   const [, iniciarTransicao] = useTransition();
   const [avisoOffline, setAvisoOffline] = useState(false);
 
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela linhas={3} />;
 
   const desafio = (snapshot?.financas.desafios ?? []).find((d: any) => d.id === params.id);
 

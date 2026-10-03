@@ -9,6 +9,7 @@ import { FormularioAcao } from "@/components/FormularioAcao";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { useSnapshotOffline, atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 /**
  * Etapa 211 — transferir entre contas (ex: Itaú → Carteira) ou pagar a
@@ -30,7 +31,7 @@ function TransferirConteudo() {
   const params = useSearchParams();
   const router = useRouter();
   const { snapshot } = useSnapshotOffline();
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={4} />;
 
   const meuId = snapshot?.perfil.id;
   const contas = ((snapshot?.financas.contas ?? []) as any[]).filter((c) => !c.dono_id || c.dono_id === meuId);

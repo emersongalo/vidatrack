@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { atualizarTransacao } from "../../actions";
 import { FormularioTransacao } from "@/components/FormularioTransacao";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 128
 export default function EditarTransacaoPage() {
@@ -21,7 +22,7 @@ function EditarTransacaoConteudo() {
   const erro = searchParams.get("erro") ?? undefined;
   const { snapshot } = useSnapshotOffline();
 
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={5} />;
 
   const transacao = (snapshot?.financas.transacoes ?? []).find((t: any) => t.id === params.id);
   const contas = snapshot?.financas.contas ?? [];

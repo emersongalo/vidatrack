@@ -14,6 +14,7 @@ import { Trash2, Archive, Pencil } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { AnelProgresso } from "@/components/AnelProgresso";
 import { EstadoVazio } from "@/components/EstadoVazio";
+import { Dica } from "@/components/Dica";
 
 // Etapa 127: a lista abre com o que já tinha salvo. Guardar progresso
 // numa meta, criar, arquivar ou excluir continuam precisando de
@@ -32,9 +33,10 @@ export default function MetasPage() {
       <p className="text-ink-400 text-sm mb-6">
         Separe um valor pra alcançar, tipo "Viagem" ou "Reserva de emergência", e vá guardando aos poucos.
       </p>
+      <Dica contexto="metas" />
 
       {metas.length === 0 && snapshot && (
-        <EstadoVazio emoji="🎯" titulo="Nenhuma meta ainda" texto="Crie a primeira aqui embaixo — viagem, reserva, um celular novo…" />
+        <EstadoVazio tom="financa" emoji="🎯" titulo="Nenhuma meta ainda" texto="Crie a primeira aqui embaixo — viagem, reserva, um celular novo…" />
       )}
 
       {metas.length > 0 && (

@@ -17,6 +17,7 @@ import { Esqueleto } from "@/components/Esqueleto";
 import { IconeHabito } from "@/components/IconeHabito";
 import { createClient } from "@/lib/supabase/client";
 import { rotuloDoDia } from "@/lib/financas/agruparPorDia";
+import { Dica } from "@/components/Dica";
 
 type Recado = { id: string; tipo: string; emoji: string | null; de_nome: string | null; habito_nome: string | null; de_usuario: string; criado_em: string };
 
@@ -73,12 +74,14 @@ export default function JuntosPage() {
       <p className="text-ink-400 text-base mb-6">
         Cada hábito que vocês fazem juntos vira uma plantinha. Ela cresce nos dias em que todos fazem — e murcha um pouco quando ninguém faz.
       </p>
+      <Dica contexto="juntos" />
 
       {duplas === null ? (
         <Esqueleto linhas={2} />
       ) : duplas.length === 0 ? (
         <EstadoVazio
           emoji="🌱"
+          tom="habito"
           titulo="Nenhum hábito em dupla ainda"
           texto="Abra um hábito e toque em Compartilhar pra convidar alguém. A plantinha de vocês nasce aqui."
           acao={{ rotulo: "Escolher um hábito", href: "/habitos/lista" }}

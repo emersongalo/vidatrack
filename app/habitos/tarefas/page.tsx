@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ListaTarefasArrastavel } from "@/components/ListaTarefasArrastavel";
 import { AlternadorHabitosTarefas } from "@/components/AlternadorHabitosTarefas";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { EstadoVazio } from "@/components/EstadoVazio";
 
 // Etapa 127
 export default function TarefasPage() {
@@ -31,10 +32,7 @@ export default function TarefasPage() {
       </div>
 
       {snapshot !== undefined && tarefas.length === 0 ? (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-8 text-center">
-          <p className="font-display font-semibold mb-1">Nenhuma tarefa ainda</p>
-          <p className="text-ink-400 text-sm">Tarefas podem ser únicas ou repetir como um hábito.</p>
-        </div>
+        <EstadoVazio tom="habito" emoji="📝" titulo="Nenhuma tarefa ainda" texto="Tarefas podem ser únicas ou repetir como um hábito." />
       ) : (
         <>
           <p className="text-xs text-ink-400 mb-3">Arraste ⠿ para reordenar</p>

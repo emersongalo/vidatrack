@@ -10,6 +10,8 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { ListaLancamentosPorDia } from "@/components/ListaLancamentosPorDia";
 import { PagarFatura } from "@/components/PagarFatura";
 import { resumoFatura } from "@/lib/financas/previsao";
+import { CarregandoTela } from "@/components/Esqueleto";
+import { EstadoVazio } from "@/components/EstadoVazio";
 
 function formatarPeriodo(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
@@ -22,7 +24,7 @@ export default function FaturaCartaoPage() {
   const { snapshot } = useSnapshotOffline();
   const [fimSelecionado, setFimSelecionado] = useState<string | null>(null);
 
-  if (snapshot === undefined) return null;
+  if (snapshot === undefined) return <CarregandoTela linhas={4} />;
 
   const conta = (snapshot?.financas.contas ?? []).find((c: any) => c.id === params.id);
 
@@ -124,7 +126,7 @@ export default function FaturaCartaoPage() {
 
       <h2 className="text-xl font-semibold mb-3">Lançamentos dessa fatura</h2>
       {transacoes.length === 0 ? (
-        <p className="text-sm text-ink-400">🧾 Nenhum lançamento nessa fatura.</p>
+        <EstadoVazio compacto tom="financa" emoji="💳" titulo="Fatura limpinha" texto="Nenhuma compra nesse período do cartão." />
       ) : (
         // Etapa 226 — mesma lista do Extrato
         <ListaLancamentosPorDia

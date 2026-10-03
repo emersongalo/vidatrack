@@ -14,7 +14,7 @@ import { CarrosselCategorias } from "@/components/CarrosselCategorias";
 import { MapaCalorGastos } from "@/components/MapaCalorGastos";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { EstadoVazio } from "@/components/EstadoVazio";
-import { Esqueleto } from "@/components/Esqueleto";
+import { Esqueleto, CarregandoTela } from "@/components/Esqueleto";
 import { HeroFinancas } from "@/components/HeroFinancas";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { ValorMonetario } from "@/components/ValorMonetario";
@@ -25,6 +25,8 @@ import { PrevisaoMes } from "@/components/PrevisaoMes";
 import { AlertasFinancas } from "@/components/AlertasFinancas";
 import { MetasResumo } from "@/components/MetasResumo";
 import { TetoMensal } from "@/components/TetoMensal";
+import { PodeGastarHoje } from "@/components/PodeGastarHoje";
+import { GastosRapidos } from "@/components/GastosRapidos";
 import { ListaLancamentosPorDia } from "@/components/ListaLancamentosPorDia";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { salvarOrdemBlocosFinancas } from "./actions";
@@ -85,13 +87,7 @@ export default function FinancasPage() {
   // Etapa 195 — Saldo e Contas a pagar dos widgets agora vêm do
   // SincronizadorWidgets (layout), junto com todos os outros widgets.
 
-  if (snapshot === undefined) {
-    return (
-      <main className="min-h-screen p-6 md:p-12 pagina animate-pulse">
-        <div className="h-64 bg-base-800 border border-base-600 rounded-xl2" />
-      </main>
-    );
-  }
+  if (snapshot === undefined) return <CarregandoTela cartoes={4} linhas={3} />;
 
   const contas = snapshot?.financas.contas ?? [];
   const transacoes = snapshot?.financas.transacoes ?? [];
@@ -257,7 +253,7 @@ export default function FinancasPage() {
         </Link>
       </div>
       {ultimasTransacoes.length === 0 ? (
-        <p className="text-ink-400 text-sm">🧾 Nenhum lançamento nesse mês.</p>
+        <EstadoVazio compacto emoji="🧾" tom="financa" titulo="Nada lançado nesse mês" texto="Use o + ou o Lançar rápido pra registrar o primeiro gasto." />
       ) : (
         // Etapa 226 — mesma lista do Extrato (por dia, verde/vermelho)
         <ListaLancamentosPorDia
@@ -280,6 +276,9 @@ export default function FinancasPage() {
   );
 
   const blocosPorId: Record<string, ReactNode> = {
+    // Etapa 247
+    hoje: snapshot && ehMesAtual ? <PodeGastarHoje snapshot={snapshot} hojeISO={hojeISOBr} /> : null,
+    rapidos: snapshot && ehMesAtual ? <GastosRapidos snapshot={snapshot} hojeISO={hojeISOBr} /> : null,
     previsao: previsao ? <PrevisaoMes previsao={previsao} /> : null,
     teto: snapshot && ehMesAtual ? <TetoMensal snapshot={snapshot} hojeISO={hojeISOBr} /> : null,
     contas: <ListaContasComSaldo contas={contas as any} transacoes={transacoes as any} />,
@@ -349,6 +348,7 @@ export default function FinancasPage() {
       ) : !contas.length ? (
         <EstadoVazio
           emoji="🏦"
+          tom="financa"
           titulo="Nenhuma conta ainda"
           texto="Adicione sua carteira, banco ou cartão pra começar."
           acao={{ rotulo: "+ Adicionar conta", href: "/financas/contas" }}

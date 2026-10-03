@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Undo2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
+import { vibrar } from "@/lib/app/vibrar";
 
 /**
  * Etapa 209 — lançamento agendado (data no futuro): "✓ Paguei" marca
@@ -28,6 +29,7 @@ export function BotaoPaguei({
   const receita = transacao.tipo === "receita";
 
   async function alterar(novo: string | null) {
+    vibrar(novo ? [15, 40, 25] : 10); // Etapa 248
     setSalvando(true);
     setErro(false);
     const anterior = pagoEm;

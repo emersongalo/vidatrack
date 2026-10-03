@@ -71,8 +71,8 @@ describe("widgets de hábitos", () => {
     expect(s[6]).toMatchObject({ dia: HOJE, feitos: 1, devidos: 2, pct: 50 });
     expect(s[0].pct).toBe(0);
   });
-  it("novidades 235", () => {
-    expect(VERSAO_NOVIDADES).toBe("235");
-    expect(NOVIDADES[0].versao).toBe("235");
+  it("novidades 235 continua na lista (a mais nova é a 250)", () => {
+    expect(VERSAO_NOVIDADES).toBe("250");
+    expect(NOVIDADES.some((g) => g.versao === "235")).toBe(true);
   });
 });

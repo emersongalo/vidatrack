@@ -9,6 +9,8 @@ import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { Pencil, Trash2 } from "lucide-react";
+import { EstadoVazio } from "@/components/EstadoVazio";
+import { Dica } from "@/components/Dica";
 
 /**
  * Etapa 168 — redesenhada como grade de cartões com ícone circular
@@ -114,7 +116,9 @@ export default function CategoriasPage() {
         </div>
       )}
 
-      {snapshot !== undefined && categorias.length === 0 && <p className="text-ink-400 text-sm">🏷️ Nenhuma categoria ainda.</p>}
+      {snapshot !== undefined && categorias.length > 0 && <Dica contexto="orcamento" className="mt-6" />}
+
+      {snapshot !== undefined && categorias.length === 0 && <EstadoVazio tom="financa" emoji="🏷️" titulo="Nenhuma categoria ainda" texto="Crie categorias como Mercado, Transporte e Lazer pra ver pra onde vai o dinheiro." />}
     </main>
   );
 }

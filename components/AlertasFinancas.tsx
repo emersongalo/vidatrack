@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { gastosForaDoNormal, assinaturasNaoCadastradas } from "@/lib/financas/alertas";
 import { faturasVencendo } from "@/lib/financas/previsao";
+import { alertasDeLimite } from "@/lib/financas/limites80";
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
 
 // Etapa 215 — avisos automáticos na tela de Finanças (dá pra dispensar;
@@ -35,6 +36,9 @@ export function montarAlertasFinancas(snapshot: SnapshotOffline, hojeISO: string
       acao: "Ver fatura",
     });
   }
+
+  // Etapa 247 — avisa ANTES de estourar (aos 80%), não só depois
+  for (const a of alertasDeLimite(snapshot as any, hojeISO)) alertas.push(a);
 
   for (const g of gastosForaDoNormal(transacoes as any, hojeISO).slice(0, 2)) {
     alertas.push({

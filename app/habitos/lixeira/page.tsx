@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AcoesLixeiraHabito } from "@/components/AcoesLixeiraHabito";
 import { IconeHabito } from "@/components/IconeHabito";
+import { Esqueleto } from "@/components/Esqueleto";
 
 // Etapa 129 — lixeiras usam busca direta (não entram no retrato
 // principal): restaurar algo do lixo não é uma ação urgente pra
@@ -34,7 +35,7 @@ export default function LixeiraHabitosPage() {
       <h1 className="text-3xl font-display font-bold mt-4 mb-6">Lixeira de hábitos</h1>
 
       {!habitos || habitos.length === 0 ? (
-        <p className="text-ink-400 text-sm">{habitos === null ? "Carregando..." : "Nenhum hábito arquivado."}</p>
+        <>{habitos === null ? <Esqueleto linhas={2} comTopo={false} /> : <p className="text-ink-400 text-sm">{"Nenhum hábito arquivado."}</p>}</>
       ) : (
         <ul className="space-y-2">
           {habitos.map((h) => (

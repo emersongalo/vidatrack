@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { criarHabito } from "../actions";
 import { FormularioHabito } from "@/components/FormularioHabito";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { Dica } from "@/components/Dica";
 
 // Etapa 132
 export default function NovoHabitoPage() {
@@ -32,9 +33,13 @@ function NovoHabitoConteudo() {
       <FormularioHabito
         action={criarHabito}
         categorias={(snapshot?.categoriasProdutividade ?? []) as any}
+        outrosHabitos={((snapshot?.habitos ?? []) as any[]).filter((h) => !h.eh_negativo).map((h) => ({ id: h.id, nome: h.nome }))}
         textoBotao="Criar hábito"
         topo={{ titulo: "Novo hábito", voltarHref: "/habitos" }}
       />
+      <div className="px-6 md:px-12 mt-2">
+        <Dica contexto="novoHabito" />
+      </div>
     </main>
   );
 }

@@ -58,6 +58,8 @@ export type ItemAgenda = {
   /** Etapa 233 — hábito feito em dupla: carinha, quem já fez, sequência juntos */
   dupla?: InfoDupla | null;
   ehHoje?: boolean;
+  /** Etapa 249 — hábito encadeado: "fazer logo depois de X" */
+  encadeado?: { depoisDe: string; paiId?: string; liberado: boolean } | null;
 };
 
 /** Etapa 193 — pendentes primeiro; entre elas, atrasadas, depois
@@ -245,6 +247,15 @@ export function ItemLinhaAgenda({
           {item.titulo}
         </p>
         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap empty:hidden">
+          {item.encadeado && !item.feito && (
+            <span
+              className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                item.encadeado.liberado ? "bg-habito/20 text-habito animate-pulse" : "bg-base-700 text-ink-400"
+              }`}
+            >
+              🔗 {item.encadeado.liberado ? `Agora! Já fez ${item.encadeado.depoisDe}` : `Depois de ${item.encadeado.depoisDe}`}
+            </span>
+          )}
           {item.atrasadaDesde && !item.feito && (
             <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-red-400/15 text-red-400">
               Atrasada desde {new Date(item.atrasadaDesde + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
 import { HUMORES, emojiDoHumor, relacaoHabitosHumor } from "@/lib/habitos/diario";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 215 — histórico do diário + o que o humor tem a ver com os hábitos
 function somarDias(iso: string, n: number) {
@@ -15,13 +16,7 @@ export default function DiarioPage() {
   const { snapshot } = useSnapshotOffline();
   const hoje = hojeISO();
 
-  if (snapshot === undefined) {
-    return (
-      <main className="min-h-screen p-6 md:p-12 pagina animate-pulse">
-        <div className="h-40 bg-base-800 border border-base-600 rounded-xl2" />
-      </main>
-    );
-  }
+  if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={5} />;
 
   const diario = [...(snapshot?.diario ?? [])].sort((a, b) => b.data.localeCompare(a.data));
   const porData = new Map(diario.map((d) => [d.data, d]));

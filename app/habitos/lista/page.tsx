@@ -39,6 +39,7 @@ export default function ListaHabitosPage() {
       ) : !snapshot || snapshot.habitos.length === 0 ? (
         <EstadoVazio
           emoji="🌱"
+          tom="habito"
           titulo="Nenhum hábito ainda"
           texto="Comece com um pequeno — beber água, ler 10 páginas, caminhar."
           acao={{ rotulo: "+ Criar hábito", href: "/habitos/novo" }}

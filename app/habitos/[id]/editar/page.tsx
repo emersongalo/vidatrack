@@ -7,6 +7,7 @@ import { atualizarHabito } from "../../actions";
 import { FormularioHabito } from "@/components/FormularioHabito";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { PausarHabito } from "@/components/ControlePausa";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 128: acha o hábito pelo id dentro do retrato já baixado —
 // funciona mesmo offline, desde que esse hábito já existisse na
@@ -26,13 +27,7 @@ function EditarHabitoConteudo() {
   const erro = searchParams.get("erro");
   const { snapshot } = useSnapshotOffline();
 
-  if (snapshot === undefined) {
-    return (
-      <main className="pagina-form px-6 md:px-12 pt-2 animate-pulse">
-        <div className="h-64 bg-base-800 border border-base-600 rounded-xl2 mt-6" />
-      </main>
-    );
-  }
+  if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={5} />;
 
   const habito = (snapshot?.habitos ?? []).find((h: any) => h.id === params.id);
   const categorias = snapshot?.categoriasProdutividade ?? [];
@@ -62,6 +57,7 @@ function EditarHabitoConteudo() {
       <FormularioHabito
         action={atualizarHabito.bind(null, habito.id)}
         categorias={categorias as any}
+        outrosHabitos={(snapshot?.habitos ?? []).filter((h: any) => h.id !== habito.id && !h.eh_negativo).map((h: any) => ({ id: h.id, nome: h.nome }))}
         textoBotao="Salvar alterações"
         topo={{ titulo: "Editar hábito", voltarHref: `/habitos/${habito.id}` }}
         valoresIniciais={{
@@ -77,6 +73,8 @@ function EditarHabitoConteudo() {
           metaDiaria: habito.meta_diaria ?? 1,
           unidade: habito.unidade,
           ehNegativo: habito.eh_negativo,
+          economiaDia: (habito as any).economia_dia ?? null,
+          depoisDe: (habito as any).depois_de ?? null,
         }}
       />
 

@@ -9,6 +9,7 @@ import { calcularRetrospectiva } from "@/lib/geral/retrospectiva";
 import { emojiDoHumor } from "@/lib/habitos/diario";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { useValoresOcultos } from "@/lib/preferencias/useValoresOcultos";
+import { CarregandoTela } from "@/components/Esqueleto";
 
 // Etapa 215 — retrospectiva do ano (dá pra ver a qualquer momento: "até agora")
 export default function RetrospectivaPage() {
@@ -41,7 +42,7 @@ function Conteudo() {
   const [aviso, setAviso] = useState<string | null>(null);
 
   if (snapshot === undefined) {
-    return <main className="min-h-screen p-6 md:p-12 pagina animate-pulse"><div className="h-64 bg-base-800 rounded-xl2" /></main>;
+    return <CarregandoTela cartoes={4} linhas={2} />;
   }
   if (!snapshot) {
     return <main className="min-h-screen p-6 md:p-12 pagina"><p className="text-ink-400">Abra o app com internet uma vez pra montar sua retrospectiva.</p></main>;

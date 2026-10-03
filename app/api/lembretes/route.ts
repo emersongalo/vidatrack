@@ -559,11 +559,13 @@ async function notificarResumoSemanal(
       .lte("data", hoje)
       .in("usuario_id", ids),
     supabase.from("tarefa_conclusoes").select("usuario_id").gte("data", inicio).lte("data", hoje).in("usuario_id", ids),
+    // Etapa 250 — duas semanas (pra comparar), sem transferências
     supabase
       .from("financa_transacoes")
-      .select("dono_id, valor")
+      .select("dono_id, valor, data, transferencia_grupo")
       .eq("tipo", "despesa")
-      .gte("data", inicio)
+      .is("transferencia_grupo", null)
+      .gte("data", somarDias(inicio, -7))
       .lte("data", hoje)
       .in("dono_id", ids),
   ]);
@@ -574,11 +576,11 @@ async function notificarResumoSemanal(
     qtd.set(k, (qtd.get(k) ?? 0) + Number(c.quantidade ?? 1));
   }
 
-  type Resumo = { devidos: number; feitos: number; tarefas: number; gasto: number };
+  type Resumo = { devidos: number; feitos: number; tarefas: number; gasto: number; gastoAntes: number };
   const resumo = new Map<string, Resumo>();
   const pegar = (id: string) => {
     let r = resumo.get(id);
-    if (!r) resumo.set(id, (r = { devidos: 0, feitos: 0, tarefas: 0, gasto: 0 }));
+    if (!r) resumo.set(id, (r = { devidos: 0, feitos: 0, tarefas: 0, gasto: 0, gastoAntes: 0 }));
     return r;
   };
 
@@ -592,14 +594,23 @@ async function notificarResumoSemanal(
     }
   }
   for (const c of conclusoes ?? []) pegar(c.usuario_id).tarefas++;
-  for (const g of gastos ?? []) pegar(g.dono_id).gasto += Number(g.valor);
+  for (const g of gastos ?? []) {
+    if ((g as any).data >= inicio) pegar(g.dono_id).gasto += Number(g.valor);
+    else pegar(g.dono_id).gastoAntes += Number(g.valor);
+  }
 
   let enviados = 0;
   for (const [usuarioId, r] of resumo) {
     const partes: string[] = [];
     if (r.devidos > 0) partes.push(`${Math.round((r.feitos / r.devidos) * 100)}% dos hábitos feitos`);
     if (r.tarefas > 0) partes.push(`${r.tarefas} ${r.tarefas === 1 ? "tarefa concluída" : "tarefas concluídas"}`);
-    if (r.gasto > 0) partes.push(`${formatarMoeda(r.gasto)} em gastos`);
+    if (r.gasto > 0) {
+      // Etapa 250 — compara com a semana anterior
+      const dif = r.gastoAntes > 0 ? Math.round(((r.gasto - r.gastoAntes) / r.gastoAntes) * 100) : null;
+      const comparacao =
+        dif === null || Math.abs(dif) < 5 ? "" : dif < 0 ? ` (${Math.abs(dif)}% menos que a anterior 👏)` : ` (${dif}% a mais que a anterior)`;
+      partes.push(`${formatarMoeda(r.gasto)} em gastos${comparacao}`);
+    }
     if (!partes.length || (r.feitos === 0 && r.tarefas === 0 && r.gasto === 0)) continue;
     const texto = `📊 Sua semana: ${partes.join(" · ")}. Toque pra ver os detalhes.`;
     enviados += await notificarUsuariosDoItem(

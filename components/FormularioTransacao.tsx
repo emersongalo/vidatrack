@@ -18,6 +18,7 @@ import { CampoEtiquetas } from "@/components/CampoEtiquetas";
 import { formatarValorDigitado } from "@/components/CampoValorMonetario";
 import { definirCorBarraStatus } from "@/lib/app/barraStatus";
 import { ChevronLeft } from "lucide-react";
+import { vibrar } from "@/lib/app/vibrar";
 
 // Etapa 223 — cor do topo (e da barra de status do celular) por tipo
 const COR_TIPO = { receita: "#059669", despesa: "#DC2626" } as const;
@@ -186,6 +187,7 @@ export function FormularioTransacao({
   const [diaMesEditado, setDiaMesEditado] = useState(false);
 
   function aoSubmeter(e: React.FormEvent<HTMLFormElement>) {
+    vibrar(20); // Etapa 248 — confirma o toque em "Salvar"
     // Só intercepta a criação (não a edição) quando não tem internet —
     // se estiver online, deixa o <form action> normal cuidar de tudo,
     // sem mudar em nada o comportamento que já existia.

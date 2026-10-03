@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
 import { placarDoHabito } from "@/lib/habitos/desafio";
+import { EstadoVazio } from "@/components/EstadoVazio";
+import { Dica } from "@/components/Dica";
 
 // Etapa 220 — desafio com amigo: hábito compartilhado vira placar
 export default function DesafiosPage() {
@@ -78,6 +80,7 @@ export default function DesafiosPage() {
       <p className="text-ink-400 text-sm mb-6">
         Faça um hábito junto com alguém: cada um marca o seu e vocês veem a sequência um do outro.
       </p>
+      <Dica contexto="desafios" />
       <Link href="/habitos/juntos" className="flex items-center gap-3 mb-6 rounded-3xl p-4 border border-habito/40 bg-habito/10 hover:border-habito transition">
         <span className="text-3xl">🌱</span>
         <span className="flex-1 min-w-0">
@@ -88,11 +91,7 @@ export default function DesafiosPage() {
       </Link>
 
       {snapshot === undefined ? null : desafios.length === 0 ? (
-        <div className="bg-base-800 border border-base-600 rounded-xl2 p-6 text-center mb-6">
-          <p className="text-3xl mb-2">🤝</p>
-          <p className="font-display font-semibold mb-1">Nenhum desafio ainda</p>
-          <p className="text-ink-400 text-sm">Escolha um hábito abaixo e convide alguém pelo e-mail.</p>
-        </div>
+        <EstadoVazio tom="habito" emoji="🤝" titulo="Nenhum desafio ainda" texto="Escolha um hábito abaixo e convide alguém pelo e-mail." />
       ) : (
         <ul className="space-y-3 mb-8 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
           {desafios.map(({ habito, pessoas }) => {

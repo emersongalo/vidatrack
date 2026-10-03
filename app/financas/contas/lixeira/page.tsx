@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AcoesLixeiraConta } from "@/components/AcoesLixeiraConta";
+import { Esqueleto } from "@/components/Esqueleto";
 
 // Etapa 129
 export default function LixeiraContasPage() {
@@ -30,7 +31,7 @@ export default function LixeiraContasPage() {
       <h1 className="text-3xl font-display font-bold mt-4 mb-6">Lixeira de contas</h1>
 
       {!contas || contas.length === 0 ? (
-        <p className="text-ink-400 text-sm">{contas === null ? "Carregando..." : "Nenhuma conta arquivada."}</p>
+        <>{contas === null ? <Esqueleto linhas={2} comTopo={false} /> : <p className="text-ink-400 text-sm">{"Nenhuma conta arquivada."}</p>}</>
       ) : (
         <ul className="space-y-2">
           {contas.map((c) => (
