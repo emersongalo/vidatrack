@@ -1,22 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+// Etapa 245 — toque abre o editor (celular). No computador, com o mouse,
+// ainda dá pra arrastar pra mover e puxar a base pra mudar o tamanho.
+import { useEffect, useRef, useState } from "react";
 import {
   horaParaMinutosDoDia,
   minutosParaHora,
   minutosDoDiaParaY,
-  yParaMinutosDoDia,
   arredondarPara15Min,
   PX_POR_MINUTO,
 } from "@/lib/planejador/tempo";
-import { moverOuRedimensionarBloco, removerBloco, renomearBloco } from "@/app/habitos/planejador/actions";
-
-const CLASSES_COR: Record<string, string> = {
-  habito: "bg-habito/25 border-habito text-ink-100",
-  nota: "bg-nota/25 border-nota text-ink-100",
-  financa: "bg-financa/25 border-financa text-ink-100",
-  neutro: "bg-ink-400/20 border-ink-400 text-ink-100",
-};
+import { moverOuRedimensionarBloco } from "@/app/habitos/planejador/actions";
+import { hexDaCor } from "@/lib/agenda/estilo";
 
 export type Bloco = {
   id: string;
@@ -26,95 +21,77 @@ export type Bloco = {
   cor: string;
 };
 
-export function BlocoTempo({ bloco }: { bloco: Bloco }) {
+export function BlocoTempo({ bloco, aoAbrir, aoMudar }: { bloco: Bloco; aoAbrir: (b: Bloco) => void; aoMudar: () => void }) {
   const [inicioMin, setInicioMin] = useState(horaParaMinutosDoDia(bloco.hora_inicio));
   const [fimMin, setFimMin] = useState(horaParaMinutosDoDia(bloco.hora_fim));
-  const [editando, setEditando] = useState(false);
-  const [titulo, setTitulo] = useState(bloco.titulo);
-  const arrastandoRef = useRef<null | { modo: "mover" | "redimensionar"; yInicial: number; inicioOrig: number; fimOrig: number }>(null);
+  useEffect(() => {
+    setInicioMin(horaParaMinutosDoDia(bloco.hora_inicio));
+    setFimMin(horaParaMinutosDoDia(bloco.hora_fim));
+  }, [bloco.hora_inicio, bloco.hora_fim]);
+  const arrastandoRef = useRef<null | { modo: "mover" | "redimensionar"; yInicial: number; inicioOrig: number; fimOrig: number; mexeu: boolean }>(null);
+  const ignorarClique = useRef(false);
 
   const top = minutosDoDiaParaY(inicioMin);
-  const altura = Math.max(24, (fimMin - inicioMin) * PX_POR_MINUTO);
+  const altura = Math.max(28, (fimMin - inicioMin) * PX_POR_MINUTO);
+  const cor = hexDaCor(bloco.cor);
 
   function iniciarArraste(e: React.PointerEvent, modo: "mover" | "redimensionar") {
     e.stopPropagation();
-    (e.target as Element).setPointerCapture(e.pointerId);
-    arrastandoRef.current = { modo, yInicial: e.clientY, inicioOrig: inicioMin, fimOrig: fimMin };
+    if (e.pointerType !== "mouse") return; // no toque, é só tocar pra editar
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    arrastandoRef.current = { modo, yInicial: e.clientY, inicioOrig: inicioMin, fimOrig: fimMin, mexeu: false };
   }
 
   function duranteArraste(e: React.PointerEvent) {
     const estado = arrastandoRef.current;
     if (!estado) return;
-
     const deltaY = e.clientY - estado.yInicial;
+    if (Math.abs(deltaY) > 4) estado.mexeu = true;
     const deltaMin = arredondarPara15Min(deltaY / PX_POR_MINUTO);
-
     if (estado.modo === "mover") {
       const duracao = estado.fimOrig - estado.inicioOrig;
       const novoInicio = Math.max(0, estado.inicioOrig + deltaMin);
       setInicioMin(novoInicio);
       setFimMin(novoInicio + duracao);
     } else {
-      const novoFim = Math.max(estado.inicioOrig + 15, estado.fimOrig + deltaMin);
-      setFimMin(novoFim);
+      setFimMin(Math.max(estado.inicioOrig + 15, estado.fimOrig + deltaMin));
     }
   }
 
   async function finalizarArraste() {
-    if (!arrastandoRef.current) return;
+    const estado = arrastandoRef.current;
+    if (!estado) return;
     arrastandoRef.current = null;
+    if (!estado.mexeu) return; // foi só um clique: o onClick abre
+    ignorarClique.current = true;
     await moverOuRedimensionarBloco(bloco.id, minutosParaHora(inicioMin), minutosParaHora(fimMin));
-  }
-
-  async function salvarTitulo() {
-    setEditando(false);
-    if (titulo !== bloco.titulo) await renomearBloco(bloco.id, titulo);
+    aoMudar();
   }
 
   return (
     <div
-      className={`absolute left-1 right-1 rounded-lg border px-2 py-1 overflow-hidden select-none group ${CLASSES_COR[bloco.cor] ?? CLASSES_COR.neutro}`}
-      style={{ top, height: altura }}
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (ignorarClique.current) {
+          ignorarClique.current = false;
+          return;
+        }
+        aoAbrir(bloco);
+      }}
+      className="absolute left-1 right-1 rounded-xl border-l-4 px-3 py-1.5 overflow-hidden select-none cursor-pointer shadow-sm"
+      style={{ top, height: altura, background: `${cor}33`, borderColor: cor }}
       onPointerDown={(e) => iniciarArraste(e, "mover")}
       onPointerMove={duranteArraste}
       onPointerUp={finalizarArraste}
     >
-      {editando ? (
-        <input
-          autoFocus
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-          onBlur={salvarTitulo}
-          onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="bg-transparent text-xs font-medium outline-none w-full"
-        />
-      ) : (
-        <p
-          className="text-xs font-medium truncate cursor-text"
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            setEditando(true);
-          }}
-        >
-          {titulo}
-        </p>
-      )}
-      {altura > 32 && (
-        <p className="text-[10px] opacity-70">
+      <p className="text-sm font-semibold truncate">{bloco.titulo}</p>
+      {altura > 40 && (
+        <p className="text-xs opacity-75">
           {minutosParaHora(inicioMin)} – {minutosParaHora(fimMin)}
         </p>
       )}
-
-      <button
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => removerBloco(bloco.id)}
-        className="absolute top-0.5 right-1 text-xs opacity-0 group-hover:opacity-70 hover:!opacity-100 transition"
-        aria-label="Remover bloco"
-      >
-        ✕
-      </button>
-
       <div
         onPointerDown={(e) => iniciarArraste(e, "redimensionar")}
         onPointerMove={duranteArraste}

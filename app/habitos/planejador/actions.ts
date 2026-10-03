@@ -58,3 +58,22 @@ export async function removerBloco(blocoId: string) {
   await supabase.from("blocos_tempo").delete().eq("id", blocoId);
   revalidatePath("/habitos/planejador");
 }
+
+/** Etapa 245 — salvar tudo de uma vez pelo editor (título, horário e cor) */
+export async function atualizarBloco(
+  blocoId: string,
+  dados: { titulo: string; horaInicio: string; horaFim: string; cor: string }
+): Promise<{ erro?: string }> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("blocos_tempo")
+    .update({
+      titulo: dados.titulo.trim() || "Sem título",
+      hora_inicio: dados.horaInicio,
+      hora_fim: dados.horaFim,
+      cor: dados.cor,
+    })
+    .eq("id", blocoId);
+  revalidatePath("/habitos/planejador");
+  return error ? { erro: error.message } : {};
+}

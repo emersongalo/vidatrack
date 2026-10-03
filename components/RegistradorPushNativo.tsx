@@ -22,6 +22,19 @@ export function RegistradorPushNativo() {
         // comum nem baixa esse código à toa.
         const { PushNotifications } = await import("@capacitor/push-notifications");
 
+        // Etapa 245 — tocar na notificação abre a tela certa (ex: o aviso de
+        // que seu par fez o hábito → Hábitos). Antes ninguém ouvia esse
+        // toque: o app abria na última tela que estava aberta.
+        PushNotifications.addListener("pushNotificationActionPerformed", (acao) => {
+          const url = String((acao?.notification?.data as any)?.url ?? "");
+          if (!url.startsWith("/")) return;
+          // espera o app terminar de "acordar" (o recarregamento de volta do
+          // segundo plano podia passar por cima da navegação)
+          setTimeout(() => {
+            if (window.location.pathname + window.location.hash !== url) window.location.assign(url);
+          }, 350);
+        });
+
         const permissao = await PushNotifications.checkPermissions();
         let status = permissao.receive;
         if (status !== "granted") {
