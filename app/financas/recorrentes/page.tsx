@@ -32,6 +32,12 @@ function RecorrentesConteudo() {
   const contas = snapshot?.financas.contas ?? [];
   const categorias = (snapshot?.financas.categorias ?? []).filter((c: any) => c.dono_id === snapshot?.perfil.id);
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
+  // Etapa 254 — lançamento deste mês de cada recorrência (pra mostrar ajuste/situação)
+  const hoje = hojeISO();
+  const desteMes = new Map<string, any>();
+  for (const t of (snapshot?.financas.transacoes ?? []) as any[]) {
+    if (t.recorrencia_id && t.data.startsWith(hoje.slice(0, 7))) desteMes.set(t.recorrencia_id, t);
+  }
 
   function alternarAtiva(id: string) {
     iniciarTransicao(async () => {
@@ -66,18 +72,33 @@ function RecorrentesConteudo() {
               <div
                 className={`flex items-center justify-between bg-base-800 border border-base-600 rounded-2xl p-4 ${!r.ativo ? "opacity-50" : ""}`}
               >
-              <div className="min-w-0">
+              <Link href={`/financas/recorrentes/${r.id}`} className="min-w-0 flex-1">
                 <p className="text-sm font-medium truncate">{r.descricao || mapaContas.get(r.conta_id)}</p>
                 <p className="text-xs text-ink-400">
                   Todo dia {r.dia_mes} · {mapaContas.get(r.conta_id)}
                   {r.data_fim && <> · até {new Date(r.data_fim + "T00:00:00").toLocaleDateString("pt-BR")}</>}
                 </p>
-              </div>
+                {desteMes.has(r.id) && (
+                  <p className="text-xs mt-0.5">
+                    {desteMes.get(r.id).pago_em || desteMes.get(r.id).data <= hoje ? (
+                      <span className="text-habito">✓ Pago este mês</span>
+                    ) : (
+                      <span className="text-financa">A pagar dia {desteMes.get(r.id).data.slice(8, 10)}</span>
+                    )}
+                    {Number(desteMes.get(r.id).valor) !== Number(r.valor) && (
+                      <span className="text-ink-400"> · este mês {formatarMoeda(desteMes.get(r.id).valor)}</span>
+                    )}
+                  </p>
+                )}
+              </Link>
               <div className="flex items-center gap-3 shrink-0">
                 <span className={`font-mono text-sm ${r.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
                   {r.tipo === "receita" ? "+" : "-"}
                   {formatarMoeda(r.valor)}
                 </span>
+                <Link href={`/financas/recorrentes/${r.id}`} className="text-ink-400 hover:text-ink-100 transition text-xs">
+                  Editar
+                </Link>
                 <button onClick={() => alternarAtiva(r.id)} className="text-ink-400 hover:text-ink-100 transition text-xs">
                   {r.ativo ? "Pausar" : "Ativar"}
                 </button>
@@ -170,8 +191,8 @@ function RecorrentesConteudo() {
             <BotaoSalvarFormulario>Criar recorrência</BotaoSalvarFormulario>
           </FormularioAcao>
           <p className="text-xs text-ink-400 mt-3">
-            O lançamento do mês é criado automaticamente na primeira vez que você abrir o app naquele mês, a
-            partir do dia escolhido — não é um agendador rodando sozinho no fundo.
+            O lançamento do mês aparece no extrato como "a pagar" assim que você abre Finanças no mês — dá pra
+            ajustar o valor só daquele mês ou marcar como pago. Toque numa recorrência pra editar daqui pra frente.
           </p>
         </>
       )}

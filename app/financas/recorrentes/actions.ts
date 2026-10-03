@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { esquemaRecorrencia, primeiroErro } from "@/lib/validacao/financas";
+import { dataAtualNoFuso } from "@/lib/tempo/fuso";
 
 export async function criarRecorrencia(formData: FormData): Promise<{ erro?: string }> {
   const supabase = createClient();
@@ -71,32 +72,38 @@ export async function removerRecorrencia(recorrenciaId: string) {
  * não tem um lançamento nesse mês. Roda toda vez que a tela de Finanças
  * é aberta — não é um agendador de verdade, mas cobre o caso comum de
  * "abro o app pelo menos uma vez por mês".
+ *
+ * Etapa 254 — gera já no começo do mês (antes do dia do vencimento),
+ * como "a pagar": assim a conta aparece no extrato, dá pra ajustar o
+ * valor só deste mês e marcar "Paguei". Data futura não sai do saldo
+ * até chegar o dia (ou até marcar como pago).
  */
 export async function garantirLancamentosRecorrentes() {
   const supabase = createClient();
   const user = await getUsuarioAtual();
   if (!user) return;
 
-  const hoje = new Date();
-  const diaAtual = hoje.getDate();
+  const hojeISO = dataAtualNoFuso();
+  const [anoAtual, mesAtual] = hojeISO.split("-").map(Number);
 
   const { data: recorrencias } = await supabase
     .from("financa_recorrencias")
     .select("id, conta_id, categoria_id, tipo, valor, descricao, dia_mes, data_fim, data_inicio")
     .eq("ativo", true)
-    .eq("dono_id", user.id)
-    .lte("dia_mes", diaAtual);
+    .eq("dono_id", user.id);
 
   if (!recorrencias || recorrencias.length === 0) return;
 
-  const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
-    .toLocaleDateString("sv-SE");
+  const mm = String(mesAtual).padStart(2, "0");
+  const primeiroDiaMes = `${anoAtual}-${mm}-01`;
+  const ultimoDiaMes = `${anoAtual}-${mm}-${String(new Date(Date.UTC(anoAtual, mesAtual, 0)).getUTCDate()).padStart(2, "0")}`;
 
   const { data: jaGerados } = await supabase
     .from("financa_transacoes")
     .select("recorrencia_id")
     .not("recorrencia_id", "is", null)
-    .gte("data", primeiroDiaMes);
+    .gte("data", primeiroDiaMes)
+    .lte("data", ultimoDiaMes);
 
   const idsJaGerados = new Set((jaGerados ?? []).map((t) => t.recorrencia_id));
 
@@ -104,7 +111,7 @@ export async function garantirLancamentosRecorrentes() {
   for (const r of recorrencias) {
     if (idsJaGerados.has(r.id)) continue;
 
-    const data = new Date(hoje.getFullYear(), hoje.getMonth(), r.dia_mes).toLocaleDateString("sv-SE");
+    const data = `${anoAtual}-${mm}-${String(Math.min(28, r.dia_mes)).padStart(2, "0")}`;
 
     // Se tem data final e esse mês já passou dela, não gera mais —
     // a recorrência "expirou" sozinha, sem precisar excluir na mão.
@@ -166,6 +173,78 @@ export async function criarRecorrenciaSugerida(dados: {
     data_inicio: dados.dataInicio,
   });
   if (error) return { erro: error.message };
+  revalidatePath("/financas");
+  revalidatePath("/financas/recorrentes");
+  return {};
+}
+
+/**
+ * Etapa 254 — editar uma recorrência. Vale daqui pra frente: muda a
+ * recorrência e os lançamentos dela que ainda estão "a pagar" (data
+ * futura e não marcados como pagos). O que já foi pago nos meses
+ * anteriores (ou já venceu) não muda.
+ */
+export async function atualizarRecorrencia(recorrenciaId: string, formData: FormData): Promise<{ erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sua sessão expirou. Saia e entre de novo." };
+
+  const resultado = esquemaRecorrencia.safeParse({
+    tipo: formData.get("tipo"),
+    valor: formData.get("valor"),
+    contaId: formData.get("contaId"),
+    categoriaId: formData.get("categoriaId"),
+    descricao: formData.get("descricao"),
+    diaMes: formData.get("diaMes"),
+    dataFim: formData.get("dataFim"),
+  });
+  if (!resultado.success) return { erro: primeiroErro(resultado) };
+  const d = resultado.data;
+
+  const { error } = await supabase
+    .from("financa_recorrencias")
+    .update({
+      tipo: d.tipo,
+      valor: d.valor,
+      conta_id: d.contaId,
+      categoria_id: d.categoriaId,
+      descricao: d.descricao,
+      dia_mes: d.diaMes,
+      data_fim: d.dataFim,
+    })
+    .eq("id", recorrenciaId);
+  if (error) return { erro: error.message };
+
+  // lançamentos dessa recorrência ainda a pagar → recebem o ajuste
+  const hoje = dataAtualNoFuso();
+  const { data: futuros } = await supabase
+    .from("financa_transacoes")
+    .select("id, data")
+    .eq("recorrencia_id", recorrenciaId)
+    .gt("data", hoje)
+    .is("pago_em", null);
+  for (const t of futuros ?? []) {
+    const novaData = `${String(t.data).slice(0, 8)}${String(d.diaMes).padStart(2, "0")}`;
+    await supabase
+      .from("financa_transacoes")
+      .update({
+        tipo: d.tipo,
+        valor: d.valor,
+        conta_id: d.contaId,
+        categoria_id: d.categoriaId,
+        descricao: d.descricao,
+        // muda o dia só se continuar no futuro (não vira "pago" sem querer)
+        ...(novaData > hoje ? { data: novaData } : {}),
+      })
+      .eq("id", t.id);
+  }
+  // terminou antes de um lançamento futuro já criado → tira ele
+  if (d.dataFim) {
+    await supabase.from("financa_transacoes").delete().eq("recorrencia_id", recorrenciaId).gt("data", d.dataFim).is("pago_em", null);
+  }
+
   revalidatePath("/financas");
   revalidatePath("/financas/recorrentes");
   return {};

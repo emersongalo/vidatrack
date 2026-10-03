@@ -378,9 +378,24 @@ async function notificarContasAPagar(
     .eq("tipo", "despesa")
     .in("dia_mes", Array.from(new Set([diaHoje, diaAmanha])));
 
+  // Etapa 254 — o lançamento do mês já existe desde o dia 1: se já foi
+  // marcado como pago, não avisa; se o valor foi ajustado, usa o novo.
+  const ids = (recorrencias ?? []).map((r) => r.id as string);
+  const { data: lancamentos } = ids.length
+    ? await supabase
+        .from("financa_transacoes")
+        .select("recorrencia_id, valor, pago_em, data")
+        .in("recorrencia_id", ids)
+        .gte("data", hoje.slice(0, 8) + "01")
+        .lte("data", amanhaISO)
+    : { data: [] as any[] };
+  const lancamentoDo = new Map((lancamentos ?? []).map((t: any) => [t.recorrencia_id as string, t]));
+
   let enviados = 0;
 
   for (const r of recorrencias ?? []) {
+    const lanc = lancamentoDo.get(r.id as string);
+    if (lanc?.pago_em) continue;
     const venceHoje = r.dia_mes === diaHoje;
     const venceAmanha = r.dia_mes === diaAmanha;
     if (!venceHoje && !venceAmanha) continue;
@@ -391,8 +406,8 @@ async function notificarContasAPagar(
 
     const descricao = r.descricao || (r as any).financa_contas?.nome || "Conta";
     const texto = venceHoje
-      ? `💳 Você tem uma conta vencendo HOJE: ${descricao} — ${formatarMoeda(r.valor)}`
-      : `💳 Você tem uma conta vencendo AMANHÃ: ${descricao} — ${formatarMoeda(r.valor)}`;
+      ? `💳 Você tem uma conta vencendo HOJE: ${descricao} — ${formatarMoeda(lanc ? lanc.valor : r.valor)}`
+      : `💳 Você tem uma conta vencendo AMANHÃ: ${descricao} — ${formatarMoeda(lanc ? lanc.valor : r.valor)}`;
 
     enviados += await notificarUsuariosDoItem(
       supabase,

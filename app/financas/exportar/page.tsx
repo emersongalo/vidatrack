@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 // Etapa 215 — mais períodos + backup completo
+// Etapa 253 — planilha em .xlsx (acentos certos no Google Planilhas do celular); .csv fica como opção
 const PERIODOS = [
   { valor: "mes", titulo: "Mês atual", texto: "Lançamentos deste mês (inclui os agendados)" },
   { valor: "mes_anterior", titulo: "Mês passado", texto: "Pra fechar as contas do mês que acabou" },
@@ -15,13 +16,13 @@ export default function ExportarPage() {
         ← Finanças
       </Link>
       <h1 className="text-3xl font-display font-bold mt-4 mb-1">Exportar</h1>
-      <p className="text-ink-400 text-sm mb-6">Planilha (.csv) que abre no Excel, Google Planilhas ou Numbers.</p>
+      <p className="text-ink-400 text-sm mb-6">Planilha (.xlsx) que abre certinha no Excel, Google Planilhas, Numbers ou WPS — com acentos, valores e datas no formato certo.</p>
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
         {PERIODOS.map((p) => (
           <a
             key={p.valor}
-            href={`/financas/exportar/csv?periodo=${p.valor}`}
+            href={`/financas/exportar/xlsx?periodo=${p.valor}`}
             className="block bg-base-800 border border-base-600 rounded-lg p-4 hover:border-financa transition"
           >
             <p className="font-medium">{p.titulo}</p>
@@ -29,6 +30,18 @@ export default function ExportarPage() {
           </a>
         ))}
       </div>
+
+      <p className="text-xs text-ink-400 mt-3">
+        Precisa em .csv (texto simples)?{" "}
+        {PERIODOS.map((p, i) => (
+          <span key={p.valor}>
+            {i > 0 && " · "}
+            <a href={`/financas/exportar/csv?periodo=${p.valor}`} className="underline hover:text-ink-100">
+              {p.titulo.toLowerCase()}
+            </a>
+          </span>
+        ))}
+      </p>
 
       <h2 className="text-lg font-display font-semibold mt-10 mb-1">Backup completo</h2>
       <p className="text-ink-400 text-sm mb-3">
