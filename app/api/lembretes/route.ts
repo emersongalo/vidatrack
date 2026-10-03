@@ -129,10 +129,23 @@ export async function GET(request: Request) {
   // --- Contas a pagar (recorrências financeiras) vencendo hoje/amanhã ---
   // Roda só uma vez por dia (perto das 8h da manhã) — não faz sentido
   // mandar lembrete de conta a cada poucos minutos o dia inteiro.
-  if (horaAtual >= "08:00" && horaAtual <= "08:05") {
-    enviados += await notificarContasAPagar(supabase, hoje);
-    // Etapa 252 — despesas agendadas (lançamento único com data) vencendo hoje/amanhã
-    enviados += await notificarDespesasAgendadas(supabase, hoje);
+  // Etapa 257 — cada pessoa escolhe o horário (padrão 08:00) em Notificações
+  {
+    const { data: perfisContas } = await supabase.from("perfis").select("id, horario_contas");
+    const donos = new Set(
+      (perfisContas ?? [])
+        .filter((p) => {
+          const h = String((p as any).horario_contas || "08:00").slice(0, 5);
+          return h >= cincoMinAntes && h <= horaAtual;
+        })
+        .map((p) => p.id as string)
+    );
+    if (donos.size) {
+      enviados += await notificarContasAPagar(supabase, hoje, donos);
+      // Etapa 252 — despesas agendadas (lançamento único com data) vencendo hoje/amanhã
+      enviados += await notificarDespesasAgendadas(supabase, hoje, donos);
+      enviados += await notificarFaturasCartao(supabase, hoje, donos);
+    }
   }
 
   // --- Orçamento estourado (categorias com meta mensal) ---
@@ -143,9 +156,7 @@ export async function GET(request: Request) {
   }
 
   // --- Etapa 215: fatura do cartão (3 dias antes, véspera e no dia) ---
-  if (horaAtual >= "08:10" && horaAtual <= "08:15") {
-    enviados += await notificarFaturasCartao(supabase, hoje);
-  }
+  // (Etapa 257 — a fatura agora sai junto com as contas, no horário de cada pessoa)
 
   // --- Etapa 220: teto de gastos do mês (80% e estourou) ---
   if (horaAtual >= "08:15" && horaAtual <= "08:20") {
@@ -362,7 +373,8 @@ async function notificarUsuariosDoItem(
  */
 async function notificarContasAPagar(
   supabase: ReturnType<typeof criarClienteAdmin>,
-  hoje: string
+  hoje: string,
+  donos?: Set<string>
 ): Promise<number> {
   const dataHoje = new Date(hoje + "T00:00:00");
   const diaHoje = dataHoje.getDate();
@@ -371,12 +383,13 @@ async function notificarContasAPagar(
   const diaAmanha = dataAmanha.getDate();
   const amanhaISO = dataAmanha.toLocaleDateString("sv-SE");
 
-  const { data: recorrencias } = await supabase
+  const { data: todasRecorrencias } = await supabase
     .from("financa_recorrencias")
     .select("id, descricao, valor, dia_mes, data_fim, data_inicio, dono_id, financa_contas(nome)")
     .eq("ativo", true)
     .eq("tipo", "despesa")
     .in("dia_mes", Array.from(new Set([diaHoje, diaAmanha])));
+  const recorrencias = (todasRecorrencias ?? []).filter((r) => !donos || donos.has(r.dono_id as string));
 
   // Etapa 254 — o lançamento do mês já existe desde o dia 1: se já foi
   // marcado como pago, não avisa; se o valor foi ajustado, usa o novo.
@@ -430,7 +443,7 @@ async function notificarContasAPagar(
  * Ficam de fora: contas fixas (já têm aviso próprio), compras no cartão
  * (entram na fatura, que tem aviso próprio), investimento e transferências.
  */
-async function notificarDespesasAgendadas(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+async function notificarDespesasAgendadas(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string, donos?: Set<string>): Promise<number> {
   const amanha = somarDias(hoje, 1);
   const { data: transacoes } = await supabase
     .from("financa_transacoes")
@@ -447,6 +460,7 @@ async function notificarDespesasAgendadas(supabase: ReturnType<typeof criarClien
     const conta = (t as any).financa_contas;
     if (conta?.tipo === "cartao" || conta?.tipo === "investimento") continue;
     const dono = t.dono_id as string;
+    if (donos && !donos.has(dono)) continue;
     if (!grupos.has(dono)) grupos.set(dono, { hoje: [], amanha: [] });
     const item = { nome: ((t.descricao as string) || "Despesa").trim(), valor: Number(t.valor) };
     (t.data === hoje ? grupos.get(dono)!.hoje : grupos.get(dono)!.amanha).push(item);
@@ -756,7 +770,7 @@ async function notificarResumoMensal(supabase: ReturnType<typeof criarClienteAdm
  * no dia do vencimento, só se ainda tiver valor a pagar (pagamento =
  * transferência pro cartão depois do fechamento).
  */
-async function notificarFaturasCartao(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+async function notificarFaturasCartao(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string, donos?: Set<string>): Promise<number> {
   const { data: cartoes } = await supabase
     .from("financa_contas")
     .select("id, nome, tipo, dono_id, dia_fechamento, dia_vencimento")
@@ -773,6 +787,7 @@ async function notificarFaturasCartao(supabase: ReturnType<typeof criarClienteAd
   let enviados = 0;
 
   for (const c of cartoes ?? []) {
+    if (donos && !donos.has(c.dono_id as string)) continue;
     const aberta = calcularPeriodoFatura(c.dia_fechamento as number, hoje);
     const fechada = periodoFaturaAdjacente(c.dia_fechamento as number, aberta.fim, -1);
     for (const periodo of [fechada, aberta]) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon, BarChart3, Sun, Wallet, HeartHandshake } from "lucide-react";
+import { Moon, BarChart3, Sun, Wallet, HeartHandshake, Receipt } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Chave = "resumo_manha" | "aviso_noite" | "resumo_semanal" | "lembrete_lancar" | "avisos_dupla";
@@ -39,16 +39,21 @@ const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }
   },
 ];
 
+const HORARIOS_SUGERIDOS = ["06:00", "07:00", "08:00", "09:00", "10:00", "12:00", "18:00", "20:00"];
+
 /** Etapa 202 — ligar/desligar os avisos automáticos (padrão: ligados). */
 export function PreferenciasAvisos() {
   const [valores, setValores] = useState<Record<Chave, boolean> | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  // Etapa 257 — horário do aviso de contas a pagar
+  const [horarioContas, setHorarioContas] = useState<string | null>(null);
+  const [salvoHorario, setSalvoHorario] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal, resumo_manha, lembrete_lancar, avisos_dupla").eq("id", user.id).maybeSingle();
+      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal, resumo_manha, lembrete_lancar, avisos_dupla, horario_contas").eq("id", user.id).maybeSingle();
       setValores({
         resumo_manha: (data as any)?.resumo_manha ?? true,
         aviso_noite: data?.aviso_noite ?? true,
@@ -56,6 +61,7 @@ export function PreferenciasAvisos() {
         lembrete_lancar: (data as any)?.lembrete_lancar ?? true,
         avisos_dupla: (data as any)?.avisos_dupla ?? true,
       });
+      setHorarioContas(String((data as any)?.horario_contas ?? "08:00").slice(0, 5));
     });
   }, []);
 
@@ -76,9 +82,70 @@ export function PreferenciasAvisos() {
     }
   }
 
+  async function salvarHorario(novo: string) {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(novo)) return;
+    const anterior = horarioContas;
+    setHorarioContas(novo);
+    setErro(null);
+    setSalvoHorario(false);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from("perfis").update({ horario_contas: novo }).eq("id", user.id);
+    if (error) {
+      setHorarioContas(anterior);
+      setErro("Não consegui salvar o horário. Tente de novo.");
+    } else {
+      setSalvoHorario(true);
+      setTimeout(() => setSalvoHorario(false), 2500);
+    }
+  }
+
   return (
     <div className="mt-6">
       <h2 className="text-lg font-semibold mb-3">Avisos automáticos</h2>
+
+      {/* Etapa 257 — horário das contas a pagar */}
+      <div className="bg-base-800 border border-base-600 rounded-xl2 p-4 mb-2">
+        <div className="flex items-start gap-3">
+          <span className="text-financa shrink-0 mt-0.5">
+            <Receipt size={18} strokeWidth={2} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">Contas a pagar</p>
+            <p className="text-xs text-ink-400 mt-0.5">
+              Contas fixas, despesas agendadas e fatura do cartão: aviso na véspera e no dia do vencimento, no horário que você escolher.
+            </p>
+          </div>
+          <input
+            type="time"
+            step={300}
+            aria-label="Horário do aviso de contas"
+            disabled={horarioContas === null}
+            value={horarioContas ?? "08:00"}
+            onChange={(e) => salvarHorario(e.target.value.slice(0, 5))}
+            className="shrink-0 bg-base-900 border border-base-600 rounded-lg px-2 py-1.5 font-mono text-sm text-ink-100 outline-none focus:border-financa"
+          />
+        </div>
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {HORARIOS_SUGERIDOS.map((h) => (
+            <button
+              key={h}
+              type="button"
+              disabled={horarioContas === null}
+              onClick={() => salvarHorario(h)}
+              className={`text-xs font-mono px-2.5 py-1 rounded-full border transition ${
+                horarioContas === h ? "bg-financa text-base-900 border-financa font-semibold" : "border-base-600 text-ink-400 hover:text-ink-100"
+              }`}
+            >
+              {h}
+            </button>
+          ))}
+        </div>
+        {salvoHorario && <p className="text-xs text-habito mt-2">✓ Salvo — os próximos avisos chegam às {horarioContas}.</p>}
+      </div>
       <div className="space-y-2">
         {ITENS.map(({ chave, titulo, texto, Icone }) => {
           const ligado = valores?.[chave] ?? true;
