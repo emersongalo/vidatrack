@@ -13,6 +13,7 @@ import { SincronizadorWidgets } from "@/components/SincronizadorWidgets";
 import { ErrosGlobais } from "@/components/ErrosGlobais";
 import { BloqueioApp } from "@/components/BloqueioApp";
 import { RegistrarIndicacao } from "@/components/RegistrarIndicacao";
+import { CorBarraPorRota } from "@/components/CorBarraPorRota";
 import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
 import { SCRIPT_APARENCIA } from "@/lib/preferencias/aparencia";
 
@@ -85,6 +86,8 @@ export default function RootLayout({
         />
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_PRE_BLOQUEIO }} />
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_APARENCIA }} />
+        {/* Etapa 240 — barra de status volta à cor normal fora das telas coloridas */}
+        <CorBarraPorRota />
         {children}
         <RegistradorPWA />
         <RecuperadorDeSegundoPlano />
