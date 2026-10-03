@@ -3,6 +3,9 @@
 // Etapa 245 — no celular: toque num horário vazio cria um bloco ali (abre
 // o editor) e dá pra rolar a grade normalmente. No computador, arrastar
 // com o mouse continua criando o bloco do tamanho arrastado.
+// Etapa 246 — no celular o editor abria no "soltar o dedo" e o clique que
+// vem logo depois caía no fundo escuro do editor, fechando na hora. Agora o
+// toque abre pelo onClick (que já é o fim do toque) e o arrasto é só mouse.
 import { useEffect, useRef, useState } from "react";
 import { BlocoTempo, Bloco } from "./BlocoTempo";
 import {
@@ -35,6 +38,7 @@ export function GradeDia({
   const [criando, setCriando] = useState<{ y1: number; y2: number } | null>(null);
   const [minutoAgora, setMinutoAgora] = useState(horarioAtualEmMinutos());
   const inicio = useRef<{ y: number; tipo: string } | null>(null);
+  const [marcado, setMarcado] = useState<number | null>(null);
 
   useEffect(() => {
     const intervalo = setInterval(() => setMinutoAgora(horarioAtualEmMinutos()), 60000);
@@ -52,14 +56,29 @@ export function GradeDia({
 
   const yRel = (clientY: number) => clientY - (containerRef.current?.getBoundingClientRect().top ?? 0);
 
+  const ignorarClique = useRef(false);
+
+  function horarioDoToque(y: number, termina?: number): RascunhoBloco {
+    const comeca = arredondarPara15Min(yParaMinutosDoDia(y) - 7);
+    const fim = termina ?? comeca + 60;
+    return { titulo: "", inicio: minutosParaHora(comeca), fim: minutosParaHora(Math.min(24 * 60, fim)), cor: "habito" };
+  }
+
+  function ehAreaVazia(alvo: EventTarget | null) {
+    const el = alvo as HTMLElement | null;
+    return !!el && (el === containerRef.current || el.dataset?.linha === "1");
+  }
+
+  // computador: arrastar com o mouse desenha o bloco
   function aoTocar(e: React.PointerEvent) {
-    if (e.target !== e.currentTarget && !(e.target as HTMLElement).dataset.linha) return;
-    inicio.current = { y: yRel(e.clientY), tipo: e.pointerType };
-    if (e.pointerType === "mouse") setCriando({ y1: inicio.current.y, y2: inicio.current.y });
+    if (e.pointerType !== "mouse" || e.button !== 0 || !ehAreaVazia(e.target)) return;
+    const y = yRel(e.clientY);
+    inicio.current = { y, tipo: "mouse" };
+    setCriando({ y1: y, y2: y });
   }
 
   function aoMover(e: React.PointerEvent) {
-    if (!inicio.current || inicio.current.tipo !== "mouse") return;
+    if (!inicio.current) return;
     setCriando({ y1: inicio.current.y, y2: yRel(e.clientY) });
   }
 
@@ -69,14 +88,23 @@ export function GradeDia({
     setCriando(null);
     if (!i) return;
     const yFim = yRel(e.clientY);
-    // no toque, se o dedo andou é rolagem — não cria nada
-    if (i.tipo !== "mouse" && Math.abs(yFim - i.y) > 10) return;
+    if (Math.abs(yFim - i.y) <= 10) return; // foi só um clique: o onClick cuida
+    ignorarClique.current = true;
+    setTimeout(() => (ignorarClique.current = false), 400);
     const y1 = Math.min(i.y, yFim);
     const y2 = Math.max(i.y, yFim);
-    const comeca = arredondarPara15Min(yParaMinutosDoDia(y1) - (i.tipo === "mouse" ? 0 : 7));
-    const arrastou = i.tipo === "mouse" && y2 - y1 > 10;
-    const termina = arrastou ? Math.max(comeca + 15, arredondarPara15Min(yParaMinutosDoDia(y2))) : comeca + 60;
+    const comeca = arredondarPara15Min(yParaMinutosDoDia(y1));
+    const termina = Math.max(comeca + 15, arredondarPara15Min(yParaMinutosDoDia(y2)));
     aoAbrir({ titulo: "", inicio: minutosParaHora(comeca), fim: minutosParaHora(Math.min(24 * 60, termina)), cor: "habito" });
+  }
+
+  // toque (celular) ou clique simples: abre o editor naquele horário
+  function aoClicar(e: React.MouseEvent) {
+    if (ignorarClique.current || !ehAreaVazia(e.target)) return;
+    const y = yRel(e.clientY);
+    setMarcado(y);
+    setTimeout(() => setMarcado(null), 500);
+    aoAbrir(horarioDoToque(y));
   }
 
   return (
@@ -97,6 +125,7 @@ export function GradeDia({
           onPointerDown={aoTocar}
           onPointerMove={aoMover}
           onPointerUp={aoSoltar}
+          onClick={aoClicar}
           onPointerCancel={() => {
             inicio.current = null;
             setCriando(null);
@@ -110,6 +139,13 @@ export function GradeDia({
             <div className="absolute left-0 right-0 h-0.5 bg-red-400 z-10 pointer-events-none" style={{ top: minutosDoDiaParaY(minutoAgora) }}>
               <span className="absolute -left-1 -top-1 w-2.5 h-2.5 rounded-full bg-red-400" />
             </div>
+          )}
+
+          {marcado !== null && (
+            <div
+              className="absolute left-1 right-1 h-12 rounded-xl bg-habito/25 pointer-events-none animate-pulse"
+              style={{ top: minutosDoDiaParaY(arredondarPara15Min(yParaMinutosDoDia(marcado) - 7)) }}
+            />
           )}
 
           {criando && (

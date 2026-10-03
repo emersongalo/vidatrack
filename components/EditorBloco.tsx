@@ -2,7 +2,7 @@
 
 // Etapa 245 — editar/criar bloco do Planejador numa folha (funciona no
 // celular: toque, sem precisar arrastar nem clicar duas vezes).
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Trash2, X } from "lucide-react";
 import { CORES_DISPONIVEIS, hexDaCor } from "@/lib/agenda/estilo";
 import { criarBloco, atualizarBloco, removerBloco } from "@/app/habitos/planejador/actions";
@@ -28,6 +28,7 @@ export function EditorBloco({
   const [fim, setFim] = useState(rascunho.fim.slice(0, 5));
   const [cor, setCor] = useState(rascunho.cor);
   const [salvando, setSalvando] = useState(false);
+  const tocouNoFundo = useRef(false);
   const [erro, setErro] = useState<string | null>(null);
   const novo = !rascunho.id;
 
@@ -66,7 +67,16 @@ export function EditorBloco({
   const campo = "w-full bg-base-900 border border-base-600 rounded-2xl px-4 py-3 text-base text-ink-100 outline-none focus:border-ink-100";
 
   return (
-    <div className="animate-fundo fixed inset-0 z-[65] bg-black/60 flex items-end sm:items-center justify-center" onClick={aoFechar}>
+    <div
+      className="animate-fundo fixed inset-0 z-[65] bg-black/60 flex items-end sm:items-center justify-center"
+      // Etapa 246 — só fecha se o toque COMEÇOU no fundo (o toque que abriu
+      // o editor não pode fechá-lo)
+      onPointerDown={(e) => (tocouNoFundo.current = e.target === e.currentTarget)}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && tocouNoFundo.current) aoFechar();
+        tocouNoFundo.current = false;
+      }}
+    >
       <div
         className="animate-folha w-full max-w-md bg-base-800 border border-base-600 rounded-t-3xl sm:rounded-3xl p-5"
         style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
