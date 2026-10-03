@@ -15,6 +15,7 @@ import { BlocosInicio } from "@/components/inicio/BlocosInicio";
 import { NovidadesApp } from "@/components/NovidadesApp";
 import { AvisoConquista } from "@/components/AvisoConquista";
 import { BarraInferiorApp } from "@/components/BarraInferiorApp";
+import { MenuLateralDesktop } from "@/components/MenuLateralDesktop";
 import { saudacao } from "@/lib/painel/seuDia";
 import { hojeISO } from "@/lib/habitos/streak";
 
@@ -49,6 +50,27 @@ export default function DashboardPage() {
   // Etapa 224 — "Seu dia" (hábitos e tarefas de hoje)
 
   return (
+    // Etapa 256 — no computador, menu lateral com Início · Hábitos · Finanças
+    <div className="lg:pl-64">
+      <MenuLateralDesktop
+        corAtiva="inicio"
+        submenu={
+          <div className="space-y-1">
+            <p className="px-3 pt-1 pb-1 text-xs uppercase tracking-wide text-ink-400">Atalhos</p>
+            {[
+              { href: "/financas/nova", rotulo: "➖ Novo gasto" },
+              { href: "/financas/nova?tipo=receita", rotulo: "➕ Nova receita" },
+              { href: "/habitos/novo", rotulo: "✅ Novo hábito" },
+              { href: "/habitos/juntos", rotulo: "🌱 Juntos" },
+              { href: "/notificacoes", rotulo: "🔔 Notificações" },
+            ].map((a) => (
+              <Link key={a.href} href={a.href} className="block rounded-xl px-3 py-2 text-sm text-ink-400 hover:text-ink-100 hover:bg-base-700 transition">
+                {a.rotulo}
+              </Link>
+            ))}
+          </div>
+        }
+      />
     <main className="min-h-screen min-h-[100dvh] p-6 pb-28 md:p-12 md:pb-28 lg:pb-12 max-w-lg lg:max-w-5xl mx-auto flex flex-col">
       <header className="flex items-center justify-between mb-2 gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -171,5 +193,6 @@ export default function DashboardPage() {
       {/* Etapa 230 — barra de baixo única */}
       <BarraInferiorApp />
     </main>
+    </div>
   );
 }
