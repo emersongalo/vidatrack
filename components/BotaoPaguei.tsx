@@ -44,8 +44,8 @@ export function BotaoPaguei({
 
   if (pagoEm) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs">
-        <span className="px-1.5 py-0.5 rounded bg-habito/15 text-habito font-medium">
+      <span className="inline-flex items-center gap-2 text-sm leading-none">
+        <span className="px-2 py-1 rounded-md bg-habito/15 text-habito font-medium">
           {receita ? "Recebido" : "Pago"} {new Date(pagoEm + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
         </span>
         <button
@@ -53,7 +53,7 @@ export function BotaoPaguei({
           disabled={salvando}
           onClick={() => alterar(null)}
           aria-label="Desfazer"
-          className="text-ink-400 hover:text-ink-100 transition p-0.5"
+          className="text-ink-400 hover:text-ink-100 transition p-1"
         >
           <Undo2 size={13} />
         </button>
@@ -62,8 +62,8 @@ export function BotaoPaguei({
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs">
-      <span className="px-1.5 py-0.5 rounded bg-financa/15 text-financa font-medium">
+    <span className="inline-flex items-center gap-2 text-sm leading-none">
+      <span className="px-2 py-1 rounded-md bg-financa/15 text-financa font-medium">
         {receita ? "A receber" : "A pagar"}
       </span>
       <button
@@ -71,7 +71,7 @@ export function BotaoPaguei({
         disabled={salvando}
         onClick={() => alterar(hoje)}
         className={`inline-flex items-center gap-1 rounded-md border border-habito/50 text-habito font-medium hover:bg-habito/10 transition disabled:opacity-50 ${
-          compacto ? "px-1.5 py-0.5" : "px-2 py-0.5"
+          compacto ? "px-2 py-1" : "px-2.5 py-1"
         }`}
       >
         <Check size={12} strokeWidth={3} /> {receita ? "Recebi" : "Paguei"}

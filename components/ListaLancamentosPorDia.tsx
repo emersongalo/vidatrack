@@ -126,8 +126,10 @@ export function ListaLancamentosPorDia({
                             )}
                           </MenuAcoes>
                         </div>
-                        {((t.etiquetas ?? []).length > 0 || t.data > hojeParaPendencia) && (
-                          <div className="flex flex-wrap items-center gap-2 bg-base-800 pl-[4.5rem] pr-4 pb-3 -mt-1.5 text-sm">
+                        {/* Etapa 238 — "relative" pra ficar POR CIMA da linha de cima (antes a
+                           linha de cima cobria a parte de cima do "A pagar / Paguei") */}
+                        {((t.etiquetas ?? []).length > 0 || t.data > hojeParaPendencia || t.pago_em) && (
+                          <div className="relative flex flex-wrap items-center gap-2 bg-base-800 pl-[4.5rem] pr-4 pt-0.5 pb-3.5 -mt-2 text-sm">
                             {(t.etiquetas ?? []).map((e: string) => (
                               <button key={e} type="button" onClick={() => setEtiquetaFiltro(e)} className="text-nota">
                                 #{e}
