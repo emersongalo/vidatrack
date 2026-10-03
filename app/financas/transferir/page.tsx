@@ -35,7 +35,8 @@ function TransferirConteudo() {
   const meuId = snapshot?.perfil.id;
   const contas = ((snapshot?.financas.contas ?? []) as any[]).filter((c) => !c.dono_id || c.dono_id === meuId);
   const para = params.get("para") ?? "";
-  const origemPadrao = contas.find((c) => c.tipo === "banco" && c.id !== para) ?? contas.find((c) => c.id !== para);
+  const origemPadrao =
+    contas.find((c) => c.tipo === "banco" && c.id !== para) ?? contas.find((c) => c.id !== para && c.tipo !== "cartao");
   const hoje = new Date().toLocaleDateString("sv-SE");
 
   return (
@@ -46,6 +47,9 @@ function TransferirConteudo() {
       <h1 className="text-3xl font-display font-bold mt-4 mb-1">Transferir entre contas</h1>
       <p className="text-ink-400 text-sm mb-6">
         Sai de uma conta e entra na outra. Não conta como gasto nem receita — é o mesmo dinheiro mudando de lugar.
+      </p>
+      <p className="text-sm text-financa bg-financa/10 border border-financa/30 rounded-2xl px-4 py-3 mb-6">
+        💳 Pra pagar cartão, use o botão <b>Pagar fatura</b> dentro do cartão — é mais simples.
       </p>
 
       {contas.length < 2 ? (
@@ -68,8 +72,9 @@ function TransferirConteudo() {
           <div className="form-coluna">
             <div>
               <label className="block text-sm text-ink-400 mb-1">De</label>
+              {/* Etapa 242 — cartão não "manda" dinheiro: só aparece no Para */}
               <select name="contaOrigemId" defaultValue={origemPadrao?.id} className={classeCampo}>
-                {contas.map((c) => (
+                {contas.filter((c) => c.tipo !== "cartao").map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nome}
                   </option>

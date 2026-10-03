@@ -72,25 +72,60 @@ export function resumoFatura(
   transacoes: Transacao[],
   periodo: { inicio: string; fim: string }
 ): { total: number; pago: number; aPagar: number; vencimento: string | null } {
-  let total = 0;
-  let pago = 0;
+  // Etapa 242 — pagamento ANTECIPADO conta: cada pagamento (transferência
+  // que entra no cartão) abate primeiro a fatura mais antiga em aberto,
+  // inclusive a que ainda nem fechou. Antes só valia pagamento feito
+  // DEPOIS do fechamento, e quem adiantava continuava vendo a fatura cheia.
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const fech = conta.dia_fechamento ?? null;
+  const periodoDe = (data: string): { inicio: string; fim: string } => {
+    if (fech) return calcularPeriodoFatura(fech, data);
+    if (data >= periodo.inicio && data <= periodo.fim) return periodo;
+    return data < periodo.inicio ? { inicio: "0000-00-00", fim: "0000-00-00" } : { inicio: "9999-99-99", fim: "9999-99-99" };
+  };
+
+  const faturas = new Map<string, { inicio: string; fim: string; bruto: number }>();
+  const garantir = (p: { inicio: string; fim: string }) => {
+    if (!faturas.has(p.fim)) faturas.set(p.fim, { ...p, bruto: 0 });
+    return faturas.get(p.fim)!;
+  };
+  garantir(periodo);
+  const pagamentos: { data: string; valor: number }[] = [];
   for (const t of transacoes) {
     if (t.conta_id !== conta.id) continue;
-    const noPeriodo = t.data >= periodo.inicio && t.data <= periodo.fim;
-    if (t.tipo === "despesa") {
-      if (noPeriodo) total += Number(t.valor);
-    } else if (t.transferencia_grupo) {
-      // pagamento (transferência do banco pro cartão) feito depois do fechamento
-      if (t.data > periodo.fim) pago += Number(t.valor);
-    } else if (noPeriodo) {
-      // estorno/crédito dentro do período abate da fatura
-      total -= Number(t.valor);
+    const v = Number(t.valor) || 0;
+    if (t.tipo === "despesa") garantir(periodoDe(t.data)).bruto += v; // compra (ou dinheiro que saiu do cartão)
+    else if (t.transferencia_grupo) pagamentos.push({ data: t.data, valor: v }); // pagamento
+    else garantir(periodoDe(t.data)).bruto -= v; // estorno/crédito abate da própria fatura
+  }
+
+  const lista = [...faturas.values()].sort((a, b) => a.fim.localeCompare(b.fim));
+  const restante = new Map(lista.map((f) => [f.fim, Math.max(0, f.bruto)]));
+  const pagoPor = new Map<string, number>();
+  for (const pg of pagamentos.sort((a, b) => a.data.localeCompare(b.data))) {
+    let sobra = pg.valor;
+    // pode pagar faturas que fecharam até ~75 dias antes e a que estava aberta no dia
+    const limite = new Date(Date.parse(pg.data + "T12:00:00Z") - 75 * 86400000).toISOString().slice(0, 10);
+    const elegiveis = lista.filter((f) => f.fim >= limite && f.inicio <= pg.data);
+    // o que sobrar vira crédito só pras próximas ~2 faturas (pagamento muito
+    // antigo, de compras que nem estão mais no aparelho, não "paga" a de hoje)
+    const ate = new Date(Date.parse(pg.data + "T12:00:00Z") + 62 * 86400000).toISOString().slice(0, 10);
+    const depois = lista.filter((f) => f.inicio > pg.data && f.inicio <= ate);
+    for (const f of [...elegiveis, ...depois]) {
+      if (sobra <= 0) break;
+      const falta = restante.get(f.fim) ?? 0;
+      if (falta <= 0) continue;
+      const usa = Math.min(falta, sobra);
+      restante.set(f.fim, falta - usa);
+      pagoPor.set(f.fim, (pagoPor.get(f.fim) ?? 0) + usa);
+      sobra -= usa;
     }
   }
+
+  const alvo = faturas.get(periodo.fim)!;
+  const total = r2(Math.max(0, alvo.bruto));
+  const pago = r2(pagoPor.get(periodo.fim) ?? 0);
   const vencimento = conta.dia_vencimento ? calcularVencimentoFatura(conta.dia_vencimento, periodo.fim) : null;
-  const r2 = (n: number) => Math.round(n * 100) / 100;
-  total = r2(Math.max(0, total));
-  pago = r2(pago);
   return { total, pago, aPagar: Math.max(0, r2(total - pago)), vencimento };
 }
 

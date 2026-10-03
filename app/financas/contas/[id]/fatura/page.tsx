@@ -8,6 +8,8 @@ import { formatarMoeda } from "@/lib/financas/formatacao";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { ListaLancamentosPorDia } from "@/components/ListaLancamentosPorDia";
+import { PagarFatura } from "@/components/PagarFatura";
+import { resumoFatura } from "@/lib/financas/previsao";
 
 function formatarPeriodo(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
@@ -39,9 +41,14 @@ export default function FaturaCartaoPage() {
 
   const hoje = new Date().toLocaleDateString("sv-SE");
   const periodoAtualAberto = calcularPeriodoFatura(conta.dia_fechamento, hoje);
+  // Etapa 242 — abre na fatura que importa: a fechada se ainda falta pagar, senão a aberta
+  const fechadaAnterior = periodoFaturaAdjacente(conta.dia_fechamento, periodoAtualAberto.fim, -1);
+  const faltaNaFechada = resumoFatura(conta as any, (snapshot?.financas.transacoes ?? []) as any, fechadaAnterior).aPagar > 0;
   const periodo = fimSelecionado
     ? calcularPeriodoFatura(conta.dia_fechamento, fimSelecionado)
-    : periodoFaturaAdjacente(conta.dia_fechamento, periodoAtualAberto.fim, -1);
+    : faltaNaFechada
+      ? fechadaAnterior
+      : periodoAtualAberto;
 
   const vencimento = calcularVencimentoFatura(conta.dia_vencimento, periodo.fim);
   const ehFaturaAberta = periodo.fim === periodoAtualAberto.fim;
@@ -51,7 +58,9 @@ export default function FaturaCartaoPage() {
     .filter((t: any) => t.conta_id === conta.id && t.data >= periodo.inicio && t.data <= periodo.fim)
     .sort((a: any, b: any) => (a.data < b.data ? 1 : -1));
 
-  const total = transacoes.reduce((soma: number, t: any) => soma + (t.tipo === "despesa" ? Number(t.valor) : -Number(t.valor)), 0);
+  // Etapa 242 — total, quanto já foi pago (inclusive adiantado) e quanto falta
+  const resumo = resumoFatura(conta as any, (snapshot?.financas.transacoes ?? []) as any, periodo);
+  const total = resumo.total;
 
   const anterior = periodoFaturaAdjacente(conta.dia_fechamento, periodo.fim, -1);
   const proximo = periodoFaturaAdjacente(conta.dia_fechamento, periodo.fim, 1);
@@ -82,21 +91,26 @@ export default function FaturaCartaoPage() {
         </div>
 
         <p className="text-xs text-ink-400 mb-1">{ehFaturaAberta ? "Total até agora" : "Total da fatura"}</p>
-        <p className="text-3xl font-mono font-bold mb-3">{formatarMoeda(total)}</p>
+        <p className="text-3xl font-mono font-bold mb-1">{formatarMoeda(total)}</p>
+        {resumo.pago > 0 && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-base mb-3">
+            <span className="text-habito">✓ Pago {formatarMoeda(resumo.pago)}</span>
+            <span className={resumo.aPagar > 0 ? "text-red-400 font-semibold" : "text-habito font-semibold"}>
+              {resumo.aPagar > 0 ? `Falta ${formatarMoeda(resumo.aPagar)}` : "Fatura quitada 🎉"}
+            </span>
+          </div>
+        )}
+        {resumo.pago === 0 && <div className="mb-2" />}
         <p className="text-sm text-ink-400">
           Vencimento: <span className="text-ink-100">{new Date(vencimento + "T00:00:00").toLocaleDateString("pt-BR")}</span>
         </p>
-        {/* Etapa 211 — pagar a fatura = transferir da conta do banco pro cartão */}
-        {total > 0 && (
-          <Link
-            href={`/financas/transferir?para=${conta.id}&valor=${total.toFixed(2)}&data=${vencimento < hoje ? hoje : vencimento}&descricao=${encodeURIComponent(
-              `Pagamento fatura ${conta.nome}`
-            )}`}
-            className="mt-4 block text-center bg-financa text-base-900 font-medium rounded-2xl py-3.5 hover:opacity-90 transition"
-          >
-            Pagar fatura
-          </Link>
-        )}
+        {/* Etapa 242 — pagar escolhendo só de qual conta sai (sem De/Para) */}
+        <PagarFatura
+          cartao={{ id: conta.id, nome: conta.nome }}
+          contas={(snapshot?.financas.contas ?? []) as any[]}
+          aPagar={resumo.aPagar}
+          vencimento={vencimento}
+        />
         {/* Etapa 215 */}
         <p className="text-xs text-ink-400 mt-3">
           🛒 Melhor dia pra comprar: <span className="text-ink-100">dia {conta.dia_fechamento >= 31 ? 1 : conta.dia_fechamento + 1}</span> — o que você compra

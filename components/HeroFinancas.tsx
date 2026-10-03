@@ -68,27 +68,27 @@ export function HeroFinancas({
       )}
 
       <div className="grid grid-cols-3 gap-2 mb-5">
-        <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0">
+        <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0 [container-type:inline-size]">
           <p className="flex items-center gap-1 text-sm text-ink-400">
             <TrendingUp size={15} strokeWidth={2.5} className="text-habito shrink-0" /> Receitas
           </p>
-          <p className="text-base font-mono font-semibold text-habito mt-1 break-words leading-tight">
+          <p className="text-[min(1rem,12cqw)] font-mono font-semibold text-habito mt-1 whitespace-nowrap leading-tight tracking-tight">
             <ValorMonetario valor={receitas} animado />
           </p>
         </Link>
-        <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0">
+        <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0 [container-type:inline-size]">
           <p className="flex items-center gap-1 text-sm text-ink-400">
             <TrendingDown size={15} strokeWidth={2.5} className="text-red-400 shrink-0" /> Despesas
           </p>
-          <p className="text-base font-mono font-semibold text-red-400 mt-1 break-words leading-tight">
+          <p className="text-[min(1rem,12cqw)] font-mono font-semibold text-red-400 mt-1 whitespace-nowrap leading-tight tracking-tight">
             <ValorMonetario valor={despesas} animado />
           </p>
         </Link>
-        <Link href="/financas/investir" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0">
+        <Link href="/financas/investir" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0 [container-type:inline-size]">
           <p className="flex items-center gap-1 text-sm text-ink-400">
             <PiggyBank size={15} strokeWidth={2.5} className="text-financa shrink-0" /> Investido
           </p>
-          <p className="text-base font-mono font-semibold text-financa mt-1 break-words leading-tight">
+          <p className="text-[min(1rem,12cqw)] font-mono font-semibold text-financa mt-1 whitespace-nowrap leading-tight tracking-tight">
             <ValorMonetario valor={totalInvestido ?? 0} />
           </p>
         </Link>
