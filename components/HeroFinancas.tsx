@@ -60,12 +60,37 @@ export function HeroFinancas({
         <ValorMonetario valor={saldo} animado />
       </p>
 
-      {total > 0 && (
-        <div className="flex h-2 overflow-hidden rounded-full bg-base-700 mb-4" aria-hidden>
-          <div className="bg-habito" style={{ width: `${(receitas / total) * 100}%` }} />
-          <div className="bg-red-400" style={{ width: `${(despesas / total) * 100}%` }} />
-        </div>
-      )}
+      {/* Etapa 243 — a barra NÃO é o saldo: mostra quanto do que ENTROU no mês
+         já SAIU. Antes era só "verde x vermelho" e, num mês sem receita
+         lançada ainda, ficava toda vermelha mesmo com saldo positivo. */}
+      {total > 0 &&
+        (receitas > 0 ? (
+          (() => {
+            const pct = Math.round((despesas / receitas) * 100);
+            const cor = pct >= 100 ? "bg-red-400" : pct >= 80 ? "bg-amber-400" : "bg-habito";
+            const corTexto = pct >= 100 ? "text-red-400" : pct >= 80 ? "text-amber-400" : "text-habito";
+            return (
+              <div className="mb-4">
+                <div className="h-2 overflow-hidden rounded-full bg-base-700" aria-hidden>
+                  <div className={`h-full rounded-full transition-all duration-700 ${cor}`} style={{ width: `${Math.min(100, pct)}%` }} />
+                </div>
+                <p className="text-sm text-ink-400 mt-1.5">
+                  {pct >= 100 ? (
+                    <>
+                      Saiu <span className={`font-semibold ${corTexto}`}>mais do que entrou</span> em {nomeMes.toLowerCase()} ({pct}%)
+                    </>
+                  ) : (
+                    <>
+                      Já saiu <span className={`font-semibold ${corTexto}`}>{pct}%</span> do que entrou em {nomeMes.toLowerCase()}
+                    </>
+                  )}
+                </p>
+              </div>
+            );
+          })()
+        ) : (
+          <p className="text-sm text-ink-400 mb-4">Nenhuma receita lançada em {nomeMes.toLowerCase()} ainda — por isso não dá pra comparar.</p>
+        ))}
 
       <div className="grid grid-cols-3 gap-2 mb-5">
         <Link href="/financas/extrato?preset=este_mes" className="bg-base-800 border border-base-600 rounded-2xl px-3 py-3 min-w-0 [container-type:inline-size]">
