@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 
 const LIMIAR_ABRIR = 64; // arrastar mais que isso revela o fundo vermelho "pronto pra soltar"
@@ -99,9 +100,10 @@ export function LinhaComDeslizar({
         {children}
       </div>
 
-      {confirmando && (
+      {/* Etapa 237 — confirmação no <body>: dentro da linha ela podia ficar cortada */}
+      {confirmando && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60"
+          className="fixed inset-0 z-[85] flex items-center justify-center p-6 bg-black/60"
           onClick={() => !pendente && setConfirmando(false)}
         >
           <div
@@ -128,7 +130,8 @@ export function LinhaComDeslizar({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

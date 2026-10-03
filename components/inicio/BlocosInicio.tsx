@@ -92,7 +92,7 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
     teto: <TetoInicio s={snapshot} hoje={hoje} />,
     categorias: <CategoriasInicio s={snapshot} hoje={hoje} />,
     faturas: cartoes.length ? (
-      <ListaContasComSaldo contas={cartoes} />
+      <ListaContasComSaldo contas={cartoes} transacoes={snapshot.financas?.transacoes ?? []} />
     ) : (
       <CartaoInicio titulo="Cartões">
         <p className="text-base text-ink-400">Cadastre um cartão de crédito pra ver fatura e limite aqui.</p>

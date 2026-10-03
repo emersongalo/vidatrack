@@ -16,6 +16,7 @@ import { SeloBanco } from "@/components/SeloBanco";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { BANCOS } from "@/lib/financas/bancos";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { resumoCartao, textoVencimento } from "@/lib/financas/cartaoResumo";
 
 const RÓTULOS_TIPO: Record<string, string> = {
   carteira: "Carteira",
@@ -34,6 +35,8 @@ const RÓTULOS_TIPO: Record<string, string> = {
 export default function ContasPage() {
   const { snapshot, recarregar } = useSnapshotOffline();
   const contas = snapshot?.financas.contas ?? [];
+  const transacoesTodas = (snapshot?.financas.transacoes ?? []) as any[];
+  const hojeLocal = new Date().toLocaleDateString("sv-SE");
   const formRef = useRef<HTMLFormElement>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [criada, setCriada] = useState<string | null>(null);
@@ -126,12 +129,35 @@ export default function ContasPage() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{conta.nome}</p>
                     <p className="text-xs text-ink-400">{RÓTULOS_TIPO[conta.tipo]}</p>
+                    {conta.tipo === "cartao" && (!conta.dia_fechamento || !conta.dia_vencimento) && (
+                      <Link href={`/financas/contas/${conta.id}/editar`} className="block text-xs text-financa mt-0.5">
+                        Defina fechamento e vencimento pra ver a fatura e receber o aviso de pagar ›
+                      </Link>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <span className="font-mono text-sm mr-1">
-                    <ValorMonetario valor={Number(conta.saldo)} />
-                  </span>
+                  {/* Etapa 237 — cartão mostra a fatura, não "saldo" */}
+                  {conta.tipo === "cartao" ? (
+                    (() => {
+                      const r = resumoCartao(conta, transacoesTodas, hojeLocal);
+                      return (
+                        <Link href={`/financas/contas/${conta.id}/fatura`} className="text-right mr-1">
+                          <span className="block text-xs text-ink-400">{r.proxima?.fechada ? "Fatura a pagar" : "Fatura atual"}</span>
+                          <span className="block font-mono text-sm font-semibold text-red-400">
+                            <ValorMonetario valor={r.proxima?.valor ?? r.devendo} />
+                          </span>
+                          {r.proxima?.vencimento && (
+                            <span className="block text-xs text-ink-400">{textoVencimento(r.proxima.vencimento, hojeLocal)}</span>
+                          )}
+                        </Link>
+                      );
+                    })()
+                  ) : (
+                    <span className="font-mono text-sm mr-1">
+                      <ValorMonetario valor={Number(conta.saldo)} />
+                    </span>
+                  )}
                   <MenuAcoes>
                     {(fecharMenu) => (
                       <>

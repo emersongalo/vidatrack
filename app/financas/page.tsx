@@ -10,7 +10,7 @@ import { calcularSaldoPrevisto } from "@/lib/financas/consulta";
 import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
-import { GraficoDespesasCategoriaLazy as GraficoDespesasCategoria } from "@/components/GraficoDespesasCategoriaLazy";
+import { CarrosselCategorias } from "@/components/CarrosselCategorias";
 import { MapaCalorGastos } from "@/components/MapaCalorGastos";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { EstadoVazio } from "@/components/EstadoVazio";
@@ -182,6 +182,21 @@ export default function FinancasPage() {
     }))
     .sort((a, b) => b.valor - a.valor);
 
+  // Etapa 237 — o que entrou, por categoria (pra deslizar ao lado das despesas)
+  const receitaPorCategoria = new Map<string, number>();
+  for (const t of movimentosDoMes) {
+    if (t.tipo !== "receita") continue;
+    const k = t.categoria_id ?? "sem";
+    receitaPorCategoria.set(k, (receitaPorCategoria.get(k) ?? 0) + Number(t.valor));
+  }
+  const dadosReceitas = Array.from(receitaPorCategoria.entries())
+    .map(([id, valor]) => ({
+      nome: id === "sem" ? "Sem categoria" : (mapaCategoriaInfo.get(id) as any)?.nome ?? "Sem categoria",
+      valor,
+      href: `/financas/extrato?categoria=${id}&tipo=receita&mes=${mesSelecionado}`,
+    }))
+    .sort((a, b) => b.valor - a.valor);
+
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
   // Etapa 207 — antes cortava em 10 sem avisar; agora mostra 10 e um
   // botão "Ver todos" (o mês inteiro, inclusive os agendados).
@@ -213,10 +228,11 @@ export default function FinancasPage() {
   }
 
   const blocoGrafico =
-    dadosGrafico.length > 0 ? (
+    dadosGrafico.length > 0 || dadosReceitas.length > 0 ? (
       <div key="grafico" className="mb-6 lg:break-inside-avoid">
-        <h2 className="text-xl font-semibold mb-3">Despesas por categoria</h2>
-        <GraficoDespesasCategoria dados={dadosGrafico} mapaCategoriaInfo={mapaCategoriaInfo} />
+        {/* Etapa 237 — despesas e receitas: arraste pro lado pra ver o que entrou */}
+        <h2 className="text-xl font-semibold mb-3">Por categoria</h2>
+        <CarrosselCategorias despesas={dadosGrafico} receitas={dadosReceitas} mapaCategoriaInfo={mapaCategoriaInfo} />
 
         {/* Etapa 176 — mapa de calor logo abaixo do gráfico de
            categorias, a pedido: mesma ideia da Análise, só que aqui
@@ -266,7 +282,7 @@ export default function FinancasPage() {
   const blocosPorId: Record<string, ReactNode> = {
     previsao: previsao ? <PrevisaoMes previsao={previsao} /> : null,
     teto: snapshot && ehMesAtual ? <TetoMensal snapshot={snapshot} hojeISO={hojeISOBr} /> : null,
-    contas: <ListaContasComSaldo contas={contas as any} />,
+    contas: <ListaContasComSaldo contas={contas as any} transacoes={transacoes as any} />,
     orcamento: (
       categoriasComMeta.length > 0 ? (
               <div className="mb-6 lg:break-inside-avoid">

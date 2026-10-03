@@ -10,11 +10,15 @@ import { useValoresOcultos } from "@/lib/preferencias/useValoresOcultos";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { IconeCategoria } from "@/components/IconeCategoria";
 
-const PALETA = ["#D9A24C", "#7FB894", "#9C8FD9", "#E08A8A", "#6BA3C7", "#C7A36B", "#8FA6D9"];
+const PALETA_PADRAO = ["#D9A24C", "#7FB894", "#9C8FD9", "#E08A8A", "#6BA3C7", "#C7A36B", "#8FA6D9"];
+// Etapa 237 — tons de verde/azul pras receitas (o que entrou)
+export const PALETA_RECEITAS = ["#4FBF8A", "#6BA3C7", "#8BD17C", "#3E9C9A", "#A3C76B", "#5C8FD9", "#7FD1B9"];
 
 export function GraficoDespesasCategoria({
   dados,
   mapaCategoriaInfo,
+  paleta = PALETA_PADRAO,
+  semCaixa = false,
 }: {
   /** Etapa 197 — href opcional: tocar na fatia/barra/legenda leva pro
    *  Extrato filtrado naquela categoria. */
@@ -23,7 +27,12 @@ export function GraficoDespesasCategoria({
    *  e a cor reais da categoria (em vez da bolinha genérica da
    *  paleta) e uma coluna de porcentagem, inspirado no Despezzas. */
   mapaCategoriaInfo?: Map<string, any>;
+  /** Etapa 237 — cores das fatias (receitas usam tons de verde) */
+  paleta?: string[];
+  /** Etapa 237 — sem o cartão em volta (quando vai dentro do carrossel) */
+  semCaixa?: boolean;
 }) {
+  const PALETA = paleta;
   const ocultos = useValoresOcultos();
   const [tipoGrafico, setTipoGrafico] = useState<"pizza" | "coluna">("pizza");
   const totalDados = dados.reduce((s, d) => s + d.valor, 0);
@@ -37,7 +46,7 @@ export function GraficoDespesasCategoria({
   if (dados.length === 0) return null;
 
   return (
-    <div className="bg-base-800 border border-base-600 rounded-3xl p-5">
+    <div className={semCaixa ? "" : "bg-base-800 border border-base-600 rounded-3xl p-5"}>
       <div className="flex justify-end gap-1.5 mb-2">
         <button
           onClick={() => setTipoGrafico("pizza")}

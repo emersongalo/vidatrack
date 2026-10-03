@@ -4,6 +4,7 @@ import { ValorMonetario } from "@/components/ValorMonetario";
 import { SeloBanco } from "@/components/SeloBanco";
 import { bancoPorId, siglaDoSelo } from "@/lib/financas/bancos";
 import { usoDoLimite } from "@/lib/financas/limite";
+import { resumoCartao, textoVencimento } from "@/lib/financas/cartaoResumo";
 import type { ContaComSaldo } from "@/lib/financas/consulta";
 
 const RÓTULOS_TIPO: Record<string, string> = {
@@ -13,7 +14,8 @@ const RÓTULOS_TIPO: Record<string, string> = {
   investimento: "Investimento",
 };
 
-export function ListaContasComSaldo({ contas }: { contas: ContaComSaldo[] }) {
+export function ListaContasComSaldo({ contas, transacoes = [] }: { contas: ContaComSaldo[]; transacoes?: any[] }) {
+  const hoje = new Date().toLocaleDateString("sv-SE");
   if (contas.length === 0) return null;
 
   // Etapa 211 — cartões ficam num bloco próprio (não somam no saldo)
@@ -73,6 +75,9 @@ export function ListaContasComSaldo({ contas }: { contas: ContaComSaldo[] }) {
               const banco = bancoPorId(cartao.banco);
               const limite = usoDoLimite(devendo, Number((cartao as any).limite) || null);
               const vence = (cartao as any).dia_vencimento as number | null | undefined;
+              // Etapa 237 — valor e vencimento da PRÓXIMA fatura (não o saldo do cartão)
+              const r = resumoCartao(cartao as any, transacoes, hoje);
+              const aPagar = r.proxima?.valor ?? devendo;
               return (
                 <li key={cartao.id} className={`snap-start shrink-0 ${cartoes.length > 1 ? "w-[85%] sm:w-80" : "w-full"}`}>
                   <Link
@@ -86,16 +91,21 @@ export function ListaContasComSaldo({ contas }: { contas: ContaComSaldo[] }) {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-lg font-semibold truncate">{cartao.nome}</p>
-                        <p className="text-sm opacity-80">{vence ? `Vence dia ${vence}` : "Cartão de crédito"}</p>
+                        <p className="text-sm opacity-80">
+                          {r.proxima?.vencimento ? textoVencimento(r.proxima.vencimento, hoje).replace(/^./, (c) => c.toUpperCase()) : vence ? `Vence dia ${vence}` : "Cartão de crédito"}
+                        </p>
                       </div>
                       <span className="text-sm font-bold tracking-wider px-2 py-1 rounded-lg bg-black/20">
                         {siglaDoSelo(cartao.banco, cartao.nome, cartao.tipo) || "💳"}
                       </span>
                     </div>
-                    <p className="text-xs opacity-80 mt-5">Fatura a pagar</p>
+                    <p className="text-xs opacity-80 mt-5">{r.proxima?.fechada ? "Fatura fechada a pagar" : "Fatura atual"}</p>
                     <p className="font-mono text-3xl font-bold">
-                      <ValorMonetario valor={devendo} />
+                      <ValorMonetario valor={aPagar} />
                     </p>
+                    {r.configurado && r.devendo > aPagar + 0.01 && (
+                      <p className="text-xs opacity-80">Total no cartão: <ValorMonetario valor={r.devendo} /></p>
+                    )}
                     {limite ? (
                       <div className="mt-4">
                         <div className="h-2 rounded-full bg-black/25 overflow-hidden">

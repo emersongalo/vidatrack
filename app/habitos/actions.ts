@@ -172,23 +172,25 @@ export async function alternarCheckin(habitoId: string, dataISO?: string) {
     .maybeSingle();
 
   if (existente) {
-    await supabase.from("habito_checkins").delete().eq("id", existente.id);
+    const { error: erroApagar } = await supabase.from("habito_checkins").delete().eq("id", existente.id);
     revalidatePath("/habitos");
-    return { marcoAtingido: null };
+    return { marcoAtingido: null, erro: erroApagar?.message ?? null };
   }
 
-  await supabase.from("habito_checkins").insert({
+  // Etapa 237 — antes o erro era ignorado e a tela parecia ter salvo
+  const { error: erroMarcar } = await supabase.from("habito_checkins").insert({
     habito_id: habitoId,
     usuario_id: user!.id,
     data,
   });
+  if (erroMarcar) return { marcoAtingido: null, erro: erroMarcar.message };
 
   revalidatePath("/habitos");
 
   // Só vale a pena checar conquista quando a pessoa está marcando o
   // dia de HOJE — marcar um dia passado (raro, mas possível) não deve
   // disparar uma comemoração de "streak atual" que não reflete hoje.
-  if (data !== hojeISO()) return { marcoAtingido: null };
+  if (data !== hojeISO()) return { marcoAtingido: null, erro: null };
 
   const { data: checkins } = await supabase
     .from("habito_checkins")
@@ -199,7 +201,7 @@ export async function alternarCheckin(habitoId: string, dataISO?: string) {
   const novoStreak = calcularStreak((checkins ?? []).map((c) => c.data));
   const marcoAtingido = MARCOS_CONQUISTA.includes(novoStreak) ? novoStreak : null;
 
-  return { marcoAtingido };
+  return { marcoAtingido, erro: null };
 }
 
 /**
@@ -223,21 +225,31 @@ export async function ajustarQuantidadeHabito(habitoId: string, dataISO: string,
     .maybeSingle();
 
   const novaQuantidade = Math.max(0, (existente?.quantidade ?? 0) + delta);
+  let erro: string | null = null;
 
   if (!existente && novaQuantidade > 0) {
-    await supabase.from("habito_checkins").insert({
+    const { error } = await supabase.from("habito_checkins").insert({
       habito_id: habitoId,
       usuario_id: user!.id,
       data: dataISO,
       quantidade: novaQuantidade,
     });
+    erro = error?.message ?? null;
   } else if (existente && novaQuantidade === 0) {
-    await supabase.from("habito_checkins").delete().eq("id", existente.id);
+    const { error } = await supabase.from("habito_checkins").delete().eq("id", existente.id);
+    erro = error?.message ?? null;
   } else if (existente) {
-    await supabase.from("habito_checkins").update({ quantidade: novaQuantidade }).eq("id", existente.id);
+    // Etapa 237 — .select() pra saber se gravou mesmo (sem permissão, o banco não acusa erro, só não muda nada)
+    const { data: mudou, error } = await supabase
+      .from("habito_checkins")
+      .update({ quantidade: novaQuantidade })
+      .eq("id", existente.id)
+      .select("id");
+    erro = error?.message ?? (!mudou?.length ? "Não deu pra atualizar a quantidade" : null);
   }
 
   revalidatePath("/habitos");
+  return { erro };
 }
 
 const SUGESTOES_HABITO: Record<string, { icone: string; cor: string }> = {

@@ -115,6 +115,8 @@ export function ItemLinhaAgenda({
   const LIMIAR = 80;
   // Etapa 233 — toque duplo quando os dois completam no mesmo dia
   const [toqueDuplo, setToqueDuplo] = useState<{ sequencia: number } | null>(null);
+  // Etapa 237 — se o banco recusar, avisa em vez de fingir que salvou
+  const [erroSalvar, setErroSalvar] = useState<string | null>(null);
 
   async function completouEmDupla() {
     if (!item.dupla) return;
@@ -180,6 +182,12 @@ export function ItemLinhaAgenda({
       if (item.tipo === "habito") {
         const feitoAntes = item.feito;
         const resultado = await alternarCheckin(item.id, dataISO);
+        if (resultado?.erro) {
+          setErroSalvar("Não salvou — tente de novo");
+          aoConcluirMutacao?.();
+          return;
+        }
+        setErroSalvar(null);
         if (resultado?.marcoAtingido) setMarcoAtingido(resultado.marcoAtingido);
         // Convite pra anotar só quando está MARCANDO (não quando
         // desmarca) — não faz sentido pedir nota de algo que a
@@ -214,8 +222,10 @@ export function ItemLinhaAgenda({
     }
     const completou = !!item.meta && item.meta.atual < item.meta.alvo && item.meta.atual + delta >= item.meta.alvo;
     iniciarTransicao(async () => {
-      await ajustarQuantidadeHabito(item.id, dataISO, delta);
+      const r = await ajustarQuantidadeHabito(item.id, dataISO, delta);
+      setErroSalvar(r?.erro ? "Não salvou — tente de novo" : null);
       aoConcluirMutacao?.();
+      if (r?.erro) return;
       if (completou && item.dupla) void completouEmDupla();
     });
   }
@@ -299,6 +309,7 @@ export function ItemLinhaAgenda({
           )}
         </div>
 
+        {erroSalvar && <p className="text-sm text-red-400 mt-1">{erroSalvar}</p>}
         {/* Etapa 230 — barra do contador (ex: 3 de 8 copos) */}
         {ehNumerico && item.meta && (
           <div className="h-1.5 bg-base-700 rounded-full overflow-hidden mt-1.5 max-w-[12rem]">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { MoreVertical } from "lucide-react";
 
@@ -16,92 +16,52 @@ import { MoreVertical } from "lucide-react";
  * Passe `fecharMenu` pra dentro de cada BotaoComConfirmacao como
  * `aoConcluir` (ou combine com o aoConcluir de verdade) pra ele
  * fechar sozinho quando a ação terminar.
- *
- * Etapa 186 — o menu agora é renderizado num portal no <body>, com
- * posição fixa calculada a partir do botão. Antes ele era `absolute`
- * dentro da linha, e quando a linha estava dentro do LinhaComDeslizar
- * (overflow-hidden + transform) o menu abria mas ficava cortado/
- * invisível. Também abre pra CIMA quando não cabe embaixo.
  */
-const LARGURA_MENU = 200;
-
-export function MenuAcoes({ children }: { children: (fecharMenu: () => void) => ReactNode }) {
+export function MenuAcoes({ children, titulo }: { children: (fecharMenu: () => void) => ReactNode; titulo?: string }) {
   const [aberto, setAberto] = useState(false);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const botaoRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [montado, setMontado] = useState(false);
+  useEffect(() => setMontado(true), []);
 
-  // calcula a posição depois que o menu montou (pra saber a altura real)
-  useLayoutEffect(() => {
-    if (!aberto) {
-      setPos(null);
-      return;
-    }
-    const b = botaoRef.current?.getBoundingClientRect();
-    if (!b) return;
-    const alturaMenu = menuRef.current?.offsetHeight ?? 120;
-    const naoCabeEmbaixo = b.bottom + 4 + alturaMenu > window.innerHeight - 8;
-    const cabeEmCima = b.top - 4 - alturaMenu > 8;
-    const top = naoCabeEmbaixo && cabeEmCima ? b.top - 4 - alturaMenu : b.bottom + 4;
-    const left = Math.max(8, Math.min(b.right - LARGURA_MENU, window.innerWidth - LARGURA_MENU - 8));
-    setPos({ top, left });
-  }, [aberto]);
-
+  // Etapa 237 — o menu abre como uma folha por cima de tudo (portal no
+  // <body>). Antes ele abria "pendurado" na linha e ficava cortado
+  // embaixo quando a linha estava no fim de um cartão (ex: "Paguei").
   useEffect(() => {
     if (!aberto) return;
-    function aoClicarFora(e: Event) {
-      const alvo = e.target as HTMLElement;
-      if (botaoRef.current?.contains(alvo)) return;
-      if (menuRef.current?.contains(alvo)) return;
-      // modais de confirmação abertos a partir do menu também ficam num
-      // portal — tocar neles não pode fechar o menu (senão o modal some)
-      if (alvo.closest?.("[data-manter-menu]")) return;
-      setAberto(false);
-    }
-    function aoRolar(e: Event) {
-      if (menuRef.current?.contains(e.target as Node)) return;
-      if (document.querySelector("[data-manter-menu]")) return; // confirmação aberta
-      setAberto(false);
-    }
-    document.addEventListener("mousedown", aoClicarFora);
-    document.addEventListener("touchstart", aoClicarFora, { passive: true });
-    window.addEventListener("scroll", aoRolar, true);
-    window.addEventListener("resize", aoRolar);
-    return () => {
-      document.removeEventListener("mousedown", aoClicarFora);
-      document.removeEventListener("touchstart", aoClicarFora);
-      window.removeEventListener("scroll", aoRolar, true);
-      window.removeEventListener("resize", aoRolar);
-    };
+    const aoTeclar = (e: KeyboardEvent) => e.key === "Escape" && setAberto(false);
+    document.addEventListener("keydown", aoTeclar);
+    return () => document.removeEventListener("keydown", aoTeclar);
   }, [aberto]);
 
   return (
     <div className="relative shrink-0">
       <button
-        ref={botaoRef}
-        onClick={() => setAberto((a) => !a)}
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setAberto(true);
+        }}
         aria-label="Mais ações"
-        aria-expanded={aberto}
-        className="w-8 h-8 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+        className="w-9 h-9 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
       >
-        <MoreVertical size={16} strokeWidth={2} />
+        <MoreVertical size={18} strokeWidth={2} />
       </button>
       {aberto &&
-        typeof document !== "undefined" &&
+        montado &&
         createPortal(
           <div
-            ref={menuRef}
-            role="menu"
-            style={{
-              position: "fixed",
-              top: pos?.top ?? 0,
-              left: pos?.left ?? 0,
-              width: LARGURA_MENU,
-              visibility: pos ? "visible" : "hidden",
-            }}
-            className="z-[60] bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/40 py-1.5"
+            className="animate-fundo fixed inset-0 z-[65] bg-black/50 flex items-end lg:items-center justify-center"
+            onClick={() => setAberto(false)}
           >
-            {children(() => setAberto(false))}
+            <div
+              className="animate-folha w-full max-w-md lg:max-w-xs bg-base-800 border border-base-600 rounded-t-3xl lg:rounded-2xl shadow-2xl py-2"
+              style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="lg:hidden mx-auto mt-1 mb-2 h-1 w-10 rounded-full bg-base-600" />
+              {titulo && <p className="px-5 pb-2 text-sm text-ink-400 truncate">{titulo}</p>}
+              <div className="[&>*]:py-3 [&>*]:text-base">{children(() => setAberto(false))}</div>
+            </div>
           </div>,
           document.body
         )}
@@ -120,7 +80,7 @@ export function ItemMenuAcoes({
   href?: string;
   destrutivo?: boolean;
 }) {
-  const classe = `flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-left transition hover:bg-base-700 ${
+  const classe = `flex items-center gap-3 w-full px-5 py-2 text-sm text-left transition hover:bg-base-700 ${
     destrutivo ? "text-red-400" : "text-ink-100"
   }`;
 
