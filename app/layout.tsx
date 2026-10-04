@@ -18,6 +18,7 @@ import { AvisoAtualizacaoApp } from "@/components/AvisoAtualizacaoApp";
 import { IndicadorConexao } from "@/components/IndicadorConexao";
 import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
 import { SCRIPT_APARENCIA } from "@/lib/preferencias/aparencia";
+import { CSS_ABERTURA, HTML_ABERTURA, SCRIPT_ABERTURA } from "@/lib/app/abertura";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -88,6 +89,10 @@ export default function RootLayout({
         />
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_PRE_BLOQUEIO }} />
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_APARENCIA }} />
+        {/* Etapa 263 — abertura com o logo animado (1x por sessão, antes do React carregar) */}
+        <style dangerouslySetInnerHTML={{ __html: CSS_ABERTURA }} />
+        <div id="vt-abertura" aria-hidden="true" dangerouslySetInnerHTML={{ __html: HTML_ABERTURA }} />
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_ABERTURA }} />
         {/* Etapa 240 — barra de status volta à cor normal fora das telas coloridas */}
         <CorBarraPorRota />
         {/* Etapa 241 — versão nova do app na Play Store */}
