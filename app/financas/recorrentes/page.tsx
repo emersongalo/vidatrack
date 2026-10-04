@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useTransition } from "react";
+import { Suspense, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormularioAcao } from "@/components/FormularioAcao";
@@ -27,6 +27,8 @@ function RecorrentesConteudo() {
   const erro = searchParams.get("erro");
   const { snapshot, recarregar } = useSnapshotOffline();
   const [, iniciarTransicao] = useTransition();
+  // Etapa 258 — só mostra categorias do tipo escolhido (despesa ou receita)
+  const [tipoNova, setTipoNova] = useState<"despesa" | "receita">("despesa");
 
   const recorrencias = [...(snapshot?.financas.recorrencias ?? [])].sort((a: any, b: any) => a.dia_mes - b.dia_mes);
   const contas = snapshot?.financas.contas ?? [];
@@ -121,6 +123,8 @@ function RecorrentesConteudo() {
           <FormularioAcao acao={criarRecorrencia} aoSucesso={recarregar} mensagemSucesso="Recorrência criada!" className="space-y-3">
             <select
               name="tipo"
+              value={tipoNova}
+              onChange={(e) => setTipoNova(e.target.value === "receita" ? "receita" : "despesa")}
               className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
               <option value="despesa">Despesa</option>
@@ -150,12 +154,14 @@ function RecorrentesConteudo() {
               className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
             >
               <option value="">Sem categoria</option>
-              {categorias.map((c: any) => (
-                <option key={c.id} value={c.id}>
-                  {c.icone ? `${c.icone} ` : ""}
-                  {c.nome}
-                </option>
-              ))}
+              {/* Etapa 258 — o ícone é um desenho (nome tipo "Home", "Car"), não emoji: no menu vai só o nome */}
+              {categorias
+                .filter((c: any) => !c.tipo || c.tipo === tipoNova)
+                .map((c: any) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
             </select>
             <div>
               <label htmlFor="diaMes" className="block text-sm text-ink-400 mb-1">

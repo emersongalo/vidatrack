@@ -2,7 +2,7 @@
 
 // Etapa 254 — detalhe de uma recorrência: ajustar só este mês, editar
 // daqui pra frente (sem mexer no que já foi pago) e ver o histórico.
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CalendarClock, History, Pencil } from "lucide-react";
@@ -33,6 +33,7 @@ export default function RecorrenciaPage() {
 function Conteudo() {
   const params = useParams<{ id: string }>();
   const { snapshot, recarregar } = useSnapshotOffline();
+  const [tipoEditado, setTipoEditado] = useState<string | null>(null);
   if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={4} />;
 
   const r = (snapshot?.financas.recorrencias ?? []).find((x: any) => x.id === params.id) as any;
@@ -118,7 +119,7 @@ function Conteudo() {
           limparAoSalvar={false}
           className="space-y-3"
         >
-          <select name="tipo" defaultValue={r.tipo} className={campo}>
+          <select name="tipo" value={tipoEditado ?? r.tipo} onChange={(e) => setTipoEditado(e.target.value)} className={campo}>
             <option value="despesa">Despesa</option>
             <option value="receita">Receita</option>
           </select>
@@ -136,7 +137,7 @@ function Conteudo() {
           </select>
           <select name="categoriaId" defaultValue={r.categoria_id ?? ""} className={campo}>
             <option value="">Sem categoria</option>
-            {categorias.map((c) => (
+            {categorias.filter((c) => !c.tipo || c.tipo === (tipoEditado ?? r.tipo)).map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nome}
               </option>
