@@ -54,7 +54,11 @@ export function ListaLancamentosPorDia({
                     <li key={t.id}>
                       <LinhaComDeslizar
                         acao={removerTransacao.bind(null, t.id)}
-                        textoConfirmacao="Excluir esse lançamento? Não tem volta."
+                        textoConfirmacao={
+                          t.recorrencia_id
+                            ? "Excluir o lançamento deste mês? A conta fixa continua nos próximos meses — pra parar de vez, use Recorrentes."
+                            : "Excluir esse lançamento? Não tem volta."
+                        }
                         aoConcluir={() => recarregar?.()}
                       >
                         <div className="relative flex items-center gap-3 bg-base-800 pl-4 pr-1 py-3.5">
@@ -115,7 +119,11 @@ export function ListaLancamentosPorDia({
                                       <Trash2 size={15} strokeWidth={2} /> Excluir
                                     </span>
                                   }
-                                  textoConfirmacao="Excluir esse lançamento? Não tem volta."
+                                  textoConfirmacao={
+                          t.recorrencia_id
+                            ? "Excluir o lançamento deste mês? A conta fixa continua nos próximos meses — pra parar de vez, use Recorrentes."
+                            : "Excluir esse lançamento? Não tem volta."
+                        }
                                   classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-red-400 hover:bg-base-700 transition"
                                   aoConcluir={() => {
                                     recarregar?.();

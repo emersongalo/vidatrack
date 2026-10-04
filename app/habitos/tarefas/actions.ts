@@ -269,3 +269,37 @@ export async function excluirTarefaDefinitivamente(tarefaId: string) {
   await supabase.from("tarefas").delete().eq("id", tarefaId);
   revalidatePath("/habitos/tarefas/lixeira");
 }
+
+/**
+ * Etapa 259 — adicionar tarefa rápida (só o título) direto da lista,
+ * já na categoria e no dia escolhidos. Devolve { erro } em vez de redirecionar.
+ */
+export async function criarTarefaRapida(dados: { titulo: string; categoriaId?: string | null; data?: string | null; prioridade?: number }): Promise<{ erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sua sessão expirou. Saia e entre de novo." };
+  const titulo = String(dados.titulo ?? "").trim().slice(0, 200);
+  if (!titulo) return { erro: "Escreva a tarefa" };
+  const data = /^\d{4}-\d{2}-\d{2}$/.test(String(dados.data ?? "")) ? String(dados.data) : hojeISO();
+  const categoriaId = dados.categoriaId && /^[0-9a-f-]{36}$/i.test(dados.categoriaId) ? dados.categoriaId : null;
+
+  const { count } = await supabase.from("tarefas").select("id", { count: "exact", head: true }).eq("dono_id", user.id);
+  const { error } = await supabase.from("tarefas").insert({
+    dono_id: user.id,
+    titulo,
+    icone: "NotebookPen",
+    categoria_id: categoriaId,
+    repetir: "nenhuma",
+    dias_semana: [],
+    data,
+    prioridade: Math.min(3, Math.max(0, Math.round(Number(dados.prioridade) || 0))),
+    subtarefas: [],
+    ordem: count ?? 0,
+  });
+  if (error) return { erro: error.message };
+  revalidatePath("/habitos");
+  revalidatePath("/habitos/tarefas");
+  return {};
+}

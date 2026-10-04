@@ -26,6 +26,20 @@ function NovaTarefaConteudo() {
       categoriasFinancas={((snapshot?.financas.categorias ?? []) as any[]).filter((c) => c.dono_id === snapshot?.perfil.id)}
       erro={searchParams.get("erro") ?? undefined}
       hoje={hojeISO()}
+      // Etapa 259 — vindo da lista filtrada, já abre na categoria escolhida
+      valoresIniciais={
+        searchParams.get("categoria")
+          ? {
+              titulo: "",
+              icone: "NotebookPen",
+              categoriaId: searchParams.get("categoria"),
+              repetir: "nenhuma",
+              diasSemana: [],
+              data: hojeISO(),
+              horarioLembrete: null,
+            }
+          : undefined
+      }
     />
   );
 }

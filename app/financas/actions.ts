@@ -13,6 +13,7 @@ import {
   primeiroErro,
 } from "@/lib/validacao/financas";
 import { lerLimite } from "@/lib/financas/limite";
+import { dataAtualNoFuso } from "@/lib/tempo/fuso";
 
 /**
  * Etapa 199 — versão usada pela tela Contas: em vez de redirecionar
@@ -627,13 +628,34 @@ export async function removerTransacao(transacaoId: string) {
   "use server";
   const supabase = createClient();
   // Etapa 211 — transferência: apagar uma ponta apaga a outra junto
-  const { data: t } = await supabase.from("financa_transacoes").select("transferencia_grupo").eq("id", transacaoId).maybeSingle();
+  const { data: t } = await supabase
+    .from("financa_transacoes")
+    .select("transferencia_grupo, recorrencia_id, data")
+    .eq("id", transacaoId)
+    .maybeSingle();
   if (t?.transferencia_grupo) {
     await supabase.from("financa_transacoes").delete().eq("transferencia_grupo", t.transferencia_grupo);
     revalidatePath("/financas");
     return;
   }
   await supabase.from("financa_transacoes").delete().eq("id", transacaoId);
+
+  // Etapa 262 — lançamento de uma recorrência (conta fixa) no mês atual:
+  // sem isso, ao abrir Finanças de novo o app achava que "faltava" o
+  // lançamento do mês e criava outro igual (parecia que apagava e voltava).
+  // Agora a recorrência passa a valer a partir do mês seguinte; os
+  // próximos meses continuam normais. Pra parar de vez: Recorrentes.
+  if (t?.recorrencia_id && t.data) {
+    const hoje = dataAtualNoFuso();
+    if (String(t.data).slice(0, 7) === hoje.slice(0, 7)) {
+      const [a, m] = hoje.split("-").map(Number);
+      const proximoMes = `${m === 12 ? a + 1 : a}-${String(m === 12 ? 1 : m + 1).padStart(2, "0")}-01`;
+      const { data: r } = await supabase.from("financa_recorrencias").select("data_inicio").eq("id", t.recorrencia_id).maybeSingle();
+      if (r && (!r.data_inicio || String(r.data_inicio) < proximoMes)) {
+        await supabase.from("financa_recorrencias").update({ data_inicio: proximoMes }).eq("id", t.recorrencia_id);
+      }
+    }
+  }
   revalidatePath("/financas");
 }
 

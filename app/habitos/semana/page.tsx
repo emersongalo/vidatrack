@@ -1,10 +1,9 @@
 "use client";
 
-// Etapa 221 — relatório da semana, com imagem pra compartilhar (gerada
-// na hora, no aparelho — nada é salvo no servidor).
-import { useState } from "react";
+// Etapa 221 — relatório da semana.
+// Etapa 260 — sem "compartilhar como imagem" (no app não dava pra baixar);
+// fica só o resumo da semana.
 import Link from "next/link";
-import { Share2 } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
@@ -31,77 +30,12 @@ function linhasDoResumo(r: ResumoSemana, mostrarGastos: boolean): [string, strin
   return linhas;
 }
 
-async function gerarImagem(r: ResumoSemana, mostrarGastos: boolean): Promise<Blob | null> {
-  const c = document.createElement("canvas");
-  c.width = 1080;
-  c.height = 1350;
-  const g = c.getContext("2d");
-  if (!g) return null;
-  const fundo = g.createLinearGradient(0, 0, 1080, 1350);
-  fundo.addColorStop(0, "#15201a");
-  fundo.addColorStop(1, "#1d1a24");
-  g.fillStyle = fundo;
-  g.fillRect(0, 0, 1080, 1350);
-
-  g.fillStyle = "#7FB894";
-  g.font = "600 44px system-ui, sans-serif";
-  g.fillText("Minha semana", 90, 160);
-  g.fillStyle = "#9A9A94";
-  g.font = "36px system-ui, sans-serif";
-  g.fillText(`${ddmm(r.inicio)} a ${ddmm(r.fim)}`, 90, 215);
-
-  let y = 360;
-  for (const [emoji, valor, texto] of linhasDoResumo(r, mostrarGastos).slice(0, 6)) {
-    g.font = "64px system-ui, sans-serif";
-    g.fillText(emoji, 90, y);
-    g.fillStyle = "#F5F5F0";
-    g.font = "700 64px system-ui, sans-serif";
-    const valorCurto = valor.length > 22 ? valor.slice(0, 21) + "…" : valor;
-    g.fillText(valorCurto, 190, y);
-    g.fillStyle = "#9A9A94";
-    g.font = "36px system-ui, sans-serif";
-    g.fillText(texto.length > 44 ? texto.slice(0, 43) + "…" : texto, 190, y + 52);
-    y += 150;
-  }
-
-  g.fillStyle = "#9A9A94";
-  g.font = "32px system-ui, sans-serif";
-  g.fillText("VidaTrack", 90, 1260);
-  return new Promise((ok) => c.toBlob((b) => ok(b), "image/png"));
-}
-
 export default function SemanaPage() {
   const { snapshot } = useSnapshotOffline();
-  const [mostrarGastos, setMostrarGastos] = useState(false);
-  const [previa, setPrevia] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
 
   if (!snapshot) return <main className="min-h-screen p-6 pagina" />;
   const r = resumoDaSemana(snapshot, hojeISO());
   const linhas = linhasDoResumo(r, true);
-
-  async function compartilhar() {
-    setAviso(null);
-    const blob = await gerarImagem(r, mostrarGastos);
-    if (!blob) return setAviso("Não consegui gerar a imagem.");
-    const arquivo = new File([blob], "minha-semana.png", { type: "image/png" });
-    const nav = navigator as any;
-    if (nav.canShare?.({ files: [arquivo] })) {
-      try {
-        await nav.share({ files: [arquivo], title: "Minha semana" });
-        return;
-      } catch {
-        /* cancelou: mostra a prévia */
-      }
-    }
-    const url = URL.createObjectURL(blob);
-    setPrevia(url);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "minha-semana.png";
-    a.click();
-    setAviso("Se não baixou, segure a imagem abaixo pra salvar.");
-  }
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
@@ -134,25 +68,12 @@ export default function SemanaPage() {
         </ul>
       )}
 
-      {linhas.length > 0 && (
-        <div className="mt-6">
-          <label className="flex items-center gap-2 text-sm mb-3">
-            <input type="checkbox" checked={mostrarGastos} onChange={(e) => setMostrarGastos(e.target.checked)} />
-            Mostrar gastos na imagem
-          </label>
-          <button
-            onClick={compartilhar}
-            className="w-full flex items-center justify-center gap-2 bg-habito text-base-900 font-semibold rounded-lg py-3"
-          >
-            <Share2 size={18} /> Compartilhar como imagem
-          </button>
-          {aviso && <p className="text-xs text-ink-400 mt-2">{aviso}</p>}
-          {previa && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={previa} alt="Resumo da semana" className="mt-4 rounded-xl2 border border-base-600 w-full" />
-          )}
-        </div>
-      )}
+      <Link
+        href="/habitos/estatisticas"
+        className="mt-6 block text-center text-sm text-ink-400 border border-base-600 rounded-2xl py-3 hover:text-ink-100 transition"
+      >
+        Ver estatísticas completas
+      </Link>
     </main>
   );
 }

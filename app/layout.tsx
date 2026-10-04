@@ -15,6 +15,7 @@ import { BloqueioApp } from "@/components/BloqueioApp";
 import { RegistrarIndicacao } from "@/components/RegistrarIndicacao";
 import { CorBarraPorRota } from "@/components/CorBarraPorRota";
 import { AvisoAtualizacaoApp } from "@/components/AvisoAtualizacaoApp";
+import { IndicadorConexao } from "@/components/IndicadorConexao";
 import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
 import { SCRIPT_APARENCIA } from "@/lib/preferencias/aparencia";
 
@@ -102,6 +103,8 @@ export default function RootLayout({
         <AlarmeAlertaTela />
         <SincronizadorWidgets />
         <ErrosGlobais />
+        {/* Etapa 261 — aviso animado de sem internet / conectou de novo */}
+        <IndicadorConexao />
         <BloqueioApp />
         <RegistrarIndicacao />
       </body>
