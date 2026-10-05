@@ -27,6 +27,7 @@ import { MetasResumo } from "@/components/MetasResumo";
 import { TetoMensal } from "@/components/TetoMensal";
 import { PodeGastarHoje } from "@/components/PodeGastarHoje";
 import { GastosRapidos } from "@/components/GastosRapidos";
+import { ConfirmarReceitas } from "@/components/ConfirmarReceitas";
 import { ListaLancamentosPorDia } from "@/components/ListaLancamentosPorDia";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { salvarOrdemBlocosFinancas } from "./actions";
@@ -374,6 +375,8 @@ export default function FinancasPage() {
             aoHoje={() => { setMesSelecionado(mesAtualISO); setMostrarTodosLancamentos(false); }}
           />
 
+          {/* Etapa 268 — "essa receita caiu?" */}
+          {snapshot && <ConfirmarReceitas snapshot={snapshot} />}
           {snapshot && ehMesAtual && <AlertasFinancas snapshot={snapshot} hojeISO={hojeISOBr} />}
 
           {/* Etapa 222 — personalizar a ordem e esconder blocos (vale só pro seu login) */}

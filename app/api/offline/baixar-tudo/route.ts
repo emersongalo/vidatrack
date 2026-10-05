@@ -85,7 +85,7 @@ export async function GET() {
     idsContas.length
       ? supabase
           .from("financa_transacoes")
-          .select("id, conta_id, categoria_id, tipo, valor, descricao, data, recorrencia_id, pago_em, parcela_grupo, parcela_numero, parcela_total, transferencia_grupo, etiquetas")
+          .select("id, conta_id, categoria_id, tipo, valor, descricao, data, criado_em, recorrencia_id, pago_em, parcela_grupo, parcela_numero, parcela_total, transferencia_grupo, etiquetas")
           .in("conta_id", idsContas)
           .order("data", { ascending: false })
           .limit(LIMITE_TRANSACOES)

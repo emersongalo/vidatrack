@@ -19,6 +19,7 @@ import { MetasResumo } from "@/components/MetasResumo";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { PodeGastarHoje } from "@/components/PodeGastarHoje";
 import { GastosRapidos } from "@/components/GastosRapidos";
+import { ConfirmarReceitas } from "@/components/ConfirmarReceitas";
 import { PersonalizarInicio } from "@/components/inicio/PersonalizarInicio";
 import {
   CartaoInicio,
@@ -133,6 +134,10 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
         </button>
       </div>
       {erro && <p className="text-sm text-red-400 mb-3">{erro}</p>}
+      {/* Etapa 268 — receita programada esperando confirmação aparece no topo do Início */}
+      <div className="mb-6 empty:hidden">
+        <ConfirmarReceitas snapshot={snapshot} noInicio />
+      </div>
 
       {lista.length === 0 ? (
         <button

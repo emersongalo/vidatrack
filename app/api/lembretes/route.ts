@@ -13,6 +13,7 @@ import { calcularPeriodoFatura, periodoFaturaAdjacente } from "@/lib/financas/fa
 import { resumoFatura } from "@/lib/financas/previsao";
 import { horariosDoHabito } from "@/lib/habitos/horariosLembrete";
 import { gastoDoMes } from "@/lib/financas/teto";
+import { receitaAguardando, INICIO_CONFIRMACAO } from "@/lib/financas/confirmacao";
 
 // Sem cookie nem sessão, o Next.js não tem como saber sozinho que essa
 // rota precisa rodar de novo a cada chamada — sem isso aqui, o Vercel
@@ -145,6 +146,8 @@ export async function GET(request: Request) {
       // Etapa 252 — despesas agendadas (lançamento único com data) vencendo hoje/amanhã
       enviados += await notificarDespesasAgendadas(supabase, hoje, donos);
       enviados += await notificarFaturasCartao(supabase, hoje, donos);
+      // Etapa 268 — receita programada: "caiu? confirme ou adie"
+      enviados += await notificarReceitasAConfirmar(supabase, hoje, donos);
     }
   }
 
@@ -481,6 +484,58 @@ async function notificarDespesasAgendadas(supabase: ReturnType<typeof criarClien
       enviados += await notificarUsuariosDoItem(supabase, "conta_a_pagar", dono, dono, texto(g.hoje, "HOJE"), "/financas/extrato?tipo=despesa", hoje, undefined, "agendado-hoje");
     if (g.amanha.length)
       enviados += await notificarUsuariosDoItem(supabase, "conta_a_pagar", dono, dono, texto(g.amanha, "AMANHÃ"), "/financas/extrato?tipo=despesa", hoje, undefined, "agendado-amanha");
+  }
+  return enviados;
+}
+
+/**
+ * Etapa 268 — receitas programadas (fixas ou agendadas) não entram mais
+ * sozinhas no saldo: no dia, avisa pra confirmar quando cair; se ficar
+ * sem confirmar, lembra nos dias seguintes (até 5 dias).
+ */
+async function notificarReceitasAConfirmar(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string, donos?: Set<string>): Promise<number> {
+  const desde = somarDias(hoje, -5) < INICIO_CONFIRMACAO ? INICIO_CONFIRMACAO : somarDias(hoje, -5);
+  if (desde > hoje) return 0;
+  const { data: receitas } = await supabase
+    .from("financa_transacoes")
+    .select("id, dono_id, descricao, valor, data, tipo, pago_em, recorrencia_id, criado_em, transferencia_grupo, financa_contas(tipo)")
+    .eq("tipo", "receita")
+    .is("pago_em", null)
+    .is("transferencia_grupo", null)
+    .gte("data", desde)
+    .lte("data", hoje);
+
+  type Item = { nome: string; valor: number; data: string };
+  const grupos = new Map<string, { hoje: Item[]; atrasadas: Item[] }>();
+  for (const t of receitas ?? []) {
+    const tipoConta = (t as any).financa_contas?.tipo;
+    if (tipoConta === "investimento" || tipoConta === "cartao") continue;
+    if (!receitaAguardando(t as any, hoje)) continue;
+    const dono = t.dono_id as string;
+    if (donos && !donos.has(dono)) continue;
+    if (!grupos.has(dono)) grupos.set(dono, { hoje: [], atrasadas: [] });
+    const item = { nome: ((t.descricao as string) || "Receita").trim(), valor: Number(t.valor), data: t.data as string };
+    (t.data === hoje ? grupos.get(dono)!.hoje : grupos.get(dono)!.atrasadas).push(item);
+  }
+
+  const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+  let enviados = 0;
+  for (const [dono, g] of grupos) {
+    if (g.hoje.length) {
+      const texto =
+        g.hoje.length === 1
+          ? `💰 Hoje cai: ${g.hoje[0].nome} (${formatarMoeda(g.hoje[0].valor)}). Quando cair, confirme no app — se atrasar, é só adiar.`
+          : `💰 Hoje caem ${g.hoje.length} receitas (${formatarMoeda(g.hoje.reduce((s, i) => s + i.valor, 0))}). Confirme no app quando caírem.`;
+      enviados += await notificarUsuariosDoItem(supabase, "conta_a_pagar", dono, dono, texto, "/financas", hoje, undefined, "receita-hoje");
+    }
+    if (g.atrasadas.length) {
+      const a = g.atrasadas[0];
+      const texto =
+        g.atrasadas.length === 1
+          ? `💰 ${a.nome} (${formatarMoeda(a.valor)}) era pra ter caído em ${ddmm(a.data)}. Já caiu? Confirme ou adie.`
+          : `💰 ${g.atrasadas.length} receitas ainda sem confirmar. Já caíram? Confirme ou adie no app.`;
+      enviados += await notificarUsuariosDoItem(supabase, "conta_a_pagar", dono, dono, texto, "/financas", hoje, undefined, "receita-atrasada");
+    }
   }
   return enviados;
 }

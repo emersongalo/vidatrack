@@ -44,7 +44,7 @@ export async function GET(request: Request) {
           .limit(5000)
       : Promise.resolve({ data: [] as any[] }),
     idsContas.length
-      ? supabase.from("financa_transacoes").select("conta_id, tipo, valor, data, pago_em").in("conta_id", idsContas).limit(20000)
+      ? supabase.from("financa_transacoes").select("conta_id, tipo, valor, data, pago_em, recorrencia_id, criado_em, transferencia_grupo").in("conta_id", idsContas).limit(20000)
       : Promise.resolve({ data: [] as any[] }),
   ]);
 

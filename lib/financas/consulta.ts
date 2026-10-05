@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { primeiroDiaDoMes } from "@/lib/financas/formatacao";
+import { receitaAguardando } from "@/lib/financas/confirmacao";
 
 export type ContaComSaldo = {
   id: string;
@@ -21,7 +22,16 @@ export type ContaComSaldo = {
  */
 export function calcularSaldoPorConta(
   contas: { id: string; nome: string; banco: string | null; tipo: string; saldo_inicial: number | string }[],
-  transacoes: { conta_id: string; tipo: string; valor: number | string; data?: string; pago_em?: string | null }[],
+  transacoes: {
+    conta_id: string;
+    tipo: string;
+    valor: number | string;
+    data?: string;
+    pago_em?: string | null;
+    recorrencia_id?: string | null;
+    criado_em?: string | null;
+    transferencia_grupo?: string | null;
+  }[],
   /** Etapa 203 — saldo ATUAL: ignora lançamentos com data depois
    *  desse dia (ex: conta agendada pro mês que vem não sai do saldo
    *  de hoje). Sem esse parâmetro, soma tudo (comportamento antigo). */
@@ -31,6 +41,8 @@ export function calcularSaldoPorConta(
   for (const t of transacoes) {
     // Etapa 209 — agendado que já foi marcado "Paguei" conta desde já
     if (ateData && t.data && t.data > ateData && !t.pago_em) continue;
+    // Etapa 268 — receita programada só entra quando a pessoa confirma que caiu
+    if (ateData && receitaAguardando(t, ateData)) continue;
     const atual = somaPorConta.get(t.conta_id) ?? 0;
     somaPorConta.set(t.conta_id, atual + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)));
   }
@@ -77,14 +89,15 @@ export async function buscarSaldoTotal(supabase: ReturnType<typeof createClient>
 
   const { data: transacoes } = await supabase
     .from("financa_transacoes")
-    .select("conta_id, tipo, valor, data, pago_em")
+    .select("conta_id, tipo, valor, data, pago_em, recorrencia_id, criado_em, transferencia_grupo")
     .in("conta_id", idsContas)
     // Etapa 203/209: até hoje, ou agendado já marcado como pago
     .or(`data.lte.${new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10)},pago_em.not.is.null`);
 
+  const hojeBr = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
   return (contas ?? []).reduce((total, conta) => {
     const doTransacoes = (transacoes ?? [])
-      .filter((t) => t.conta_id === conta.id)
+      .filter((t) => t.conta_id === conta.id && !receitaAguardando(t as any, hojeBr))
       .reduce((acc, t) => acc + (t.tipo === "receita" ? t.valor : -t.valor), 0);
     return total + Number(conta.saldo_inicial) + doTransacoes;
   }, 0);
