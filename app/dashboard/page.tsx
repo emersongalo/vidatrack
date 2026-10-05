@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlternadorTema } from "@/components/AlternadorTema";
-import { ConfirmarSaidaApp } from "@/components/ConfirmarSaidaApp";
 import { FotoPerfil } from "@/components/FotoPerfil";
 import { sair } from "../login/actions";
 import { Bell, Search } from "lucide-react";
@@ -170,7 +169,6 @@ export default function DashboardPage() {
 
       {/* Etapa 224 — Painel novo: seu dia, atalhos, resumo e as áreas do app
          (o "trilho" vertical deixava metade da tela vazia no celular) */}
-      <ConfirmarSaidaApp />
       {/* Etapa 235 — Início personalizável: hábitos, finanças ou os dois */}
       <div className="flex-1 mt-4">
         <BlocosInicio snapshot={snapshot} hoje={hojeISO()} />

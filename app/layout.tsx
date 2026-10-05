@@ -16,6 +16,7 @@ import { RegistrarIndicacao } from "@/components/RegistrarIndicacao";
 import { CorBarraPorRota } from "@/components/CorBarraPorRota";
 import { AvisoAtualizacaoApp } from "@/components/AvisoAtualizacaoApp";
 import { IndicadorConexao } from "@/components/IndicadorConexao";
+import { BotaoVoltarApp } from "@/components/BotaoVoltarApp";
 import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
 import { SCRIPT_APARENCIA } from "@/lib/preferencias/aparencia";
 import { CSS_ABERTURA, HTML_ABERTURA, SCRIPT_ABERTURA } from "@/lib/app/abertura";
@@ -110,6 +111,8 @@ export default function RootLayout({
         <ErrosGlobais />
         {/* Etapa 261 — aviso animado de sem internet / conectou de novo */}
         <IndicadorConexao />
+        {/* Etapa 266 — botão voltar do Android em todas as telas */}
+        <BotaoVoltarApp />
         <BloqueioApp />
         <RegistrarIndicacao />
       </body>

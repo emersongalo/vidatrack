@@ -1,10 +1,27 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { salvarTokenFCM } from "@/app/notificacoes/actions";
 import { versaoNativa } from "@/lib/widgets/atualizar";
 
+/**
+ * Etapa 266 — espera a abertura animada terminar antes de trocar de
+ * tela (antes a navegação recarregava a página no meio da animação e
+ * ela "saía cortando").
+ */
+function depoisDaAbertura(fazer: () => void) {
+  const inicio = Date.now();
+  const checar = () => {
+    const estado = document.documentElement.getAttribute("data-abertura");
+    if (!estado || estado === "vista" || Date.now() - inicio > 3500) return fazer();
+    setTimeout(checar, 150);
+  };
+  checar();
+}
+
 export function RegistradorPushNativo() {
+  const router = useRouter();
   useEffect(() => {
     // Esse componente é montado em todo lugar (inclusive no navegador
     // comum), mas só faz alguma coisa quando detecta que está rodando
@@ -31,7 +48,15 @@ export function RegistradorPushNativo() {
           // espera o app terminar de "acordar" (o recarregamento de volta do
           // segundo plano podia passar por cima da navegação)
           setTimeout(() => {
-            if (window.location.pathname + window.location.hash !== url) window.location.assign(url);
+            depoisDaAbertura(() => {
+              if (window.location.pathname + window.location.hash === url) return;
+              // troca de tela sem recarregar o app inteiro
+              try {
+                router.push(url);
+              } catch {
+                window.location.assign(url);
+              }
+            });
           }, 350);
         });
 
@@ -66,6 +91,7 @@ export function RegistradorPushNativo() {
     return () => {
       cancelado = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;
