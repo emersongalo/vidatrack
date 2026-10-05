@@ -2,13 +2,20 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 
-// Depois de quanto tempo escondido a gente prefere recarregar a
-// página inteira, em vez de só atualizar os dados — passado esse
-// tempo, é mais seguro garantir um estado limpo do zero do que
-// confiar que tudo (conexões, temporizadores, sessão) sobreviveu
-// certinho ao período em segundo plano.
-const LIMITE_PARA_RECARGA_TOTAL_MS = 2 * 60 * 1000;
+// Etapa 267 — voltar pro app depois de um tempo parado não dá mais
+// "piscada". Antes, passados 2 minutos escondido, a página inteira era
+// recarregada (tela apagava e voltava). Como as telas leem do retrato
+// salvo no aparelho, dá pra só buscar os dados novos em silêncio: a tela
+// fica como está e os números se atualizam sozinhos quando chegam.
+//
+// Recarregar tudo só depois de MUITO tempo parado (8h — ex: deixou
+// aberto de um dia pro outro), e aí com a abertura animada do logo,
+// pra parecer que o app abriu de novo, e não uma piscada.
+const LIMITE_PARA_RECARGA_TOTAL_MS = 8 * 60 * 60 * 1000;
+// abaixo disso nem precisa buscar nada (trocou de app rapidinho)
+const MINIMO_PARA_ATUALIZAR_MS = 20 * 1000;
 
 export function RecuperadorDeSegundoPlano() {
   const router = useRouter();
@@ -25,20 +32,25 @@ export function RecuperadorDeSegundoPlano() {
       if (escondidoDesde.current === null) return;
       const tempoEscondido = Date.now() - escondidoDesde.current;
       escondidoDesde.current = null;
+      if (tempoEscondido < MINIMO_PARA_ATUALIZAR_MS) return;
 
-      // Etapa 229 — espera um pouco antes de recarregar: quando o app
-      // volta por um WIDGET ou NOTIFICAÇÃO, o Android já está abrindo a
-      // tela certa (ex: /financas). Recarregar na hora cancelava essa
-      // navegação e o app ficava na aba que estava aberta antes. Se a
-      // página mudar nesse meio tempo, não recarrega nada.
+      // Etapa 229 — espera um pouco: quando o app volta por um WIDGET ou
+      // NOTIFICAÇÃO, o Android já está abrindo a tela certa. Se a página
+      // mudar nesse meio tempo, deixa ela abrir em paz.
       const enderecoAntes = window.location.href;
       window.setTimeout(() => {
         if (window.location.href !== enderecoAntes || document.visibilityState !== "visible") return;
-        if (tempoEscondido > LIMITE_PARA_RECARGA_TOTAL_MS) {
+        if (tempoEscondido > LIMITE_PARA_RECARGA_TOTAL_MS && navigator.onLine) {
+          // mostra a abertura animada no lugar da tela piscando
+          try {
+            sessionStorage.removeItem("vt-abertura");
+          } catch {}
           window.location.reload();
-        } else {
-          router.refresh();
+          return;
         }
+        // atualização silenciosa: dados novos sem mexer na tela
+        atualizarSnapshotEmTodasAsTelas();
+        router.refresh();
       }, 900);
     }
 
