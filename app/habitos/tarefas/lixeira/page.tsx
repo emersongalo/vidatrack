@@ -26,7 +26,7 @@ export default function LixeiraTarefasPage() {
 
   return (
     <main className="pagina px-6 md:px-12 pt-2 pb-20">
-      <Link href="/habitos/tarefas" className="text-ink-400 text-base hover:text-ink-100 transition">
+      <Link href="/tarefas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Tarefas
       </Link>
       <h1 className="text-3xl font-display font-bold mt-4 mb-6">Lixeira de tarefas</h1>

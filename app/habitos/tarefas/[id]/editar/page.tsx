@@ -46,7 +46,7 @@ function EditarTarefaConteudo() {
       categoriasFinancas={((snapshot?.financas.categorias ?? []) as any[]).filter((c) => c.dono_id === snapshot?.perfil.id)}
       erro={searchParams.get("erro") ?? undefined}
       hoje={hojeISO()}
-      voltarHref={`/habitos/tarefas/${tarefa.id}`}
+      voltarHref={`/tarefas/${tarefa.id}`}
       titulo="Editar tarefa"
       textoBotao="Salvar alterações"
       mostrarChecklist={false}

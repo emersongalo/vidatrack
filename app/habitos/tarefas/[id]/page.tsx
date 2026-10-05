@@ -39,7 +39,7 @@ function DetalheTarefaConteudo() {
   if (!tarefa) {
     return (
       <main className="pagina-form px-6 md:px-12 pt-6">
-        <Link href="/habitos/tarefas" className="text-ink-400 text-base hover:text-ink-100 transition">
+        <Link href="/tarefas" className="text-ink-400 text-base hover:text-ink-100 transition">
           ← Tarefas
         </Link>
         <p className="text-ink-400 text-sm mt-6">
@@ -68,11 +68,11 @@ function DetalheTarefaConteudo() {
   return (
     <main className="pagina-form px-6 md:px-12 pt-2">
       <div className="flex items-center justify-between mb-6">
-        <Link href="/habitos/tarefas" className="text-ink-400 text-base hover:text-ink-100 transition">
+        <Link href="/tarefas" className="text-ink-400 text-base hover:text-ink-100 transition">
           ← Tarefas
         </Link>
         <div className="flex items-center gap-4">
-          <Link href={`/habitos/tarefas/${tarefa.id}/editar`} className="text-ink-400 text-base hover:text-ink-100 transition">
+          <Link href={`/tarefas/${tarefa.id}/editar`} className="text-ink-400 text-base hover:text-ink-100 transition">
             Editar
           </Link>
           <BotaoComConfirmacao
@@ -169,7 +169,7 @@ function DetalheTarefaConteudo() {
         <PainelCompartilhamentoCliente
           tipoItem="tarefa"
           itemId={tarefa.id}
-          caminhoRetorno={`/habitos/tarefas/${tarefa.id}`}
+          caminhoRetorno={`/tarefas/${tarefa.id}`}
           erroInicial={searchParams.get("erro")}
         />
       </div>

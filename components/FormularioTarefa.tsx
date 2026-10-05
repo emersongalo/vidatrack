@@ -50,7 +50,7 @@ export function FormularioTarefa({
   categorias,
   erro,
   hoje,
-  voltarHref = "/habitos/tarefas",
+  voltarHref = "/tarefas",
   titulo: tituloTela = "Nova tarefa",
   textoBotao = "Criar tarefa",
   mostrarChecklist = true,

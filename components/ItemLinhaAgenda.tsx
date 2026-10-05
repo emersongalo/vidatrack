@@ -426,7 +426,7 @@ export function ItemLinhaAgenda({
         }`}
       />
       <Link
-        href={item.tipo === "tarefa" ? `/habitos/tarefas/${item.id}` : `/habitos/${item.id}`}
+        href={item.tipo === "tarefa" ? `/tarefas/${item.id}` : `/habitos/${item.id}`}
         className="flex items-center gap-3 flex-1 min-w-0"
       >
         {conteudo}

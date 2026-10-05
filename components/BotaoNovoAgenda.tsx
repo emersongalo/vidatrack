@@ -50,7 +50,7 @@ export function BotaoNovoAgenda() {
                 <span className="font-medium">Hábito</span>
               </Link>
               <Link
-                href="/habitos/tarefas/nova"
+                href="/tarefas/nova"
                 onClick={() => setAberto(false)}
                 className="flex items-center gap-3 border border-nota/40 text-nota rounded-xl2 py-3.5 px-4 hover:bg-nota/10 transition"
               >

@@ -52,7 +52,7 @@ export function LinhaTarefa({
         {feita && <Check size={17} strokeWidth={3} className="text-base-900" />}
       </button>
 
-      <Link href={`/habitos/tarefas/${tarefa.id}`} className="flex-1 min-w-0">
+      <Link href={`/tarefas/${tarefa.id}`} className="flex-1 min-w-0">
         <p className={`text-base font-medium truncate ${feita ? "line-through text-ink-400" : ""}`}>{tarefa.titulo}</p>
         <div className="flex items-center gap-1.5 flex-wrap mt-0.5 text-xs text-ink-400">
           {prioridade > 0 && (

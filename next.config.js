@@ -7,6 +7,14 @@ const nextConfig = {
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
     ],
   },
+  // Etapa 264 — Tarefas saiu de dentro de Hábitos: links antigos (avisos,
+  // favoritos, notificações já enviadas) continuam funcionando.
+  async redirects() {
+    return [
+      { source: "/habitos/tarefas", destination: "/tarefas", permanent: false },
+      { source: "/habitos/tarefas/:caminho*", destination: "/tarefas/:caminho*", permanent: false },
+    ];
+  },
   experimental: {
     // Por padrão, o Next re-busca do zero TODA rota dinâmica (que usa
     // cookies/searchParams — o caso de quase todas as nossas páginas)

@@ -8,7 +8,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Repeat, Wallet, User, Plus, X, TrendingDown, TrendingUp, ArrowLeftRight, CheckSquare } from "lucide-react";
+import { Home, Repeat, Wallet, Plus, X, TrendingDown, TrendingUp, ArrowLeftRight, CheckSquare } from "lucide-react";
 import { FolhaLancamento } from "@/components/BotaoNovoLancamento";
 import { vibrar } from "@/components/ItemLinhaAgenda";
 import { AvisosDupla } from "@/components/AvisosDupla";
@@ -17,8 +17,9 @@ const ITENS = [
   { href: "/dashboard", rotulo: "Início", Icone: Home, cor: "text-ink-100" },
   { href: "/habitos", rotulo: "Hábitos", Icone: Repeat, cor: "text-habito" },
   null, // lugar do +
+  // Etapa 264 — Tarefas virou área própria; Perfil fica no Início (foto no topo)
+  { href: "/tarefas", rotulo: "Tarefas", Icone: CheckSquare, cor: "text-nota" },
   { href: "/financas", rotulo: "Finanças", Icone: Wallet, cor: "text-financa" },
-  { href: "/perfil", rotulo: "Perfil", Icone: User, cor: "text-ink-100" },
 ] as const;
 
 export function areaAtiva(pathname: string, href: string) {
@@ -102,7 +103,7 @@ export function BarraInferiorApp() {
               <Opcao href="/financas/nova?tipo=receita" rotulo="Receita" Icone={TrendingUp} classe="bg-habito/10 border-habito/40 text-habito" fechar={() => setMenu(false)} />
               <Opcao href="/financas/transferir" rotulo="Transferir" Icone={ArrowLeftRight} classe="bg-financa/10 border-financa/40 text-financa" fechar={() => setMenu(false)} />
               <Opcao href="/habitos/novo" rotulo="Hábito" Icone={Repeat} classe="bg-habito/10 border-habito/40 text-habito" fechar={() => setMenu(false)} />
-              <Opcao href="/habitos/tarefas/nova" rotulo="Tarefa" Icone={CheckSquare} classe="bg-nota/10 border-nota/40 text-nota" fechar={() => setMenu(false)} />
+              <Opcao href="/tarefas/nova" rotulo="Tarefa" Icone={CheckSquare} classe="bg-nota/10 border-nota/40 text-nota" fechar={() => setMenu(false)} />
             </div>
           </div>
         </div>

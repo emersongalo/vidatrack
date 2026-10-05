@@ -75,10 +75,10 @@ export async function criarTarefa(formData: FormData) {
   const observacoes = String(formData.get("observacoes") ?? "").trim();
 
   if (!titulo) {
-    redirect(`/habitos/tarefas/nova?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
+    redirect(`/tarefas/nova?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
   }
   const financa = camposFinanca(formData);
-  if (financa.erro) redirect(`/habitos/tarefas/nova?erro=${encodeURIComponent(financa.erro)}`);
+  if (financa.erro) redirect(`/tarefas/nova?erro=${encodeURIComponent(financa.erro)}`);
 
   const subtarefas = subtarefasTexto.map((texto) => ({
     id: randomUUID(),
@@ -100,12 +100,12 @@ export async function criarTarefa(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/habitos/tarefas/nova?erro=${encodeURIComponent(error.message)}`);
+    redirect(`/tarefas/nova?erro=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/habitos");
-  revalidatePath("/habitos/tarefas");
-  redirect("/habitos/tarefas");
+  revalidatePath("/tarefas");
+  redirect("/tarefas");
 }
 
 export async function atualizarTarefa(tarefaId: string, formData: FormData) {
@@ -118,10 +118,10 @@ export async function atualizarTarefa(tarefaId: string, formData: FormData) {
   const observacoes = String(formData.get("observacoes") ?? "").trim();
 
   if (!titulo) {
-    redirect(`/habitos/tarefas/${tarefaId}/editar?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
+    redirect(`/tarefas/${tarefaId}/editar?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
   }
   const financa = camposFinanca(formData);
-  if (financa.erro) redirect(`/habitos/tarefas/${tarefaId}/editar?erro=${encodeURIComponent(financa.erro)}`);
+  if (financa.erro) redirect(`/tarefas/${tarefaId}/editar?erro=${encodeURIComponent(financa.erro)}`);
 
   const { error } = await supabase
     .from("tarefas")
@@ -137,13 +137,13 @@ export async function atualizarTarefa(tarefaId: string, formData: FormData) {
     .eq("id", tarefaId);
 
   if (error) {
-    redirect(`/habitos/tarefas/${tarefaId}/editar?erro=${encodeURIComponent(error.message)}`);
+    redirect(`/tarefas/${tarefaId}/editar?erro=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/habitos");
-  revalidatePath("/habitos/tarefas");
-  revalidatePath(`/habitos/tarefas/${tarefaId}`);
-  redirect(`/habitos/tarefas/${tarefaId}`);
+  revalidatePath("/tarefas");
+  revalidatePath(`/tarefas/${tarefaId}`);
+  redirect(`/tarefas/${tarefaId}`);
 }
 
 export async function alternarConclusaoTarefaUnica(tarefaId: string) {
@@ -163,7 +163,7 @@ export async function alternarConclusaoTarefaUnica(tarefaId: string) {
 
   revalidatePath("/financas");
   revalidatePath("/habitos");
-  revalidatePath("/habitos/tarefas");
+  revalidatePath("/tarefas");
 }
 
 /**
@@ -229,9 +229,9 @@ export async function alternarSubtarefa(tarefaId: string, subtarefaId: string) {
 
   await supabase.from("tarefas").update({ subtarefas }).eq("id", tarefaId);
 
-  revalidatePath(`/habitos/tarefas/${tarefaId}`);
+  revalidatePath(`/tarefas/${tarefaId}`);
   revalidatePath("/habitos");
-  revalidatePath("/habitos/tarefas");
+  revalidatePath("/tarefas");
 }
 
 export async function arquivarTarefa(tarefaId: string) {
@@ -239,8 +239,8 @@ export async function arquivarTarefa(tarefaId: string) {
   const supabase = createClient();
   await supabase.from("tarefas").update({ arquivada: true }).eq("id", tarefaId);
   revalidatePath("/habitos");
-  revalidatePath("/habitos/tarefas");
-  redirect("/habitos/tarefas");
+  revalidatePath("/tarefas");
+  redirect("/tarefas");
 }
 
 export async function reordenarTarefas(idsEmOrdem: string[]) {
@@ -249,7 +249,7 @@ export async function reordenarTarefas(idsEmOrdem: string[]) {
   await Promise.all(
     idsEmOrdem.map((id, indice) => supabase.from("tarefas").update({ ordem: indice }).eq("id", id))
   );
-  revalidatePath("/habitos/tarefas");
+  revalidatePath("/tarefas");
   revalidatePath("/habitos");
 }
 
@@ -257,9 +257,9 @@ export async function restaurarTarefa(tarefaId: string) {
   "use server";
   const supabase = createClient();
   await supabase.from("tarefas").update({ arquivada: false }).eq("id", tarefaId);
-  revalidatePath("/habitos/tarefas");
+  revalidatePath("/tarefas");
   revalidatePath("/habitos");
-  revalidatePath("/habitos/tarefas/lixeira");
+  revalidatePath("/tarefas/lixeira");
 }
 
 export async function excluirTarefaDefinitivamente(tarefaId: string) {
@@ -267,7 +267,7 @@ export async function excluirTarefaDefinitivamente(tarefaId: string) {
   const supabase = createClient();
   await supabase.from("compartilhamentos").delete().eq("tipo_item", "tarefa").eq("item_id", tarefaId);
   await supabase.from("tarefas").delete().eq("id", tarefaId);
-  revalidatePath("/habitos/tarefas/lixeira");
+  revalidatePath("/tarefas/lixeira");
 }
 
 /**
@@ -300,6 +300,6 @@ export async function criarTarefaRapida(dados: { titulo: string; categoriaId?: s
   });
   if (error) return { erro: error.message };
   revalidatePath("/habitos");
-  revalidatePath("/habitos/tarefas");
+  revalidatePath("/tarefas");
   return {};
 }

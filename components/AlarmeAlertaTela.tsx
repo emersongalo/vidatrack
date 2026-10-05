@@ -73,7 +73,7 @@ export function AlarmeAlertaTela() {
             chave: `tarefa-${t.id}`,
             nome: t.titulo,
             horario: (t.horario_lembrete as string).slice(0, 5),
-            href: `/habitos/tarefas/${t.id}`,
+            href: `/tarefas/${t.id}`,
           });
         }
       }

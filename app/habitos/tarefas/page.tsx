@@ -8,7 +8,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, ChevronDown, FolderKanban, GripVertical, Plus, Trash2, Settings2 } from "lucide-react";
 import { ListaTarefasArrastavel } from "@/components/ListaTarefasArrastavel";
-import { AlternadorHabitosTarefas } from "@/components/AlternadorHabitosTarefas";
 import { LinhaTarefa } from "@/components/LinhaTarefa";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { Esqueleto } from "@/components/Esqueleto";
@@ -139,17 +138,16 @@ export default function TarefasPage() {
     <main className="pagina px-6 md:px-12 pt-2 pb-10">
       <div className="flex items-center justify-between mb-3">
         <h1 className="text-3xl font-display font-bold">Tarefas</h1>
-        <Link href={filtro !== "todas" && filtro !== "sem" ? `/habitos/tarefas/nova?categoria=${filtro}` : "/habitos/tarefas/nova"} className="flex items-center gap-1.5 bg-nota text-base-900 text-sm font-semibold rounded-full px-4 py-2 hover:opacity-90 transition">
+        <Link href={filtro !== "todas" && filtro !== "sem" ? `/tarefas/nova?categoria=${filtro}` : "/tarefas/nova"} className="flex items-center gap-1.5 bg-nota text-base-900 text-sm font-semibold rounded-full px-4 py-2 hover:opacity-90 transition">
           <Plus size={16} strokeWidth={2.6} /> Nova
         </Link>
       </div>
 
-      <AlternadorHabitosTarefas ativo="tarefas" />
 
       {snapshot === undefined ? (
         <Esqueleto linhas={4} />
       ) : todas.length === 0 ? (
-        <EstadoVazio tom="nota" emoji="📝" titulo="Nenhuma tarefa ainda" texto="Tarefas podem ser únicas (com data) ou repetir — e dá pra separar por categoria." acao={{ rotulo: "+ Criar a primeira", href: "/habitos/tarefas/nova" }} />
+        <EstadoVazio tom="nota" emoji="📝" titulo="Nenhuma tarefa ainda" texto="Tarefas podem ser únicas (com data) ou repetir — e dá pra separar por categoria." acao={{ rotulo: "+ Criar a primeira", href: "/tarefas/nova" }} />
       ) : (
         <>
           {/* Resumo do dia */}
@@ -205,7 +203,7 @@ export default function TarefasPage() {
             </button>
           </form>
           {erro && <p className="text-xs text-red-400 mb-2">{erro}</p>}
-          <p className="text-xs text-ink-400 mb-4">Pra repetir, lembrete ou subtarefas, use o <Link href="/habitos/tarefas/nova" className="underline">+ Nova</Link>.</p>
+          <p className="text-xs text-ink-400 mb-4">Pra repetir, lembrete ou subtarefas, use o <Link href="/tarefas/nova" className="underline">+ Nova</Link>.</p>
 
           {/* Categorias */}
           <div className="flex gap-2 overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 pb-1 mb-3">
@@ -316,7 +314,7 @@ export default function TarefasPage() {
             <EstadoVazio compacto tom="nota" emoji="🗂️" titulo="Nada nesta categoria" texto="Use o campo acima pra adicionar a primeira." />
           )}
 
-          <Link href="/habitos/tarefas/lixeira" className="mt-8 flex items-center justify-center gap-1.5 text-xs text-ink-400 hover:text-ink-100 transition">
+          <Link href="/tarefas/lixeira" className="mt-8 flex items-center justify-center gap-1.5 text-xs text-ink-400 hover:text-ink-100 transition">
             <Trash2 size={13} /> Lixeira de tarefas
           </Link>
         </>

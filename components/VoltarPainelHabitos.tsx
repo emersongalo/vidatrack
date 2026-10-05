@@ -6,7 +6,7 @@
 import { usePathname } from "next/navigation";
 import { LinkVoltar } from "@/components/LinkVoltar";
 
-const ABAS = ["/habitos", "/habitos/lista", "/habitos/categorias", "/habitos/timer", "/habitos/tarefas"];
+const ABAS = ["/habitos", "/habitos/lista", "/habitos/categorias", "/habitos/timer"];
 
 export function VoltarPainelHabitos() {
   const caminho = usePathname();

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { ListaHabitosArrastavel } from "@/components/ListaHabitosArrastavel";
 import { BotaoNovoHabitoOffline } from "@/components/BotaoNovoHabitoOffline";
-import { AlternadorHabitosTarefas } from "@/components/AlternadorHabitosTarefas";
 import { calcularStreak, calcularMelhorStreak, calcularStreakNegativo, hojeISO } from "@/lib/habitos/streak";
 import { ultimosDias } from "@/lib/habitos/detalhe";
 import { pausasDe } from "@/lib/habitos/pausa";
@@ -32,7 +31,6 @@ export default function ListaHabitosPage() {
         </div>
       </div>
 
-      <AlternadorHabitosTarefas ativo="habitos" />
 
       {snapshot === undefined ? (
         <Esqueleto linhas={4} comTopo={false} />

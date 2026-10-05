@@ -38,7 +38,7 @@ export function ListaTarefasArrastavel({ tarefas }: { tarefas: Tarefa[] }) {
             <span className="text-ink-400 text-sm select-none" aria-hidden>
               ⠿
             </span>
-            <Link href={`/habitos/tarefas/${tarefa.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+            <Link href={`/tarefas/${tarefa.id}`} className="flex items-center gap-3 flex-1 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-nota/15 flex items-center justify-center text-lg shrink-0">
                 <IconeHabito icone={tarefa.icone} tamanho={19} />
               </div>

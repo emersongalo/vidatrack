@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarCheck, Repeat, LayoutGrid, Timer, CheckSquare, BarChart3, Clock, HeartHandshake } from "lucide-react";
+import { CalendarCheck, Repeat, LayoutGrid, Timer, BarChart3, Clock, HeartHandshake } from "lucide-react";
 import { BotaoNovoAgenda } from "@/components/BotaoNovoAgenda";
 import { BarraInferiorApp } from "@/components/BarraInferiorApp";
 
+// Etapa 264: Tarefas virou uma área própria (/tarefas), com menu e aba na barra de baixo.
 // Etapa 137: Tarefas saiu de aba própria (eram 5, ficava apertado no
 // celular) — agora vive dentro de "Hábitos", acessível pelo alternador
 // no topo da página (AlternadorHabitosTarefas). A rota /habitos/tarefas
@@ -22,7 +23,6 @@ const GRUPOS_DESKTOP = [
     itens: [
       { href: "/habitos", rotulo: "Hoje", Icone: CalendarCheck },
       { href: "/habitos/lista", rotulo: "Hábitos", Icone: Repeat },
-      { href: "/habitos/tarefas", rotulo: "Tarefas", Icone: CheckSquare },
       { href: "/habitos/categorias", rotulo: "Categorias", Icone: LayoutGrid },
     ],
   },

@@ -102,8 +102,8 @@ function HojeConteudo() {
 
   const categorias = snapshot?.categoriasProdutividade ?? [];
 
-  const { itens, temAlgumItemCadastrado } = useMemo(() => {
-    if (!snapshot) return { itens: null as ItemAgenda[] | null, temAlgumItemCadastrado: true };
+  const { itens, temAlgumItemCadastrado, tarefasDoDia } = useMemo(() => {
+    if (!snapshot) return { itens: null as ItemAgenda[] | null, temAlgumItemCadastrado: true, tarefasDoDia: { total: 0, feitas: 0 } };
 
     const checkinsPorHabito = new Map<string, number>();
     for (const c of snapshot.habitoCheckins) {
@@ -161,6 +161,9 @@ function HojeConteudo() {
       });
     }
 
+    // Etapa 264 — tarefas agora têm área própria (/tarefas): aqui ficam só
+    // os hábitos, e as tarefas do dia viram um atalho logo abaixo.
+    const tarefasDoDia = { total: 0, feitas: 0 };
     for (const t of snapshot.tarefas as any[]) {
       // Etapa 193 — regra única de repetição (lib/agenda/recorrencia) +
       // tarefa única atrasada aparece no dia de HOJE até ser concluída.
@@ -169,25 +172,8 @@ function HojeConteudo() {
       if (!apareceHoje) continue;
       if (categoriaFiltro && t.categoria_id !== categoriaFiltro) continue;
 
-      const subtarefas = (t.subtarefas as { feita: boolean }[]) ?? [];
-      lista.push({
-        id: t.id,
-        tipo: "tarefa",
-        titulo: t.titulo,
-        icone: t.icone,
-        cor: "nota",
-        feito: t.repetir === "nenhuma" ? t.concluida : tarefasFeitasHoje.has(t.id),
-        repete: t.repetir !== "nenhuma",
-        horarioLembrete: t.horario_lembrete,
-        prioridade: t.prioridade ?? 0,
-        atrasadaDesde: atrasada ? t.data : null,
-        financa: t.financa_valor ? { tipo: t.financa_tipo, valor: Number(t.financa_valor) } : null,
-        progressoSubtarefas:
-          subtarefas.length > 0
-            ? { feitas: subtarefas.filter((s) => s.feita).length, total: subtarefas.length }
-            : null,
-        ordem: t.ordem ?? 0,
-      });
+      tarefasDoDia.total++;
+      if (t.repetir === "nenhuma" ? t.concluida : tarefasFeitasHoje.has(t.id)) tarefasDoDia.feitas++;
     }
 
     lista.sort(ordenarItensAgenda);
@@ -196,6 +182,7 @@ function HojeConteudo() {
     return {
       itens: lista,
       temAlgumItemCadastrado: snapshot.habitos.length > 0 || snapshot.tarefas.length > 0,
+      tarefasDoDia,
     };
   }, [snapshot, dataSelecionada, categoriaFiltro]);
 
@@ -300,7 +287,7 @@ function HojeConteudo() {
                   + Hábito
                 </Link>
                 <Link
-                  href="/habitos/tarefas/nova"
+                  href="/tarefas/nova"
                   className="text-sm border border-base-600 rounded-lg px-3.5 py-2 hover:bg-base-700 transition"
                 >
                   + Tarefa
@@ -308,7 +295,7 @@ function HojeConteudo() {
               </div>
             </div>
           ) : itens!.length === 0 ? (
-            <EstadoVazio tom="habito" emoji="🌤️" titulo="Dia livre" texto="Nenhum hábito ou tarefa cai neste dia." />
+            <EstadoVazio tom="habito" emoji="🌤️" titulo="Dia livre" texto="Nenhum hábito cai neste dia." />
           ) : (
             <>
               <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />
@@ -324,6 +311,21 @@ function HojeConteudo() {
                 </Link>
               )}
             </>
+          )}
+          {tarefasDoDia.total > 0 && (
+            <Link
+              href="/tarefas"
+              className="mt-3 flex items-center gap-3 rounded-2xl px-4 py-3 border border-nota/30 bg-nota/10 hover:border-nota transition"
+            >
+              <span className="text-2xl">📋</span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-base font-medium">Tarefas de {dataSelecionada === hoje ? "hoje" : "nesse dia"}</span>
+                <span className="block text-xs text-ink-400">
+                  {tarefasDoDia.feitas === tarefasDoDia.total ? "Todas feitas ✓" : `${tarefasDoDia.feitas} de ${tarefasDoDia.total} feitas`}
+                </span>
+              </span>
+              <span className="text-nota text-sm font-medium">Abrir ›</span>
+            </Link>
           )}
       </div>
     ),

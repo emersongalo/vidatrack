@@ -38,7 +38,7 @@ export function buscarNoSnapshot(snapshot: SnapshotOffline, consulta: string, li
   }
   for (const t of snapshot.tarefas as any[]) {
     if (bate(t.titulo, t.observacoes)) {
-      res.push({ tipo: "tarefa", titulo: t.titulo, detalhe: t.data ? `Tarefa · ${t.data.split("-").reverse().join("/")}` : "Tarefa", href: `/habitos/tarefas/${t.id}`, data: t.data ?? undefined });
+      res.push({ tipo: "tarefa", titulo: t.titulo, detalhe: t.data ? `Tarefa · ${t.data.split("-").reverse().join("/")}` : "Tarefa", href: `/tarefas/${t.id}`, data: t.data ?? undefined });
     }
   }
   for (const m of snapshot.financas.metas as any[]) {

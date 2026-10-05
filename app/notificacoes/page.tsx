@@ -44,7 +44,7 @@ export default function NotificacoesPage() {
               <span className="text-red-400 shrink-0 mt-0.5">
                 <AlertTriangle size={18} strokeWidth={2} />
               </span>
-              <Link href="/habitos/tarefas" className="flex-1 min-w-0">
+              <Link href="/tarefas" className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{t.titulo}</p>
                 <p className="text-xs text-ink-400 mt-0.5">
                   Venceu em {new Date(t.data + "T00:00:00").toLocaleDateString("pt-BR")} e ainda não foi concluída

@@ -121,7 +121,7 @@ export async function GET(request: Request) {
       t.id,
       t.dono_id,
       `📝 Lembrete: ${t.titulo}`,
-      `/habitos/tarefas/${t.id}`,
+      `/tarefas/${t.id}`,
       hoje
     );
   }

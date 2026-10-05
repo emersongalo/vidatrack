@@ -13,7 +13,7 @@ const AREAS: Record<"habitos" | "financas", { cor: string; abas: Aba[] }> = {
     cor: "bg-habito text-base-900",
     abas: [
       { href: "/habitos", rotulo: "Hoje" },
-      { href: "/habitos/lista", rotulo: "Hábitos", tambem: ["/habitos/tarefas"] },
+      { href: "/habitos/lista", rotulo: "Hábitos" },
       { href: "/habitos/categorias", rotulo: "Categorias" },
       { href: "/habitos/timer", rotulo: "Timer" },
     ],

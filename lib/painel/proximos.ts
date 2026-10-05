@@ -43,7 +43,7 @@ export function proximosDias(s: any, hoje: string, dias = 7, limite = 6): ItemPr
   for (const t of (s?.tarefas ?? []) as any[]) {
     if ((t.repetir ?? "nenhuma") !== "nenhuma" || t.concluida || !t.data) continue;
     if (t.data < inicio || t.data > fim) continue;
-    itens.push({ data: t.data, titulo: String(t.titulo ?? "Tarefa"), tipo: "tarefa", valor: null, href: `/habitos/tarefas/${t.id}` });
+    itens.push({ data: t.data, titulo: String(t.titulo ?? "Tarefa"), tipo: "tarefa", valor: null, href: `/tarefas/${t.id}` });
   }
 
   const ordemTipo = { tarefa: 0, despesa: 1, receita: 2 } as const;

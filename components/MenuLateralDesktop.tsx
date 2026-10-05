@@ -5,11 +5,13 @@
 // e também aparece no Início, que antes ficava sem menu no computador.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Repeat, Wallet, Search, User } from "lucide-react";
+import { Home, Repeat, Wallet, Search, User, CheckSquare } from "lucide-react";
 
 const AREAS = [
   { id: "inicio", href: "/dashboard", rotulo: "Início", Icone: Home, ativa: "bg-ink-100/10 text-ink-100" },
   { id: "habito", href: "/habitos", rotulo: "Hábitos", Icone: Repeat, ativa: "bg-habito/15 text-habito" },
+  // Etapa 264 — Tarefas virou área própria
+  { id: "tarefa", href: "/tarefas", rotulo: "Tarefas", Icone: CheckSquare, ativa: "bg-nota/15 text-nota" },
   { id: "financa", href: "/financas", rotulo: "Finanças", Icone: Wallet, ativa: "bg-financa/15 text-financa" },
 ] as const;
 
@@ -17,11 +19,11 @@ export function MenuLateralDesktop({
   corAtiva,
   submenu,
 }: {
-  corAtiva: "inicio" | "habito" | "financa";
+  corAtiva: "inicio" | "habito" | "tarefa" | "financa";
   submenu?: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "";
-  const cor = corAtiva === "financa" ? "#D9A24C" : "#7FB894";
+  const cor = corAtiva === "financa" ? "#D9A24C" : corAtiva === "tarefa" ? "#9C8FD9" : "#7FB894";
 
   return (
     <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 z-30 bg-base-800 border-r border-base-600 px-4 py-6 overflow-y-auto">
