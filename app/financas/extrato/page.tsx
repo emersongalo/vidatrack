@@ -20,6 +20,7 @@ import { ValorMonetario } from "@/components/ValorMonetario";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { Esqueleto } from "@/components/Esqueleto";
+import { receitaAguardando } from "@/lib/financas/confirmacao";
 
 const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "este_mes", rotulo: "Este mês" },
@@ -190,12 +191,18 @@ function ExtratoConteudo() {
   const categoriaInfo = categoriaFiltro && categoriaFiltro !== "sem" ? (mapaCategorias.get(categoriaFiltro) as any) : null;
 
   // Etapa 211 — transferências aparecem na lista, mas não somam como receita/despesa
-  const totalReceitas = lista.filter((t: any) => t.tipo === "receita" && !t.transferencia_grupo).reduce((a: number, t: any) => a + Number(t.valor), 0);
-  const totalDespesas = lista.filter((t: any) => t.tipo === "despesa" && !t.transferencia_grupo).reduce((a: number, t: any) => a + Number(t.valor), 0);
+  // Etapa 269 — Receitas/Despesas/Balanço mostram só o que JÁ caiu/saiu;
+  // o que ainda vai cair (ou espera confirmar) fica no "a receber/a pagar".
+  // Período todo no futuro (planejamento): soma tudo, como antes.
+  const hojeParaPendencia = new Date().toLocaleDateString("sv-SE");
+  const periodoFuturo = !!inicio && inicio > hojeParaPendencia;
+  const realizado = (t: any) =>
+    periodoFuturo || ((t.data <= hojeParaPendencia || !!t.pago_em) && !receitaAguardando(t, hojeParaPendencia));
+  const totalReceitas = lista.filter((t: any) => t.tipo === "receita" && !t.transferencia_grupo && realizado(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
+  const totalDespesas = lista.filter((t: any) => t.tipo === "despesa" && !t.transferencia_grupo && realizado(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
   const balanco = totalReceitas - totalDespesas;
   // Etapa 209 — quanto ainda falta pagar/receber no período (agendados não marcados)
-  const hojeParaPendencia = new Date().toLocaleDateString("sv-SE");
-  const pendentes = lista.filter((t: any) => t.data > hojeParaPendencia && !t.pago_em);
+  const pendentes = lista.filter((t: any) => !t.transferencia_grupo && ((t.data > hojeParaPendencia && !t.pago_em) || receitaAguardando(t, hojeParaPendencia)));
   const aPagar = pendentes.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
   const aReceber = pendentes.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
 
@@ -225,6 +232,11 @@ function ExtratoConteudo() {
           <p className="text-base font-mono font-semibold text-habito leading-tight break-words">
             <ValorMonetario valor={totalReceitas} />
           </p>
+          {!periodoFuturo && aReceber > 0 && (
+            <p className="text-xs text-ink-400 font-mono mt-0.5 break-words">
+              +<ValorMonetario valor={aReceber} /> a receber
+            </p>
+          )}
         </div>
         <div className="bg-base-800 border border-base-600 rounded-2xl p-3 min-w-0">
           <span className="w-7 h-7 rounded-full bg-red-400/15 flex items-center justify-center text-red-400 mb-1.5">
@@ -234,6 +246,11 @@ function ExtratoConteudo() {
           <p className="text-base font-mono font-semibold text-red-400 leading-tight break-words">
             <ValorMonetario valor={totalDespesas} />
           </p>
+          {!periodoFuturo && aPagar > 0 && (
+            <p className="text-xs text-ink-400 font-mono mt-0.5 break-words">
+              <ValorMonetario valor={aPagar} /> a pagar
+            </p>
+          )}
         </div>
         <div className="bg-base-800 border border-base-600 rounded-2xl p-3 min-w-0">
           <span className="w-7 h-7 rounded-full bg-financa/15 flex items-center justify-center text-financa mb-1.5">
@@ -248,7 +265,7 @@ function ExtratoConteudo() {
 
       {(aPagar > 0 || aReceber > 0) && (
         <div className="flex items-center justify-between gap-3 bg-financa/10 border border-financa/30 rounded-xl px-3 py-2.5 mb-3 text-sm">
-          <span className="text-ink-400">Ainda não pago nesse período</span>
+          <span className="text-ink-400">{periodoFuturo ? "Previsto nesse período" : "Ainda vai cair / sair nesse período"}</span>
           <span className="font-mono text-right">
             {aPagar > 0 && (
               <span className="text-red-400">
