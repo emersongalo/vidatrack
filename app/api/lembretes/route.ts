@@ -13,7 +13,7 @@ import { calcularPeriodoFatura, periodoFaturaAdjacente } from "@/lib/financas/fa
 import { resumoFatura } from "@/lib/financas/previsao";
 import { horariosDoHabito } from "@/lib/habitos/horariosLembrete";
 import { gastoDoMes } from "@/lib/financas/teto";
-import { receitaAguardando, INICIO_CONFIRMACAO } from "@/lib/financas/confirmacao";
+import { receitaAguardando, despesaAguardando, INICIO_CONFIRMACAO } from "@/lib/financas/confirmacao";
 
 // Sem cookie nem sessão, o Next.js não tem como saber sozinho que essa
 // rota precisa rodar de novo a cada chamada — sem isso aqui, o Vercel
@@ -148,6 +148,8 @@ export async function GET(request: Request) {
       enviados += await notificarFaturasCartao(supabase, hoje, donos);
       // Etapa 268 — receita programada: "caiu? confirme ou adie"
       enviados += await notificarReceitasAConfirmar(supabase, hoje, donos);
+      // Etapa 270 — conta programada que venceu e ninguém marcou "Paguei"
+      enviados += await notificarDespesasSemConfirmar(supabase, hoje, donos);
     }
   }
 
@@ -536,6 +538,40 @@ async function notificarReceitasAConfirmar(supabase: ReturnType<typeof criarClie
           : `💰 ${g.atrasadas.length} receitas ainda sem confirmar. Já caíram? Confirme ou adie no app.`;
       enviados += await notificarUsuariosDoItem(supabase, "conta_a_pagar", dono, dono, texto, "/financas", hoje, undefined, "receita-atrasada");
     }
+  }
+  return enviados;
+}
+
+/** Etapa 270 — despesas programadas vencidas (1 a 5 dias) ainda sem "Paguei". */
+async function notificarDespesasSemConfirmar(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string, donos?: Set<string>): Promise<number> {
+  const desde = somarDias(hoje, -5) < INICIO_CONFIRMACAO ? INICIO_CONFIRMACAO : somarDias(hoje, -5);
+  const ate = somarDias(hoje, -1);
+  if (desde > ate) return 0;
+  const { data: despesas } = await supabase
+    .from("financa_transacoes")
+    .select("id, dono_id, descricao, valor, data, tipo, pago_em, recorrencia_id, criado_em, transferencia_grupo, financa_contas(tipo)")
+    .eq("tipo", "despesa")
+    .is("pago_em", null)
+    .is("transferencia_grupo", null)
+    .gte("data", desde)
+    .lte("data", ate);
+  const porDono = new Map<string, { nome: string; valor: number; data: string }[]>();
+  for (const t of despesas ?? []) {
+    const tipoConta = (t as any).financa_contas?.tipo ?? null;
+    if (!despesaAguardando(t as any, hoje, tipoConta)) continue;
+    const dono = t.dono_id as string;
+    if (donos && !donos.has(dono)) continue;
+    if (!porDono.has(dono)) porDono.set(dono, []);
+    porDono.get(dono)!.push({ nome: ((t.descricao as string) || "Conta").trim(), valor: Number(t.valor), data: t.data as string });
+  }
+  const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+  let enviados = 0;
+  for (const [dono, l] of porDono) {
+    const texto =
+      l.length === 1
+        ? `🧾 ${l[0].nome} (${formatarMoeda(l[0].valor)}) venceu em ${ddmm(l[0].data)}. Já pagou? Toque pra marcar "Paguei" ou adiar.`
+        : `🧾 ${l.length} contas venceram e ainda não foram marcadas como pagas. Confirme no app.`;
+    enviados += await notificarUsuariosDoItem(supabase, "conta_a_pagar", dono, dono, texto, "/financas", hoje, undefined, "despesa-atrasada");
   }
   return enviados;
 }

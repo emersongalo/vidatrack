@@ -20,7 +20,7 @@ import { ValorMonetario } from "@/components/ValorMonetario";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { Esqueleto } from "@/components/Esqueleto";
-import { receitaAguardando } from "@/lib/financas/confirmacao";
+import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 
 const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "este_mes", rotulo: "Este mês" },
@@ -197,12 +197,12 @@ function ExtratoConteudo() {
   const hojeParaPendencia = new Date().toLocaleDateString("sv-SE");
   const periodoFuturo = !!inicio && inicio > hojeParaPendencia;
   const realizado = (t: any) =>
-    periodoFuturo || ((t.data <= hojeParaPendencia || !!t.pago_em) && !receitaAguardando(t, hojeParaPendencia));
+    periodoFuturo || ((t.data <= hojeParaPendencia || !!t.pago_em) && !aguardandoConfirmacao(t, hojeParaPendencia));
   const totalReceitas = lista.filter((t: any) => t.tipo === "receita" && !t.transferencia_grupo && realizado(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
   const totalDespesas = lista.filter((t: any) => t.tipo === "despesa" && !t.transferencia_grupo && realizado(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
   const balanco = totalReceitas - totalDespesas;
   // Etapa 209 — quanto ainda falta pagar/receber no período (agendados não marcados)
-  const pendentes = lista.filter((t: any) => !t.transferencia_grupo && ((t.data > hojeParaPendencia && !t.pago_em) || receitaAguardando(t, hojeParaPendencia)));
+  const pendentes = lista.filter((t: any) => !t.transferencia_grupo && ((t.data > hojeParaPendencia && !t.pago_em) || aguardandoConfirmacao(t, hojeParaPendencia)));
   const aPagar = pendentes.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
   const aReceber = pendentes.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
 

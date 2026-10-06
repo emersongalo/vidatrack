@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { primeiroDiaDoMes } from "@/lib/financas/formatacao";
-import { receitaAguardando } from "@/lib/financas/confirmacao";
+import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 
 export type ContaComSaldo = {
   id: string;
@@ -38,11 +38,12 @@ export function calcularSaldoPorConta(
   ateData?: string
 ): ContaComSaldo[] {
   const somaPorConta = new Map<string, number>();
+  const tipoDaConta = new Map(contas.map((c) => [c.id, c.tipo]));
   for (const t of transacoes) {
     // Etapa 209 — agendado que já foi marcado "Paguei" conta desde já
     if (ateData && t.data && t.data > ateData && !t.pago_em) continue;
-    // Etapa 268 — receita programada só entra quando a pessoa confirma que caiu
-    if (ateData && receitaAguardando(t, ateData)) continue;
+    // Etapa 268/270 — receita/despesa programada só conta quando a pessoa confirma
+    if (ateData && aguardandoConfirmacao(t, ateData, tipoDaConta.get(t.conta_id))) continue;
     const atual = somaPorConta.get(t.conta_id) ?? 0;
     somaPorConta.set(t.conta_id, atual + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)));
   }
@@ -97,7 +98,7 @@ export async function buscarSaldoTotal(supabase: ReturnType<typeof createClient>
   const hojeBr = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
   return (contas ?? []).reduce((total, conta) => {
     const doTransacoes = (transacoes ?? [])
-      .filter((t) => t.conta_id === conta.id && !receitaAguardando(t as any, hojeBr))
+      .filter((t) => t.conta_id === conta.id && !aguardandoConfirmacao(t as any, hojeBr, (conta as any).tipo))
       .reduce((acc, t) => acc + (t.tipo === "receita" ? t.valor : -t.valor), 0);
     return total + Number(conta.saldo_inicial) + doTransacoes;
   }, 0);

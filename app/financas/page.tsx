@@ -28,7 +28,7 @@ import { TetoMensal } from "@/components/TetoMensal";
 import { PodeGastarHoje } from "@/components/PodeGastarHoje";
 import { GastosRapidos } from "@/components/GastosRapidos";
 import { ConfirmarReceitas } from "@/components/ConfirmarReceitas";
-import { receitaAguardando } from "@/lib/financas/confirmacao";
+import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 import { ListaLancamentosPorDia } from "@/components/ListaLancamentosPorDia";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { salvarOrdemBlocosFinancas } from "./actions";
@@ -164,7 +164,7 @@ export default function FinancasPage() {
   // Etapa 269 — no topo, só o que já caiu/saiu (receita a confirmar e agendado
   // futuro ficam de fora); mês futuro mostra o previsto.
   const jaAconteceu = (t: any) =>
-    ehMesFuturo || ((t.data <= hojeISOBr || !!t.pago_em) && !receitaAguardando(t, hojeISOBr));
+    ehMesFuturo || ((t.data <= hojeISOBr || !!t.pago_em) && !aguardandoConfirmacao(t, hojeISOBr));
   const receitasDoMes = movimentosDoMes.filter((t: any) => t.tipo === "receita" && jaAconteceu(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
   const despesasDoMes = movimentosDoMes.filter((t: any) => t.tipo === "despesa" && jaAconteceu(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
 

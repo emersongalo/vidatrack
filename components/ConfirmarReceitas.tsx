@@ -1,5 +1,6 @@
 "use client";
 
+// Etapa 270 — também as despesas programadas: "Pagou a conta de luz?"
 // Etapa 268 — "Caiu o salário?": receitas programadas que chegaram o
 // dia esperam confirmação. "Caiu" entra no saldo na hora; "Adiar" muda
 // a data (amanhã, +2, +5 dias ou outra) e ela volta a perguntar no dia.
@@ -8,7 +9,7 @@ import Link from "next/link";
 import { Check, CalendarClock, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
-import { receitaAguardando, somarDiasISO } from "@/lib/financas/confirmacao";
+import { aguardandoConfirmacao, somarDiasISO } from "@/lib/financas/confirmacao";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { vibrar } from "@/lib/app/vibrar";
 
@@ -26,7 +27,7 @@ export function ConfirmarReceitas({ snapshot, noInicio = false }: { snapshot: an
   const lista = useMemo(
     () =>
       ((snapshot?.financas?.transacoes ?? []) as any[])
-        .filter((t) => receitaAguardando(t, hoje))
+        .filter((t) => aguardandoConfirmacao(t, hoje))
         .sort((a, b) => a.data.localeCompare(b.data)),
     [snapshot, hoje]
   );
@@ -35,7 +36,7 @@ export function ConfirmarReceitas({ snapshot, noInicio = false }: { snapshot: an
   if (!visiveis.length) {
     return (
       <div className={`animate-surgir text-sm text-habito bg-habito/10 border border-habito/30 rounded-2xl px-4 py-3 ${noInicio ? "" : "mb-6"}`}>
-        ✓ Tudo certo com as receitas de hoje.
+        ✓ Tudo confirmado por hoje.
       </div>
     );
   }
@@ -58,25 +59,38 @@ export function ConfirmarReceitas({ snapshot, noInicio = false }: { snapshot: an
     atualizarSnapshotEmTodasAsTelas();
   }
 
+  const soReceitas = visiveis.every((t) => t.tipo === "receita");
+  const soDespesas = visiveis.every((t) => t.tipo === "despesa");
+  const titulo = soReceitas
+    ? visiveis.length === 1 ? "Essa receita caiu?" : "Essas receitas caíram?"
+    : soDespesas
+      ? visiveis.length === 1 ? "Essa conta foi paga?" : "Essas contas foram pagas?"
+      : "Confirme o que caiu e o que foi pago";
+
   return (
     <section className={`bg-base-800 border border-habito/40 rounded-3xl p-4 ${noInicio ? "" : "mb-6 lg:break-inside-avoid"}`}>
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-xl">💰</span>
-        <h2 className="text-base font-semibold flex-1">{visiveis.length === 1 ? "Essa receita caiu?" : "Essas receitas caíram?"}</h2>
+        <span className="text-xl">{soDespesas ? "🧾" : "💰"}</span>
+        <h2 className="text-base font-semibold flex-1">{titulo}</h2>
       </div>
-      <p className="text-xs text-ink-400 -mt-2 mb-3">Só entram no saldo quando você confirmar.</p>
+      <p className="text-xs text-ink-400 -mt-2 mb-3">Só mexem no saldo quando você confirmar.</p>
 
       <div className="space-y-2">
         {visiveis.map((t) => (
           <div key={t.id} className="bg-base-900/60 border border-base-600 rounded-2xl p-3">
             <div className="flex items-baseline justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-base font-medium truncate">{t.descricao || "Receita"}</p>
+                <p className="text-base font-medium truncate">{t.descricao || (t.tipo === "receita" ? "Receita" : "Despesa")}</p>
                 <p className="text-xs text-ink-400">
-                  {t.data === hoje ? "Prevista pra hoje" : `Prevista pra ${ddmm(t.data)}`} · {contas.get(t.conta_id) ?? ""}
+                  {t.tipo === "receita"
+                    ? t.data === hoje ? "Prevista pra hoje" : `Prevista pra ${ddmm(t.data)}`
+                    : t.data === hoje ? "Vence hoje" : `Venceu ${ddmm(t.data)}`} · {contas.get(t.conta_id) ?? ""}
                 </p>
               </div>
-              <span className="font-mono font-semibold text-habito shrink-0">+{formatarMoeda(Number(t.valor))}</span>
+              <span className={`font-mono font-semibold shrink-0 ${t.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
+                {t.tipo === "receita" ? "+" : "−"}
+                {formatarMoeda(Number(t.valor))}
+              </span>
             </div>
 
             {adiando === t.id ? (
@@ -116,7 +130,7 @@ export function ConfirmarReceitas({ snapshot, noInicio = false }: { snapshot: an
                   onClick={() => salvar(t.id, { pago_em: hoje }, "caiu")}
                   className="flex-1 flex items-center justify-center gap-1.5 bg-habito text-base-900 rounded-xl py-2.5 text-sm font-semibold active:scale-[0.98] transition"
                 >
-                  <Check size={16} strokeWidth={3} /> Caiu
+                  <Check size={16} strokeWidth={3} /> {t.tipo === "receita" ? "Caiu" : "Paguei"}
                 </button>
                 <button
                   type="button"
@@ -127,8 +141,8 @@ export function ConfirmarReceitas({ snapshot, noInicio = false }: { snapshot: an
                 </button>
                 <Link
                   href={`/financas/${t.id}/editar`}
-                  aria-label="Caiu outro valor? Editar"
-                  title="Caiu outro valor? Editar"
+                  aria-label="Valor diferente? Editar"
+                  title="Valor diferente? Editar"
                   className="w-10 h-10 rounded-xl border border-base-600 flex items-center justify-center text-ink-400"
                 >
                   <Pencil size={15} />

@@ -5,7 +5,7 @@ import { Check, Undo2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { vibrar } from "@/lib/app/vibrar";
-import { receitaAguardando } from "@/lib/financas/confirmacao";
+import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 
 /**
  * Etapa 209 — lançamento agendado (data no futuro): "✓ Paguei" marca
@@ -17,7 +17,7 @@ export function BotaoPaguei({
   transacao,
   compacto = false,
 }: {
-  transacao: { id: string; tipo: string; data: string; pago_em?: string | null; recorrencia_id?: string | null; criado_em?: string | null; transferencia_grupo?: string | null };
+  transacao: { id: string; tipo: string; data: string; pago_em?: string | null; recorrencia_id?: string | null; criado_em?: string | null; transferencia_grupo?: string | null; conta_tipo?: string | null };
   compacto?: boolean;
 }) {
   const hoje = new Date().toLocaleDateString("sv-SE");
@@ -26,7 +26,7 @@ export function BotaoPaguei({
   const [erro, setErro] = useState(false);
 
   // Etapa 268 — receita programada que chegou o dia: espera confirmar
-  const aguardando = !pagoEm && receitaAguardando(transacao, hoje);
+  const aguardando = !pagoEm && aguardandoConfirmacao(transacao, hoje);
   if (transacao.data <= hoje && !pagoEm && !aguardando) return null;
 
   const receita = transacao.tipo === "receita";
@@ -69,7 +69,7 @@ export function BotaoPaguei({
   return (
     <span className="inline-flex items-center gap-2 text-sm leading-none">
       <span className="px-2 py-1 rounded-md bg-financa/15 text-financa font-medium">
-        {aguardando ? "Caiu?" : receita ? "A receber" : "A pagar"}
+        {aguardando ? (receita ? "Caiu?" : "Pagou?") : receita ? "A receber" : "A pagar"}
       </span>
       <button
         type="button"

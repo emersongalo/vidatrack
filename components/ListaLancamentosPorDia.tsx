@@ -7,7 +7,7 @@ import Link from "next/link";
 import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowLeftRight, Pencil, Trash2 } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { BotaoPaguei } from "@/components/BotaoPaguei";
-import { receitaAguardando } from "@/lib/financas/confirmacao";
+import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
 import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
@@ -137,7 +137,7 @@ export function ListaLancamentosPorDia({
                         </div>
                         {/* Etapa 238 — "relative" pra ficar POR CIMA da linha de cima (antes a
                            linha de cima cobria a parte de cima do "A pagar / Paguei") */}
-                        {((t.etiquetas ?? []).length > 0 || t.data > hojeParaPendencia || t.pago_em || receitaAguardando(t, hojeParaPendencia)) && (
+                        {((t.etiquetas ?? []).length > 0 || t.data > hojeParaPendencia || t.pago_em || aguardandoConfirmacao(t, hojeParaPendencia)) && (
                           <div className="relative flex flex-wrap items-center gap-2 bg-base-800 pl-[4.5rem] pr-4 pt-0.5 pb-3.5 -mt-2 text-sm">
                             {(t.etiquetas ?? []).map((e: string) => (
                               <button key={e} type="button" onClick={() => setEtiquetaFiltro(e)} className="text-nota">

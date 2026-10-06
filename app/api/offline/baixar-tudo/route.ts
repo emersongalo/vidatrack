@@ -101,7 +101,9 @@ export async function GET() {
       .order("data_fim", { ascending: true }),
   ]);
 
-  const todasTransacoes = transacoes ?? [];
+  // Etapa 270 — cada lançamento leva o tipo da conta (pra saber se é cartão)
+  const tipoConta = new Map((contas ?? []).map((c: any) => [c.id, c.tipo]));
+  const todasTransacoes = (transacoes ?? []).map((t: any) => ({ ...t, conta_tipo: tipoConta.get(t.conta_id) ?? null }));
 
   // Etapa 233 — hábitos em dupla: meus check-ins ficam separados dos do
   // parceiro (antes vinham misturados e o do outro contava como meu), e

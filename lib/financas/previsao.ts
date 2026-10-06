@@ -2,7 +2,7 @@
 // vai entrar/sair (agendados, recorrentes que ainda não viraram
 // lançamento e faturas de cartão que vencem no mês). Função pura.
 import { calcularPeriodoFatura, calcularVencimentoFatura, periodoFaturaAdjacente } from "@/lib/financas/fatura";
-import { receitaAguardando } from "@/lib/financas/confirmacao";
+import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 
 export type ItemPrevisto = {
   data: string;
@@ -171,9 +171,16 @@ export function preverFimDoMes(entrada: {
   // 1) Lançamentos com data futura ainda não pagos
   for (const t of transacoes) {
     if (!comuns.has(t.conta_id)) continue;
-    // Etapa 268 — receita que já era pra ter caído e ninguém confirmou: ainda "vai entrar"
-    if (receitaAguardando(t, hojeISO)) {
-      itens.push({ data: hojeISO, descricao: `${t.descricao || "Receita"} (a confirmar)`, valor: Number(t.valor), tipo: "receita", origem: "agendado" });
+    // Etapa 268/270 — já era pra ter caído/saído e ninguém confirmou: ainda "vai entrar/sair"
+    if (aguardandoConfirmacao(t, hojeISO, "corrente")) {
+      const receita = t.tipo === "receita";
+      itens.push({
+        data: hojeISO,
+        descricao: `${t.descricao || (receita ? "Receita" : "Despesa")} (a confirmar)`,
+        valor: Number(t.valor),
+        tipo: receita ? "receita" : "despesa",
+        origem: "agendado",
+      });
       continue;
     }
     if (t.data <= hojeISO || t.data > fim || t.pago_em) continue;
