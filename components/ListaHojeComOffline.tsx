@@ -135,11 +135,15 @@ export function ListaHojeComOffline({
           <section key={g.id}>
             <div className="flex items-baseline justify-between px-1 mb-2">
               <h3 className="text-base font-semibold">{g.titulo}</h3>
-              <span className={`text-sm ${g.feitos === g.itens.length ? "text-habito" : "text-ink-400"}`}>
+              <span
+                key={`${g.id}-${g.feitos}`}
+                className={`text-sm inline-block animate-pop ${g.feitos === g.itens.length ? "text-habito font-semibold" : "text-ink-400"}`}
+              >
+                {g.feitos === g.itens.length ? "✓ " : ""}
                 {g.feitos}/{g.itens.length}
               </span>
             </div>
-            <ul className="bg-base-800 border border-base-600 rounded-2xl overflow-hidden divide-y divide-base-600">
+            <ul className="lista-entrar bg-base-800 border border-base-600 rounded-2xl overflow-hidden divide-y divide-base-600">
               {g.itens.map((item) => (
                 <ItemLinhaAgenda
                   key={`${item.tipo}-${item.id}`}

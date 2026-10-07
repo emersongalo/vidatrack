@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { convidarCompartilhamento, convidarPessoaConhecida, removerCompartilhamento, type TipoItem } from "@/lib/compartilhamento/actions";
+import {
+  convidarPorEmail,
+  convidarPessoaConhecida,
+  removerCompartilhamento,
+  removerConvite,
+  reenviarConvite,
+  type TipoItem,
+} from "@/lib/compartilhamento/actions";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 
 type Conhecida = { chave: string; usuarioId: string | null; email: string | null; nome: string };
@@ -31,6 +38,9 @@ export function PainelCompartilhamentoCliente({
   erroInicial?: string | null;
 }) {
   const [compartilhamentos, setCompartilhamentos] = useState<any[] | null>(null);
+  // Etapa 273 — convites aguardando resposta (ou recusados)
+  const [convites, setConvites] = useState<any[]>([]);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(erroInicial ?? null);
   const [, iniciarTransicao] = useTransition();
   // Etapa 234 — pessoas com quem você já compartilhou algo (ou que compartilharam com você)
@@ -77,17 +87,26 @@ export function PainelCompartilhamentoCliente({
     const r = await convidarPessoaConhecida(tipoItem, itemId, caminhoRetorno, { usuarioId: p.usuarioId, email: p.email }, permissao);
     setEnviando(null);
     if (!r.ok) setErro(r.erro ?? "Não deu pra compartilhar");
+    else setAviso("Convite enviado! A pessoa recebe uma notificação pra aceitar.");
     buscar();
   }
 
   const buscar = useCallback(() => {
-    createClient()
+    const supabase = createClient();
+    supabase
       .from("compartilhamentos")
       .select("id, email_convidado, usuario_convidado_id, permissao")
       .eq("tipo_item", tipoItem)
       .eq("item_id", itemId)
       .order("criado_em", { ascending: true })
       .then(({ data }) => setCompartilhamentos(data ?? []));
+    supabase
+      .from("convites_compartilhamento")
+      .select("id, email_convidado, usuario_convidado_id, permissao, status, criado_em")
+      .eq("tipo_item", tipoItem)
+      .eq("item_id", itemId)
+      .order("criado_em", { ascending: true })
+      .then(({ data }) => setConvites(data ?? []));
   }, [tipoItem, itemId]);
 
   useEffect(() => {
@@ -96,16 +115,68 @@ export function PainelCompartilhamentoCliente({
 
   function convidar(formData: FormData) {
     setErro(null);
+    setAviso(null);
+    const email = String(formData.get("email") ?? "");
     iniciarTransicao(async () => {
-      await convidarCompartilhamento(tipoItem, itemId, caminhoRetorno, formData);
+      const r = await convidarPorEmail(tipoItem, itemId, caminhoRetorno, email, permissao);
+      if (!r.ok) setErro(r.erro ?? "Não deu pra convidar");
+      else {
+        setAviso("Convite enviado! A pessoa recebe uma notificação pra aceitar ou recusar.");
+        const campo = document.getElementById("email-convite") as HTMLInputElement | null;
+        if (campo) campo.value = "";
+      }
       buscar();
     });
+  }
+
+  async function reenviar(id: string) {
+    setErro(null);
+    const r = await reenviarConvite(id);
+    if (!r.ok) setErro(r.erro ?? "Não deu pra reenviar");
+    else setAviso("Convite enviado de novo.");
+    buscar();
   }
 
   return (
     <div>
       {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">{erro}</p>
+      )}
+      {aviso && !erro && (
+        <p className="mb-4 text-sm text-habito bg-habito/10 border border-habito/30 rounded-lg px-3 py-2 animate-surgir">📩 {aviso}</p>
+      )}
+
+      {convites.length > 0 && (
+        <ul className="space-y-2 mb-4">
+          {convites.map((c) => (
+            <li key={c.id} className="flex items-center justify-between gap-2 bg-base-800 border border-base-600 rounded-lg px-3 py-2">
+              <div className="min-w-0">
+                <p className="text-sm truncate">{c.email_convidado}</p>
+                <p className="text-xs">
+                  <span className="text-ink-400">{RÓTULOS_PERMISSAO[c.permissao]} · </span>
+                  {c.status === "recusado" ? (
+                    <span className="text-red-400">recusou o convite</span>
+                  ) : (
+                    <span className="text-financa">⏳ aguardando resposta</span>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {c.status === "recusado" && (
+                  <button type="button" onClick={() => reenviar(c.id)} className="text-xs text-habito hover:underline">
+                    Convidar de novo
+                  </button>
+                )}
+                <BotaoComConfirmacao
+                  acao={() => removerConvite(c.id, caminhoRetorno)}
+                  textoBotao={c.status === "recusado" ? "Apagar" : "Cancelar"}
+                  textoConfirmacao="Cancelar esse convite?"
+                  aoConcluir={buscar}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
       {compartilhamentos === null ? (
@@ -118,7 +189,7 @@ export function PainelCompartilhamentoCliente({
                 <div className="min-w-0">
                   <p className="text-sm truncate">{c.email_convidado}</p>
                   <p className="text-xs text-ink-400">
-                    {RÓTULOS_PERMISSAO[c.permissao]} · {c.usuario_convidado_id ? "aceito" : "convite pendente"}
+                    {RÓTULOS_PERMISSAO[c.permissao]} · <span className="text-habito">✓ aceitou</span>
                   </p>
                 </div>
                 <BotaoComConfirmacao
@@ -134,7 +205,9 @@ export function PainelCompartilhamentoCliente({
       )}
 
       {(() => {
-        const jaTem = new Set((compartilhamentos ?? []).flatMap((c) => [c.usuario_convidado_id, `email:${c.email_convidado}`, c.email_convidado]));
+        const jaTem = new Set(
+          [...(compartilhamentos ?? []), ...convites].flatMap((c) => [c.usuario_convidado_id, `email:${c.email_convidado}`, c.email_convidado])
+        );
         const disponiveis = conhecidas.filter((p) => !(p.usuarioId && jaTem.has(p.usuarioId)) && !(p.email && jaTem.has(p.email)));
         if (!disponiveis.length) return null;
         return (
@@ -164,6 +237,7 @@ export function PainelCompartilhamentoCliente({
 
       <form action={convidar} className="flex gap-2">
         <input
+          id="email-convite"
           name="email"
           type="email"
           required
@@ -184,8 +258,8 @@ export function PainelCompartilhamentoCliente({
         </button>
       </form>
       <p className="text-xs text-ink-400 mt-2">
-        Se a pessoa ainda não tem conta no VidaTrack, o convite fica pendente e libera sozinho assim que ela se
-        cadastrar com esse e-mail.
+        A pessoa recebe uma notificação e escolhe se aceita ou recusa. Se ela ainda não tem conta no VidaTrack, o
+        convite aparece assim que ela se cadastrar com esse e-mail.
       </p>
     </div>
   );

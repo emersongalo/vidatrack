@@ -4,7 +4,7 @@
 // Etapa 259 — Tarefas de cara nova: resumo do dia, adicionar rápido,
 // filtro por categoria e duas formas de ver (por data ou por categoria),
 // concluir com um toque e "Organizar" pra arrastar a ordem.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, ChevronDown, FolderKanban, GripVertical, Plus, Trash2, Settings2 } from "lucide-react";
 import { ListaTarefasArrastavel } from "@/components/ListaTarefasArrastavel";
@@ -19,6 +19,7 @@ import { tarefaAtrasada } from "@/lib/agenda/recorrencia";
 import { ORDEM_GRUPOS, NOMES_GRUPO, agruparTarefas, resumoTarefas, somarDias } from "@/lib/agenda/tarefasLista";
 import { alternarConclusaoTarefa, criarTarefaRapida } from "./actions";
 import { vibrar } from "@/lib/app/vibrar";
+import { ComemoracaoDia } from "@/components/ComemoracaoDia";
 
 type Modo = "data" | "categoria" | "organizar";
 const CHAVE_MODO = "vidatrack-tarefas-modo";
@@ -37,6 +38,9 @@ export default function TarefasPage() {
   const [quando, setQuando] = useState<"hoje" | "amanha">("hoje");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // Etapa 273 — comemora quando a última tarefa de hoje é concluída
+  const [comemorar, setComemorar] = useState(false);
+  const marcouAgora = useRef(false);
 
   useEffect(() => {
     try {
@@ -80,6 +84,7 @@ export default function TarefasPage() {
   async function alternar(t: any) {
     const feitaAgora = t.repetir === "nenhuma" ? !!t.concluida : conclusoesHoje.has(t.id);
     vibrar(feitaAgora ? 10 : [15, 40, 25]);
+    marcouAgora.current = !feitaAgora;
     setLocal((l) => ({ ...l, [t.id]: !feitaAgora }));
     try {
       if (!navigator.onLine) {
@@ -131,11 +136,22 @@ export default function TarefasPage() {
   );
 
   const pctHoje = resumo.deHoje ? Math.round((resumo.feitasHoje / resumo.deHoje) * 100) : 0;
+  const tudoFeitoHoje = resumo.deHoje > 0 && resumo.feitasHoje === resumo.deHoje;
+  useEffect(() => {
+    if (marcouAgora.current && tudoFeitoHoje) {
+      setComemorar(true);
+      vibrar([20, 60, 20, 60, 40]);
+    }
+    marcouAgora.current = false;
+  }, [tudoFeitoHoje, local]);
   const raio = 30;
   const volta = 2 * Math.PI * raio;
 
   return (
     <main className="pagina px-6 md:px-12 pt-2 pb-10">
+      {comemorar && (
+        <ComemoracaoDia aoFechar={() => setComemorar(false)} emoji="✅" titulo="Tarefas de hoje feitas!" texto="Lista zerada. Pode respirar. 😌" />
+      )}
       <div className="flex items-center justify-between mb-3">
         <h1 className="text-3xl font-display font-bold">Tarefas</h1>
         <Link href={filtro !== "todas" && filtro !== "sem" ? `/tarefas/nova?categoria=${filtro}` : "/tarefas/nova"} className="flex items-center gap-1.5 bg-nota text-base-900 text-sm font-semibold rounded-full px-4 py-2 hover:opacity-90 transition">
@@ -274,7 +290,7 @@ export default function TarefasPage() {
                       <span className="text-xs text-ink-400 bg-base-800 border border-base-600 rounded-full px-2 py-0.5">{lista.length}</span>
                       {concluidas && <ChevronDown size={16} className={`ml-auto text-ink-400 transition ${mostrarConcluidas ? "rotate-180" : ""}`} />}
                     </button>
-                    <div className="space-y-2">{visiveis.map((t) => linha(t, filtro === "todas"))}</div>
+                    <div className="space-y-2 lista-entrar">{visiveis.map((t) => linha(t, filtro === "todas"))}</div>
                   </section>
                 );
               })}
@@ -303,7 +319,7 @@ export default function TarefasPage() {
                       <div className="h-1.5 rounded-full bg-base-800 mx-1 mb-3 overflow-hidden">
                         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(feitas / daCat.length) * 100}%`, background: cor }} />
                       </div>
-                      <div className="space-y-2">{daCat.map((t) => linha(t, false))}</div>
+                      <div className="space-y-2 lista-entrar">{daCat.map((t) => linha(t, false))}</div>
                     </section>
                   );
                 })}

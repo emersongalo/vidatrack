@@ -154,3 +154,61 @@ html[data-fonte="maior"] { font-size: 125%; }
 .entrada-tela {
   animation: entrar-tela 220ms ease-out;
 }
+
+/* Etapa 273 — animações de hábitos e tarefas ------------------------- */
+
+/* risco que "desenha" por cima do texto ao concluir */
+.riscado {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 55%;
+  background-size: 100% 1.5px;
+  animation: vt-riscar 0.35s ease-out;
+}
+@keyframes vt-riscar {
+  from { background-size: 0% 1.5px; }
+  to { background-size: 100% 1.5px; }
+}
+
+/* brilho que passa pela linha quando marca feito */
+.varredura {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.13) 50%, transparent 80%);
+  animation: vt-varrer 0.75s ease-out forwards;
+}
+@keyframes vt-varrer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* o ✓ se desenha */
+.traco-check {
+  stroke-dasharray: 16;
+  animation: vt-traco 0.35s ease-out 0.05s backwards;
+}
+@keyframes vt-traco {
+  from { stroke-dashoffset: 16; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* itens da lista chegam um depois do outro (backwards: não deixa
+   transform depois que acaba, pra não atrapalhar janelas "fixed") */
+@keyframes vt-entrar {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.lista-entrar > * { animation: vt-entrar 0.38s cubic-bezier(.2,.8,.2,1) backwards; }
+.lista-entrar > *:nth-child(2) { animation-delay: 0.04s; }
+.lista-entrar > *:nth-child(3) { animation-delay: 0.08s; }
+.lista-entrar > *:nth-child(4) { animation-delay: 0.12s; }
+.lista-entrar > *:nth-child(5) { animation-delay: 0.16s; }
+.lista-entrar > *:nth-child(6) { animation-delay: 0.2s; }
+.lista-entrar > *:nth-child(7) { animation-delay: 0.24s; }
+.lista-entrar > *:nth-child(n + 8) { animation-delay: 0.28s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .riscado, .varredura, .traco-check, .lista-entrar > * { animation: none !important; }
+  .varredura { display: none; }
+}

@@ -17,6 +17,7 @@ import { CorBarraPorRota } from "@/components/CorBarraPorRota";
 import { AvisoAtualizacaoApp } from "@/components/AvisoAtualizacaoApp";
 import { IndicadorConexao } from "@/components/IndicadorConexao";
 import { BotaoVoltarApp } from "@/components/BotaoVoltarApp";
+import { AvisoConvites } from "@/components/AvisoConvites";
 import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
 import { SCRIPT_APARENCIA } from "@/lib/preferencias/aparencia";
 import { CSS_ABERTURA, HTML_ABERTURA, SCRIPT_ABERTURA } from "@/lib/app/abertura";
@@ -113,6 +114,7 @@ export default function RootLayout({
         <IndicadorConexao />
         {/* Etapa 266 — botão voltar do Android em todas as telas */}
         <BotaoVoltarApp />
+        <AvisoConvites />
         <BloqueioApp />
         <RegistrarIndicacao />
       </body>

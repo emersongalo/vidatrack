@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { RefreshCw, Bell } from "lucide-react";
-import { classeCor, classeFundoSuave, classeTextoCor } from "@/lib/agenda/estilo";
+import { classeCor, classeFundoSuave, classeTextoCor, hexDaCor } from "@/lib/agenda/estilo";
+import { explodirEm, textoFlutuante, frasePositiva } from "@/lib/app/festa";
 import { IconeHabito } from "@/components/IconeHabito";
 import { CelebracaoConquista } from "@/components/CelebracaoConquista";
 import { alternarCheckin, ajustarQuantidadeHabito, salvarObservacaoCheckin } from "@/app/habitos/actions";
@@ -110,6 +111,9 @@ export function ItemLinhaAgenda({
   const ehNumerico = item.tipo === "habito" && item.meta && item.meta.alvo > 1;
   // Etapa 230 — animação ao marcar e gesto de arrastar a linha
   const [pulsar, setPulsar] = useState(0);
+  // Etapa 273 — de onde sai o confete
+  const refBotao = useRef<HTMLButtonElement>(null);
+  const refMais = useRef<HTMLButtonElement>(null);
   const [arrasto, setArrasto] = useState(0);
   const toque = useRef<{ x: number; y: number; decidido: boolean; horizontal: boolean } | null>(null);
   const arrastou = useRef(false);
@@ -173,6 +177,9 @@ export function ItemLinhaAgenda({
     if (!item.feito) {
       vibrar(15);
       setPulsar((n) => n + 1);
+      const cor = hexDaCor(item.cor);
+      explodirEm(refBotao.current, { cor, emojis: item.tipo === "habito" ? ["✨", "⭐"] : ["✨"] });
+      textoFlutuante(refBotao.current, frasePositiva(), cor);
     }
     aoAlternarLocal?.();
 
@@ -212,9 +219,17 @@ export function ItemLinhaAgenda({
   }
 
   function ajustar(delta: number) {
+    const vaiCompletar = !!item.meta && item.meta.atual < item.meta.alvo && item.meta.atual + delta >= item.meta.alvo;
     if (delta > 0) {
-      vibrar(10);
+      vibrar(vaiCompletar ? [15, 40, 25] : 10);
       setPulsar((n) => n + 1);
+      const cor = hexDaCor(item.cor);
+      if (vaiCompletar) {
+        explodirEm(refMais.current, { cor, emojis: ["✨", "⭐"] });
+        textoFlutuante(refMais.current, "Meta batida! 🎯", cor);
+      } else {
+        textoFlutuante(refMais.current, `+1${item.meta?.unidade ? ` ${item.meta.unidade}` : ""}`, cor);
+      }
     }
     aoAjustarLocal?.(delta);
 
@@ -239,12 +254,14 @@ export function ItemLinhaAgenda({
           item.cor
         )}`}
       >
-        <IconeHabito icone={item.icone} tamanho={20} />
+        <span key={`ic-${item.feito ? pulsar : 0}`} className={`inline-flex ${item.feito && pulsar ? "animate-sacudir" : ""}`}>
+          <IconeHabito icone={item.icone} tamanho={20} />
+        </span>
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className={`text-[1.0625rem] font-medium truncate ${item.feito ? "line-through text-ink-400" : ""}`}>
-          {item.titulo}
+        <p className={`text-[1.0625rem] font-medium truncate transition-colors duration-300 ${item.feito ? "text-ink-400" : ""}`}>
+          <span className={item.feito ? "riscado" : ""}>{item.titulo}</span>
         </p>
         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap empty:hidden">
           {item.encadeado && !item.feito && (
@@ -419,6 +436,8 @@ export function ItemLinhaAgenda({
         className="relative flex items-center gap-3 bg-base-800 pl-4 pr-3 py-3.5"
         style={{ transform: arrasto ? `translateX(${arrasto}px)` : undefined, transition: arrasto ? "none" : "transform 200ms" }}
       >
+      {/* Etapa 273 — brilho que passa pela linha ao marcar */}
+      {item.feito && pulsar > 0 && <span key={`v-${pulsar}`} aria-hidden className="varredura" />}
       <span
         aria-hidden
         className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${
@@ -446,6 +465,7 @@ export function ItemLinhaAgenda({
             onClick={() => ajustar(1)}
             disabled={pendente}
             aria-label="Aumentar"
+            ref={refMais}
             key={`mais-${pulsar}`}
             className={`${pulsar ? "animate-pop" : ""} w-10 h-10 rounded-full flex items-center justify-center transition text-lg ${
               item.feito ? `${classeCor(item.cor)} text-base-900` : "border border-base-600 hover:border-ink-400"
@@ -460,6 +480,7 @@ export function ItemLinhaAgenda({
           disabled={pendente}
           aria-pressed={item.feito}
           aria-label={item.feito ? "Desmarcar" : "Marcar como feito"}
+          ref={refBotao}
           key={`chk-${pulsar}`}
           className={`${pulsar ? "animate-pop" : ""} w-11 h-11 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
             item.feito ? `${classeCor(item.cor)} border-transparent` : "border-base-600 hover:border-ink-400"
@@ -468,6 +489,7 @@ export function ItemLinhaAgenda({
           {item.feito && (
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
               <path
+                className="traco-check"
                 d="M3 8.5L6.2 11.5L13 4.5"
                 stroke="#0F1013"
                 strokeWidth="2"

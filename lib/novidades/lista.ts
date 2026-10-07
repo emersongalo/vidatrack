@@ -1,13 +1,22 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "250";
+export const VERSAO_NOVIDADES = "273";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "273",
+    titulo: "Convites e mais festa",
+    itens: [
+      { emoji: "📩", titulo: "Compartilhar agora é convite", texto: "Quando alguém compartilha um hábito, tarefa ou conta com você, chega uma notificação e você escolhe: aceitar ou recusar. Nada aparece sem o seu sim.", href: "/convites" },
+      { emoji: "🎉", titulo: "Hábitos e tarefas mais animados", texto: "Confete ao marcar, frases de incentivo, o ✓ se desenhando, risco animado nas tarefas e chuva de confete quando o dia (ou a lista de tarefas) fecha." },
+      { emoji: "😀", titulo: "Emojis nas categorias e hábitos", texto: "Além dos ícones, agora dá pra escolher emojis coloridos — e são bem mais opções." },
+    ],
+  },
   {
     versao: "250",
     titulo: "Mais rápido no dia a dia",

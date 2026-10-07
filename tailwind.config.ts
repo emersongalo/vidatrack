@@ -85,6 +85,12 @@ const config: Config = {
           "100%": { transform: "translate(-160px, 70px)", opacity: "0" },
         },
         brilhar: { "0%, 100%": { boxShadow: "0 0 18px 4px rgba(255,244,200,0.35)" }, "50%": { boxShadow: "0 0 30px 10px rgba(255,244,200,0.55)" } },
+        // Etapa 273 — hábitos e tarefas mais animados
+        sacudir: { "0%, 100%": { transform: "rotate(0) scale(1)" }, "20%": { transform: "rotate(-14deg) scale(1.15)" }, "45%": { transform: "rotate(10deg) scale(1.15)" }, "70%": { transform: "rotate(-5deg) scale(1.05)" } },
+        quicar: { "0%": { transform: "scale(0.5)", opacity: "0" }, "55%": { transform: "scale(1.08)", opacity: "1" }, "75%": { transform: "scale(0.96)" }, "100%": { transform: "scale(1)" } },
+        chama: { "0%, 100%": { transform: "scale(1) rotate(-2deg)" }, "25%": { transform: "scale(1.08, 0.95) rotate(2deg)" }, "50%": { transform: "scale(0.96, 1.08) rotate(-1deg)" }, "75%": { transform: "scale(1.05) rotate(1deg)" } },
+        entrar: { "0%": { transform: "translateY(10px)", opacity: "0" }, "100%": { transform: "translateY(0)", opacity: "1" } },
+        respirar: { "0%, 100%": { transform: "scale(1)" }, "50%": { transform: "scale(1.06)" } },
       },
       animation: {
         reluzir: "reluzir 1.6s ease-in-out infinite",
@@ -112,6 +118,11 @@ const config: Config = {
         asas: "asas 0.5s ease-in-out infinite",
         cadente: "cadente 9s ease-out infinite",
         brilhar: "brilhar 4s ease-in-out infinite",
+        sacudir: "sacudir 0.6s ease-in-out",
+        quicar: "quicar 0.5s cubic-bezier(.2,.9,.3,1.2)",
+        chama: "chama 1.2s ease-in-out infinite",
+        entrar: "entrar 0.38s cubic-bezier(.2,.8,.2,1) backwards",
+        respirar: "respirar 2.4s ease-in-out infinite",
       },
       borderRadius: {
         // Etapa 250 — cantos iguais aos cartões novos (rounded-3xl) em todo o app

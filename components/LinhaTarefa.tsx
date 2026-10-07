@@ -3,6 +3,8 @@
 // Etapa 259 — uma tarefa na lista: bolinha pra concluir (na cor da
 // categoria), título, quando, prioridade, subtarefas e lançamento.
 import Link from "next/link";
+import { useRef, useState } from "react";
+import { explodirEm, textoFlutuante, frasePositiva } from "@/lib/app/festa";
 import { Check, Repeat, ListChecks, Wallet } from "lucide-react";
 import { IconeHabito } from "@/components/IconeHabito";
 import { PRIORIDADES, descreverRepeticao } from "@/lib/agenda/recorrencia";
@@ -30,30 +32,46 @@ export function LinhaTarefa({
   const subtarefas = (tarefa.subtarefas ?? []) as { feita: boolean }[];
   const repete = tarefa.repetir !== "nenhuma";
   const prioridade = tarefa.prioridade ?? 0;
+  // Etapa 273 — confete + frase ao concluir
+  const refBotao = useRef<HTMLButtonElement>(null);
+  const [vezes, setVezes] = useState(0);
+
+  function clicar() {
+    if (!feita) {
+      explodirEm(refBotao.current, { cor, emojis: ["✨"] });
+      textoFlutuante(refBotao.current, frasePositiva(), cor);
+      setVezes((n) => n + 1);
+    }
+    aoAlternar();
+  }
 
   return (
     <div
-      className={`group relative flex items-center gap-3 bg-base-800 border rounded-2xl pl-3 pr-4 py-3 transition ${
+      className={`group relative overflow-hidden flex items-center gap-3 bg-base-800 border rounded-2xl pl-3 pr-4 py-3 transition ${
         atrasada && !feita ? "border-red-400/40" : "border-base-600"
-      } ${feita ? "opacity-60" : ""}`}
+      } ${feita ? "opacity-60" : ""} transition-opacity duration-500`}
     >
+      {feita && vezes > 0 && <span key={`v-${vezes}`} aria-hidden className="varredura rounded-2xl" />}
       {/* faixa da categoria */}
       <span aria-hidden className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full" style={{ background: cor }} />
 
       <button
         type="button"
-        onClick={aoAlternar}
+        ref={refBotao}
+        onClick={clicar}
         aria-label={feita ? "Desmarcar" : "Concluir"}
         className={`ml-1 w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 transition active:scale-90 ${
           feita ? "animate-pop" : "hover:scale-105"
         }`}
         style={feita ? { background: cor, borderColor: cor } : { borderColor: cor }}
       >
-        {feita && <Check size={17} strokeWidth={3} className="text-base-900" />}
+        {feita && <Check key={vezes} size={17} strokeWidth={3} className="text-base-900 animate-surgir" />}
       </button>
 
       <Link href={`/tarefas/${tarefa.id}`} className="flex-1 min-w-0">
-        <p className={`text-base font-medium truncate ${feita ? "line-through text-ink-400" : ""}`}>{tarefa.titulo}</p>
+        <p className={`text-base font-medium truncate transition-colors duration-300 ${feita ? "text-ink-400" : ""}`}>
+          <span className={feita ? "riscado" : ""}>{tarefa.titulo}</span>
+        </p>
         <div className="flex items-center gap-1.5 flex-wrap mt-0.5 text-xs text-ink-400">
           {prioridade > 0 && (
             <span className={`flex items-center gap-1 ${PRIORIDADES[prioridade].classe}`}>
