@@ -6,7 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { hexDaCor } from "@/lib/agenda/estilo";
 import { definirCorBarraStatus } from "@/lib/app/barraStatus";
 import { IconeHabito } from "@/components/IconeHabito";
-import { ICONES_HABITO } from "@/lib/agenda/icones-habito";
+import { SeletorIcone } from "@/components/SeletorIcone";
 import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
 
 // Etapa 227 — cor clara pede texto escuro no topo colorido
@@ -65,7 +65,7 @@ export function FormularioHabito({
   textoBotao: string;
 }) {
   const [cor, setCor] = useState(valoresIniciais?.cor ?? "habito");
-  const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_HABITO[0].nome);
+  const [icone, setIcone] = useState(valoresIniciais?.icone || "Droplet");
   const [ehNegativo, setEhNegativo] = useState(valoresIniciais?.ehNegativo ?? false);
   const [frequencia, setFrequencia] = useState<"diaria" | "dias_semana" | "semanal">(
     (valoresIniciais?.frequencia as "diaria" | "dias_semana" | "semanal") ?? "diaria"
@@ -197,23 +197,8 @@ export function FormularioHabito({
       </div>
 
       <div>
-        <span className="block text-base font-medium mb-2">Ícone</span>
-        <div className="grade-icones">
-          {ICONES_HABITO.map(({ nome, Icone }) => (
-            <button
-              type="button"
-              key={nome}
-              onClick={() => setIcone(nome)}
-              aria-label={nome}
-              className={`w-full h-10 rounded-lg flex items-center justify-center border transition ${
-                icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
-              }`}
-            >
-              <Icone size={18} strokeWidth={2} />
-            </button>
-          ))}
-        </div>
-        <input type="hidden" name="icone" value={icone} />
+        <span className="block text-base font-medium mb-2">Ícone ou emoji</span>
+        <SeletorIcone tipo="habito" valor={icone} aoMudar={setIcone} name="icone" />
       </div>
 
       <div>

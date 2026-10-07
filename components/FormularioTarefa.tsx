@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { criarTarefa } from "@/app/habitos/tarefas/actions";
-import { ICONES_HABITO } from "@/lib/agenda/icones-habito";
+import { SeletorIcone } from "@/components/SeletorIcone";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { PRIORIDADES, descreverRepeticao } from "@/lib/agenda/recorrencia";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
@@ -92,7 +92,7 @@ export function FormularioTarefa({
   const mesHoje = Number(hoje.slice(5, 7));
   const intervaloInicial = valoresIniciais?.intervaloDias ?? 7;
 
-  const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_HABITO[8].nome); // NotebookPen
+  const [icone, setIcone] = useState(valoresIniciais?.icone || "NotebookPen");
   const [repetir, setRepetir] = useState<TipoRepeticao>(valoresIniciais?.repetir ?? "nenhuma");
   const [diasSelecionados, setDiasSelecionados] = useState<number[]>(
     valoresIniciais?.diasSemana?.length ? valoresIniciais.diasSemana : [1, 2, 3, 4, 5]
@@ -179,23 +179,8 @@ export function FormularioTarefa({
             </div>
 
             <div>
-              <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-              <div className="grade-icones">
-                {ICONES_HABITO.map(({ nome, Icone }) => (
-                  <button
-                    type="button"
-                    key={nome}
-                    onClick={() => setIcone(nome)}
-                    aria-label={nome}
-                    className={`w-full h-10 rounded-lg flex items-center justify-center border transition ${
-                      icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
-                    }`}
-                  >
-                    <Icone size={18} strokeWidth={2} />
-                  </button>
-                ))}
-              </div>
-              <input type="hidden" name="icone" value={icone} />
+              <span className="block text-sm text-ink-400 mb-2">Ícone ou emoji</span>
+              <SeletorIcone tipo="habito" valor={icone} aoMudar={setIcone} name="icone" />
             </div>
 
             {categorias.length > 0 && (

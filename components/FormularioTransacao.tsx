@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { criarTransacao, criarCategoriaRapida, removerParcelasDaqui } from "@/app/financas/actions";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
-import { ICONES_CATEGORIA } from "@/lib/financas/icones-categoria";
+import { SeletorIcone } from "@/components/SeletorIcone";
+import { ehEmoji } from "@/lib/geral/emojis";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { adicionarNaFila } from "@/lib/offline/fila";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
@@ -89,7 +90,7 @@ export function FormularioTransacao({
   const [categoriaSugerida, setCategoriaSugerida] = useState(false);
   const [mostrarNovaCategoria, setMostrarNovaCategoria] = useState(false);
   const [nomeNovaCategoria, setNomeNovaCategoria] = useState("");
-  const [iconeNovaCategoria, setIconeNovaCategoria] = useState(ICONES_CATEGORIA[0].nome);
+  const [iconeNovaCategoria, setIconeNovaCategoria] = useState("🛒");
   const [erroCategoria, setErroCategoria] = useState("");
   const [criandoCategoria, iniciarCriacaoCategoria] = useTransition();
 
@@ -148,7 +149,7 @@ export function FormularioTransacao({
   }
 
   function abrirNovaCategoria() {
-    setIconeNovaCategoria(ICONES_CATEGORIA[0].nome);
+    setIconeNovaCategoria("🛒");
     setNomeNovaCategoria("");
     setErroCategoria("");
     setMostrarNovaCategoria(true);
@@ -306,13 +307,18 @@ export function FormularioTransacao({
             <label htmlFor="categoriaId" className="block text-base font-medium">
               Categoria
             </label>
-            <button
-              type="button"
-              onClick={abrirNovaCategoria}
-              className="text-sm text-financa hover:underline"
-            >
-              + Nova categoria
-            </button>
+            <div className="flex items-center gap-3">
+              <Link href="/financas/categorias" className="text-sm text-ink-400 hover:text-ink-100 transition">
+                Editar
+              </Link>
+              <button
+                type="button"
+                onClick={abrirNovaCategoria}
+                className="text-sm text-financa hover:underline"
+              >
+                + Nova categoria
+              </button>
+            </div>
           </div>
           <select
             id="categoriaId"
@@ -328,7 +334,7 @@ export function FormularioTransacao({
             <option value="">Sem categoria</option>
             {categoriasFiltradas.map((cat) => (
               <option key={cat.id} value={cat.id}>
-                {cat.nome}
+                {`${ehEmoji(cat.icone) ? `${cat.icone} ` : ""}${cat.nome}`}
               </option>
             ))}
           </select>
@@ -346,21 +352,7 @@ export function FormularioTransacao({
                 autoFocus
                 className="w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
               />
-              <div className="grid grid-cols-8 lg:grid-cols-12 gap-1.5 max-h-40 overflow-y-auto">
-                {ICONES_CATEGORIA.map(({ nome, Icone }) => (
-                  <button
-                    type="button"
-                    key={nome}
-                    onClick={() => setIconeNovaCategoria(nome)}
-                    aria-label={nome}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center border transition ${
-                      iconeNovaCategoria === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400"
-                    }`}
-                  >
-                    <Icone size={16} strokeWidth={2} />
-                  </button>
-                ))}
-              </div>
+              <SeletorIcone tipo="categoria" valor={iconeNovaCategoria} aoMudar={setIconeNovaCategoria} compacto />
               {erroCategoria && <p className="text-xs text-red-400">{erroCategoria}</p>}
               <div className="flex gap-2">
                 <button

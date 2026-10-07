@@ -30,9 +30,21 @@ export default function CategoriasPage() {
   function CartaoCategoria({ cat }: { cat: any }) {
     const ehMinha = cat.dono_id === meuId;
     return (
-      <div className="relative bg-base-800 border border-base-600 rounded-xl2 p-4 flex flex-col items-center text-center">
+      <div
+        className={`relative bg-base-800 border border-base-600 rounded-xl2 p-4 flex flex-col items-center text-center transition ${
+          ehMinha ? "hover:border-ink-400 active:scale-[0.98]" : ""
+        }`}
+      >
+        {/* Etapa 272 — o cartão inteiro abre a edição (antes só pelo menu ⋯) */}
+        {ehMinha && (
+          <Link
+            href={`/financas/categorias/${cat.id}/editar`}
+            aria-label={`Editar ${cat.nome}`}
+            className="absolute inset-0 rounded-xl2 z-0"
+          />
+        )}
         {ehMinha ? (
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 right-2 z-10">
             <MenuAcoes>
               {(fecharMenu) => (
                 <>
@@ -63,15 +75,20 @@ export default function CategoriasPage() {
           </span>
         )}
         <span
-          className={`w-14 h-14 rounded-full flex items-center justify-center text-xl mb-2.5 ${classeFundoSuave(cat.cor)}`}
+          className={`w-14 h-14 rounded-full flex items-center justify-center mb-2.5 pointer-events-none ${classeFundoSuave(cat.cor)}`}
         >
-          <IconeCategoria icone={cat.icone} />
+          <IconeCategoria icone={cat.icone} tamanho={24} />
         </span>
-        <p className="text-sm font-medium truncate max-w-full px-1">{cat.nome}</p>
+        <p className="text-sm font-medium truncate max-w-full px-1 pointer-events-none">{cat.nome}</p>
         {cat.meta_mensal && (
-          <p className="text-xs text-ink-400 mt-0.5 break-words max-w-full px-1">
+          <p className="text-xs text-ink-400 mt-0.5 break-words max-w-full px-1 pointer-events-none">
             até {formatarMoeda(Number(cat.meta_mensal))}
           </p>
+        )}
+        {ehMinha && (
+          <span className="mt-2 inline-flex items-center gap-1 text-[11px] text-ink-400 bg-base-700 rounded-full px-2.5 py-0.5 pointer-events-none">
+            <Pencil size={11} strokeWidth={2} /> Editar
+          </span>
         )}
       </div>
     );
@@ -85,6 +102,7 @@ export default function CategoriasPage() {
             ← Finanças
           </Link>
           <h1 className="text-3xl font-display font-bold mt-2">Categorias</h1>
+          <p className="text-sm text-ink-400 mt-1">Toque numa categoria pra trocar nome, cor, ícone ou emoji.</p>
         </div>
         <Link
           href="/financas/categorias/nova"

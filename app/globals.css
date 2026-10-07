@@ -76,7 +76,9 @@ html[data-fonte="maior"] { font-size: 125%; }
   .form-coluna { @apply space-y-5 min-w-0; }
   .form-rodape { @apply mt-8 lg:max-w-sm lg:ml-auto; }
   /* grade de ícones que se ajusta à largura da coluna (não vaza) */
-  .grade-icones { @apply grid gap-2 max-h-56 overflow-y-auto pr-1; grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr)); }
+  .grade-icones { @apply grid gap-2 max-h-64 overflow-y-auto pr-1; grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr)); }
+  /* Etapa 272 — versão menor, usada dentro de outros formulários */
+  .grade-icones-compacta { @apply gap-1.5 max-h-44; grid-template-columns: repeat(auto-fill, minmax(2.25rem, 1fr)); }
 }
 
 /* Trilho: elemento de assinatura visual — a linha que conecta os 3 módulos */

@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { criarCategoria } from "@/app/financas/actions";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
-import { ICONES_CATEGORIA } from "@/lib/financas/icones-categoria";
-import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
+import { CORES_DISPONIVEIS, classeFundoSuave } from "@/lib/agenda/estilo";
+import { SeletorIcone } from "@/components/SeletorIcone";
+import { IconeCategoria } from "@/components/IconeCategoria";
 
 export function FormularioCategoria({
   action = criarCategoria,
@@ -29,8 +30,9 @@ export function FormularioCategoria({
   };
 }) {
   const [tipo, setTipo] = useState<"despesa" | "receita">(valoresIniciais?.tipo ?? "despesa");
-  const [icone, setIcone] = useState(valoresIniciais?.icone ?? ICONES_CATEGORIA[0].nome);
+  const [icone, setIcone] = useState(valoresIniciais?.icone || "🛒");
   const [cor, setCor] = useState(valoresIniciais?.cor ?? "financa");
+  const [nome, setNome] = useState(valoresIniciais?.nome ?? "");
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
@@ -38,6 +40,19 @@ export function FormularioCategoria({
         ← Categorias
       </Link>
       <h1 className="text-3xl font-display font-bold mt-4 mb-6">{titulo}</h1>
+
+      {/* Etapa 272 — prévia ao vivo de como a categoria vai aparecer */}
+      <div className="flex items-center gap-3.5 bg-base-800 border border-base-600 rounded-2xl p-4 mb-6 lg:max-w-md">
+        <span className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${classeFundoSuave(cor)}`}>
+          <IconeCategoria icone={icone} tamanho={26} />
+        </span>
+        <div className="min-w-0">
+          <p className="font-medium truncate">{nome.trim() || "Nome da categoria"}</p>
+          <p className={`text-xs mt-0.5 ${tipo === "despesa" ? "text-red-400" : "text-habito"}`}>
+            {tipo === "despesa" ? "Despesa" : "Receita"}
+          </p>
+        </div>
+      </div>
 
       {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
@@ -57,7 +72,8 @@ export function FormularioCategoria({
             name="nome"
             type="text"
             required
-            defaultValue={valoresIniciais?.nome}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
             placeholder="Ex: Assinaturas, Educação"
             className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition"
           />
@@ -113,23 +129,8 @@ export function FormularioCategoria({
         <div className="form-coluna">
 
         <div>
-          <span className="block text-sm text-ink-400 mb-2">Ícone</span>
-          <div className="grade-icones">
-            {ICONES_CATEGORIA.map(({ nome, Icone }) => (
-              <button
-                type="button"
-                key={nome}
-                onClick={() => setIcone(nome)}
-                aria-label={nome}
-                className={`w-full h-10 rounded-lg flex items-center justify-center border transition ${
-                  icone === nome ? "border-ink-100 bg-base-700 text-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
-                }`}
-              >
-                <Icone size={18} strokeWidth={2} />
-              </button>
-            ))}
-          </div>
-          <input type="hidden" name="icone" value={icone} />
+          <span className="block text-sm text-ink-400 mb-2">Ícone ou emoji</span>
+          <SeletorIcone tipo="categoria" valor={icone} aoMudar={setIcone} name="icone" />
         </div>
 
         <div>
