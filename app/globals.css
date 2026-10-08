@@ -55,9 +55,32 @@ html[data-fonte="maior"] { font-size: 125%; }
   h1, h2, h3 {
     @apply font-display;
   }
+  /* Etapa 275 — o contorno de foco (teclado/leitor de tela) agora
+     acompanha o tema: no claro ele ficava branco e sumia */
   :focus-visible {
-    outline: 2px solid #F2F0EA;
+    outline: 2px solid rgb(var(--c-ink-100));
     outline-offset: 2px;
+  }
+  /* Etapa 275 — toque mais "nativo" no celular: sem o flash azul do
+     Android e sem a espera de ~300ms do zoom por toque duplo */
+  a, button, [role="button"], label, summary {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  /* palavras/e-mails/links enormes quebram em vez de vazar da tela */
+  body {
+    overflow-wrap: break-word;
+  }
+  img, video {
+    max-width: 100%;
+  }
+}
+
+/* Etapa 275 — só no iPhone/iPad: campos com 16px no mínimo, senão o
+   Safari dá zoom sozinho ao tocar num campo */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: max(16px, 1em);
   }
 }
 
@@ -74,6 +97,8 @@ html[data-fonte="maior"] { font-size: 125%; }
   .pagina-curta { @apply w-full max-w-2xl lg:max-w-3xl mx-auto; }
   .form-colunas { @apply grid gap-5 lg:grid-cols-2 lg:gap-x-10 lg:items-start; }
   .form-coluna { @apply space-y-5 min-w-0; }
+  /* Etapa 275 — nenhum filho de grade de formulário alarga a coluna */
+  .form-colunas > * { min-width: 0; }
   .form-rodape { @apply mt-8 lg:max-w-sm lg:ml-auto; }
   /* grade de ícones que se ajusta à largura da coluna (não vaza) */
   .grade-icones { @apply grid gap-2 max-h-64 overflow-y-auto pr-1; grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr)); }

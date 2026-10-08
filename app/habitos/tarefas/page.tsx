@@ -137,6 +137,8 @@ export default function TarefasPage() {
 
   const pctHoje = resumo.deHoje ? Math.round((resumo.feitasHoje / resumo.deHoje) * 100) : 0;
   const tudoFeitoHoje = resumo.deHoje > 0 && resumo.feitasHoje === resumo.deHoje;
+  // Etapa 275 — quantas pedem uma decisão (atrasadas ou sem data)
+  const paraRevisar = todas.filter((t) => t.repetir === "nenhuma" && !t.concluida && (!t.data || t.data < hoje)).length;
   useEffect(() => {
     if (marcouAgora.current && tudoFeitoHoje) {
       setComemorar(true);
@@ -189,6 +191,28 @@ export default function TarefasPage() {
               </div>
             </div>
           </section>
+
+          {/* Etapa 275 — revisão semanal guiada */}
+          <Link
+            href="/tarefas/revisao"
+            className="flex items-center gap-3 rounded-2xl border border-base-600 bg-base-800 px-4 py-3 mb-4 hover:border-nota/60 transition active:scale-[0.99]"
+          >
+            <span className="text-2xl">🧹</span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-medium">Revisar a semana</span>
+              <span className="block text-xs text-ink-400">
+                {paraRevisar > 0
+                  ? `${paraRevisar} tarefa${paraRevisar > 1 ? "s" : ""} esperando uma decisão`
+                  : "Tudo em dia — dá uma olhada nos próximos 7 dias"}
+              </span>
+            </span>
+            {paraRevisar > 0 && (
+              <span className="text-xs font-semibold bg-nota text-base-900 rounded-full min-w-[1.5rem] h-6 px-2 flex items-center justify-center">
+                {paraRevisar}
+              </span>
+            )}
+            <span className="text-ink-400">→</span>
+          </Link>
 
           {/* Adicionar rápido */}
           <form

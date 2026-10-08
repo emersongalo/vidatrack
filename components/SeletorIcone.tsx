@@ -44,8 +44,8 @@ export function SeletorIcone({
   const grade = compacto ? "grade-icones grade-icones-compacta" : "grade-icones";
 
   function classeBotao(ativo: boolean) {
-    return `w-full ${tamBotao} rounded-xl flex items-center justify-center border transition active:scale-95 ${
-      ativo ? "border-ink-100 bg-base-700 text-ink-100 ring-1 ring-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
+    return `w-full min-w-0 ${tamBotao} rounded-xl flex items-center justify-center overflow-hidden border transition active:scale-95 ${
+      ativo ? "border-ink-100 bg-base-700 text-ink-100 ring-1 ring-inset ring-ink-100" : "border-base-600 text-ink-400 hover:border-ink-400"
     }`;
   }
 
@@ -56,7 +56,9 @@ export function SeletorIcone({
   }
 
   return (
-    <div>
+    // Etapa 274 — min-w-0/w-full: nunca deixa o seletor alargar a coluna
+    // do formulário (no celular a tela ficava cortada do lado direito)
+    <div className="w-full min-w-0 max-w-full">
       <div className="flex gap-1 p-1 bg-base-800 border border-base-600 rounded-xl mb-2.5" role="tablist">
         {(
           [
@@ -81,7 +83,8 @@ export function SeletorIcone({
 
       {aba === "emojis" ? (
         <>
-          <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
+          {/* w-0 + min-w-full: a fileira rola sozinha sem empurrar a largura da tela */}
+          <div className="w-0 min-w-full flex gap-1.5 overflow-x-auto pb-2 scrollbar-none overscroll-x-contain">
             {grupos.map((g, i) => (
               <button
                 key={g.titulo}
@@ -115,7 +118,7 @@ export function SeletorIcone({
               onChange={(e) => usarColado(e.target.value)}
               maxLength={16}
               placeholder="Ou digite/cole outro emoji aqui"
-              className="mt-2.5 w-full bg-base-800 border border-base-600 rounded-xl px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
+              className="mt-2.5 w-full min-w-0 bg-base-800 border border-base-600 rounded-xl px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition"
             />
           )}
         </>

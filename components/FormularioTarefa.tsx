@@ -143,7 +143,7 @@ export function FormularioTarefa({
             (título, ícone, prioridade...) à esquerda e o "quando"
             (repetição, lembrete) à direita. No celular continua uma
             coluna só, na mesma ordem. */}
-        <div className="grid gap-5 lg:grid-cols-2 lg:gap-x-10">
+        <div className="grid gap-5 lg:grid-cols-2 lg:gap-x-10 [&>*]:min-w-0">
           <div className="space-y-5">
             <div>
               <label htmlFor="titulo" className="block text-sm text-ink-400 mb-1">

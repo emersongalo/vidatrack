@@ -3,11 +3,12 @@
 // Etapa 264 — menu lateral (computador) da área de Tarefas
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CheckSquare, Plus, LayoutGrid, Trash2 } from "lucide-react";
+import { CheckSquare, Plus, LayoutGrid, Trash2, ListChecks } from "lucide-react";
 
 const ITENS = [
   { href: "/tarefas", rotulo: "Minhas tarefas", Icone: CheckSquare },
   { href: "/tarefas/nova", rotulo: "Nova tarefa", Icone: Plus },
+  { href: "/tarefas/revisao", rotulo: "Revisão da semana", Icone: ListChecks },
   { href: "/habitos/categorias", rotulo: "Categorias", Icone: LayoutGrid },
   { href: "/tarefas/lixeira", rotulo: "Lixeira", Icone: Trash2 },
 ];

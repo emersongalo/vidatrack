@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { RefreshCw, Bell } from "lucide-react";
 import { classeCor, classeFundoSuave, classeTextoCor, hexDaCor } from "@/lib/agenda/estilo";
-import { explodirEm, textoFlutuante, frasePositiva } from "@/lib/app/festa";
+import { explodirEm, textoFlutuante, frasePositiva, chuvaDeConfete } from "@/lib/app/festa";
+import { lerSnapshotOffline } from "@/lib/offline/snapshot";
+import { diasFeitos, subiriaDeNivel, type Nivel } from "@/lib/habitos/nivel";
 import { IconeHabito } from "@/components/IconeHabito";
 import { CelebracaoConquista } from "@/components/CelebracaoConquista";
 import { alternarCheckin, ajustarQuantidadeHabito, salvarObservacaoCheckin } from "@/app/habitos/actions";
@@ -20,6 +22,18 @@ import type { InfoDupla } from "@/lib/habitos/dupla";
 
 // Etapa 230 — vibraçãozinha ao marcar (no celular)
 const LIMITE_NOTA = 1000;
+
+/** Etapa 275 — se este check-in faz o hábito subir de nível, devolve o nível novo. */
+function nivelNovoAoMarcar(habitoId: string): Nivel | null {
+  try {
+    const snap = lerSnapshotOffline();
+    const habito = (snap?.habitos as any[] | undefined)?.find((h) => h.id === habitoId);
+    if (!habito || habito.eh_negativo) return null;
+    return subiriaDeNivel(diasFeitos(habito, (snap?.habitoCheckins ?? []) as any[]));
+  } catch {
+    return null;
+  }
+}
 
 export function vibrar(padrao: number | number[] = 15) {
   try {
@@ -179,7 +193,14 @@ export function ItemLinhaAgenda({
       setPulsar((n) => n + 1);
       const cor = hexDaCor(item.cor);
       explodirEm(refBotao.current, { cor, emojis: item.tipo === "habito" ? ["✨", "⭐"] : ["✨"] });
-      textoFlutuante(refBotao.current, frasePositiva(), cor);
+      const nivel = item.tipo === "habito" && item.ehHoje !== false ? nivelNovoAoMarcar(item.id) : null;
+      if (nivel) {
+        textoFlutuante(refBotao.current, `Nível ${nivel.numero}! ${nivel.emoji} ${nivel.nome}`, cor);
+        chuvaDeConfete({ quantidade: 50, duracao: 2200 });
+        vibrar([20, 50, 20, 50, 40]);
+      } else {
+        textoFlutuante(refBotao.current, frasePositiva(), cor);
+      }
     }
     aoAlternarLocal?.();
 
@@ -226,7 +247,9 @@ export function ItemLinhaAgenda({
       const cor = hexDaCor(item.cor);
       if (vaiCompletar) {
         explodirEm(refMais.current, { cor, emojis: ["✨", "⭐"] });
-        textoFlutuante(refMais.current, "Meta batida! 🎯", cor);
+        const nivel = item.ehHoje !== false ? nivelNovoAoMarcar(item.id) : null;
+        textoFlutuante(refMais.current, nivel ? `Nível ${nivel.numero}! ${nivel.emoji} ${nivel.nome}` : "Meta batida! 🎯", cor);
+        if (nivel) chuvaDeConfete({ quantidade: 50, duracao: 2200 });
       } else {
         textoFlutuante(refMais.current, `+1${item.meta?.unidade ? ` ${item.meta.unidade}` : ""}`, cor);
       }

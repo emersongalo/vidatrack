@@ -12,6 +12,7 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { descreverRepeticao, tarefaAtrasada, PRIORIDADES } from "@/lib/agenda/recorrencia";
 import { hojeISO } from "@/lib/habitos/streak";
 import { CarregandoTela } from "@/components/Esqueleto";
+import { FocoTarefa } from "@/components/FocoTarefa";
 
 // Etapa 134
 export default function DetalheTarefaPage() {
@@ -31,6 +32,8 @@ function DetalheTarefaConteudo() {
   // do React) — por isso o valor de partida é um objeto vazio, não os
   // dados da tarefa (que a essa altura ainda não sabemos se existe).
   const [subtarefasSobrepostas, setSubtarefasSobrepostas] = useState<Record<string, boolean>>({});
+  // Etapa 275 — modo foco
+  const [focando, setFocando] = useState(false);
 
   if (snapshot === undefined) return <CarregandoTela linhas={3} />;
 
@@ -133,6 +136,26 @@ function DetalheTarefaConteudo() {
         >
           {tarefa.concluida ? "Marcada como concluída ✓" : "Marcar como concluída"}
         </button>
+      )}
+
+      {/* Etapa 275 — modo foco */}
+      {!(tarefa.repetir === "nenhuma" && tarefa.concluida) && (
+        <button
+          type="button"
+          onClick={() => setFocando(true)}
+          className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-medium border border-nota/40 text-nota bg-nota/10 hover:bg-nota/15 transition mb-6 active:scale-[0.98]"
+        >
+          🎯 Focar nesta tarefa
+        </button>
+      )}
+      {focando && (
+        <FocoTarefa
+          tarefa={{ ...tarefa, subtarefas }}
+          aoFechar={() => {
+            setFocando(false);
+            recarregar();
+          }}
+        />
       )}
 
       {tarefa.observacoes && (

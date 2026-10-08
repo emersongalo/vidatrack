@@ -17,6 +17,8 @@ import { CarregandoTela } from "@/components/Esqueleto";
 import { CartaoParar } from "@/components/CartaoParar";
 import { MelhorHorario } from "@/components/MelhorHorario";
 import { Dica } from "@/components/Dica";
+import { CartaoNivel } from "@/components/CartaoNivel";
+import { diasFeitos } from "@/lib/habitos/nivel";
 
 const DIAS_SEMANA = ["D", "S", "T", "Q", "Q", "S", "S"];
 
@@ -118,6 +120,9 @@ export default function DetalheHabitoPage() {
           </div>
         </div>
         )}
+
+        {/* Etapa 275 — nível do hábito */}
+        {!habito.eh_negativo && <CartaoNivel dias={diasFeitos(habito, snapshot!.habitoCheckins as any[])} hex={hex} />}
 
         {/* Etapa 249 — melhor horário */}
         {!habito.eh_negativo && (

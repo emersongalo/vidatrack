@@ -1,13 +1,23 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "273";
+export const VERSAO_NOVIDADES = "275";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "275",
+    titulo: "Foco, revisão e níveis",
+    itens: [
+      { emoji: "🎯", titulo: "Modo foco nas tarefas", texto: "Abra uma tarefa e toque em \"Focar nesta tarefa\": tela só com ela, timer de 15/25/45 min, checklist à mão e o \"Concluí!\" com confete no fim.", href: "/tarefas" },
+      { emoji: "🧹", titulo: "Revisão da semana", texto: "Em Tarefas, passe uma por uma as atrasadas e sem data: já fiz, hoje, amanhã, próxima semana ou não vou fazer. No fim, veja seus próximos 7 dias.", href: "/tarefas/revisao" },
+      { emoji: "🌱", titulo: "Níveis nos hábitos", texto: "Cada hábito cresce de Semente até Lenda 👑 conforme os dias feitos. Veja no detalhe do hábito — e subir de nível vira festa." },
+      { emoji: "✨", titulo: "Toques mais suaves", texto: "Telas que não cortam mais no celular, toque mais rápido e melhor contraste no tema claro." },
+    ],
+  },
   {
     versao: "273",
     titulo: "Convites e mais festa",
