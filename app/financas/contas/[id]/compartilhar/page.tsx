@@ -32,6 +32,11 @@ function CompartilharContaConteudo() {
       <p className="text-xs text-ink-400 mb-6 bg-base-800 border border-base-600 rounded-lg px-3 py-2">
         Quem tiver acesso a essa conta vê e lança transações nela — as categorias continuam pessoais de cada um.
       </p>
+      {/* Etapa 277 */}
+      <p className="text-xs text-ink-400 -mt-4 mb-6 bg-financa/10 border border-financa/30 rounded-lg px-3 py-2">
+        🔔 Cada movimentação nessa conta (gasto, receita, "Paguei" ou "Caiu") vira um aviso no celular de quem participa.
+        Cada um pode desligar em Notificações.
+      </p>
 
       <PainelCompartilhamentoCliente
         tipoItem="financa"

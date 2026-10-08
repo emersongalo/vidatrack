@@ -4,6 +4,7 @@
 // Etapa 268 — "Caiu o salário?": receitas programadas que chegaram o
 // dia esperam confirmação. "Caiu" entra no saldo na hora; "Adiar" muda
 // a data (amanhã, +2, +5 dias ou outra) e ela volta a perguntar no dia.
+import { avisarConfirmacaoMovimentacao } from "@/app/financas/avisos";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Check, CalendarClock, Pencil } from "lucide-react";
@@ -57,6 +58,8 @@ export function ConfirmarReceitas({ snapshot, noInicio = false }: { snapshot: an
     }
     vibrar(resultado === "caiu" ? [15, 40, 25] : 10);
     atualizarSnapshotEmTodasAsTelas();
+    // Etapa 277 — conta compartilhada: avisa quem participa
+    if (resultado === "caiu") void avisarConfirmacaoMovimentacao(id).catch(() => {});
   }
 
   const soReceitas = visiveis.every((t) => t.tipo === "receita");

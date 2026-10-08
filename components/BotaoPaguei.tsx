@@ -1,5 +1,6 @@
 "use client";
 
+import { avisarConfirmacaoMovimentacao } from "@/app/financas/avisos";
 import { useState } from "react";
 import { Check, Undo2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -45,6 +46,8 @@ export function BotaoPaguei({
       return;
     }
     atualizarSnapshotEmTodasAsTelas();
+    // Etapa 277 — conta compartilhada: avisa quem participa
+    if (novo) void avisarConfirmacaoMovimentacao(transacao.id).catch(() => {});
   }
 
   if (pagoEm) {

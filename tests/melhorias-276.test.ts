@@ -109,6 +109,6 @@ describe("Etapa 276 — desfazer", () => {
 });
 
 it("novidades 276 no topo", () => {
-  expect(VERSAO_NOVIDADES).toBe("276");
-  expect(NOVIDADES[0].versao).toBe("276");
+  expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(276);
+  expect(NOVIDADES.some((g) => g.versao === "276")).toBe(true);
 });

@@ -14,6 +14,7 @@ import {
 } from "@/lib/validacao/financas";
 import { lerLimite } from "@/lib/financas/limite";
 import { dataAtualNoFuso } from "@/lib/tempo/fuso";
+import { avisarMovimentacao } from "@/lib/financas/avisoMovimentacao";
 
 /**
  * Etapa 199 — versão usada pela tela Contas: em vez de redirecionar
@@ -355,6 +356,17 @@ export async function criarTransacao(formData: FormData) {
     }));
     const { error: erroParcelas } = await supabase.from("financa_transacoes").insert(linhas);
     if (erroParcelas) redirect(`/financas/nova?erro=${encodeURIComponent(erroParcelas.message)}`);
+    // Etapa 277 — conta compartilhada: avisa quem participa
+    await avisarMovimentacao(user!.id, d.contaId, {
+      acao: "lancou",
+      tipo: d.tipo,
+      valor: valores.reduce((s, v) => s + v, 0),
+      descricao: nomeBase,
+      categoriaId: d.categoriaId,
+      data: d.data,
+      parcelas: n,
+      hoje: dataAtualNoFuso(),
+    });
     revalidatePath("/financas");
     redirect("/financas");
   }
@@ -377,6 +389,17 @@ export async function criarTransacao(formData: FormData) {
   if (error) {
     redirect(`/financas/nova?erro=${encodeURIComponent(error.message)}`);
   }
+
+  // Etapa 277 — conta compartilhada: avisa quem participa
+  await avisarMovimentacao(user!.id, resultado.data.contaId, {
+    acao: "lancou",
+    tipo: resultado.data.tipo,
+    valor: Number(resultado.data.valor),
+    descricao: resultado.data.descricao,
+    categoriaId: resultado.data.categoriaId,
+    data: resultado.data.data,
+    hoje: dataAtualNoFuso(),
+  });
 
   // "Repetir todo mês" marcado: além do lançamento de hoje, já deixa
   // configurada a recorrência pros próximos meses (a mesma tabela que
@@ -448,6 +471,19 @@ export async function criarTransacaoSilenciosa(dadosFormulario: {
     descricao: resultado.data.descricao,
     data: resultado.data.data,
   });
+
+  // Etapa 277 — conta compartilhada: avisa quem participa
+  if (!error) {
+    await avisarMovimentacao(user.id, resultado.data.contaId, {
+      acao: "lancou",
+      tipo: resultado.data.tipo,
+      valor: Number(resultado.data.valor),
+      descricao: resultado.data.descricao,
+      categoriaId: resultado.data.categoriaId,
+      data: resultado.data.data,
+      hoje: dataAtualNoFuso(),
+    });
+  }
 
   revalidatePath("/financas");
   return { sucesso: !error, erro: error?.message };

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Moon, BarChart3, Sun, Wallet, HeartHandshake, Receipt } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-type Chave = "resumo_manha" | "aviso_noite" | "resumo_semanal" | "lembrete_lancar" | "avisos_dupla";
+type Chave = "resumo_manha" | "aviso_noite" | "resumo_semanal" | "lembrete_lancar" | "avisos_dupla" | "avisos_movimentacoes";
 
 const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }[] = [
   {
@@ -37,6 +37,12 @@ const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }
     texto: "Quando seu par fizer um hábito de vocês, te cutucar ou reagir ao seu.",
     Icone: HeartHandshake,
   },
+  {
+    chave: "avisos_movimentacoes",
+    titulo: "Movimentações das contas compartilhadas",
+    texto: "Quando alguém lançar um gasto ou receita, ou marcar como pago, numa conta que vocês compartilham.",
+    Icone: Receipt,
+  },
 ];
 
 const HORARIOS_SUGERIDOS = ["06:00", "07:00", "08:00", "09:00", "10:00", "12:00", "18:00", "20:00"];
@@ -53,13 +59,14 @@ export function PreferenciasAvisos() {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal, resumo_manha, lembrete_lancar, avisos_dupla, horario_contas").eq("id", user.id).maybeSingle();
+      const { data } = await supabase.from("perfis").select("aviso_noite, resumo_semanal, resumo_manha, lembrete_lancar, avisos_dupla, avisos_movimentacoes, horario_contas").eq("id", user.id).maybeSingle();
       setValores({
         resumo_manha: (data as any)?.resumo_manha ?? true,
         aviso_noite: data?.aviso_noite ?? true,
         resumo_semanal: data?.resumo_semanal ?? true,
         lembrete_lancar: (data as any)?.lembrete_lancar ?? true,
         avisos_dupla: (data as any)?.avisos_dupla ?? true,
+        avisos_movimentacoes: (data as any)?.avisos_movimentacoes ?? true,
       });
       setHorarioContas(String((data as any)?.horario_contas ?? "08:00").slice(0, 5));
     });

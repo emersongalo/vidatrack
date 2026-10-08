@@ -1,13 +1,20 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "276";
+export const VERSAO_NOVIDADES = "277";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "277",
+    titulo: "Conta compartilhada avisa",
+    itens: [
+      { emoji: "🔔", titulo: "Avisos de movimentação", texto: "Compartilhou uma conta? Quem participa recebe um aviso a cada gasto, receita, \"Paguei\" ou \"Caiu\" lançado nela. Dá pra desligar em Notificações.", href: "/notificacoes" },
+    ],
+  },
   {
     versao: "276",
     titulo: "Mais leve e mais esperto",
