@@ -182,6 +182,10 @@ export async function GET(request: Request) {
   if (horaAtual >= "20:30" && horaAtual <= "20:35") {
     enviados += await notificarHabitosPendentesDaNoite(supabase, hoje);
   }
+  // Etapa 276 — 21:30: resumo do dia que está fechando (hábitos, tarefas, gastos)
+  if (horaAtual >= "21:30" && horaAtual <= "21:35") {
+    enviados += await notificarResumoDoDia(supabase, hoje);
+  }
   // Etapa 214 — dia 1 às 09:00: resumo do mês que acabou
   if (hoje.endsWith("-01") && horaAtual >= "09:00" && horaAtual <= "09:05") {
     enviados += await notificarResumoMensal(supabase, hoje);
@@ -698,6 +702,71 @@ async function notificarHabitosPendentesDaNoite(
         ? `🌙 Falta só ${listarNomes(r.pendentes)} hoje${feitos ? ` — você já fez ${feitos} de ${r.total}` : ""}. Ainda dá tempo!`
         : `🌙 Faltam ${r.pendentes.length} hábitos hoje: ${listarNomes(r.pendentes)}. Ainda dá tempo de manter a sequência!`;
     enviados += await notificarUsuariosDoItem(supabase, "resumo_noite", usuarioId, usuarioId, texto, "/habitos", hoje);
+  }
+  return enviados;
+}
+
+/**
+ * Etapa 276 — 21:30: "Hoje: 4/5 hábitos, 2 tarefas, R$ 62 gastos".
+ * Vai pra quem deixou o aviso da noite ligado e teve algum movimento.
+ * Tocar abre a tela /resumo-dia.
+ */
+async function notificarResumoDoDia(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+  const { data: perfis } = await supabase.from("perfis").select("id").eq("aviso_noite", true);
+  const ids = (perfis ?? []).map((p) => p.id as string);
+  if (!ids.length) return 0;
+
+  const [{ data: habitos }, { data: checkins }, { data: conclusoes }, { data: unicas }, { data: gastos }] = await Promise.all([
+    supabase
+      .from("habitos")
+      .select("id, dono_id, frequencia, dias_semana, meta_diaria, pausas")
+      .eq("arquivado", false)
+      .eq("eh_negativo", false)
+      .in("dono_id", ids),
+    supabase.from("habito_checkins").select("habito_id, usuario_id, quantidade").eq("data", hoje).in("usuario_id", ids),
+    supabase.from("tarefa_conclusoes").select("usuario_id").eq("data", hoje).in("usuario_id", ids),
+    supabase.from("tarefas").select("dono_id").eq("repetir", "nenhuma").eq("concluida", true).eq("data", hoje).eq("arquivada", false).in("dono_id", ids),
+    supabase
+      .from("financa_transacoes")
+      .select("dono_id, valor")
+      .eq("tipo", "despesa")
+      .is("transferencia_grupo", null)
+      .eq("data", hoje)
+      .in("dono_id", ids),
+  ]);
+
+  const qtd = new Map<string, number>();
+  for (const c of checkins ?? []) {
+    const k = `${c.usuario_id}|${c.habito_id}`;
+    qtd.set(k, (qtd.get(k) ?? 0) + Number(c.quantidade ?? 1));
+  }
+  type R = { devidos: number; feitos: number; tarefas: number; gasto: number };
+  const resumo = new Map<string, R>();
+  const pegar = (id: string) => {
+    let r = resumo.get(id);
+    if (!r) resumo.set(id, (r = { devidos: 0, feitos: 0, tarefas: 0, gasto: 0 }));
+    return r;
+  };
+  for (const h of habitos ?? []) {
+    if (h.frequencia === "semanal" || !habitoDevidoNoDia(h, hoje)) continue;
+    const r = pegar(h.dono_id);
+    r.devidos++;
+    if ((qtd.get(`${h.dono_id}|${h.id}`) ?? 0) >= (h.meta_diaria ?? 1)) r.feitos++;
+  }
+  for (const c of conclusoes ?? []) pegar(c.usuario_id).tarefas++;
+  for (const t of unicas ?? []) pegar((t as any).dono_id).tarefas++;
+  for (const g of gastos ?? []) pegar(g.dono_id).gasto += Number(g.valor);
+
+  let enviados = 0;
+  for (const [usuarioId, r] of resumo) {
+    if (r.feitos === 0 && r.tarefas === 0 && r.gasto === 0) continue;
+    const partes: string[] = [];
+    if (r.devidos > 0) partes.push(`${r.feitos}/${r.devidos} hábitos`);
+    if (r.tarefas > 0) partes.push(`${r.tarefas} ${r.tarefas === 1 ? "tarefa feita" : "tarefas feitas"}`);
+    partes.push(r.gasto > 0 ? `${formatarMoeda(r.gasto)} em gastos` : "nenhum gasto 💚");
+    const emoji = r.devidos > 0 && r.feitos === r.devidos ? "🏆" : "🌙";
+    const texto = `${emoji} Seu dia: ${partes.join(" · ")}. Toque pra ver o resumo.`;
+    enviados += await notificarUsuariosDoItem(supabase, "resumo_noite", usuarioId, usuarioId, texto, "/resumo-dia", hoje, undefined, "resumo-dia");
   }
   return enviados;
 }

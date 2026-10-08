@@ -42,6 +42,6 @@ describe("Etapa 275 — níveis dos hábitos", () => {
 
   it("novidades 275 no topo", () => {
     expect(NOVIDADES[0].versao).toBe(VERSAO_NOVIDADES);
-    expect(VERSAO_NOVIDADES).toBe("275");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(275);
   });
 });

@@ -20,6 +20,8 @@ import { ultimosDias } from "@/lib/habitos/detalhe";
 import { calcularStreak } from "@/lib/habitos/streak";
 import { pausasDe } from "@/lib/habitos/pausa";
 import { resumoDaSemana } from "@/lib/geral/semana";
+import { ofertaDeEscudo } from "@/lib/habitos/escudo";
+import { CartaoEscudo } from "@/components/CartaoEscudo";
 import { createClient } from "@/lib/supabase/client";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { infoDupla, type Parceiro } from "@/lib/habitos/dupla";
@@ -206,6 +208,17 @@ function HojeConteudo() {
     return { sequencia, taxaSemana: semana.habitos.devidos > 0 ? semana.habitos.pct : null };
   }, [snapshot, hoje]);
 
+  // Etapa 276 — escudo da sequência: o hábito com a maior sequência em risco
+  const escudo = useMemo(() => {
+    if (!snapshot || dataSelecionada !== hoje) return null;
+    let melhor: { habito: any; oferta: NonNullable<ReturnType<typeof ofertaDeEscudo>> } | null = null;
+    for (const h of snapshot.habitos as any[]) {
+      const o = ofertaDeEscudo(h, snapshot.habitoCheckins as any[], hoje);
+      if (o && (!melhor || o.sequencia > melhor.oferta.sequencia)) melhor = { habito: h, oferta: o };
+    }
+    return melhor;
+  }, [snapshot, dataSelecionada, hoje]);
+
   const layoutSalvo = lerLayoutHoje(snapshot?.perfil?.ordem_blocos_habitos);
   const layout = editandoLayout && layoutEditado ? layoutEditado : layoutSalvo;
 
@@ -239,6 +252,7 @@ function HojeConteudo() {
     ) : null,
     lista: (
       <div className="mb-6">
+          {escudo && <CartaoEscudo key={escudo.habito.id} habito={escudo.habito} oferta={escudo.oferta} compacto />}
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-4 scrollbar-none">
             <button
               onClick={() => setCategoriaFiltro("")}

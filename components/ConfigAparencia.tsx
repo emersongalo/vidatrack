@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { lerAparencia, salvarAparencia, type TamanhoFonte } from "@/lib/preferencias/aparencia";
+import { SeletorPaleta } from "@/components/SeletorPaleta";
 
 // Etapa 215 — acessibilidade: texto maior e alto contraste
 const TAMANHOS: { valor: TamanhoFonte; rotulo: string; classe: string }[] = [
@@ -74,6 +75,9 @@ export function ConfigAparencia() {
           </button>
         ))}
       </div>
+
+      {/* Etapa 276 — paletas extras (recompensa de convite) */}
+      <SeletorPaleta />
 
       <label className="flex items-center justify-between gap-3 max-w-sm cursor-pointer">
         <span>

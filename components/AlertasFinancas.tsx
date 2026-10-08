@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { formatarMoeda } from "@/lib/financas/formatacao";
-import { gastosForaDoNormal, assinaturasNaoCadastradas } from "@/lib/financas/alertas";
+import { gastosForaDoNormal, assinaturasNaoCadastradas, ritmoAcimaDoNormal } from "@/lib/financas/alertas";
 import { faturasVencendo } from "@/lib/financas/previsao";
 import { alertasDeLimite } from "@/lib/financas/limites80";
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
@@ -46,6 +46,21 @@ export function montarAlertasFinancas(snapshot: SnapshotOffline, hojeISO: string
       emoji: "📈",
       texto: `${nomes.get(g.categoriaId) ?? "Categoria"}: ${formatarMoeda(g.gastoMes)} este mês, ${g.percentualAcima}% acima da sua média (${formatarMoeda(g.media)}).`,
       href: `/financas/extrato?categoria=${g.categoriaId}&tipo=despesa&mes=${mes}`,
+      acao: "Ver gastos",
+    });
+  }
+
+  // Etapa 276 — no ritmo de agora, a categoria vai estourar a média
+  for (const r of ritmoAcimaDoNormal(transacoes as any, hojeISO).slice(0, 2)) {
+    const comparacao =
+      r.vezes >= 2
+        ? `${String(r.vezes).replace(".", ",")}× a sua média`
+        : `${Math.round((r.vezes - 1) * 100)}% acima da sua média`;
+    alertas.push({
+      id: `ritmo-${r.categoriaId}-${mes}`,
+      emoji: "🏃",
+      texto: `No ritmo de agora, ${nomes.get(r.categoriaId) ?? "uma categoria"} fecha o mês em ~${formatarMoeda(r.projecao)} — ${comparacao} (${formatarMoeda(r.media)}).`,
+      href: `/financas/extrato?categoria=${r.categoriaId}&tipo=despesa&mes=${mes}`,
       acao: "Ver gastos",
     });
   }

@@ -22,6 +22,7 @@ export function LinhaComDeslizar({
   children,
   icone,
   corFundo = "bg-red-400",
+  semConfirmar = false,
 }: {
   acao: () => void | Promise<void>;
   textoConfirmacao?: string;
@@ -34,6 +35,8 @@ export function LinhaComDeslizar({
   /** Cor de fundo revelada ao arrastar — vermelho pra excluir (ação
    *  sem volta), âmbar pra arquivar (reversível). */
   corFundo?: string;
+  /** Etapa 276 — sem a janela "Tem certeza?": a ação já vem com Desfazer */
+  semConfirmar?: boolean;
 }) {
   const [arrastoX, setArrastoX] = useState(0);
   const [confirmando, setConfirmando] = useState(false);
@@ -68,7 +71,11 @@ export function LinhaComDeslizar({
     if (!inicio.current) return;
     inicio.current = null;
     if (Math.abs(arrastoX) >= LIMIAR_CONFIRMAR) {
-      setConfirmando(true);
+      if (semConfirmar) {
+        void Promise.resolve(acao()).then(() => aoConcluir?.());
+      } else {
+        setConfirmando(true);
+      }
     }
     setArrastoX(0); // sempre volta pro lugar — o vermelho não fica "aberto" sozinho
   }

@@ -135,6 +135,8 @@ function ExtratoConteudo() {
   const [busca, setBusca] = useState(params.get("busca") ?? "");
   // Etapa 230 — busca fica escondida atrás da lupa
   const [buscaAberta, setBuscaAberta] = useState(!!params.get("busca"));
+  // Etapa 276 — buscar em todos os meses (não só no período escolhido)
+  const [buscaEmTudo, setBuscaEmTudo] = useState(params.get("tudo") === "1");
 
   // mantém a URL igual aos filtros (voltar/atualizar a página não perde o filtro)
   useEffect(() => {
@@ -144,6 +146,7 @@ function ExtratoConteudo() {
     if (etiquetaFiltro) q.set("etiqueta", etiquetaFiltro);
     if (tipo !== "todos") q.set("tipo", tipo);
     if (busca.trim()) q.set("busca", busca.trim());
+    if (busca.trim() && buscaEmTudo) q.set("tudo", "1");
     if (periodo.tipo === "mes") {
       if (periodo.mes !== mesDe(new Date().toLocaleDateString("sv-SE"))) q.set("mes", periodo.mes);
     } else if (periodo.tipo === "dia") q.set("dia", periodo.dia);
@@ -155,7 +158,7 @@ function ExtratoConteudo() {
     if (url !== window.location.pathname + window.location.search) {
       window.history.replaceState(window.history.state, "", url);
     }
-  }, [categoriaFiltro, contaFiltro, etiquetaFiltro, tipo, periodo, busca]);
+  }, [categoriaFiltro, contaFiltro, etiquetaFiltro, tipo, periodo, busca, buscaEmTudo]);
 
   const contas = snapshot?.financas.contas ?? [];
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
@@ -167,10 +170,31 @@ function ExtratoConteudo() {
     setPainelPeriodo(false);
   }
 
-  const termo = semAcento(busca.trim());
+  // Etapa 276 — "R$ 62.90" acha "62,90"
+  const termo = semAcento(busca.trim()).replace(/^r\$\s*/, "").replace(/^(\d+)\.(\d{1,2})$/, "$1,$2");
+  const ignorarPeriodo = buscaEmTudo && !!termo;
+  const confere = (t: any) => {
+    if (tipo !== "todos" && t.tipo !== tipo) return false;
+    if (categoriaFiltro === "sem" && t.categoria_id) return false;
+    if (categoriaFiltro && categoriaFiltro !== "sem" && t.categoria_id !== categoriaFiltro) return false;
+    if (contaFiltro && t.conta_id !== contaFiltro) return false;
+    if (etiquetaFiltro && !(t.etiquetas ?? []).includes(etiquetaFiltro)) return false;
+    if (termo) {
+      const cat = t.categoria_id ? (mapaCategorias.get(t.categoria_id) as any)?.nome ?? "" : "";
+      const alvo = semAcento(`${t.descricao ?? ""} ${cat} ${mapaContas.get(t.conta_id) ?? ""} ${(t.etiquetas ?? []).join(" ")} ${Number(t.valor).toFixed(2).replace(".", ",")}`);
+      if (!alvo.includes(termo)) return false;
+    }
+    return true;
+  };
+  // quantos resultados da busca estão fora do período escolhido
+  const foraDoPeriodo = useMemo(() => {
+    if (!termo || ignorarPeriodo) return 0;
+    return (snapshot?.financas.transacoes ?? []).filter((t: any) => (t.data < inicio || t.data > fim) && confere(t)).length;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro, etiquetaFiltro, termo, ignorarPeriodo]);
   const lista = useMemo(() => {
     const filtrada = (snapshot?.financas.transacoes ?? []).filter((t: any) => {
-      if (t.data < inicio || t.data > fim) return false;
+      if (!ignorarPeriodo && (t.data < inicio || t.data > fim)) return false;
       if (tipo !== "todos" && t.tipo !== tipo) return false;
       if (categoriaFiltro === "sem" && t.categoria_id) return false;
       if (categoriaFiltro && categoriaFiltro !== "sem" && t.categoria_id !== categoriaFiltro) return false;
@@ -184,9 +208,10 @@ function ExtratoConteudo() {
       return true;
     });
     // Etapa 207 — agendados/futuros: o mais próximo primeiro
-    const futuro = inicio > new Date().toLocaleDateString("sv-SE");
+    const futuro = !ignorarPeriodo && inicio > new Date().toLocaleDateString("sv-SE");
+    if (ignorarPeriodo) return [...filtrada].sort((a: any, b: any) => String(b.data).localeCompare(String(a.data)));
     return futuro ? [...filtrada].sort((a: any, b: any) => String(a.data).localeCompare(String(b.data))) : filtrada;
-  }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro, etiquetaFiltro, termo]);
+  }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro, etiquetaFiltro, termo, ignorarPeriodo]);
 
   const categoriaInfo = categoriaFiltro && categoriaFiltro !== "sem" ? (mapaCategorias.get(categoriaFiltro) as any) : null;
 
@@ -414,6 +439,25 @@ function ExtratoConteudo() {
           )}
         </div>
       </div>
+      )}
+      {/* Etapa 276 — busca em todos os meses */}
+      {buscaAberta && termo && (
+        <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
+          <button
+            type="button"
+            onClick={() => setBuscaEmTudo((v) => !v)}
+            className={`rounded-full border px-3 py-1.5 transition ${
+              buscaEmTudo ? "border-financa bg-financa/10 text-financa" : "border-base-600 text-ink-400 hover:text-ink-100"
+            }`}
+          >
+            {buscaEmTudo ? "✓ Buscando em todos os meses" : "Buscar em todos os meses"}
+          </button>
+          {!buscaEmTudo && foraDoPeriodo > 0 && (
+            <span className="text-ink-400">
+              +{foraDoPeriodo} em outros meses
+            </span>
+          )}
+        </div>
       )}
 
       <div className="flex gap-2 mb-2">

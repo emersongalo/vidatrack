@@ -15,8 +15,8 @@ const ITENS: { chave: Chave; titulo: string; texto: string; Icone: typeof Moon }
   },
   {
     chave: "aviso_noite",
-    titulo: "Aviso da noite (20:30)",
-    texto: "Se ainda faltar algum hábito do dia, a gente te lembra quais são.",
+    titulo: "Avisos da noite (20:30 e 21:30)",
+    texto: "20:30: se faltar algum hábito, lembramos quais. 21:30: o resumo do seu dia (hábitos, tarefas e gastos).",
     Icone: Moon,
   },
   {

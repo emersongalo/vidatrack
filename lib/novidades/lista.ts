@@ -1,13 +1,28 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "275";
+export const VERSAO_NOVIDADES = "276";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "276",
+    titulo: "Mais leve e mais esperto",
+    itens: [
+      { emoji: "📈", titulo: "Saldo dia a dia até o fim do mês", texto: "Na previsão de Finanças, uma linha mostra como o saldo vai ficar em cada dia — toque pra ver o valor e o que entra/sai.", href: "/financas" },
+      { emoji: "🏃", titulo: "Aviso de ritmo", texto: "Se no ritmo de agora uma categoria vai fechar o mês bem acima da sua média, você fica sabendo antes." },
+      { emoji: "🔎", titulo: "Busca em todos os meses", texto: "No Extrato, busque por texto ou valor (ex: 62,90) e toque em \"Buscar em todos os meses\".", href: "/financas/extrato" },
+      { emoji: "↩️", titulo: "Desfazer", texto: "Excluiu um lançamento ou arquivou um hábito/tarefa sem querer? Toque em Desfazer nos 5 segundos seguintes." },
+      { emoji: "📦", titulo: "Offline mais claro", texto: "Sem internet, o aviso mostra quantas alterações estão guardadas esperando sincronizar." },
+      { emoji: "🌙", titulo: "Resumo do dia", texto: "Às 21:30 chega o resumo do seu dia (hábitos, tarefas e gastos). Também fica no Início à noite.", href: "/resumo-dia" },
+      { emoji: "🛡️", titulo: "Escudo da sequência", texto: "Esqueceu de marcar ontem? Uma vez por semana dá pra usar o escudo e não perder a sequência." },
+      { emoji: "✨", titulo: "Seu mês em números", texto: "Nos primeiros dias do mês, uma retrospectiva do mês que passou, comparando com o anterior.", href: "/retrospectiva/mes" },
+      { emoji: "🎨", titulo: "Cores novas de presente", texto: "Convide um amigo que use o app por uma semana e libere os temas Oceano, Floresta e Ameixa.", href: "/convidar" },
+    ],
+  },
   {
     versao: "275",
     titulo: "Foco, revisão e níveis",

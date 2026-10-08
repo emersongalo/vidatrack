@@ -10,6 +10,15 @@ export type AcaoPendente =
   | { id: string; tipo: "criar_habito"; dados: { nome: string; icone: string; cor: string } };
 
 const CHAVE_FILA = "vidatrack-fila-offline";
+/** Etapa 276 — avisa as telas sempre que a fila muda (selo "N esperando internet") */
+export const EVENTO_FILA_MUDOU = "vt-fila-mudou";
+function avisarMudanca() {
+  try {
+    window.dispatchEvent(new CustomEvent(EVENTO_FILA_MUDOU, { detail: lerFila().length }));
+  } catch {
+    /* fora do navegador */
+  }
+}
 const CHAVE_CACHE_HOJE = "vidatrack-cache-hoje";
 
 export function lerFila(): AcaoPendente[] {
@@ -31,6 +40,7 @@ export function adicionarNaFila(acao: AcaoPendente) {
   const filaFiltrada = idNovo ? fila.filter((a) => !("id" in a) || a.id !== idNovo) : fila;
   filaFiltrada.push(acao);
   localStorage.setItem(CHAVE_FILA, JSON.stringify(filaFiltrada));
+  avisarMudanca();
 }
 
 /**
@@ -41,10 +51,12 @@ export function adicionarNaFila(acao: AcaoPendente) {
 export function salvarFilaCompleta(fila: AcaoPendente[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(CHAVE_FILA, JSON.stringify(fila));
+  avisarMudanca();
 }
 
 export function limparFila() {
   localStorage.setItem(CHAVE_FILA, "[]");
+  avisarMudanca();
 }
 
 export function salvarCacheHoje(chave: string, itens: unknown) {

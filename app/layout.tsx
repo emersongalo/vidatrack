@@ -18,8 +18,10 @@ import { AvisoAtualizacaoApp } from "@/components/AvisoAtualizacaoApp";
 import { IndicadorConexao } from "@/components/IndicadorConexao";
 import { BotaoVoltarApp } from "@/components/BotaoVoltarApp";
 import { AvisoConvites } from "@/components/AvisoConvites";
+import { AvisoDesfazer } from "@/components/AvisoDesfazer";
 import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
 import { SCRIPT_APARENCIA } from "@/lib/preferencias/aparencia";
+import { SCRIPT_PALETA } from "@/lib/preferencias/paletas";
 import { CSS_ABERTURA, HTML_ABERTURA, SCRIPT_ABERTURA } from "@/lib/app/abertura";
 
 const outfit = Outfit({
@@ -91,6 +93,7 @@ export default function RootLayout({
         />
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_PRE_BLOQUEIO }} />
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_APARENCIA }} />
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_PALETA }} />
         {/* Etapa 263 — abertura com o logo animado (1x por sessão, antes do React carregar) */}
         <style dangerouslySetInnerHTML={{ __html: CSS_ABERTURA }} />
         <div id="vt-abertura" aria-hidden="true" dangerouslySetInnerHTML={{ __html: HTML_ABERTURA }} />
@@ -115,6 +118,7 @@ export default function RootLayout({
         {/* Etapa 266 — botão voltar do Android em todas as telas */}
         <BotaoVoltarApp />
         <AvisoConvites />
+        <AvisoDesfazer />
         <BloqueioApp />
         <RegistrarIndicacao />
       </body>

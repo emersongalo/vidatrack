@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { Pencil, Share2, Archive } from "lucide-react";
 import { ListaArrastavel } from "@/components/ListaArrastavel";
-import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
 import { classeCor, classeFundoSuave } from "@/lib/agenda/estilo";
 import { IconeHabito } from "@/components/IconeHabito";
-import { arquivarHabito, reordenarHabitos } from "@/app/habitos/actions";
+import { arquivarHabito, reordenarHabitos, restaurarHabito } from "@/app/habitos/actions";
+import { comDesfazer } from "@/lib/app/desfazer";
+import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 
 const RÓTULOS_FREQUENCIA: Record<string, string> = {
   diaria: "Todos os dias",
@@ -93,20 +94,27 @@ export function ListaHabitosArrastavel({ habitos, aoMudar }: { habitos: Habito[]
                   <Share2 size={15} strokeWidth={2} /> Compartilhar
                 </ItemMenuAcoes>
                 <div className="my-1 border-t border-base-600" />
-                <BotaoComConfirmacao
-                  acao={() => arquivarHabito(habito.id)}
-                  textoBotao={
-                    <span className="flex items-center gap-2.5">
-                      <Archive size={15} strokeWidth={2} /> Arquivar
-                    </span>
-                  }
-                  textoConfirmacao={`Arquivar "${habito.nome}"?`}
-                  classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-ink-100 hover:bg-base-700 transition"
-                  aoConcluir={() => {
-                    aoMudar?.();
+                {/* Etapa 276 — arquiva na hora, com "Desfazer" */}
+                <button
+                  type="button"
+                  onClick={async () => {
                     fecharMenu();
+                    await arquivarHabito(habito.id);
+                    aoMudar?.();
+                    void atualizarSnapshotEmTodasAsTelas();
+                    comDesfazer({
+                      texto: `"${habito.nome}" arquivado`,
+                      desfazer: () => restaurarHabito(habito.id),
+                      aoTerminar: () => {
+                        aoMudar?.();
+                        void atualizarSnapshotEmTodasAsTelas();
+                      },
+                    });
                   }}
-                />
+                  className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-left text-ink-100 hover:bg-base-700 transition"
+                >
+                  <Archive size={15} strokeWidth={2} /> Arquivar
+                </button>
               </>
             )}
           </MenuAcoes>

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { LogoAnimado } from "@/components/LogoAnimado";
 import { vibrar } from "@/lib/app/vibrar";
+import { lerFila, EVENTO_FILA_MUDOU } from "@/lib/offline/fila";
 
 type Estado = "oculto" | "offline" | "voltou";
 
@@ -14,6 +15,14 @@ export function IndicadorConexao() {
   const [estado, setEstado] = useState<Estado>("oculto");
   const [minimizado, setMinimizado] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Etapa 276 — quantas alterações estão guardadas esperando internet
+  const [naFila, setNaFila] = useState(0);
+  useEffect(() => {
+    setNaFila(lerFila().length);
+    const aoMudar = (e: Event) => setNaFila(Number((e as CustomEvent<number>).detail) || 0);
+    window.addEventListener(EVENTO_FILA_MUDOU, aoMudar);
+    return () => window.removeEventListener(EVENTO_FILA_MUDOU, aoMudar);
+  }, []);
 
   useEffect(() => {
     // espera um pouquinho antes de avisar (quedas de 1–2s não precisam de aviso)
@@ -62,6 +71,14 @@ export function IndicadorConexao() {
         style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
       >
         <LogoAnimado estado="offline" tamanho={40} />
+        {naFila > 0 && (
+          <span
+            key={naFila}
+            className="absolute -top-1.5 -right-1.5 min-w-[1.25rem] h-5 px-1 rounded-full bg-financa text-base-900 text-[11px] font-bold flex items-center justify-center animate-pop"
+          >
+            {naFila}
+          </span>
+        )}
       </button>
     );
   }
@@ -85,6 +102,11 @@ export function IndicadorConexao() {
           <p className="text-xs text-ink-400">
             {off ? "Pode continuar usando: o que você marcar fica salvo e sincroniza quando voltar." : "Sincronizando o que você fez enquanto estava offline."}
           </p>
+          {off && naFila > 0 && (
+            <p key={naFila} className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-financa bg-financa/10 rounded-full px-2.5 py-0.5 animate-pop">
+              📦 {naFila} {naFila === 1 ? "alteração guardada" : "alterações guardadas"} esperando internet
+            </p>
+          )}
         </div>
         {off && (
           <button type="button" onClick={() => setMinimizado(true)} aria-label="Minimizar" className="text-ink-400 hover:text-ink-100 p-1 -m-1 shrink-0">

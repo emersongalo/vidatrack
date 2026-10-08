@@ -4,10 +4,11 @@ import { Suspense, useState, useTransition } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { IconeHabito } from "@/components/IconeHabito";
-import { arquivarTarefa, alternarConclusaoTarefaUnica } from "../actions";
+import { arquivarTarefa, alternarConclusaoTarefaUnica, restaurarTarefa } from "../actions";
+import { comDesfazer } from "@/lib/app/desfazer";
+import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { CheckboxSubtarefa } from "@/components/CheckboxSubtarefa";
 import { PainelCompartilhamentoCliente } from "@/components/PainelCompartilhamentoCliente";
-import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { descreverRepeticao, tarefaAtrasada, PRIORIDADES } from "@/lib/agenda/recorrencia";
 import { hojeISO } from "@/lib/habitos/streak";
@@ -78,11 +79,21 @@ function DetalheTarefaConteudo() {
           <Link href={`/tarefas/${tarefa.id}/editar`} className="text-ink-400 text-base hover:text-ink-100 transition">
             Editar
           </Link>
-          <BotaoComConfirmacao
-            acao={arquivarTarefa.bind(null, tarefa.id)}
-            textoBotao="Arquivar"
-            classeBotao="text-ink-400 text-sm hover:text-red-400 transition"
-          />
+          {/* Etapa 276 — arquiva e volta pra lista, com "Desfazer" */}
+          <button
+            type="button"
+            onClick={() => {
+              comDesfazer({
+                texto: "Tarefa arquivada",
+                desfazer: () => restaurarTarefa(tarefa.id),
+                aoTerminar: () => void atualizarSnapshotEmTodasAsTelas(),
+              });
+              void arquivarTarefa(tarefa.id).finally(() => void atualizarSnapshotEmTodasAsTelas());
+            }}
+            className="text-ink-400 text-sm hover:text-red-400 transition"
+          >
+            Arquivar
+          </button>
         </div>
       </div>
 

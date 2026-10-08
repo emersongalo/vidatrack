@@ -4,6 +4,9 @@
 // ficar igual em todo lugar (Extrato, Início de Finanças, fatura):
 // agrupada por dia, faixa verde/vermelha, seta no ícone e valor com +/−.
 import Link from "next/link";
+import { useState } from "react";
+import { comDesfazer } from "@/lib/app/desfazer";
+import { vibrar } from "@/lib/app/vibrar";
 import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowLeftRight, Pencil, Trash2 } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { BotaoPaguei } from "@/components/BotaoPaguei";
@@ -11,7 +14,6 @@ import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
 import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
-import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { removerTransacao } from "@/app/financas/actions";
 import { agruparPorDia } from "@/lib/financas/agruparPorDia";
@@ -33,9 +35,23 @@ export function ListaLancamentosPorDia({
 }) {
   const hojeParaPendencia = new Date().toLocaleDateString("sv-SE");
   const setEtiquetaFiltro = (e: string) => aoEscolherEtiqueta?.(e);
+  // Etapa 276 — excluir some na hora e mostra "Desfazer" por 5s; só
+  // apaga de verdade depois disso
+  const [escondidos, setEscondidos] = useState<string[]>([]);
+  function excluir(t: any) {
+    vibrar(10);
+    setEscondidos((l) => [...l, t.id]);
+    comDesfazer({
+      texto: t.recorrencia_id ? "Lançamento deste mês excluído" : "Lançamento excluído",
+      executarDepois: () => removerTransacao(t.id),
+      aoDesfazer: () => setEscondidos((l) => l.filter((x) => x !== t.id)),
+      aoTerminar: () => recarregar?.(),
+    });
+  }
+  const visiveis = escondidos.length ? lista.filter((t: any) => !escondidos.includes(t.id)) : lista;
   return (
         <div className="space-y-5">
-          {agruparPorDia(lista, hojeParaPendencia).map((g) => (
+          {agruparPorDia(visiveis, hojeParaPendencia).map((g) => (
             <section key={g.dia}>
               <div className="flex items-baseline justify-between px-1 mb-2">
                 <h3 className="text-base font-semibold">{g.rotulo}</h3>
@@ -53,15 +69,7 @@ export function ListaLancamentosPorDia({
                   const agendado = t.data > hojeParaPendencia && !t.pago_em;
                   return (
                     <li key={t.id}>
-                      <LinhaComDeslizar
-                        acao={removerTransacao.bind(null, t.id)}
-                        textoConfirmacao={
-                          t.recorrencia_id
-                            ? "Excluir o lançamento deste mês? A conta fixa continua nos próximos meses — pra parar de vez, use Recorrentes."
-                            : "Excluir esse lançamento? Não tem volta."
-                        }
-                        aoConcluir={() => recarregar?.()}
-                      >
+                      <LinhaComDeslizar acao={() => excluir(t)} semConfirmar>
                         <div className="relative flex items-center gap-3 bg-base-800 pl-4 pr-1 py-3.5">
                           {/* faixa lateral: verde = entrou, vermelho = saiu */}
                           <span
@@ -113,24 +121,16 @@ export function ListaLancamentosPorDia({
                                 <ItemMenuAcoes href={`/financas/${t.id}/editar`}>
                                   <Pencil size={15} strokeWidth={2} /> Editar
                                 </ItemMenuAcoes>
-                                <BotaoComConfirmacao
-                                  acao={removerTransacao.bind(null, t.id)}
-                                  textoBotao={
-                                    <span className="flex items-center gap-2.5">
-                                      <Trash2 size={15} strokeWidth={2} /> Excluir
-                                    </span>
-                                  }
-                                  textoConfirmacao={
-                          t.recorrencia_id
-                            ? "Excluir o lançamento deste mês? A conta fixa continua nos próximos meses — pra parar de vez, use Recorrentes."
-                            : "Excluir esse lançamento? Não tem volta."
-                        }
-                                  classeBotao="flex items-center w-full px-3.5 py-2 text-sm text-left text-red-400 hover:bg-base-700 transition"
-                                  aoConcluir={() => {
-                                    recarregar?.();
+                                <button
+                                  type="button"
+                                  onClick={() => {
                                     fecharMenu();
+                                    excluir(t);
                                   }}
-                                />
+                                  className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-left text-red-400 hover:bg-base-700 transition"
+                                >
+                                  <Trash2 size={15} strokeWidth={2} /> Excluir
+                                </button>
                               </>
                             )}
                           </MenuAcoes>

@@ -13,4 +13,8 @@
     <string name="atalho_gasto_longo">Lançar gasto rápido</string>
     <string name="atalho_hoje_curto">Hoje</string>
     <string name="atalho_hoje_longo">Hábitos e tarefas de hoje</string>
+    <string name="atalho_tarefa_curto">Nova tarefa</string>
+    <string name="atalho_tarefa_longo">Criar uma tarefa</string>
+    <string name="atalho_resumo_curto">Meu dia</string>
+    <string name="atalho_resumo_longo">Resumo do meu dia</string>
 </resources>

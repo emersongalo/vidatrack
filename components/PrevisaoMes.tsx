@@ -4,6 +4,8 @@ import { useState } from "react";
 import { CalendarClock, ChevronDown } from "lucide-react";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import type { PrevisaoMes as TipoPrevisao } from "@/lib/financas/previsao";
+import { GraficoSaldoProjetado } from "@/components/GraficoSaldoProjetado";
+import { hojeISO } from "@/lib/habitos/streak";
 
 // Etapa 215 — "quanto vai sobrar até o fim do mês" em destaque
 const ROTULO_ORIGEM = { agendado: "agendado", recorrente: "↻ todo mês", fatura: "cartão" } as const;
@@ -67,6 +69,9 @@ export function PrevisaoMes({ previsao }: { previsao: TipoPrevisao }) {
           <p className="text-xs font-mono text-red-400">-<ValorMonetario valor={saidas} /></p>
         </div>
       </div>
+
+      {/* Etapa 276 — linha do saldo até o fim do mês */}
+      {diasRestantes > 1 && <GraficoSaldoProjetado saldoHoje={saldoHoje} itens={itens} hoje={hojeISO()} />}
 
       {itens.length > 0 && (
         <>

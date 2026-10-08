@@ -19,6 +19,8 @@ import { MelhorHorario } from "@/components/MelhorHorario";
 import { Dica } from "@/components/Dica";
 import { CartaoNivel } from "@/components/CartaoNivel";
 import { diasFeitos } from "@/lib/habitos/nivel";
+import { ofertaDeEscudo } from "@/lib/habitos/escudo";
+import { CartaoEscudo } from "@/components/CartaoEscudo";
 
 const DIAS_SEMANA = ["D", "S", "T", "Q", "Q", "S", "S"];
 
@@ -120,6 +122,12 @@ export default function DetalheHabitoPage() {
           </div>
         </div>
         )}
+
+        {/* Etapa 276 — escudo da sequência */}
+        {(() => {
+          const oferta = ofertaDeEscudo(habito, snapshot!.habitoCheckins as any[], hoje);
+          return oferta ? <CartaoEscudo habito={habito} oferta={oferta} /> : null;
+        })()}
 
         {/* Etapa 275 — nível do hábito */}
         {!habito.eh_negativo && <CartaoNivel dias={diasFeitos(habito, snapshot!.habitoCheckins as any[])} hex={hex} />}

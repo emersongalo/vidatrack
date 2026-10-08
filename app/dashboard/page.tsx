@@ -151,6 +151,38 @@ export default function DashboardPage() {
         <ConvitesPendentes />
       </div>
 
+      {/* Etapa 276 — primeiros 7 dias do mês: o mês que passou em números */}
+      {snapshot && Number(hojeISO().slice(8, 10)) <= 7 && (
+        <Link
+          href="/retrospectiva/mes"
+          className="flex items-center gap-3 mt-3 mb-1 rounded-xl2 p-4 border border-nota/40 bg-gradient-to-r from-nota/20 to-financa/10 hover:border-nota transition animate-surgir"
+        >
+          <span className="text-2xl animate-boiar">✨</span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-medium">
+              Seu mês de{" "}
+              {new Date(Date.UTC(Number(hojeISO().slice(0, 4)), Number(hojeISO().slice(5, 7)) - 2, 15)).toLocaleDateString("pt-BR", { month: "long", timeZone: "UTC" })} em números
+            </span>
+            <span className="block text-xs text-ink-400">Hábitos, tarefas e dinheiro — e como foi vs o mês anterior</span>
+          </span>
+          <span className="text-ink-400">→</span>
+        </Link>
+      )}
+      {/* Etapa 276 — de noite, atalho pro resumo do dia */}
+      {snapshot && new Date().getHours() >= 18 && (
+        <Link
+          href="/resumo-dia"
+          className="flex items-center gap-3 mt-3 mb-1 rounded-xl2 p-4 border border-habito/30 bg-habito/10 hover:border-habito transition"
+        >
+          <span className="text-2xl">🌙</span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-medium">Como foi seu dia</span>
+            <span className="block text-xs text-ink-400">Hábitos, tarefas e gastos de hoje num lugar só</span>
+          </span>
+          <span className="text-ink-400">→</span>
+        </Link>
+      )}
+
       {/* Etapa 215 — retrospectiva em dezembro (do ano) e janeiro (do ano que passou) */}
       {(() => {
         const agora = new Date();

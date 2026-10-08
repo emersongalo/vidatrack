@@ -23,6 +23,26 @@
   --c-ink-400: 107 108 118;
 }
 
+/* Etapa 276 — paletas extras do tema escuro (recompensa de convite) */
+:root[data-paleta="oceano"]:not([data-theme="light"]) {
+  --c-base-900: 11 18 28;
+  --c-base-800: 16 26 40;
+  --c-base-700: 23 36 54;
+  --c-base-600: 35 52 74;
+}
+:root[data-paleta="floresta"]:not([data-theme="light"]) {
+  --c-base-900: 12 20 16;
+  --c-base-800: 18 29 23;
+  --c-base-700: 25 39 31;
+  --c-base-600: 38 56 45;
+}
+:root[data-paleta="ameixa"]:not([data-theme="light"]) {
+  --c-base-900: 20 14 26;
+  --c-base-800: 29 21 37;
+  --c-base-700: 39 29 50;
+  --c-base-600: 56 43 70;
+}
+
 /* Etapa 215 — acessibilidade: texto maior (tudo em rem escala junto) */
 html[data-fonte="grande"] { font-size: 112.5%; }
 html[data-fonte="maior"] { font-size: 125%; }

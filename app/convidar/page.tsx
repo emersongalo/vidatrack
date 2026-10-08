@@ -13,6 +13,8 @@ export default function ConvidarPage() {
   const [indicados, setIndicados] = useState<number | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  // Etapa 276 — recompensa: quantos já usam de verdade
+  const [ativos, setAtivos] = useState<number | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -21,6 +23,10 @@ export default function ConvidarPage() {
       else setCodigo(String(data));
     });
     supabase.rpc("contar_indicados").then(({ data }) => setIndicados(typeof data === "number" ? data : 0));
+    fetch("/api/indicacoes")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setAtivos(Number(d.ativos) || 0))
+      .catch(() => {});
   }, []);
 
   const link = codigo ? `${SITE}/apresentacao?ref=${codigo}` : "";
@@ -53,6 +59,20 @@ export default function ConvidarPage() {
         <p className="text-4xl mb-2">🎁</p>
         <h1 className="text-3xl font-display font-bold mb-1">Convide seus amigos</h1>
         <p className="text-sm text-ink-400">Ajude o VidaTrack a crescer — ele continua de graça e fica melhor com mais gente usando.</p>
+      </div>
+
+      {/* Etapa 276 — recompensa */}
+      <div className="mb-6 rounded-2xl border border-nota/40 bg-nota/10 p-4">
+        <p className="text-sm font-semibold">🎨 Ganhe cores novas pro app</p>
+        <p className="text-xs text-ink-400 mt-1">
+          Quando 1 pessoa que entrou pelo seu link usar o VidaTrack por uma semana, você libera os temas Oceano 🌊, Floresta 🌲 e
+          Ameixa 🍇 (em Perfil → Aparência).
+        </p>
+        {ativos !== null && (
+          <p className={`text-sm mt-2 font-medium ${ativos > 0 ? "text-habito" : "text-ink-400"}`}>
+            {ativos > 0 ? "✅ Liberado! Escolha em Perfil → Aparência." : "⏳ Ainda não — compartilhe seu link abaixo."}
+          </p>
+        )}
       </div>
 
       {erro && <p className="text-sm text-red-400 mb-3">{erro}</p>}

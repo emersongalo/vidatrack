@@ -136,3 +136,65 @@ export function inicioDaRecorrenciaSugerida(s: AssinaturaSugerida, hojeISO: stri
   if (!s.cobradaEsteMes && s.diaMes >= d) return iso(a, m);
   return m === 12 ? iso(a + 1, 1) : iso(a, m + 1);
 }
+
+export type RitmoAcima = {
+  categoriaId: string;
+  gastoAteAgora: number;
+  projecao: number;
+  media: number;
+  vezes: number;
+};
+
+/**
+ * Etapa 276 — aviso ANTES do mês acabar: no ritmo de agora, a categoria
+ * vai fechar o mês bem acima da média dos 3 meses anteriores?
+ * Só a partir do 5º dia (antes disso o ritmo engana) e com gasto real.
+ */
+export function ritmoAcimaDoNormal(
+  transacoes: Transacao[],
+  hojeISO: string,
+  opcoes: { minimoVezes?: number; minimoValor?: number } = {}
+): RitmoAcima[] {
+  const minimoVezes = opcoes.minimoVezes ?? 1.5;
+  const minimoValor = opcoes.minimoValor ?? 80;
+  const dia = Number(hojeISO.slice(8, 10));
+  if (dia < 5) return [];
+  const [a, m] = hojeISO.split("-").map(Number);
+  const diasNoMes = new Date(Date.UTC(a, m, 0)).getUTCDate();
+  if (dia >= diasNoMes - 2) return []; // fim do mês: o "fora do normal" já cobre
+  const mesAtual = hojeISO.slice(0, 7);
+  const anteriores = [1, 2, 3].map((n) => mesMenos(mesAtual, n));
+
+  const porCatMes = new Map<string, Map<string, number>>();
+  for (const t of transacoes) {
+    if (t.tipo !== "despesa" || !t.categoria_id || t.transferencia_grupo || t.recorrencia_id || t.parcela_grupo) continue;
+    if (t.data > hojeISO) continue;
+    const mes = t.data.slice(0, 7);
+    if (mes !== mesAtual && !anteriores.includes(mes)) continue;
+    if (!porCatMes.has(t.categoria_id)) porCatMes.set(t.categoria_id, new Map());
+    const mm = porCatMes.get(t.categoria_id)!;
+    mm.set(mes, (mm.get(mes) ?? 0) + Number(t.valor));
+  }
+
+  const saida: RitmoAcima[] = [];
+  for (const [categoriaId, meses] of porCatMes) {
+    const historico = anteriores.map((x) => meses.get(x)).filter((v): v is number => v !== undefined);
+    if (historico.length < 2) continue;
+    const media = historico.reduce((s, v) => s + v, 0) / historico.length;
+    const gastoAteAgora = meses.get(mesAtual) ?? 0;
+    if (media <= 0 || gastoAteAgora <= 0) continue;
+    const projecao = (gastoAteAgora / dia) * diasNoMes;
+    const vezes = projecao / media;
+    if (vezes < minimoVezes || projecao - media < minimoValor) continue;
+    // se já passou da média, o aviso "fora do normal" é que fala
+    if (gastoAteAgora > media) continue;
+    saida.push({
+      categoriaId,
+      gastoAteAgora: Math.round(gastoAteAgora * 100) / 100,
+      projecao: Math.round(projecao * 100) / 100,
+      media: Math.round(media * 100) / 100,
+      vezes: Math.round(vezes * 10) / 10,
+    });
+  }
+  return saida.sort((x, y) => y.vezes - x.vezes);
+}
