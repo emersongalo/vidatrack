@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { gastoDoDia, fraseDoDia, topoDoInicio } from "@/lib/painel/topoInicio";
+import { gastoDoDia, fraseDoDia, topoDoInicio, lerQuadrosTopo } from "@/lib/painel/topoInicio";
 import { NOVIDADES, VERSAO_NOVIDADES } from "@/lib/novidades/lista";
 
 const r = (hf: number, ht: number, tf: number, tt: number) => ({
@@ -34,7 +34,16 @@ describe("Etapa 287 — topo do Início", () => {
     expect(t.frase).toContain("Dia livre");
   });
   it("novidades 287", () => {
-    expect(VERSAO_NOVIDADES).toBe("287");
-    expect(NOVIDADES[0].versao).toBe("287");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(287);
+    expect(NOVIDADES.some((g) => g.versao === "287")).toBe(true);
+  });
+  it("Etapa 288 — escolher os quadrinhos do topo", () => {
+    expect(lerQuadrosTopo(null)).toEqual(["habitos", "tarefas", "gasto"]);
+    expect(lerQuadrosTopo('["gasto","habitos"]')).toEqual(["habitos", "gasto"]);
+    expect(lerQuadrosTopo("[]")).toEqual([]);
+    expect(lerQuadrosTopo("lixo")).toEqual(["habitos", "tarefas", "gasto"]);
+    expect(lerQuadrosTopo('["xyz","tarefas"]')).toEqual(["tarefas"]);
+    expect(VERSAO_NOVIDADES).toBe("288");
+    expect(NOVIDADES[0].versao).toBe("288");
   });
 });

@@ -36,3 +36,25 @@ export function topoDoInicio(s: any, hoje: string, hora: number): TopoInicio {
   const { gasto, entrou } = gastoDoDia((s?.financas?.transacoes ?? []) as any[], hoje);
   return { ...r, gastoHoje: gasto, entrouHoje: entrou, frase: fraseDoDia(r, hora) };
 }
+
+// Etapa 288 — a pessoa escolhe quais quadrinhos aparecem no topo
+// (ex: esconder o gasto do dia pra não mostrar finanças de cara).
+export type QuadroTopo = "habitos" | "tarefas" | "gasto";
+export const QUADROS_TOPO: { id: QuadroTopo; rotulo: string; emoji: string }[] = [
+  { id: "habitos", rotulo: "Hábitos", emoji: "✅" },
+  { id: "tarefas", rotulo: "Tarefas", emoji: "📋" },
+  { id: "gasto", rotulo: "Saiu hoje", emoji: "💸" },
+];
+export const CHAVE_QUADROS_TOPO = "vt-topo-inicio-quadros";
+
+/** Lê o que foi salvo; inválido ou nada salvo = os 3. Lista vazia vale (esconde tudo). */
+export function lerQuadrosTopo(bruto: string | null): QuadroTopo[] {
+  if (bruto === null) return QUADROS_TOPO.map((q) => q.id);
+  try {
+    const v = JSON.parse(bruto);
+    if (!Array.isArray(v)) return QUADROS_TOPO.map((q) => q.id);
+    return QUADROS_TOPO.map((q) => q.id).filter((id) => v.includes(id));
+  } catch {
+    return QUADROS_TOPO.map((q) => q.id);
+  }
+}
