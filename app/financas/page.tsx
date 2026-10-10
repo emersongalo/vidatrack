@@ -30,6 +30,7 @@ import { GastosRapidos } from "@/components/GastosRapidos";
 import { ConfirmarReceitas } from "@/components/ConfirmarReceitas";
 import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 import { ListaLancamentosPorDia } from "@/components/ListaLancamentosPorDia";
+import { ordenarComoBanco } from "@/lib/financas/agruparPorDia";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { salvarOrdemBlocosFinancas } from "./actions";
 import {
@@ -204,8 +205,13 @@ export default function FinancasPage() {
   const mapaContas = new Map(contas.map((c: any) => [c.id, c.nome]));
   // Etapa 207 — antes cortava em 10 sem avisar; agora mostra 10 e um
   // botão "Ver todos" (o mês inteiro, inclusive os agendados).
-  const ultimasTransacoes = mostrarTodosLancamentos ? transacoesDoMes : transacoesDoMes.slice(0, 10);
-  const lancamentosEscondidos = transacoesDoMes.length - ultimasTransacoes.length;
+  // Etapa 289 — os 10 primeiros na ordem do banco (hoje, ontem...); agendados vão à parte
+  const ordemBanco = ordenarComoBanco(transacoesDoMes as any[], hojeISOBr);
+  const transacoesOrdenadas = [...ordemBanco.passados, ...ordemBanco.futuros];
+  const ultimasTransacoes = mostrarTodosLancamentos
+    ? transacoesOrdenadas
+    : [...ordemBanco.passados.slice(0, 10), ...ordemBanco.futuros];
+  const lancamentosEscondidos = transacoesOrdenadas.length - ultimasTransacoes.length;
 
   const gastoPorDiaMapaInicio = new Map<number, number>();
   for (const t of movimentosDoMes) {

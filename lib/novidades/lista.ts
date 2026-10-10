@@ -1,13 +1,20 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "288";
+export const VERSAO_NOVIDADES = "289";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "289",
+    titulo: "Extrato na ordem do banco",
+    itens: [
+      { emoji: "🏦", titulo: "Hoje sempre em cima", texto: "Extrato e lançamentos do mês agora seguem a ordem do app do banco: hoje, ontem e os dias anteriores. Os agendados ficam num grupo à parte, fechado.", href: "/financas/extrato" },
+    ],
+  },
   {
     versao: "288",
     titulo: "Você escolhe o topo",

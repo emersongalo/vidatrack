@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { comDesfazer } from "@/lib/app/desfazer";
 import { vibrar } from "@/lib/app/vibrar";
-import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowLeftRight, Pencil, Trash2 } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowLeftRight, Pencil, Trash2, ChevronDown } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { BotaoPaguei } from "@/components/BotaoPaguei";
 import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
@@ -16,7 +16,7 @@ import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
 import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { removerTransacao } from "@/app/financas/actions";
-import { agruparPorDia } from "@/lib/financas/agruparPorDia";
+import { agruparPorDia, ordenarComoBanco, rotuloDoDia, type GrupoDia } from "@/lib/financas/agruparPorDia";
 
 export function ListaLancamentosPorDia({
   lista,
@@ -55,7 +55,12 @@ export function ListaLancamentosPorDia({
   const [limite, setLimite] = useState(PASSO);
   const sentinela = useRef<HTMLDivElement>(null);
   useEffect(() => setLimite(PASSO), [lista]);
-  const temMais = semEscondidos.length > limite;
+  // Etapa 289 — ordem do app do banco: hoje, ontem, dias anteriores
+  const { passados, futuros } = ordenarComoBanco(semEscondidos, hojeParaPendencia);
+  const soFuturo = passados.length === 0;
+  const principal = soFuturo ? futuros : passados;
+  const [verAgendados, setVerAgendados] = useState(false);
+  const temMais = principal.length > limite;
   useEffect(() => {
     if (!temMais || !sentinela.current || typeof IntersectionObserver === "undefined") return;
     const obs = new IntersectionObserver(
@@ -67,7 +72,7 @@ export function ListaLancamentosPorDia({
     obs.observe(sentinela.current);
     return () => obs.disconnect();
   }, [temMais, limite]);
-  const visiveis = temMais ? semEscondidos.slice(0, limite) : semEscondidos;
+  const visiveis = temMais ? principal.slice(0, limite) : principal;
   // Etapa 286 — lançamento que acabou de ser criado entra com um pulinho
   // (só os que aparecem com a tela aberta e foram criados agora há pouco)
   const vistos = useRef<Set<string> | null>(null);
@@ -81,10 +86,8 @@ export function ListaLancamentosPorDia({
     }, 2000);
     return () => clearTimeout(t);
   }, [lista]);
-  return (
-        <div className="space-y-5">
-          {agruparPorDia(visiveis, hojeParaPendencia).map((g) => (
-            <section key={g.dia}>
+  const secao = (g: GrupoDia<any>) => (
+<section key={g.dia}>
               <div className="flex items-baseline justify-between px-1 mb-2">
                 <h3 className="text-base font-semibold">{g.rotulo}</h3>
                 {mostrarSaldoDoDia && <span className={`text-sm font-mono ${g.saldoDia > 0 ? "text-habito" : g.saldoDia < 0 ? "text-ink-400" : "text-ink-400"}`}>
@@ -187,11 +190,38 @@ export function ListaLancamentosPorDia({
                 })}
               </ul>
             </section>
-          ))}
+  );
+
+  return (
+        <div className="space-y-5">
+          {/* Etapa 289 — agendados (data no futuro) ficam num grupo à parte, fechado */}
+          {!soFuturo && futuros.length > 0 && (
+            <section className="rounded-2xl border border-financa/30 bg-financa/5 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setVerAgendados((v) => !v)}
+                aria-expanded={verAgendados}
+                className="w-full flex items-center gap-2 px-4 py-3 text-left"
+              >
+                <span className="text-lg">📅</span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-base font-semibold">
+                    Agendados <span className="text-sm font-normal text-ink-400">({futuros.length})</span>
+                  </span>
+                  <span className="block text-xs text-ink-400 truncate">
+                    Próximo: {rotuloDoDia(futuros[0].data, hojeParaPendencia).toLowerCase()} · {futuros[0].descricao || "lançamento"}
+                  </span>
+                </span>
+                <ChevronDown size={18} className={`text-ink-400 transition-transform duration-300 shrink-0 ${verAgendados ? "rotate-180" : ""}`} />
+              </button>
+              {verAgendados && <div className="space-y-5 px-2 pb-3 animate-surgir">{agruparPorDia(futuros, hojeParaPendencia).map(secao)}</div>}
+            </section>
+          )}
+          {agruparPorDia(visiveis, hojeParaPendencia).map(secao)}
           {temMais && (
             <div ref={sentinela} className="py-4 text-center">
               <button type="button" onClick={() => setLimite((l) => l + PASSO)} className="text-sm text-ink-400 hover:text-ink-100">
-                Carregar mais ({semEscondidos.length - limite} restantes)
+                Carregar mais ({principal.length - limite} restantes)
               </button>
             </div>
           )}

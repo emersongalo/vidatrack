@@ -43,7 +43,7 @@ describe("Etapa 287 — topo do Início", () => {
     expect(lerQuadrosTopo("[]")).toEqual([]);
     expect(lerQuadrosTopo("lixo")).toEqual(["habitos", "tarefas", "gasto"]);
     expect(lerQuadrosTopo('["xyz","tarefas"]')).toEqual(["tarefas"]);
-    expect(VERSAO_NOVIDADES).toBe("288");
-    expect(NOVIDADES[0].versao).toBe("288");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(288);
+    expect(NOVIDADES.some((g) => g.versao === "288")).toBe(true);
   });
 });

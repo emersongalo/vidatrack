@@ -20,16 +20,41 @@ export function rotuloDoDia(dia: string, hoje: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-/** Mantém a ordem da lista; junta os lançamentos seguidos do mesmo dia. Transferência não entra no saldo do dia. */
+/**
+ * Etapa 289 — ordem igual à do app do banco: hoje no topo, depois ontem
+ * e os dias anteriores (no mesmo dia, o lançado por último primeiro).
+ * O que ainda vai acontecer (data no futuro) fica separado, do mais
+ * próximo pro mais distante.
+ */
+export function ordenarComoBanco<T extends { data: string; criado_em?: string | null; id?: string }>(
+  lista: T[],
+  hoje: string
+): { passados: T[]; futuros: T[] } {
+  const passados: T[] = [];
+  const futuros: T[] = [];
+  for (const t of lista) (String(t.data) > hoje ? futuros : passados).push(t);
+  const criado = (t: T) => String(t.criado_em ?? "");
+  passados.sort(
+    (a, b) => String(b.data).localeCompare(String(a.data)) || criado(b).localeCompare(criado(a)) || String(b.id ?? "").localeCompare(String(a.id ?? ""))
+  );
+  futuros.sort(
+    (a, b) => String(a.data).localeCompare(String(b.data)) || criado(a).localeCompare(criado(b)) || String(a.id ?? "").localeCompare(String(b.id ?? ""))
+  );
+  return { passados, futuros };
+}
+
+/** Junta os lançamentos do mesmo dia (mesmo que venham fora de ordem), na ordem em que cada dia aparece. Transferência não entra no saldo do dia. */
 export function agruparPorDia<T extends { data: string; tipo: string; valor: number | string; transferencia_grupo?: string | null }>(
   lista: T[],
   hoje: string
 ): GrupoDia<T>[] {
   const grupos: GrupoDia<T>[] = [];
+  const porDia = new Map<string, GrupoDia<T>>();
   for (const t of lista) {
-    let g = grupos[grupos.length - 1];
-    if (!g || g.dia !== t.data) {
+    let g = porDia.get(t.data);
+    if (!g) {
       g = { dia: t.data, rotulo: rotuloDoDia(t.data, hoje), saldoDia: 0, itens: [] };
+      porDia.set(t.data, g);
       grupos.push(g);
     }
     g.itens.push(t);
