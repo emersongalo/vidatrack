@@ -1,13 +1,24 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "285";
+export const VERSAO_NOVIDADES = "286";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "286",
+    titulo: "Mais vivo e mais bonito",
+    itens: [
+      { emoji: "💰", titulo: "Cartão do mês em Finanças", texto: "Saldo que conta até o valor, anel de quanto já saiu, Entrou/Saiu/Sobra e um brilho dourado. Trocar de mês desliza a tela.", href: "/financas" },
+      { emoji: "🧾", titulo: "Carimbo de PAGO", texto: "Marcou que pagou? Aparece o carimbo. Lançamento novo entra no topo com um pulinho." },
+      { emoji: "🫙", titulo: "Pote das metas", texto: "As metas viraram potes que enchem — e caem moedas quando você guarda.", href: "/financas/metas" },
+      { emoji: "🌅", titulo: "Hábitos com o céu do dia", texto: "O topo muda de cor de manhã, à tarde e à noite. A chama cresce com a sequência e fica dourada com 30 dias." },
+      { emoji: "🌱", titulo: "Plantinha em cada hábito", texto: "Cada hábito mostra a plantinha do nível dele — e ela brota quando sobe. Fechou o dia? Chovem folhinhas." },
+    ],
+  },
   {
     versao: "285",
     titulo: "Hábitos e Tarefas mais leves",

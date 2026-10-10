@@ -75,6 +75,8 @@ export type ItemAgenda = {
   /** Etapa 233 — hábito feito em dupla: carinha, quem já fez, sequência juntos */
   dupla?: InfoDupla | null;
   ehHoje?: boolean;
+  /** Etapa 286 — nível do hábito (plantinha ao lado do nome) */
+  nivel?: { numero: number; emoji: string; nome: string } | null;
   /** Etapa 249 — hábito encadeado: "fazer logo depois de X" */
   encadeado?: { depoisDe: string; paiId?: string; liberado: boolean } | null;
 };
@@ -304,6 +306,12 @@ export function ItemLinhaAgenda({
       <div className="flex-1 min-w-0">
         <p className={`text-[1.0625rem] font-medium truncate transition-colors duration-300 ${item.feito ? "text-ink-400" : ""}`}>
           <span className={item.feito ? "riscado" : ""}>{item.titulo}</span>
+          {/* Etapa 286 — a plantinha do nível do hábito (brota ao subir) */}
+          {item.nivel && (
+            <span key={item.nivel.numero} title={`Nível ${item.nivel.numero} · ${item.nivel.nome}`} className="brotar ml-1.5 text-[0.95em] align-[-1px]">
+              {item.nivel.emoji}
+            </span>
+          )}
         </p>
         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap empty:hidden">
           {item.encadeado && !item.feito && (
@@ -399,7 +407,8 @@ export function ItemLinhaAgenda({
                 <span
                   key={d.dia}
                   title={d.dia.split("-").reverse().slice(0, 2).join("/")}
-                  className={`w-2.5 h-2.5 rounded-full ${
+                  style={{ animationDelay: `${120 + i * 55}ms` }}
+                  className={`ponto-onda w-2.5 h-2.5 rounded-full ${
                     feito
                       ? classeCor(item.cor)
                       : ultimo
@@ -546,12 +555,14 @@ export function ItemLinhaAgenda({
           aria-label={item.feito ? "Desmarcar" : "Marcar como feito"}
           ref={refBotao}
           key={`chk-${pulsar}`}
-          className={`${pulsar ? "animate-pop" : ""} w-11 h-11 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
-            item.feito ? `${classeCor(item.cor)} border-transparent` : "border-base-600 hover:border-ink-400"
+          className={`${pulsar ? "animate-pop" : ""} relative overflow-hidden w-11 h-11 rounded-full border-2 flex items-center justify-center transition shrink-0 ${
+            item.feito ? "border-transparent" : "border-base-600 hover:border-ink-400"
           } ${pendente ? "opacity-60" : ""}`}
         >
+          {/* Etapa 286 — a cor enche a bolinha como tinta */}
+          {item.feito && <span aria-hidden className={`absolute inset-0 rounded-full ${classeCor(item.cor)} ${pulsar ? "tinta" : ""}`} />}
           {item.feito && (
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" className="relative">
               <path
                 className="traco-check"
                 d="M3 8.5L6.2 11.5L13 4.5"

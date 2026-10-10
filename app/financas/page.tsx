@@ -14,11 +14,11 @@ import { CarrosselCategorias } from "@/components/CarrosselCategorias";
 import { MapaCalorGastos } from "@/components/MapaCalorGastos";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { EstadoVazio } from "@/components/EstadoVazio";
-import { Esqueleto, CarregandoTela } from "@/components/Esqueleto";
+import { Esqueleto, EsqueletoFinancas } from "@/components/Esqueleto";
 import { HeroFinancas } from "@/components/HeroFinancas";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { ValorMonetario } from "@/components/ValorMonetario";
-import { classeFundoSuave } from "@/lib/agenda/estilo";
+import { classeFundoSuave, hexDaCor } from "@/lib/agenda/estilo";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { preverFimDoMes } from "@/lib/financas/previsao";
 import { PrevisaoMes } from "@/components/PrevisaoMes";
@@ -54,6 +54,8 @@ export default function FinancasPage() {
   const mesAtualISO = hoje.toLocaleDateString("sv-SE").slice(0, 7);
   const [mesSelecionado, setMesSelecionado] = useState(mesAtualISO);
   const [mostrarTodosLancamentos, setMostrarTodosLancamentos] = useState(false);
+  // Etapa 286 — trocar de mês desliza a tela pro lado, como virar página
+  const [direcaoMes, setDirecaoMes] = useState<"avancar" | "voltar" | null>(null);
   const ehMesAtual = mesSelecionado === mesAtualISO;
   const [pessoas, setPessoas] = useState<{ nome: string; urlFoto: string | null }[]>([]);
   // Etapa 222 — "Personalizar início": ordem e blocos escondidos, salvos por login
@@ -89,7 +91,7 @@ export default function FinancasPage() {
   // Etapa 195 — Saldo e Contas a pagar dos widgets agora vêm do
   // SincronizadorWidgets (layout), junto com todos os outros widgets.
 
-  if (snapshot === undefined) return <CarregandoTela cartoes={4} linhas={3} />;
+  if (snapshot === undefined) return <EsqueletoFinancas />;
 
   const contas = snapshot?.financas.contas ?? [];
   const transacoes = snapshot?.financas.transacoes ?? [];
@@ -295,8 +297,10 @@ export default function FinancasPage() {
                 <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4 space-y-4">
                   {categoriasComMeta.map((cat: any) => (
                     <BarraOrcamento
-                      key={cat.id}
+                      key={`${cat.id}-${mesSelecionado}`}
                       nome={cat.nome}
+                      cor={cat.cor ? hexDaCor(cat.cor) : undefined}
+                      icone={cat.icone ? <IconeCategoria icone={cat.icone} tamanho={15} /> : undefined}
                       gasto={gastoPorCategoria.get(cat.id) ?? 0}
                       meta={Number(cat.meta_mensal)}
                       href={`/financas/extrato?categoria=${cat.id}&tipo=despesa&mes=${mesSelecionado}`}
@@ -375,9 +379,9 @@ export default function FinancasPage() {
             hrefMesProximo={`/financas?mes=${mesProximoISO}`}
             hrefHoje="/financas"
             ehMesAtual={ehMesAtual}
-            aoMesAnterior={() => { setMesSelecionado(mesAnteriorISO); setMostrarTodosLancamentos(false); }}
-            aoMesProximo={() => { setMesSelecionado(mesProximoISO); setMostrarTodosLancamentos(false); }}
-            aoHoje={() => { setMesSelecionado(mesAtualISO); setMostrarTodosLancamentos(false); }}
+            aoMesAnterior={() => { setDirecaoMes("voltar"); setMesSelecionado(mesAnteriorISO); setMostrarTodosLancamentos(false); }}
+            aoMesProximo={() => { setDirecaoMes("avancar"); setMesSelecionado(mesProximoISO); setMostrarTodosLancamentos(false); }}
+            aoHoje={() => { setDirecaoMes(mesSelecionado > mesAtualISO ? "voltar" : "avancar"); setMesSelecionado(mesAtualISO); setMostrarTodosLancamentos(false); }}
           />
 
           {/* Etapa 268 — "essa receita caiu?" */}
@@ -414,7 +418,10 @@ export default function FinancasPage() {
           </div>
           {erroLayout && <p className="text-sm text-red-400 mb-3">{erroLayout}</p>}
 
-          <div className="lg:columns-2 lg:gap-6">
+          <div
+            key={editandoLayout ? "editando" : mesSelecionado}
+            className={`lg:columns-2 lg:gap-6 ${!editandoLayout && direcaoMes ? (direcaoMes === "avancar" ? "entrada-avancar" : "entrada-voltar") : ""}`}
+          >
             {layout.map((b, i) => {
               const conteudo = blocosPorId[b.id];
               if (!editandoLayout) return b.visivel && conteudo ? <div key={b.id} className="lg:break-inside-avoid">{conteudo}</div> : null;

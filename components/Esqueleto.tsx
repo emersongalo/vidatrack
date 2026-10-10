@@ -63,3 +63,55 @@ export function CarregandoTela({ linhas = 4, cartoes = 0, comTopo = true }: { li
     </main>
   );
 }
+
+/** Etapa 286 — Finanças carregando: o cartão do saldo e os blocos no formato certo */
+export function EsqueletoFinancas() {
+  return (
+    <main className="min-h-screen p-6 md:p-12 pagina" aria-busy="true" aria-label="Carregando">
+      <Pedaco className="h-8 w-36 rounded-lg mt-2 mb-6" />
+      <div className="rounded-3xl border border-financa/20 bg-financa/5 p-5 mb-3">
+        <Pedaco className="h-3.5 w-24 rounded mb-2" />
+        <Pedaco className="h-10 w-3/5 rounded-lg mb-4" />
+        <div className="flex items-center gap-4 pt-4 border-t border-base-600/60">
+          <Pedaco className="w-[76px] h-[76px] rounded-full shrink-0" />
+          <div className="flex-1 space-y-2.5">
+            <Pedaco className="h-3.5 w-full rounded" />
+            <Pedaco className="h-3.5 w-5/6 rounded" />
+            <Pedaco className="h-3.5 w-2/3 rounded" />
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between mb-6">
+        <Pedaco className="w-10 h-10 rounded-full" />
+        <Pedaco className="h-5 w-28 rounded" />
+        <Pedaco className="w-10 h-10 rounded-full" />
+      </div>
+      <Esqueleto linhas={3} comTopo={false} cartoes={2} />
+    </main>
+  );
+}
+
+/** Etapa 286 — lista de hábitos carregando: título de grupo + linhas num cartão */
+export function EsqueletoHabitos({ linhas = 4 }: { linhas?: number }) {
+  return (
+    <div aria-busy="true" aria-label="Carregando">
+      <Pedaco className="h-4 w-24 rounded mb-2.5 ml-1" />
+      <div className="rounded-2xl bg-base-800 border border-base-600 divide-y divide-base-600">
+        {Array.from({ length: linhas }, (_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+            <Pedaco className="w-11 h-11 rounded-full shrink-0" />
+            <div className="flex-1 space-y-2">
+              <Pedaco className="h-3.5 rounded" style={{ width: `${72 - i * 10}%` }} />
+              <div className="flex gap-1">
+                {Array.from({ length: 7 }, (_, k) => (
+                  <Pedaco key={k} className="w-2.5 h-2.5 rounded-full" />
+                ))}
+              </div>
+            </div>
+            <Pedaco className="w-11 h-11 rounded-full shrink-0" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

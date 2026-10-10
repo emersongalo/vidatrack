@@ -11,7 +11,7 @@ describe("Etapa 285 — aba Hábitos só com hábitos", () => {
     expect(NOMES_BLOCOS_HOJE.lista).toBe("✅ Hábitos");
   });
   it("novidades 285", () => {
-    expect(VERSAO_NOVIDADES).toBe("285");
-    expect(NOVIDADES[0].versao).toBe("285");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(285);
+    expect(NOVIDADES.some((g) => g.versao === "285")).toBe(true);
   });
 });

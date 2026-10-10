@@ -68,6 +68,19 @@ export function ListaLancamentosPorDia({
     return () => obs.disconnect();
   }, [temMais, limite]);
   const visiveis = temMais ? semEscondidos.slice(0, limite) : semEscondidos;
+  // Etapa 286 — lançamento que acabou de ser criado entra com um pulinho
+  // (só os que aparecem com a tela aberta e foram criados agora há pouco)
+  const vistos = useRef<Set<string> | null>(null);
+  if (vistos.current === null) vistos.current = new Set(lista.map((t: any) => t.id));
+  const agora = Date.now();
+  const ehNovo = (t: any) =>
+    !vistos.current!.has(t.id) && !!t.criado_em && agora - new Date(t.criado_em).getTime() < 3 * 60 * 1000;
+  useEffect(() => {
+    const t = setTimeout(() => {
+      for (const x of lista) vistos.current!.add(x.id);
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [lista]);
   return (
         <div className="space-y-5">
           {agruparPorDia(visiveis, hojeParaPendencia).map((g) => (
@@ -87,7 +100,7 @@ export function ListaLancamentosPorDia({
                   const corValor = ehTransf ? "text-ink-400" : ehReceita ? "text-habito" : "text-red-400";
                   const agendado = t.data > hojeParaPendencia && !t.pago_em;
                   return (
-                    <li key={t.id}>
+                    <li key={t.id} className={ehNovo(t) ? "entrar-topo" : undefined}>
                       <LinhaComDeslizar acao={() => excluir(t)} semConfirmar>
                         <div className="relative flex items-center gap-3 bg-base-800 pl-4 pr-1 py-3.5">
                           {/* faixa lateral: verde = entrou, vermelho = saiu */}

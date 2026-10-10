@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Target } from "lucide-react";
 import { planoDaMeta } from "@/lib/financas/metas";
 import { ValorMonetario } from "@/components/ValorMonetario";
-import { AnelProgresso } from "@/components/AnelProgresso";
+import { PoteMeta } from "@/components/PoteMeta";
 
 // Etapa 215 — as metas em andamento, direto na tela de Finanças
 export function MetasResumo({ metas, hojeISO }: { metas: any[]; hojeISO: string }) {
@@ -24,7 +24,7 @@ export function MetasResumo({ metas, hojeISO }: { metas: any[]; hojeISO: string 
           const p = planoDaMeta(m, hojeISO);
           return (
             <div key={m.id} className="flex items-center gap-4">
-              <AnelProgresso valor={p.percentual} total={100} tamanho={60} texto={`${p.percentual}%`} classeCor="stroke-financa" />
+              <PoteMeta percentual={p.percentual} tamanho={64} />
               <div className="flex-1 min-w-0">
                 <p className="text-base font-medium truncate flex items-center gap-1.5">
                   <Target size={15} className="text-financa shrink-0" /> {m.nome}

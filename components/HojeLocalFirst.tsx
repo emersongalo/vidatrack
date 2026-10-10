@@ -19,11 +19,12 @@ import { calcularStreak } from "@/lib/habitos/streak";
 import { pausasDe } from "@/lib/habitos/pausa";
 import { resumoDaSemana } from "@/lib/geral/semana";
 import { ofertaDeEscudo } from "@/lib/habitos/escudo";
+import { diasFeitos, nivelPorDias } from "@/lib/habitos/nivel";
 import { CartaoEscudo } from "@/components/CartaoEscudo";
 import { createClient } from "@/lib/supabase/client";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { infoDupla, type Parceiro } from "@/lib/habitos/dupla";
-import { Esqueleto } from "@/components/Esqueleto";
+import { EsqueletoHabitos } from "@/components/Esqueleto";
 import { Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff, Sun, Clock3 } from "lucide-react";
 import {
   NOMES_BLOCOS_HOJE,
@@ -155,6 +156,7 @@ function HojeConteudo() {
             ? infoDupla(h, checkinsDeTodos, eu, parceirosPorHabito.get(h.id)!, dataSelecionada, horaDoDia)
             : null,
         ehHoje: dataSelecionada === hoje,
+        nivel: h.eh_negativo ? null : nivelPorDias(diasFeitos(h, snapshot.habitoCheckins as any[])).atual,
       });
     }
 
@@ -267,7 +269,7 @@ function HojeConteudo() {
           </div>
 
           {carregando ? (
-            <Esqueleto linhas={4} comTopo={false} />
+            <EsqueletoHabitos linhas={4} />
           ) : itens!.length === 0 && !temAlgumItemCadastrado ? (
             <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-8 text-center">
               <p className="font-display font-semibold mb-1">Vamos começar?</p>

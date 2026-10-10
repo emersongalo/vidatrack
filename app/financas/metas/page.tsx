@@ -12,7 +12,7 @@ import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { Trash2, Archive, Pencil } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
-import { AnelProgresso } from "@/components/AnelProgresso";
+import { PoteMeta } from "@/components/PoteMeta";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { Dica } from "@/components/Dica";
 import { CabecalhoPagina } from "@/components/CabecalhoPagina";
@@ -95,13 +95,8 @@ function CartaoMeta({ meta, aoMudar }: { meta: any; aoMudar: () => void }) {
     <li className="bg-base-800 border border-base-600 rounded-3xl p-5">
       {/* Etapa 230 — anel com a % no meio, quanto falta e o ritmo pra chegar */}
       <div className="flex items-center gap-4 mb-4">
-        <AnelProgresso
-          valor={plano.percentual}
-          total={100}
-          tamanho={88}
-          texto={`${plano.percentual}%`}
-          classeCor={meta.concluida ? "stroke-habito" : "stroke-financa"}
-        />
+        {/* Etapa 286 — pote que enche (e moedas caindo ao guardar) */}
+        <PoteMeta percentual={plano.percentual} tamanho={92} concluida={!!meta.concluida} />
         <div className="flex-1 min-w-0">
           <p className="text-lg font-semibold truncate">{meta.nome}</p>
           <p className="font-mono text-base">

@@ -90,12 +90,22 @@ export function GraficoSaldoProjetado({ saldoHoje, itens, hoje }: { saldoHoje: n
             className={temNegativo ? "stroke-red-400" : "stroke-base-600"}
             vectorEffect="non-scaling-stroke"
           />
-          <path d={area} fill="url(#vt-saldo-area)" />
-          <path d={linha} fill="none" stroke={COR} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <path d={area} fill="url(#vt-saldo-area)" className="aparecer-depois" />
+          {/* Etapa 286 — a linha se desenha da esquerda pra direita */}
+          <path d={linha} pathLength={1} fill="none" stroke={COR} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" className="desenhar-linha" />
           {/* dias com movimento */}
           {pontos.map((pt, i) =>
             pt.entrou || pt.saiu ? (
-              <circle key={pt.dia} cx={x(i)} cy={y(pt.saldo)} r="3" fill={pt.saldo < 0 ? "#F87171" : COR} className="stroke-base-800" strokeWidth="1.5" />
+              <circle
+                key={pt.dia}
+                cx={x(i)}
+                cy={y(pt.saldo)}
+                r="3"
+                fill={pt.saldo < 0 ? "#F87171" : COR}
+                className="stroke-base-800 aparecer-depois"
+                strokeWidth="1.5"
+                style={{ animationDelay: `${0.25 + (i / pontos.length) * 1.0}s` }}
+              />
             ) : null
           )}
           {p && sel !== null && (

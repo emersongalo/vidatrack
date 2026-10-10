@@ -332,3 +332,147 @@ html[data-fonte="maior"] { font-size: 125%; }
   --c-base-700: 22 22 26;
   --c-base-600: 38 38 44;
 }
+
+/* ================================================================
+   Etapa 286 — design e animação (Finanças e Hábitos)
+   ================================================================ */
+
+/* 16 · pressionar e soltar: cartões e botões arredondados afundam um
+   pouco e voltam com mola. Usa `scale` (e não `transform`) pra não
+   brigar com quem já usa translate. */
+:is(a, button)[class*="rounded-2xl"],
+:is(a, button)[class*="rounded-3xl"],
+:is(a, button)[class*="rounded-xl"],
+:is(a, button)[class*="rounded-full"] {
+  transition-property: scale, color, background-color, border-color, opacity, box-shadow, transform;
+  transition-duration: 0.22s;
+  transition-timing-function: cubic-bezier(.34, 1.56, .64, 1);
+}
+:is(a, button)[class*="rounded-2xl"]:active:not(:disabled),
+:is(a, button)[class*="rounded-3xl"]:active:not(:disabled),
+:is(a, button)[class*="rounded-xl"]:active:not(:disabled),
+:is(a, button)[class*="rounded-full"]:active:not(:disabled) {
+  scale: 0.97;
+  transition-duration: 0.08s;
+}
+
+/* 2 · brilho dourado passando devagar no cartão do mês */
+.brilho-ouro { position: relative; isolation: isolate; }
+.brilho-ouro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgb(var(--c-financa) / 0.16) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: vt-ouro 7s ease-in-out infinite;
+  z-index: -1;
+}
+@keyframes vt-ouro {
+  0%, 55% { background-position: 150% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* 3 · lançamento novo entra no topo com um pulinho */
+@keyframes vt-entrar-topo {
+  0% { opacity: 0; transform: translateY(-14px) scale(0.97); }
+  60% { opacity: 1; transform: translateY(2px) scale(1.01); }
+  100% { transform: translateY(0) scale(1); }
+}
+.entrar-topo { position: relative; animation: vt-entrar-topo 520ms cubic-bezier(.2,.8,.2,1) backwards; }
+.entrar-topo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgb(var(--c-financa) / 0.16);
+  animation: vt-sumir 1.8s ease-out forwards;
+}
+@keyframes vt-sumir { 0%, 35% { opacity: 1; } 100% { opacity: 0; } }
+
+/* 4 · carimbo "PAGO" */
+@keyframes vt-carimbo {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(2.4) rotate(-28deg); }
+  35% { opacity: 1; transform: translate(-50%, -50%) scale(0.95) rotate(-12deg); }
+  45% { transform: translate(-50%, -50%) scale(1.04) rotate(-12deg); }
+  80% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-12deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1) rotate(-12deg); }
+}
+.carimbo {
+  position: fixed;
+  z-index: 70;
+  pointer-events: none;
+  padding: 0.35rem 0.9rem;
+  border: 3px solid rgb(var(--c-habito));
+  color: rgb(var(--c-habito));
+  border-radius: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 1.15rem;
+  background: rgb(var(--c-base-900) / 0.85);
+  animation: vt-carimbo 1.3s cubic-bezier(.2,.9,.3,1.2) forwards;
+  white-space: nowrap;
+}
+
+/* 5 · barra que estourou pisca uma vez */
+@keyframes vt-alerta { 0%, 100% { opacity: 1; } 30%, 70% { opacity: 0.35; } }
+.piscar-alerta { animation: vt-alerta 0.9s ease-in-out 0.8s 2; }
+
+/* 6 · moedas caindo no pote */
+@keyframes vt-moeda {
+  0% { transform: translateY(-46px) rotate(0); opacity: 0; }
+  15% { opacity: 1; }
+  80% { transform: translateY(0) rotate(200deg); opacity: 1; }
+  100% { transform: translateY(2px) rotate(220deg); opacity: 0; }
+}
+.moeda-cair { animation: vt-moeda 0.9s cubic-bezier(.5,0,.7,1) forwards; }
+
+/* 7 · linha do gráfico se desenhando (path com pathLength=1) */
+@keyframes vt-desenhar { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.desenhar-linha { stroke-dasharray: 1; stroke-dashoffset: 0; animation: vt-desenhar 1.2s ease-out backwards; }
+@keyframes vt-aparecer { from { opacity: 0; } to { opacity: 1; } }
+.aparecer-depois { animation: vt-aparecer 0.6s ease-out 0.7s backwards; }
+
+/* 9 · anel dá uma volta ao completar */
+@keyframes vt-volta { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(180deg) scale(1.08); } 100% { transform: rotate(360deg) scale(1); } }
+.anel-volta { animation: vt-volta 0.9s cubic-bezier(.4,0,.2,1); }
+
+/* 10 · bolinha do hábito enche como tinta */
+@keyframes vt-tinta { 0% { transform: scale(0); } 70% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.tinta { animation: vt-tinta 0.4s cubic-bezier(.2,.8,.2,1); }
+
+/* 12 · plantinha brotando */
+@keyframes vt-brotar {
+  0% { transform: translateY(6px) scale(0.2); opacity: 0; }
+  60% { transform: translateY(-2px) scale(1.25); opacity: 1; }
+  100% { transform: translateY(0) scale(1); }
+}
+.brotar { display: inline-block; animation: vt-brotar 0.6s cubic-bezier(.2,.9,.3,1.3) backwards; transform-origin: 50% 100%; }
+
+/* 13 · bolinhas da semana acendendo em onda */
+@keyframes vt-ponto { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); } }
+.ponto-onda { animation: vt-ponto 0.35s cubic-bezier(.2,.9,.3,1.3) backwards; }
+
+/* 11 · chama dourada (30+ dias) */
+.chama-ouro { filter: drop-shadow(0 0 6px rgba(255, 196, 64, 0.85)) saturate(1.3); }
+
+/* 15 · coração subindo quando o parceiro marca */
+@keyframes vt-coracao {
+  0% { transform: translate(-50%, 0) scale(0.4); opacity: 0; }
+  20% { transform: translate(-50%, -6px) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -42px) scale(0.9); opacity: 0; }
+}
+.coracao-subir { position: absolute; left: 50%; top: -4px; pointer-events: none; animation: vt-coracao 1.4s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .brilho-ouro::after, .entrar-topo, .entrar-topo::after, .piscar-alerta, .moeda-cair, .desenhar-linha, .aparecer-depois,
+  .anel-volta, .tinta, .brotar, .ponto-onda, .coracao-subir { animation: none !important; }
+  .carimbo { animation-duration: 0.01s; }
+  :is(a, button):active { scale: 1 !important; }
+}
+
+/* 6 · ondinha no pote da meta */
+@keyframes vt-onda { from { transform: translateX(0); } to { transform: translateX(40px); } }
+.onda-pote { animation: vt-onda 2.4s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .onda-pote { animation: none; } }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useContagem } from "@/components/NumeroAnimado";
 
 // Etapa 227 — anel de progresso (usado no topo do Hoje e no detalhe do hábito)
@@ -20,13 +21,22 @@ export function AnelProgresso({
   const c = 2 * Math.PI * r;
   // Etapa 230 — o anel "enche" ao abrir a tela e quando o valor muda
   const pct = useContagem(total > 0 ? Math.min(1, valor / total) : 0, 700);
+  // Etapa 286 — quando completa na hora (não ao abrir), o anel dá uma volta
+  const completo = total > 0 && valor >= total;
+  const antes = useRef(completo);
+  const [volta, setVolta] = useState(0);
+  useEffect(() => {
+    if (completo && !antes.current) setVolta((n) => n + 1);
+    antes.current = completo;
+  }, [completo]);
   return (
     // Etapa 273 — completo: o anel brilha e "respira"
     <div
       className={`relative shrink-0 rounded-full ${total > 0 && valor >= total ? "animate-brilhar" : ""}`}
       style={{ width: tamanho, height: tamanho }}
     >
-      <svg viewBox="0 0 84 84" className="w-full h-full -rotate-90">
+      <svg key={volta} viewBox="0 0 84 84" className={`w-full h-full ${volta ? "anel-volta" : ""}`}>
+        <g transform="rotate(-90 42 42)">
         <circle cx="42" cy="42" r={r} fill="none" strokeWidth="9" className="stroke-base-700" />
         <circle
           cx="42"
@@ -39,6 +49,7 @@ export function AnelProgresso({
           strokeDasharray={c}
           strokeDashoffset={c * (1 - pct)}
         />
+        </g>
       </svg>
       <span
         key={valor}

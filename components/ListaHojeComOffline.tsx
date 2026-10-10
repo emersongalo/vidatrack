@@ -221,7 +221,7 @@ export function ListaHojeComOffline({
 
   return (
     <div>
-      {comemorar && <ComemoracaoDia aoFechar={() => setComemorar(false)} />}
+      {comemorar && <ComemoracaoDia aoFechar={() => setComemorar(false)} emoji="🌳" titulo="Dia completo!" texto="Todos os hábitos de hoje feitos. Seu jardim agradece." chuva={["🍃", "🌿", "🍀", "🌱", "🍃"]} />}
       {offline && (
         <p className="mb-3 text-xs bg-financa-soft text-financa border border-financa/30 rounded-lg px-3 py-2">
           Sem conexão — suas marcações estão sendo guardadas e vão

@@ -2,7 +2,7 @@
 
 // Etapa 233 — faixa embaixo de um hábito compartilhado na tela Hoje:
 // carinha do dia, quem já fez, sequência juntos, cutucar e reagir.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CarinhaDupla } from "@/components/CarinhaDupla";
 import { PlantaDupla } from "@/components/PlantaDupla";
@@ -36,6 +36,23 @@ export function FaixaDupla({ habitoId, dupla, dataISO, ehHoje }: { habitoId: str
     setCutucou(!!lerMarca(chaveCutucar));
     setReacao(lerMarca(chaveReacao));
   }, [chaveCutucar, chaveReacao]);
+
+  // Etapa 286 — quando o parceiro marca com a tela aberta: toquinho + coração
+  const antes = useRef<Map<string, boolean> | null>(null);
+  const [recemFeito, setRecemFeito] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const atual = new Map(dupla.parceiros.map((p) => [p.id, p.feito]));
+    const ant = antes.current;
+    antes.current = atual;
+    if (!ant || !ehHoje) return;
+    const novos = dupla.parceiros.filter((p) => p.feito && ant.get(p.id) === false).map((p) => p.id);
+    if (!novos.length) return;
+    setRecemFeito(new Set(novos));
+    try {
+      (navigator as any).vibrate?.([10, 40, 10]);
+    } catch {}
+    setTimeout(() => setRecemFeito(new Set()), 1600);
+  }, [dupla.parceiros, ehHoje]);
 
   const nomes = dupla.parceiros.map((p) => p.nome);
   const faltaAlguem = dupla.parceiros.some((p) => !p.feito);
@@ -72,8 +89,18 @@ export function FaixaDupla({ habitoId, dupla, dataISO, ehHoje }: { habitoId: str
               {dupla.euFiz ? "✓" : "○"} Você
             </span>
             {dupla.parceiros.map((p) => (
-              <span key={p.id} className={`text-xs px-1.5 py-0.5 rounded-full ${p.feito ? "bg-habito/15 text-habito" : "bg-base-700 text-ink-400"}`}>
+              <span
+                key={p.id}
+                className={`relative text-xs px-1.5 py-0.5 rounded-full ${p.feito ? "bg-habito/15 text-habito" : "bg-base-700 text-ink-400"} ${
+                  recemFeito.has(p.id) ? "animate-quicar" : ""
+                }`}
+              >
                 {p.feito ? "✓" : "○"} {p.nome}
+                {recemFeito.has(p.id) && (
+                  <span className="coracao-subir text-base" aria-hidden>
+                    💚
+                  </span>
+                )}
               </span>
             ))}
             {dupla.sequencia > 0 && <span className="text-xs text-ink-400">🔥 {dupla.sequencia} juntos</span>}

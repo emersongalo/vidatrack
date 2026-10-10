@@ -1,7 +1,7 @@
 "use client";
 
 import { avisarConfirmacaoMovimentacao } from "@/app/financas/avisos";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Undo2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
@@ -14,6 +14,19 @@ import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
  * mostra "Pago em dd/mm" com opção de desfazer.
  * Lançamento com data de hoje ou passada não mostra nada (já conta).
  */
+/** Etapa 286 — carimbo "✓ PAGO" girando em cima do botão */
+function carimbar(el: HTMLElement | null, texto: string) {
+  if (!el || typeof document === "undefined") return;
+  const r = el.getBoundingClientRect();
+  const c = document.createElement("div");
+  c.className = "carimbo";
+  c.textContent = texto;
+  c.style.left = `${Math.min(window.innerWidth - 70, Math.max(70, r.left + r.width / 2))}px`;
+  c.style.top = `${r.top + r.height / 2}px`;
+  document.body.appendChild(c);
+  setTimeout(() => c.remove(), 1400);
+}
+
 export function BotaoPaguei({
   transacao,
   compacto = false,
@@ -25,6 +38,7 @@ export function BotaoPaguei({
   const [pagoEm, setPagoEm] = useState<string | null>(transacao.pago_em ?? null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(false);
+  const refBotao = useRef<HTMLButtonElement>(null);
 
   // Etapa 268 — receita programada que chegou o dia: espera confirmar
   const aguardando = !pagoEm && aguardandoConfirmacao(transacao, hoje);
@@ -53,7 +67,7 @@ export function BotaoPaguei({
   if (pagoEm) {
     return (
       <span className="inline-flex items-center gap-2 text-sm leading-none">
-        <span className="px-2 py-1 rounded-md bg-habito/15 text-habito font-medium">
+        <span className="px-2 py-1 rounded-md bg-habito/15 text-habito font-medium animate-surgir">
           {receita ? "Recebido" : "Pago"} {new Date(pagoEm + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
         </span>
         <button
@@ -77,7 +91,11 @@ export function BotaoPaguei({
       <button
         type="button"
         disabled={salvando}
-        onClick={() => alterar(hoje)}
+        ref={refBotao}
+        onClick={() => {
+          carimbar(refBotao.current, receita ? "✓ RECEBIDO" : "✓ PAGO");
+          alterar(hoje);
+        }}
         className={`inline-flex items-center gap-1 rounded-md border border-habito/50 text-habito font-medium hover:bg-habito/10 transition disabled:opacity-50 ${
           compacto ? "px-2 py-1" : "px-2.5 py-1"
         }`}
