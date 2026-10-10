@@ -55,7 +55,7 @@ export default function SemanaPage() {
             <li key={texto} className="flex items-center gap-3 bg-base-800 border border-base-600 rounded-xl2 p-4">
               <span className="text-2xl">{emoji}</span>
               <span className="min-w-0">
-                <span className="block font-semibold font-mono truncate">{valor}</span>
+                <span className="block font-semibold font-mono break-words">{valor}</span>
                 <span className="block text-xs text-ink-400">{texto}</span>
               </span>
             </li>

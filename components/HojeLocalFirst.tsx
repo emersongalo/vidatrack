@@ -332,7 +332,7 @@ function HojeConteudo() {
   const botaoLayout = "w-8 h-8 rounded-lg flex items-center justify-center bg-base-700 text-ink-100 disabled:opacity-30";
 
   return (
-    <main className="max-w-2xl lg:max-w-3xl mx-auto px-6 md:px-12 pt-2 pb-6">
+    <main className="max-w-2xl lg:max-w-6xl mx-auto px-6 md:px-12 pt-2 pb-6">
       {/* Etapa 285 — topo mais limpo: título da área + atalhos em chips */}
       <div className="flex items-end justify-between gap-3 mb-4">
         <div className="min-w-0">
@@ -382,9 +382,33 @@ function HojeConteudo() {
       )}
       {erroLayout && <p className="text-sm text-red-400 mb-3">{erroLayout}</p>}
 
-      {layout.map((b, i) => {
+      {/* Etapa 291 — no computador: lista dos hábitos à esquerda e o resto
+         (resumo, pausados, diário, sugestões) numa coluna ao lado */}
+      {!editandoLayout && (
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)] lg:gap-8 lg:items-start">
+          <div className="min-w-0">
+            {layout.map((b) => {
+              const conteudo = blocos[b.id];
+              if (!b.visivel || !conteudo) return null;
+              return (
+                <div key={b.id} className={b.id === "lista" ? "" : "lg:hidden"}>
+                  {conteudo}
+                </div>
+              );
+            })}
+          </div>
+          <aside className="hidden lg:block min-w-0">
+            {layout
+              .filter((b) => b.id !== "lista" && b.visivel && blocos[b.id])
+              .map((b) => (
+                <div key={b.id}>{blocos[b.id]}</div>
+              ))}
+          </aside>
+        </div>
+      )}
+
+      {editandoLayout && layout.map((b, i) => {
         const conteudo = blocos[b.id];
-        if (!editandoLayout) return b.visivel && conteudo ? <div key={b.id}>{conteudo}</div> : null;
         return (
           <div key={b.id} className={`mb-4 rounded-2xl border border-habito/40 p-2 ${b.visivel ? "" : "opacity-40"}`}>
             <div className="flex items-center gap-1 mb-1">
