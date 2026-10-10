@@ -1,13 +1,25 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "280";
+export const VERSAO_NOVIDADES = "281";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "281",
+    titulo: "Cara nova e atalhos",
+    itens: [
+      { emoji: "➕", titulo: "Leque no +", texto: "O botão + abre bolhas: Gasto, Tarefa, Hábito e Mais — tudo a um toque." },
+      { emoji: "🌓", titulo: "Tema automático e preto total", texto: "Siga o tema do celular, troque sozinho pelo horário (claro de dia, escuro à noite) ou use a paleta Preto, ótima pra telas OLED.", href: "/perfil" },
+      { emoji: "📅", titulo: "Calendário único", texto: "Hábitos, tarefas e dinheiro no mesmo mês. Toque num dia e veja tudo dele.", href: "/calendario" },
+      { emoji: "🌳", titulo: "Jardim dos hábitos", texto: "Cada hábito é uma planta que cresce com os dias feitos. Feito hoje = planta regada.", href: "/habitos/jardim" },
+      { emoji: "⚡", titulo: "Modo rápido", texto: "Hábitos de hoje em quadrados grandes, tarefas com 1 toque e o gasto rápido — numa tela só.", href: "/rapido" },
+      { emoji: "⏱️", titulo: "Timer no hábito", texto: "Hábito em minutos (ex: Ler 20 min) ganhou o ▶: cronometre e os minutos entram sozinhos." },
+    ],
+  },
   {
     versao: "280",
     titulo: "Mais leve",

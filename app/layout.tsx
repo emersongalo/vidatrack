@@ -22,6 +22,8 @@ import { AvisoDesfazer } from "@/components/AvisoDesfazer";
 import { SCRIPT_PRE_BLOQUEIO } from "@/lib/seguranca/pin";
 import { SCRIPT_APARENCIA } from "@/lib/preferencias/aparencia";
 import { SCRIPT_PALETA } from "@/lib/preferencias/paletas";
+import { SCRIPT_TEMA } from "@/lib/preferencias/tema";
+import { TemaAutomatico } from "@/components/TemaAutomatico";
 import { CSS_ABERTURA, HTML_ABERTURA, SCRIPT_ABERTURA } from "@/lib/app/abertura";
 
 const outfit = Outfit({
@@ -82,7 +84,8 @@ export default function RootLayout({
         {/* Aplica o tema salvo antes da 1ª pintura, evitando flash de tela errada */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{document.documentElement.setAttribute('data-theme', localStorage.getItem('vidatrack-tema') || 'dark')}catch(e){}`,
+            // Etapa 281 — também "igual ao celular" e "por horário"
+            __html: SCRIPT_TEMA,
           }}
         />
         {/* Etapa 214 — se o PIN estiver ativo, esconde a tela até desbloquear */}
@@ -119,6 +122,7 @@ export default function RootLayout({
         <BotaoVoltarApp />
         <AvisoConvites />
         <AvisoDesfazer />
+        <TemaAutomatico />
         <BloqueioApp />
         <RegistrarIndicacao />
       </body>

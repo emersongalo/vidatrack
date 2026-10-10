@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlternadorTema } from "@/components/AlternadorTema";
 import { FotoPerfil } from "@/components/FotoPerfil";
 import { sair } from "../login/actions";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, CalendarDays } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
@@ -91,6 +91,14 @@ export default function DashboardPage() {
             className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
           >
             <Search size={18} strokeWidth={2} />
+          </Link>
+          {/* Etapa 281 — calendário único */}
+          <Link
+            href="/calendario"
+            aria-label="Calendário"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
+          >
+            <CalendarDays size={18} strokeWidth={2} />
           </Link>
           <Link
             href="/notificacoes"

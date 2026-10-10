@@ -30,7 +30,10 @@ export default function ListaHabitosPage() {
         }
         acoes={<BotaoNovoHabitoOffline />}
       >
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Link href="/habitos/jardim" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
+            🌳 Jardim
+          </Link>
           <Link href="/habitos/estatisticas" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
             📊 Estatísticas
           </Link>

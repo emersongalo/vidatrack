@@ -2,20 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
+import { aplicarTema } from "@/lib/preferencias/tema";
 
+// Etapa 281 — o botão do topo troca na hora entre claro e escuro (e
+// sai do automático, se estava). O automático fica em Perfil → Aparência.
 export function AlternadorTema() {
   const [tema, setTema] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
-    const salvo = (localStorage.getItem("vidatrack-tema") as "dark" | "light") || "dark";
-    setTema(salvo);
+    setTema(document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark");
   }, []);
 
   function alternar() {
     const novo = tema === "dark" ? "light" : "dark";
     setTema(novo);
-    document.documentElement.setAttribute("data-theme", novo);
-    localStorage.setItem("vidatrack-tema", novo);
+    aplicarTema(novo);
   }
 
   return (

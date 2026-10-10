@@ -313,3 +313,22 @@ html[data-fonte="maior"] { font-size: 125%; }
 @media (prefers-reduced-motion: reduce) {
   .aurora-respirar { animation: none; }
 }
+
+/* Etapa 281 — bolhas do "+" (usa `scale`, não `transform`, pra não
+   brigar com a posição de cada bolha) */
+@keyframes vt-bolha {
+  from { opacity: 0; scale: 0.3; }
+  to { opacity: 1; scale: 1; }
+}
+.animate-bolha { animation: vt-bolha 260ms cubic-bezier(.2,.9,.3,1.3) both; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-bolha { animation: none; }
+}
+
+/* Etapa 281 — "preto total" (OLED) no tema escuro */
+:root[data-paleta="oled"]:not([data-theme="light"]) {
+  --c-base-900: 0 0 0;
+  --c-base-800: 12 12 14;
+  --c-base-700: 22 22 26;
+  --c-base-600: 38 38 44;
+}

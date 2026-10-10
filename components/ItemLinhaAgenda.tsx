@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useTransition } from "react";
-import { RefreshCw, Bell } from "lucide-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { RefreshCw, Bell, Play } from "lucide-react";
 import { classeCor, classeFundoSuave, classeTextoCor, hexDaCor } from "@/lib/agenda/estilo";
 import { explodirEm, textoFlutuante, frasePositiva, chuvaDeConfete } from "@/lib/app/festa";
 import { lerSnapshotOffline } from "@/lib/offline/snapshot";
@@ -16,6 +16,8 @@ import { AdiarTarefa } from "@/components/AdiarTarefa";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { FaixaDupla } from "@/components/FaixaDupla";
+import { TimerHabito } from "@/components/TimerHabito";
+import { ehUnidadeDeMinuto, lerTimer } from "@/lib/habitos/timerHabito";
 import { ToqueDuplo } from "@/components/ToqueDuplo";
 import { avisarDupla } from "@/lib/habitos/avisarDupla";
 import type { InfoDupla } from "@/lib/habitos/dupla";
@@ -123,6 +125,15 @@ export function ItemLinhaAgenda({
   const [mostrarNota, setMostrarNota] = useState(false);
   const [textoNota, setTextoNota] = useState("");
   const ehNumerico = item.tipo === "habito" && item.meta && item.meta.alvo > 1;
+  // Etapa 282 — hábito de minutos ganha um timer embutido
+  const temTimer = !!ehNumerico && ehUnidadeDeMinuto(item.meta?.unidade);
+  const [timerAberto, setTimerAberto] = useState(false);
+  const [timerRodando, setTimerRodando] = useState(false);
+  useEffect(() => {
+    if (!temTimer) return;
+    const t = lerTimer(item.id);
+    setTimerRodando(!!t && t.data === dataISO);
+  }, [temTimer, item.id, dataISO, timerAberto]);
   // Etapa 230 — animação ao marcar e gesto de arrastar a linha
   const [pulsar, setPulsar] = useState(0);
   // Etapa 273 — de onde sai o confete
@@ -251,7 +262,7 @@ export function ItemLinhaAgenda({
         textoFlutuante(refMais.current, nivel ? `Nível ${nivel.numero}! ${nivel.emoji} ${nivel.nome}` : "Meta batida! 🎯", cor);
         if (nivel) chuvaDeConfete({ quantidade: 50, duracao: 2200 });
       } else {
-        textoFlutuante(refMais.current, `+1${item.meta?.unidade ? ` ${item.meta.unidade}` : ""}`, cor);
+        textoFlutuante(refMais.current, `+${delta}${item.meta?.unidade ? ` ${item.meta.unidade}` : ""}`, cor);
       }
     }
     aoAjustarLocal?.(delta);
@@ -423,6 +434,16 @@ export function ItemLinhaAgenda({
         aoFechar={() => setToqueDuplo(null)}
       />
     )}
+    {timerAberto && item.meta && (
+      <TimerHabito
+        habito={{ id: item.id, titulo: item.titulo, icone: item.icone }}
+        dataISO={dataISO}
+        faltamMin={Math.max(0, item.meta.alvo - item.meta.atual)}
+        cor={hexDaCor(item.cor)}
+        aoLancar={(min) => ajustar(min)}
+        aoFechar={() => setTimerAberto(false)}
+      />
+    )}
     {marcoAtingido && (
       <CelebracaoConquista
         marco={marcoAtingido}
@@ -476,6 +497,18 @@ export function ItemLinhaAgenda({
 
       {ehNumerico ? (
         <div className="flex items-center gap-1.5 shrink-0">
+          {temTimer && (
+            <button
+              type="button"
+              onClick={() => setTimerAberto(true)}
+              aria-label={timerRodando ? "Voltar pro timer" : "Cronometrar"}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
+                timerRodando ? `${classeCor(item.cor)} text-base-900 animate-pulse` : `${classeFundoSuave(item.cor)} ${classeTextoCor(item.cor)}`
+              }`}
+            >
+              <Play size={16} fill="currentColor" />
+            </button>
+          )}
           <button
             onClick={() => ajustar(-1)}
             disabled={pendente}

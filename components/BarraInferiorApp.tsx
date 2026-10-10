@@ -8,7 +8,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Repeat, Wallet, Plus, X, TrendingDown, TrendingUp, ArrowLeftRight, CheckSquare } from "lucide-react";
+import { Home, Repeat, Wallet, Plus, X, TrendingDown, TrendingUp, ArrowLeftRight, CheckSquare, Zap, CalendarDays } from "lucide-react";
 import { FolhaLancamento } from "@/components/BotaoNovoLancamento";
 import { vibrar } from "@/components/ItemLinhaAgenda";
 import { AvisosDupla } from "@/components/AvisosDupla";
@@ -31,36 +31,57 @@ export function BarraInferiorApp() {
   const pathname = usePathname() ?? "";
   const [menu, setMenu] = useState(false);
   const [gasto, setGasto] = useState(false);
+  // Etapa 281 — "+" abre um leque com 3 bolhas (gasto, tarefa, hábito) + "mais"
+  const [leque, setLeque] = useState(false);
+  const indiceAtivo = ITENS.findIndex((it) => it !== null && areaAtiva(pathname, it.href));
+  const itemAtivo = indiceAtivo >= 0 ? ITENS[indiceAtivo] : null;
+  const COR_PILULA: Record<string, string> = {
+    "/dashboard": "bg-ink-100/10",
+    "/habitos": "bg-habito/15",
+    "/tarefas": "bg-nota/15",
+    "/financas": "bg-financa/15",
+  };
 
   function abrirMenu() {
     vibrar(10);
-    setMenu(true);
+    setLeque((v) => !v);
   }
 
   return (
     <>
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-base-800/95 backdrop-blur border-t border-base-600"
+        className={`lg:hidden fixed bottom-0 left-0 right-0 ${leque ? "z-[46]" : "z-20"} bg-base-800/95 backdrop-blur border-t border-base-600`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="max-w-2xl mx-auto grid grid-cols-5 items-end">
+        <div className="relative max-w-2xl mx-auto grid grid-cols-5 items-end">
+          {/* Etapa 281 — pílula que desliza até a aba ativa, na cor da área */}
+          {itemAtivo && (
+            <span
+              aria-hidden
+              className={`absolute top-1.5 bottom-1.5 left-0 w-[20%] px-2 transition-transform duration-300 ease-[cubic-bezier(.2,.8,.2,1)] pointer-events-none`}
+              style={{ transform: `translateX(${indiceAtivo * 100}%)` }}
+            >
+              <span className={`block w-full h-full rounded-2xl transition-colors duration-300 ${COR_PILULA[itemAtivo.href] ?? "bg-ink-100/10"}`} />
+            </span>
+          )}
           {ITENS.map((item, i) =>
             item === null ? (
               <div key="mais" className="flex justify-center">
                 <button
                   type="button"
                   onClick={abrirMenu}
-                  aria-label="Adicionar"
-                  className="-mt-6 mb-1.5 w-14 h-14 rounded-full bg-gradient-to-br from-habito to-financa text-base-900 flex items-center justify-center shadow-lg shadow-black/40 ring-4 ring-base-900 active:scale-95 transition"
+                  aria-label={leque ? "Fechar" : "Adicionar"}
+                  aria-expanded={leque}
+                  className="relative z-[46] -mt-6 mb-1.5 w-14 h-14 rounded-full bg-gradient-to-br from-habito to-financa text-base-900 flex items-center justify-center shadow-lg shadow-black/40 ring-4 ring-base-900 active:scale-95 transition"
                 >
-                  <Plus size={28} strokeWidth={2.6} />
+                  <Plus size={28} strokeWidth={2.6} className={`transition-transform duration-300 ${leque ? "rotate-45" : ""}`} />
                 </button>
               </div>
             ) : (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 pt-2.5 pb-2 text-xs transition ${
+                className={`relative flex flex-col items-center gap-1 pt-2.5 pb-2 text-xs transition ${
                   areaAtiva(pathname, item.href) ? `${item.cor} font-semibold` : "text-ink-400 hover:text-ink-100"
                 }`}
               >
@@ -71,6 +92,55 @@ export function BarraInferiorApp() {
           )}
         </div>
       </nav>
+
+      {/* Etapa 281 — leque do "+" */}
+      {leque && (
+        <div className="lg:hidden fixed inset-0 z-[45] animate-fundo bg-black/55 backdrop-blur-[2px]" onClick={() => setLeque(false)}>
+          <div
+            className="absolute left-1/2 -translate-x-1/2"
+            style={{ bottom: "calc(env(safe-area-inset-bottom) + 4.75rem)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {[
+              { rotulo: "Gasto", emoji: "💸", x: -112, y: -18, cor: "bg-red-400", acao: () => setGasto(true) },
+              { rotulo: "Tarefa", emoji: "✅", x: -40, y: -92, cor: "bg-nota", href: "/tarefas/nova" },
+              { rotulo: "Hábito", emoji: "🌱", x: 40, y: -92, cor: "bg-habito", href: "/habitos/novo" },
+              { rotulo: "Mais", emoji: "➕", x: 112, y: -18, cor: "bg-financa", acao: () => setMenu(true) },
+            ].map((b, n) => {
+              const conteudo = (
+                <>
+                  <span className={`w-14 h-14 rounded-full ${b.cor} flex items-center justify-center text-2xl shadow-xl shadow-black/40`}>{b.emoji}</span>
+                  <span className="text-xs font-semibold text-white drop-shadow">{b.rotulo}</span>
+                </>
+              );
+              const estilo = {
+                transform: `translate(calc(-50% + ${b.x}px), ${b.y}px)`,
+                animationDelay: `${n * 40}ms`,
+              } as React.CSSProperties;
+              const classe = "absolute left-0 top-0 flex flex-col items-center gap-1 animate-bolha active:scale-90 transition";
+              return b.href ? (
+                <Link key={b.rotulo} href={b.href} onClick={() => setLeque(false)} className={classe} style={estilo}>
+                  {conteudo}
+                </Link>
+              ) : (
+                <button
+                  key={b.rotulo}
+                  type="button"
+                  onClick={() => {
+                    vibrar(10);
+                    setLeque(false);
+                    b.acao?.();
+                  }}
+                  className={classe}
+                  style={estilo}
+                >
+                  {conteudo}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {menu && (
         <div className="animate-fundo fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={() => setMenu(false)}>
@@ -104,6 +174,9 @@ export function BarraInferiorApp() {
               <Opcao href="/financas/transferir" rotulo="Transferir" Icone={ArrowLeftRight} classe="bg-financa/10 border-financa/40 text-financa" fechar={() => setMenu(false)} />
               <Opcao href="/habitos/novo" rotulo="Hábito" Icone={Repeat} classe="bg-habito/10 border-habito/40 text-habito" fechar={() => setMenu(false)} />
               <Opcao href="/tarefas/nova" rotulo="Tarefa" Icone={CheckSquare} classe="bg-nota/10 border-nota/40 text-nota" fechar={() => setMenu(false)} />
+              {/* Etapa 282 */}
+              <Opcao href="/rapido" rotulo="Modo rápido" Icone={Zap} classe="bg-base-700 border-base-600 text-ink-100" fechar={() => setMenu(false)} />
+              <Opcao href="/calendario" rotulo="Calendário" Icone={CalendarDays} classe="bg-base-700 border-base-600 text-ink-100" fechar={() => setMenu(false)} />
             </div>
           </div>
         </div>

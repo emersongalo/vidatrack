@@ -46,7 +46,7 @@ export function SeletorPaleta() {
   return (
     <div className="mb-5">
       <p className="text-sm text-ink-400 mb-2">Cores do tema escuro</p>
-      <div className="grid grid-cols-4 gap-2 max-w-sm">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-w-md">
         {PALETAS.map((p) => {
           const bloqueada = p.recompensa && !liberadas;
           return (

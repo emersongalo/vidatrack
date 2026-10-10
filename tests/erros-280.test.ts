@@ -22,7 +22,7 @@ describe("Etapa 280 — monitor de erros", () => {
     expect(telaDoErro("erro-http /tarefas: 500")).toBe("/tarefas");
   });
   it("novidades 280", () => {
-    expect(VERSAO_NOVIDADES).toBe("280");
-    expect(NOVIDADES[0].versao).toBe("280");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(280);
+    expect(NOVIDADES.some((g) => g.versao === "280")).toBe(true);
   });
 });

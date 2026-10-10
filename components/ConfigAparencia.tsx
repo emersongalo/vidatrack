@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { lerAparencia, salvarAparencia, type TamanhoFonte } from "@/lib/preferencias/aparencia";
 import { SeletorPaleta } from "@/components/SeletorPaleta";
+import { OPCOES_TEMA, aplicarTema, lerPreferenciaTema, type PreferenciaTema } from "@/lib/preferencias/tema";
 
 // Etapa 215 — acessibilidade: texto maior e alto contraste
 const TAMANHOS: { valor: TamanhoFonte; rotulo: string; classe: string }[] = [
@@ -14,15 +15,13 @@ const TAMANHOS: { valor: TamanhoFonte; rotulo: string; classe: string }[] = [
 export function ConfigAparencia() {
   const [fonte, setFonte] = useState<TamanhoFonte>("normal");
   const [contraste, setContraste] = useState(false);
-  const [tema, setTema] = useState<"dark" | "light">("dark");
+  const [tema, setTema] = useState<PreferenciaTema>("dark");
 
   useEffect(() => {
     const a = lerAparencia();
     setFonte(a.fonte);
     setContraste(a.contrasteAlto);
-    try {
-      setTema((localStorage.getItem("vidatrack-tema") as "dark" | "light") || "dark");
-    } catch {}
+    setTema(lerPreferenciaTema());
   }, []);
 
   const mudar = (f: TamanhoFonte, c: boolean) => {
@@ -31,12 +30,10 @@ export function ConfigAparencia() {
     salvarAparencia(f, c);
   };
 
-  const mudarTema = (t: "dark" | "light") => {
+  // Etapa 281 — também automático (igual ao celular) e por horário
+  const mudarTema = (t: PreferenciaTema) => {
     setTema(t);
-    document.documentElement.setAttribute("data-theme", t);
-    try {
-      localStorage.setItem("vidatrack-tema", t);
-    } catch {}
+    aplicarTema(t);
   };
 
   return (
@@ -63,15 +60,15 @@ export function ConfigAparencia() {
 
       <p className="text-sm text-ink-400 mb-2">Tema</p>
       <div className="grid grid-cols-2 gap-2 max-w-sm mb-5">
-        {(["dark", "light"] as const).map((t) => (
+        {OPCOES_TEMA.map((t) => (
           <button
-            key={t}
+            key={t.valor}
             type="button"
-            onClick={() => mudarTema(t)}
-            aria-pressed={tema === t}
-            className={`rounded-lg border py-2.5 text-sm transition ${tema === t ? "border-ink-100 bg-base-700" : "border-base-600 text-ink-400"}`}
+            onClick={() => mudarTema(t.valor)}
+            aria-pressed={tema === t.valor}
+            className={`rounded-lg border py-2.5 px-2 text-sm transition ${tema === t.valor ? "border-ink-100 bg-base-700" : "border-base-600 text-ink-400"}`}
           >
-            {t === "dark" ? "🌙 Escuro" : "☀️ Claro"}
+            {t.rotulo}
           </button>
         ))}
       </div>
