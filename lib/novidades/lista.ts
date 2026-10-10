@@ -1,13 +1,22 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "286";
+export const VERSAO_NOVIDADES = "287";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "287",
+    titulo: "Início de cara nova",
+    itens: [
+      { emoji: "🌅", titulo: "Bom dia de verdade", texto: "O topo do Início muda com a hora do dia e mostra uma frase sobre como vai seu dia." },
+      { emoji: "🎯", titulo: "Hoje num olhar", texto: "Hábitos, tarefas e quanto saiu hoje em três quadrinhos — toque pra ir direto." },
+      { emoji: "👉", titulo: "Destaques de deslizar", texto: "Mês em números, resumo do dia e retrospectiva agora ficam num carrossel." },
+    ],
+  },
   {
     versao: "286",
     titulo: "Mais vivo e mais bonito",

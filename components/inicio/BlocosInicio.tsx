@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { CHAVE_INICIO, lerBlocosInicio, type IdBloco } from "@/lib/painel/blocos";
 import { resumoDoDia } from "@/lib/painel/seuDia";
-import { SeuDia } from "@/components/SeuDia";
+import type { ResumoDia } from "@/lib/painel/seuDia";
 import { JuntosPainel } from "@/components/JuntosPainel";
 import { ProximosPainel } from "@/components/ProximosPainel";
 import { PainelCartoes } from "@/components/PainelCartoes";
@@ -76,7 +76,8 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
   const resumoHoje = resumoDoDia(snapshot, hoje);
 
   const blocos: Record<IdBloco, React.ReactNode> = {
-    seuDia: <SeuDia resumo={resumoHoje} />,
+    // Etapa 287 — o anel do dia foi pro topo; aqui fica o que falta, com um toque pra abrir
+    seuDia: <PraFazer resumo={resumoHoje} />,
     juntos: <JuntosPainel snapshot={snapshot} hoje={hoje} />,
     sequencias: <SequenciasInicio s={snapshot} hoje={hoje} />,
     semanaHabitos: <SemanaHabitosInicio s={snapshot} hoje={hoje} />,
@@ -124,13 +125,15 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
 
   return (
     <>
-      <div className="flex items-center justify-end mb-2">
+      <div className="flex items-center justify-between mb-3 mt-2">
+        <h2 className="text-lg font-display font-semibold">Seu painel</h2>
         <button
           type="button"
           onClick={() => setEditando(true)}
-          className="flex items-center gap-1.5 text-sm text-ink-400 hover:text-ink-100 rounded-full border border-base-600 px-3 py-1.5"
+          aria-label="Personalizar Início"
+          className="flex items-center gap-1.5 text-sm text-ink-400 hover:text-ink-100 rounded-full bg-base-800 border border-base-600 px-3 py-1.5"
         >
-          <SlidersHorizontal size={15} /> Personalizar Início
+          <SlidersHorizontal size={15} /> Organizar
         </button>
       </div>
       {erro && <p className="text-sm text-red-400 mb-3">{erro}</p>}
@@ -149,8 +152,12 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
         </button>
       ) : (
         <div className="lg:columns-2 lg:gap-6">
-          {lista.map((id) => (
-            <div key={id} className="mb-6 break-inside-avoid animate-surgir [&>*]:!mb-0">
+          {lista.map((id, i) => (
+            <div
+              key={id}
+              className="mb-5 break-inside-avoid animate-entrar empty:hidden [&>*]:!mb-0"
+              style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
+            >
               {blocos[id]}
             </div>
           ))}
@@ -159,5 +166,33 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
 
       {editando && <PersonalizarInicio inicial={lista} aoSalvar={salvar} aoFechar={() => setEditando(false)} />}
     </>
+  );
+}
+
+/** Etapa 287 — "Pra fazer hoje": os nomes do que falta, em chips. */
+function PraFazer({ resumo }: { resumo: ResumoDia }) {
+  const pendH = resumo.habitos.pendentes;
+  const pendT = resumo.tarefas.pendentes;
+  if (!pendH.length && !pendT.length) return null;
+  return (
+    <div className="bg-base-800 border border-base-600 rounded-3xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-base font-semibold">Pra fazer hoje</p>
+        <span className="text-xs text-ink-400">{pendH.length + pendT.length} no total</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {pendH.slice(0, 5).map((nome, i) => (
+          <Link key={`h${i}`} href="/habitos" className="text-sm rounded-full px-3 py-1.5 bg-habito/10 text-habito border border-habito/25 max-w-full truncate">
+            {nome}
+          </Link>
+        ))}
+        {pendT.slice(0, 5).map((nome, i) => (
+          <Link key={`t${i}`} href="/tarefas" className="text-sm rounded-full px-3 py-1.5 bg-nota/10 text-nota border border-nota/25 max-w-full truncate">
+            {nome}
+          </Link>
+        ))}
+        {pendH.length + pendT.length > 10 && <span className="text-sm text-ink-400 px-1 py-1.5">+{pendH.length + pendT.length - 10}</span>}
+      </div>
+    </div>
   );
 }

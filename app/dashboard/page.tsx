@@ -17,7 +17,7 @@ import { ConvitesPendentes } from "@/components/ConvitesPendentes";
 import { TourInicial } from "@/components/TourInicial";
 import { BarraInferiorApp } from "@/components/BarraInferiorApp";
 import { MenuLateralDesktop } from "@/components/MenuLateralDesktop";
-import { saudacao } from "@/lib/painel/seuDia";
+import { TopoInicio } from "@/components/inicio/TopoInicio";
 import { hojeISO } from "@/lib/habitos/streak";
 
 // Etapa 133 — o Painel é pra onde todo botão "← Painel" do app aponta,
@@ -73,16 +73,14 @@ export default function DashboardPage() {
         }
       />
     <main className="min-h-screen min-h-[100dvh] p-6 pb-28 md:p-12 md:pb-28 lg:pb-12 max-w-lg lg:max-w-5xl mx-auto flex flex-col">
-      <header className="flex items-center justify-between mb-2 gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link href="/perfil" className="shrink-0">
-            <FotoPerfil url={urlFoto} tamanho={48} className="rounded-full w-12 h-12 object-cover" />
-          </Link>
-          <div className="min-w-0">
-            <p className="text-ink-400 text-sm whitespace-nowrap">{saudacao(new Date().getHours())},</p>
-            <h1 className="text-xl font-display font-semibold truncate">{nome.split(" ")[0]}</h1>
-          </div>
-        </div>
+      <header className="flex items-center justify-between mb-3 gap-3">
+        {/* Etapa 287 — a saudação foi pro cartão do topo; aqui fica a foto e os atalhos */}
+        <Link href="/perfil" className="flex items-center gap-2.5 min-w-0 rounded-full pr-3 hover:bg-base-800 transition">
+          <span className="relative shrink-0">
+            <FotoPerfil url={urlFoto} tamanho={40} className="rounded-full w-10 h-10 object-cover ring-2 ring-base-600" />
+          </span>
+          <span className="text-sm font-display font-semibold tracking-tight text-ink-400">VidaTrack</span>
+        </Link>
         <div className="flex items-center gap-0.5 shrink-0 -mr-2">
           {/* Etapa 215 — busca geral */}
           <Link
@@ -127,6 +125,27 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* Etapa 287 — topo novo: saudação com o céu da hora + hábitos, tarefas e gasto de hoje */}
+      {snapshot && <TopoInicio snapshot={snapshot} hoje={hojeISO()} nome={nome} />}
+
+      {/* Etapa 220 — novidades da versão (só pra quem já usa) e resumos escolhidos pela pessoa */}
+      <NovidadesApp jaUsa={(snapshot?.habitos?.length ?? 0) > 0 || contas.length > 0} />
+      {/* Etapa 221 — selo novo desbloqueado */}
+      <AvisoConquista />
+      {/* Etapa 279 — tour de boas-vindas pra conta nova */}
+      <TourInicial
+        contaVazia={
+          !!snapshot && (snapshot.habitos?.length ?? 0) === 0 && contas.length === 0 && (snapshot.tarefas?.length ?? 0) === 0
+        }
+      />
+      {/* Etapa 273 — convites de compartilhamento pra aceitar ou recusar */}
+      <div className="mt-3 empty:hidden">
+        <ConvitesPendentes />
+      </div>
+
+      {/* Etapa 287 — destaques (primeiro uso, mês em números, resumo do dia,
+         retrospectiva) num carrossel de deslizar, em vez de empilhados */}
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory -mx-6 px-6 md:mx-0 md:px-0 pb-1 mt-1 scrollbar-none empty:hidden [&>*]:snap-start [&>*]:shrink-0 [&>*]:w-[84%] [&>*:only-child]:w-full [&>*]:!m-0 lista-entrar">
       {/* Etapa 201 — quem ainda não tem hábito ou conta ganha um atalho
          pro primeiro uso guiado (metade dos cadastros parou aqui). */}
       {snapshot && ((snapshot.habitos?.length ?? 0) === 0 || contas.length === 0) && (
@@ -145,21 +164,6 @@ export default function DashboardPage() {
           <span className="text-ink-400">→</span>
         </Link>
       )}
-
-      {/* Etapa 220 — novidades da versão (só pra quem já usa) e resumos escolhidos pela pessoa */}
-      <NovidadesApp jaUsa={(snapshot?.habitos?.length ?? 0) > 0 || contas.length > 0} />
-      {/* Etapa 221 — selo novo desbloqueado */}
-      <AvisoConquista />
-      {/* Etapa 279 — tour de boas-vindas pra conta nova */}
-      <TourInicial
-        contaVazia={
-          !!snapshot && (snapshot.habitos?.length ?? 0) === 0 && contas.length === 0 && (snapshot.tarefas?.length ?? 0) === 0
-        }
-      />
-      {/* Etapa 273 — convites de compartilhamento pra aceitar ou recusar */}
-      <div className="mt-3 empty:hidden">
-        <ConvitesPendentes />
-      </div>
 
       {/* Etapa 276 — primeiros 7 dias do mês: o mês que passou em números */}
       {snapshot && Number(hojeISO().slice(8, 10)) <= 7 && (
@@ -213,6 +217,8 @@ export default function DashboardPage() {
           </Link>
         );
       })()}
+
+      </div>
 
       {/* Etapa 224 — Painel novo: seu dia, atalhos, resumo e as áreas do app
          (o "trilho" vertical deixava metade da tela vazia no celular) */}

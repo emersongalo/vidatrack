@@ -11,7 +11,7 @@ describe("Etapa 286 — design e animação", () => {
     expect(ceuDaHora(null).astro).toBe("🌿");
   });
   it("novidades 286", () => {
-    expect(VERSAO_NOVIDADES).toBe("286");
-    expect(NOVIDADES[0].versao).toBe("286");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(286);
+    expect(NOVIDADES.some((g) => g.versao === "286")).toBe(true);
   });
 });
