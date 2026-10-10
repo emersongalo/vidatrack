@@ -31,7 +31,7 @@ export function BarraInferiorApp() {
   const pathname = usePathname() ?? "";
   const [menu, setMenu] = useState(false);
   const [gasto, setGasto] = useState(false);
-  // Etapa 281 — "+" abre um leque com 3 bolhas (gasto, tarefa, hábito) + "mais"
+  // Etapa 281/283 — "+" abre um cartão com gasto, tarefa, hábito e "mais"
   const [leque, setLeque] = useState(false);
   const indiceAtivo = ITENS.findIndex((it) => it !== null && areaAtiva(pathname, it.href));
   const itemAtivo = indiceAtivo >= 0 ? ITENS[indiceAtivo] : null;
@@ -93,51 +93,71 @@ export function BarraInferiorApp() {
         </div>
       </nav>
 
-      {/* Etapa 281 — leque do "+" */}
+      {/* Etapa 283 — o "+" abre um cartão no estilo do app (antes eram
+         bolhas coloridas, que ficavam cortadas pela barra) */}
       {leque && (
-        <div className="lg:hidden fixed inset-0 z-[45] animate-fundo bg-black/55 backdrop-blur-[2px]" onClick={() => setLeque(false)}>
+        <div className="lg:hidden fixed inset-0 z-[45] animate-fundo bg-black/60" onClick={() => setLeque(false)}>
           <div
-            className="absolute left-1/2 -translate-x-1/2"
-            style={{ bottom: "calc(env(safe-area-inset-bottom) + 4.75rem)" }}
+            className="absolute left-4 right-4 mx-auto max-w-md animate-surgir origin-bottom"
+            style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            {[
-              { rotulo: "Gasto", emoji: "💸", x: -112, y: -18, cor: "bg-red-400", acao: () => setGasto(true) },
-              { rotulo: "Tarefa", emoji: "✅", x: -40, y: -92, cor: "bg-nota", href: "/tarefas/nova" },
-              { rotulo: "Hábito", emoji: "🌱", x: 40, y: -92, cor: "bg-habito", href: "/habitos/novo" },
-              { rotulo: "Mais", emoji: "➕", x: 112, y: -18, cor: "bg-financa", acao: () => setMenu(true) },
-            ].map((b, n) => {
-              const conteudo = (
-                <>
-                  <span className={`w-14 h-14 rounded-full ${b.cor} flex items-center justify-center text-2xl shadow-xl shadow-black/40`}>{b.emoji}</span>
-                  <span className="text-xs font-semibold text-white drop-shadow">{b.rotulo}</span>
-                </>
-              );
-              const estilo = {
-                transform: `translate(calc(-50% + ${b.x}px), ${b.y}px)`,
-                animationDelay: `${n * 40}ms`,
-              } as React.CSSProperties;
-              const classe = "absolute left-0 top-0 flex flex-col items-center gap-1 animate-bolha active:scale-90 transition";
-              return b.href ? (
-                <Link key={b.rotulo} href={b.href} onClick={() => setLeque(false)} className={classe} style={estilo}>
-                  {conteudo}
-                </Link>
-              ) : (
-                <button
-                  key={b.rotulo}
-                  type="button"
-                  onClick={() => {
-                    vibrar(10);
-                    setLeque(false);
-                    b.acao?.();
-                  }}
-                  className={classe}
-                  style={estilo}
+            <div className="bg-base-800 border border-base-600 rounded-3xl p-3 shadow-2xl shadow-black/50">
+              <div className="grid grid-cols-4 gap-1">
+                {[
+                  { rotulo: "Gasto", Icone: TrendingDown, classe: "bg-red-400/15 text-red-400", acao: () => setGasto(true) },
+                  { rotulo: "Tarefa", Icone: CheckSquare, classe: "bg-nota/15 text-nota", href: "/tarefas/nova" },
+                  { rotulo: "Hábito", Icone: Repeat, classe: "bg-habito/15 text-habito", href: "/habitos/novo" },
+                  { rotulo: "Mais", Icone: Plus, classe: "bg-base-700 text-ink-100", acao: () => setMenu(true) },
+                ].map((b, n) => {
+                  const conteudo = (
+                    <>
+                      <span className={`w-12 h-12 rounded-2xl ${b.classe} flex items-center justify-center`}>
+                        <b.Icone size={22} strokeWidth={2.2} />
+                      </span>
+                      <span className="text-xs font-medium text-ink-100">{b.rotulo}</span>
+                    </>
+                  );
+                  const classe = "flex flex-col items-center gap-1.5 rounded-2xl py-2 hover:bg-base-700 active:scale-95 transition animate-bolha";
+                  const estilo = { animationDelay: `${n * 35}ms` } as React.CSSProperties;
+                  return b.href ? (
+                    <Link key={b.rotulo} href={b.href} onClick={() => setLeque(false)} className={classe} style={estilo}>
+                      {conteudo}
+                    </Link>
+                  ) : (
+                    <button
+                      key={b.rotulo}
+                      type="button"
+                      onClick={() => {
+                        vibrar(10);
+                        setLeque(false);
+                        b.acao?.();
+                      }}
+                      className={classe}
+                      style={estilo}
+                    >
+                      {conteudo}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex gap-2 mt-2 pt-2 border-t border-base-600">
+                <Link
+                  href="/rapido"
+                  onClick={() => setLeque(false)}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
                 >
-                  {conteudo}
-                </button>
-              );
-            })}
+                  <Zap size={15} /> Modo rápido
+                </Link>
+                <Link
+                  href="/calendario"
+                  onClick={() => setLeque(false)}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+                >
+                  <CalendarDays size={15} /> Calendário
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       )}
