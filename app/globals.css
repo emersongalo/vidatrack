@@ -11,10 +11,18 @@
   --c-base-600: 42 45 53;
   --c-ink-100: 242 240 234;
   --c-ink-400: 155 156 166;
+  /* Etapa 278 — cores das áreas (Hábitos, Tarefas, Finanças) */
+  --c-habito: 127 184 148;
+  --c-nota: 156 143 217;
+  --c-financa: 217 162 76;
 }
 
 [data-theme="light"] {
   color-scheme: light;
+  /* Etapa 278 — tons mais fortes pra ler bem no fundo claro */
+  --c-habito: 47 132 86;
+  --c-nota: 106 90 196;
+  --c-financa: 168 112 22;
   --c-base-900: 252 251 249;
   --c-base-800: 246 245 241;
   --c-base-700: 255 255 255;
@@ -256,4 +264,52 @@ html[data-fonte="maior"] { font-size: 125%; }
 @media (prefers-reduced-motion: reduce) {
   .riscado, .varredura, .traco-check, .lista-entrar > * { animation: none !important; }
   .varredura { display: none; }
+}
+
+/* Etapa 278 — tema claro: vermelhos e sombras ajustados pro fundo branco */
+[data-theme="light"] .text-red-400 { color: #C93636; }
+[data-theme="light"] .border-red-400\/30, [data-theme="light"] .border-red-400\/40 { border-color: rgb(201 54 54 / 0.35); }
+[data-theme="light"] .shadow-black\/20, [data-theme="light"] .shadow-black\/40 { --tw-shadow-color: rgb(30 30 40 / 0.08); }
+
+/* Etapa 278 — transições com direção (sem "fill": nada de transform
+   preso depois, pra não atrapalhar janelas fixas) */
+@keyframes vt-entrar-direita {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes vt-entrar-esquerda {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.entrada-avancar { animation: vt-entrar-direita 240ms cubic-bezier(.2,.8,.2,1); }
+.entrada-voltar { animation: vt-entrar-esquerda 240ms cubic-bezier(.2,.8,.2,1); }
+@media (prefers-reduced-motion: reduce) {
+  .entrada-tela, .entrada-avancar, .entrada-voltar { animation: none; }
+}
+
+/* Etapa 279 — padrão visual ------------------------------------------- */
+/* botão "+ Nova" das telas (mesmo tamanho e forma em todo lugar;
+   a cor vem junto: bg-habito / bg-nota / bg-financa) */
+.botao-novo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgb(var(--c-base-900));
+  transition: transform 150ms, opacity 150ms;
+}
+.botao-novo:hover { opacity: 0.9; }
+.botao-novo:active { transform: scale(0.96); }
+
+/* brilho da área respirando devagar */
+@keyframes vt-aurora {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.8; transform: translateX(-50%) scale(1.06); }
+}
+.aurora-respirar { animation: vt-aurora 9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .aurora-respirar { animation: none; }
 }

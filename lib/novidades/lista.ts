@@ -1,13 +1,39 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "277";
+export const VERSAO_NOVIDADES = "280";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "280",
+    titulo: "Mais leve",
+    itens: [
+      { emoji: "⚡", titulo: "Extrato mais rápido", texto: "Listas grandes (como a busca em todos os meses) abrem na hora e vão carregando o resto conforme você rola." },
+    ],
+  },
+  {
+    versao: "279",
+    titulo: "Busca nova e cara nova",
+    itens: [
+      { emoji: "🔎", titulo: "Busca turbinada", texto: "Resultados separados por Hábitos, Tarefas, Lançamentos e Finanças, com ícones, buscas recentes e atalhos. Digitou algo que não existe? Crie como tarefa na hora.", href: "/buscar" },
+      { emoji: "🌈", titulo: "Cada área com sua cor", texto: "Hábitos, Tarefas e Finanças ganharam um brilho suave da própria cor no topo." },
+      { emoji: "👋", titulo: "Boas-vindas em 3 telas", texto: "Quem está chegando agora vê um tour rápido antes de montar o app." },
+    ],
+  },
+  {
+    versao: "278",
+    titulo: "Mais bonito e mais rápido de usar",
+    itens: [
+      { emoji: "☀️", titulo: "Tema claro caprichado", texto: "Verde, lilás e dourado num tom mais forte no tema claro — tudo fica mais legível. Os vermelhos também." },
+      { emoji: "➡️", titulo: "Telas que deslizam", texto: "Abrir um item desliza da direita, voltar desliza da esquerda — igual app de celular." },
+      { emoji: "👆", titulo: "Arrastar nas Tarefas", texto: "Arraste uma tarefa pra direita pra concluir, ou pra esquerda pra mandar pra amanhã (com Desfazer).", href: "/tarefas" },
+      { emoji: "🎯", titulo: "Metas por semana e por dia", texto: "Cada meta mostra quanto guardar por semana e por dia. Sem prazo? Simule um valor semanal e veja quando chega.", href: "/financas/metas" },
+    ],
+  },
   {
     versao: "277",
     titulo: "Conta compartilhada avisa",

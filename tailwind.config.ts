@@ -15,17 +15,20 @@ const config: Config = {
           100: "rgb(var(--c-ink-100) / <alpha-value>)", // texto principal
           400: "rgb(var(--c-ink-400) / <alpha-value>)", // texto secundário
         },
+        // Etapa 278 — as cores das áreas viraram variáveis: no tema claro
+        // elas ficam um tom mais escuras (antes o verde/âmbar/lilás claros
+        // sumiam no fundo branco). No escuro continuam iguais.
         habito: {
-          DEFAULT: "#7FB894", // sage — trilho de Hábitos
-          soft: "#7FB89422",
+          DEFAULT: "rgb(var(--c-habito) / <alpha-value>)", // sage — Hábitos
+          soft: "rgb(var(--c-habito) / 0.13)",
         },
         nota: {
-          DEFAULT: "#9C8FD9", // lavanda — trilho de Notas
-          soft: "#9C8FD922",
+          DEFAULT: "rgb(var(--c-nota) / <alpha-value>)", // lavanda — Tarefas
+          soft: "rgb(var(--c-nota) / 0.13)",
         },
         financa: {
-          DEFAULT: "#D9A24C", // âmbar — trilho de Finanças
-          soft: "#D9A24C22",
+          DEFAULT: "rgb(var(--c-financa) / <alpha-value>)", // âmbar — Finanças
+          soft: "rgb(var(--c-financa) / 0.13)",
         },
       },
       fontFamily: {

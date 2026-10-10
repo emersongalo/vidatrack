@@ -4,7 +4,7 @@
 // ficar igual em todo lugar (Extrato, Início de Finanças, fatura):
 // agrupada por dia, faixa verde/vermelha, seta no ícone e valor com +/−.
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { comDesfazer } from "@/lib/app/desfazer";
 import { vibrar } from "@/lib/app/vibrar";
 import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowLeftRight, Pencil, Trash2 } from "lucide-react";
@@ -48,7 +48,26 @@ export function ListaLancamentosPorDia({
       aoTerminar: () => recarregar?.(),
     });
   }
-  const visiveis = escondidos.length ? lista.filter((t: any) => !escondidos.includes(t.id)) : lista;
+  const semEscondidos = escondidos.length ? lista.filter((t: any) => !escondidos.includes(t.id)) : lista;
+  // Etapa 280 — listas longas (ex: busca em todos os meses) desenham aos
+  // poucos: 80 primeiro, mais 80 quando chega perto do fim da tela.
+  const PASSO = 80;
+  const [limite, setLimite] = useState(PASSO);
+  const sentinela = useRef<HTMLDivElement>(null);
+  useEffect(() => setLimite(PASSO), [lista]);
+  const temMais = semEscondidos.length > limite;
+  useEffect(() => {
+    if (!temMais || !sentinela.current || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      (entradas) => {
+        if (entradas.some((e) => e.isIntersecting)) setLimite((l) => l + PASSO);
+      },
+      { rootMargin: "600px 0px" }
+    );
+    obs.observe(sentinela.current);
+    return () => obs.disconnect();
+  }, [temMais, limite]);
+  const visiveis = temMais ? semEscondidos.slice(0, limite) : semEscondidos;
   return (
         <div className="space-y-5">
           {agruparPorDia(visiveis, hojeParaPendencia).map((g) => (
@@ -156,6 +175,13 @@ export function ListaLancamentosPorDia({
               </ul>
             </section>
           ))}
+          {temMais && (
+            <div ref={sentinela} className="py-4 text-center">
+              <button type="button" onClick={() => setLimite((l) => l + PASSO)} className="text-sm text-ink-400 hover:text-ink-100">
+                Carregar mais ({semEscondidos.length - limite} restantes)
+              </button>
+            </div>
+          )}
         </div>
   );
 }

@@ -20,6 +20,9 @@ import { ORDEM_GRUPOS, NOMES_GRUPO, agruparTarefas, resumoTarefas, somarDias } f
 import { alternarConclusaoTarefa, criarTarefaRapida } from "./actions";
 import { vibrar } from "@/lib/app/vibrar";
 import { ComemoracaoDia } from "@/components/ComemoracaoDia";
+import { TopoArea } from "@/components/TopoArea";
+import { createClient } from "@/lib/supabase/client";
+import { comDesfazer } from "@/lib/app/desfazer";
 
 type Modo = "data" | "categoria" | "organizar";
 const CHAVE_MODO = "vidatrack-tarefas-modo";
@@ -98,6 +101,24 @@ export default function TarefasPage() {
     }
   }
 
+  // Etapa 278 — arrastar pra esquerda: adia pra amanhã (com Desfazer)
+  async function adiar(t: any) {
+    const antes = t.data ?? null;
+    const amanha = somarDias(hoje, 1);
+    vibrar(10);
+    const supabase = createClient();
+    const { error } = await supabase.from("tarefas").update({ data: amanha }).eq("id", t.id);
+    if (error) return;
+    await atualizarSnapshotEmTodasAsTelas();
+    comDesfazer({
+      texto: `"${t.titulo}" foi pra amanhã`,
+      desfazer: async () => {
+        await createClient().from("tarefas").update({ data: antes }).eq("id", t.id);
+      },
+      aoTerminar: () => void atualizarSnapshotEmTodasAsTelas(),
+    });
+  }
+
   async function adicionar() {
     const titulo = texto.trim();
     if (!titulo || salvando) return;
@@ -132,6 +153,7 @@ export default function TarefasPage() {
       cor={corDe(t.categoria_id)}
       nomeCategoria={mostrarCategoria && t.categoria_id ? mapaCat.get(t.categoria_id)?.nome : null}
       aoAlternar={() => alternar(t)}
+      aoAdiar={() => adiar(t)}
     />
   );
 
@@ -154,12 +176,16 @@ export default function TarefasPage() {
       {comemorar && (
         <ComemoracaoDia aoFechar={() => setComemorar(false)} emoji="✅" titulo="Tarefas de hoje feitas!" texto="Lista zerada. Pode respirar. 😌" />
       )}
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-3xl font-display font-bold">Tarefas</h1>
-        <Link href={filtro !== "todas" && filtro !== "sem" ? `/tarefas/nova?categoria=${filtro}` : "/tarefas/nova"} className="flex items-center gap-1.5 bg-nota text-base-900 text-sm font-semibold rounded-full px-4 py-2 hover:opacity-90 transition">
-          <Plus size={16} strokeWidth={2.6} /> Nova
-        </Link>
-      </div>
+      {/* Etapa 279 — topo com a identidade da área */}
+      <TopoArea
+        area="tarefa"
+        titulo="Tarefas"
+        acoes={
+          <Link href={filtro !== "todas" && filtro !== "sem" ? `/tarefas/nova?categoria=${filtro}` : "/tarefas/nova"} className="flex items-center gap-1.5 bg-nota text-base-900 text-sm font-semibold rounded-full px-4 py-2 hover:opacity-90 transition shadow-lg shadow-black/20">
+            <Plus size={16} strokeWidth={2.6} /> Nova
+          </Link>
+        }
+      />
 
 
       {snapshot === undefined ? (

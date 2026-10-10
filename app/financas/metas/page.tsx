@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormularioAcao } from "@/components/FormularioAcao";
 import { useState } from "react";
 import { criarMeta, adicionarProgressoMeta, arquivarMeta, excluirMetaDefinitivamente, retirarDaMeta, editarMeta } from "./actions";
-import { planoDaMeta } from "@/lib/financas/metas";
+import { planoDaMeta, ritmoDaMeta, quandoChega, sugestaoSemanal } from "@/lib/financas/metas";
 import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
@@ -15,6 +15,7 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { AnelProgresso } from "@/components/AnelProgresso";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { Dica } from "@/components/Dica";
+import { CabecalhoPagina } from "@/components/CabecalhoPagina";
 
 // Etapa 127: a lista abre com o que já tinha salvo. Guardar progresso
 // numa meta, criar, arquivar ou excluir continuam precisando de
@@ -26,13 +27,13 @@ export default function MetasPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
-        ← Finanças
-      </Link>
-      <h1 className="text-3xl font-display font-bold mt-4 mb-1">Metas de economia</h1>
-      <p className="text-ink-400 text-sm mb-6">
-        Separe um valor pra alcançar, tipo "Viagem" ou "Reserva de emergência", e vá guardando aos poucos.
-      </p>
+      <CabecalhoPagina
+        voltarHref="/financas"
+        voltarTexto="Finanças"
+        emoji="🎯"
+        titulo="Metas de economia"
+        subtitulo={`Separe um valor pra alcançar, tipo "Viagem" ou "Reserva de emergência", e vá guardando aos poucos.`}
+      />
       <Dica contexto="metas" />
 
       {metas.length === 0 && snapshot && (
@@ -83,6 +84,10 @@ function CartaoMeta({ meta, aoMudar }: { meta: any; aoMudar: () => void }) {
   const [modo, setModo] = useState<"guardar" | "retirar">("guardar");
   const [editando, setEditando] = useState(false);
   const plano = planoDaMeta(meta, hojeISO());
+  // Etapa 278 — ritmo por semana/dia e projeção sem prazo
+  const ritmo = ritmoDaMeta(meta, hojeISO());
+  const [semanal, setSemanal] = useState(() => sugestaoSemanal(plano.falta));
+  const chegaEm = quandoChega(meta, semanal, hojeISO());
   const classeCampo =
     "w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 focus:border-ink-100 outline-none transition";
 
@@ -122,9 +127,47 @@ function CartaoMeta({ meta, aoMudar }: { meta: any; aoMudar: () => void }) {
               Guarde <span className="text-financa font-mono font-semibold">{formatarMoeda(plano.porMes)}/mês</span> até{" "}
               {new Date(meta.data_alvo + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
               <span className="text-ink-400"> ({plano.meses} {plano.meses === 1 ? "mês" : "meses"})</span>
+              {ritmo.porSemana !== null && ritmo.porDia !== null && (
+                <span className="flex flex-wrap gap-1.5 mt-2">
+                  <span className="text-xs rounded-full bg-financa/15 text-financa px-2.5 py-0.5 font-mono">
+                    ≈ {formatarMoeda(ritmo.porSemana)}/semana
+                  </span>
+                  <span className="text-xs rounded-full bg-financa/15 text-financa px-2.5 py-0.5 font-mono">
+                    ≈ {formatarMoeda(ritmo.porDia)}/dia
+                  </span>
+                </span>
+              )}
             </>
           ) : (
-            <span className="text-ink-400">Sem prazo — defina uma data no lápis pra ver quanto guardar por mês.</span>
+            <>
+              <span className="text-ink-400">Sem prazo. Simule: guardando </span>
+              <span className="inline-flex items-center gap-1 align-middle">
+                <button
+                  type="button"
+                  aria-label="Menos"
+                  onClick={() => setSemanal((v) => Math.max(5, v - 5))}
+                  className="w-6 h-6 rounded-full border border-base-600 text-ink-400 hover:text-ink-100"
+                >
+                  −
+                </button>
+                <span className="font-mono font-semibold text-financa">{formatarMoeda(semanal)}</span>
+                <button
+                  type="button"
+                  aria-label="Mais"
+                  onClick={() => setSemanal((v) => v + 5)}
+                  className="w-6 h-6 rounded-full border border-base-600 text-ink-400 hover:text-ink-100"
+                >
+                  +
+                </button>
+              </span>
+              <span className="text-ink-400"> por semana, </span>
+              {chegaEm && (
+                <span>
+                  chega em{" "}
+                  <strong>{new Date(chegaEm + "T12:00:00").toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</strong>.
+                </span>
+              )}
+            </>
           )}
         </div>
       )}

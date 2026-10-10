@@ -10,6 +10,7 @@ import { calcularStreak, calcularMelhorStreak, calcularStreakNegativo, hojeISO }
 import { ultimosDias } from "@/lib/habitos/detalhe";
 import { pausasDe } from "@/lib/habitos/pausa";
 import { ModoFerias } from "@/components/ControlePausa";
+import { TopoArea } from "@/components/TopoArea";
 
 // Etapa 127: lê do mesmo retrato local usado pelas outras telas —
 // abre com o que já tinha salvo, atualiza sozinha se houver internet.
@@ -18,18 +19,26 @@ export default function ListaHabitosPage() {
 
   return (
     <main className="pagina px-6 md:px-12 pt-2">
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-3xl font-display font-bold">Hábitos</h1>
-        <div className="flex items-center gap-3">
-          <Link href="/habitos/estatisticas" className="text-ink-400 text-base hover:text-ink-100 transition">
-            Estatísticas
+      {/* Etapa 279 — topo com a identidade da área */}
+      <TopoArea
+        area="habito"
+        titulo="Hábitos"
+        subtitulo={
+          snapshot?.habitos?.length
+            ? `${snapshot.habitos.length} ${snapshot.habitos.length === 1 ? "hábito" : "hábitos"} no seu jardim`
+            : undefined
+        }
+        acoes={<BotaoNovoHabitoOffline />}
+      >
+        <div className="flex gap-2">
+          <Link href="/habitos/estatisticas" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
+            📊 Estatísticas
           </Link>
-          <Link href="/habitos/lixeira" className="text-ink-400 text-base hover:text-ink-100 transition">
-            Lixeira
+          <Link href="/habitos/lixeira" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
+            🗑️ Lixeira
           </Link>
-          <BotaoNovoHabitoOffline />
         </div>
-      </div>
+      </TopoArea>
 
 
       {snapshot === undefined ? (

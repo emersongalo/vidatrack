@@ -14,6 +14,7 @@ import { BlocosInicio } from "@/components/inicio/BlocosInicio";
 import { NovidadesApp } from "@/components/NovidadesApp";
 import { AvisoConquista } from "@/components/AvisoConquista";
 import { ConvitesPendentes } from "@/components/ConvitesPendentes";
+import { TourInicial } from "@/components/TourInicial";
 import { BarraInferiorApp } from "@/components/BarraInferiorApp";
 import { MenuLateralDesktop } from "@/components/MenuLateralDesktop";
 import { saudacao } from "@/lib/painel/seuDia";
@@ -146,6 +147,12 @@ export default function DashboardPage() {
       <NovidadesApp jaUsa={(snapshot?.habitos?.length ?? 0) > 0 || contas.length > 0} />
       {/* Etapa 221 — selo novo desbloqueado */}
       <AvisoConquista />
+      {/* Etapa 279 — tour de boas-vindas pra conta nova */}
+      <TourInicial
+        contaVazia={
+          !!snapshot && (snapshot.habitos?.length ?? 0) === 0 && contas.length === 0 && (snapshot.tarefas?.length ?? 0) === 0
+        }
+      />
       {/* Etapa 273 — convites de compartilhamento pra aceitar ou recusar */}
       <div className="mt-3 empty:hidden">
         <ConvitesPendentes />

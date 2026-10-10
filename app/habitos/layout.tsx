@@ -1,3 +1,4 @@
+import { AuroraArea } from "@/components/AuroraArea";
 import { BarraNavegacaoAgenda, SubmenuHabitos } from "@/components/BarraNavegacaoAgenda";
 import { MenuLateralDesktop } from "@/components/MenuLateralDesktop";
 import { AbasArea } from "@/components/AbasArea";
@@ -13,7 +14,9 @@ const ABAS_HABITOS = [
 
 export default function HabitosLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="pb-24 lg:pb-0 lg:pl-64">
+    <div className="relative isolate pb-24 lg:pb-0 lg:pl-64">
+      {/* Etapa 279 — brilho da cor da área no topo */}
+      <AuroraArea area="habito" />
       <MenuLateralDesktop corAtiva="habito" submenu={<SubmenuHabitos />} />
       {/* Etapa 230 — voltar + abas de Hábitos no topo (a barra de baixo é a do app) */}
       <AbasArea area="habitos" />

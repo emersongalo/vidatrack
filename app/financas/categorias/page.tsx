@@ -11,6 +11,7 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { Pencil, Trash2 } from "lucide-react";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { Dica } from "@/components/Dica";
+import { CabecalhoPagina } from "@/components/CabecalhoPagina";
 
 /**
  * Etapa 168 — redesenhada como grade de cartões com ícone circular
@@ -96,21 +97,18 @@ export default function CategoriasPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
-            ← Finanças
+      <CabecalhoPagina
+        voltarHref="/financas"
+        voltarTexto="Finanças"
+        emoji="🏷️"
+        titulo="Categorias"
+        subtitulo="Toque numa categoria pra trocar nome, cor, ícone ou emoji."
+        acao={
+          <Link href="/financas/categorias/nova" className="botao-novo bg-financa">
+            + Nova
           </Link>
-          <h1 className="text-3xl font-display font-bold mt-2">Categorias</h1>
-          <p className="text-sm text-ink-400 mt-1">Toque numa categoria pra trocar nome, cor, ícone ou emoji.</p>
-        </div>
-        <Link
-          href="/financas/categorias/nova"
-          className="bg-ink-100 text-base-900 text-sm font-medium rounded-lg px-4 py-2 hover:opacity-90 transition"
-        >
-          + Nova
-        </Link>
-      </div>
+        }
+      />
 
       {despesas.length > 0 && (
         <div className="mb-6">

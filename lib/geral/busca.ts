@@ -9,7 +9,22 @@ export type ResultadoBusca = {
   data?: string;
   valor?: number;
   receita?: boolean;
+  /** Etapa 279 — ícone (nome do ícone ou emoji) pra mostrar no resultado */
+  icone?: string | null;
 };
+
+/** Etapa 279 — grupos da tela de busca, nesta ordem */
+export const GRUPOS_BUSCA: { tipos: ResultadoBusca["tipo"][]; titulo: string }[] = [
+  { tipos: ["habito"], titulo: "Hábitos" },
+  { tipos: ["tarefa"], titulo: "Tarefas" },
+  { tipos: ["lancamento"], titulo: "Lançamentos" },
+  { tipos: ["conta", "categoria", "meta"], titulo: "Finanças" },
+  { tipos: ["diario"], titulo: "Diário" },
+];
+
+export function agruparResultados(resultados: ResultadoBusca[]) {
+  return GRUPOS_BUSCA.map((g) => ({ titulo: g.titulo, itens: resultados.filter((r) => g.tipos.includes(r.tipo)) })).filter((g) => g.itens.length);
+}
 
 function semAcento(s: string | null | undefined) {
   return (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -34,11 +49,11 @@ export function buscarNoSnapshot(snapshot: SnapshotOffline, consulta: string, li
   const res: ResultadoBusca[] = [];
 
   for (const h of snapshot.habitos as any[]) {
-    if (bate(h.nome)) res.push({ tipo: "habito", titulo: h.nome, detalhe: "Hábito", href: `/habitos/${h.id}/editar` });
+    if (bate(h.nome)) res.push({ tipo: "habito", titulo: h.nome, detalhe: h.arquivado ? "Hábito arquivado" : "Hábito", href: `/habitos/${h.id}`, icone: h.icone });
   }
   for (const t of snapshot.tarefas as any[]) {
     if (bate(t.titulo, t.observacoes)) {
-      res.push({ tipo: "tarefa", titulo: t.titulo, detalhe: t.data ? `Tarefa · ${t.data.split("-").reverse().join("/")}` : "Tarefa", href: `/tarefas/${t.id}`, data: t.data ?? undefined });
+      res.push({ tipo: "tarefa", titulo: t.titulo, detalhe: t.concluida ? "Tarefa concluída" : t.data ? `Tarefa · ${t.data.split("-").reverse().join("/")}` : "Tarefa", href: `/tarefas/${t.id}`, data: t.data ?? undefined, icone: t.icone });
     }
   }
   for (const m of snapshot.financas.metas as any[]) {
@@ -48,9 +63,11 @@ export function buscarNoSnapshot(snapshot: SnapshotOffline, consulta: string, li
     if (bate(c.nome, c.banco)) res.push({ tipo: "conta", titulo: c.nome, detalhe: "Conta", href: `/financas/extrato?conta=${c.id}&periodo=tudo` });
   }
   const nomesCat = new Map<string, string>();
+  const iconesCat = new Map<string, string>();
   for (const c of snapshot.financas.categorias as any[]) {
     nomesCat.set(c.id, c.nome);
-    if (bate(c.nome)) res.push({ tipo: "categoria", titulo: c.nome, detalhe: c.tipo === "receita" ? "Categoria de receita" : "Categoria de despesa", href: `/financas/extrato?categoria=${c.id}&periodo=tudo` });
+    if (c.icone) iconesCat.set(c.id, c.icone);
+    if (bate(c.nome)) res.push({ tipo: "categoria", titulo: c.nome, detalhe: c.tipo === "receita" ? "Categoria de receita" : "Categoria de despesa", href: `/financas/extrato?categoria=${c.id}&periodo=tudo`, icone: c.icone });
   }
   for (const d of snapshot.diario ?? []) {
     if (d.texto && bate(d.texto)) res.push({ tipo: "diario", titulo: d.texto, detalhe: "Diário", href: "/habitos/diario", data: d.data });
@@ -71,6 +88,7 @@ export function buscarNoSnapshot(snapshot: SnapshotOffline, consulta: string, li
       data: t.data,
       valor: v,
       receita: t.tipo === "receita",
+      icone: t.categoria_id ? iconesCat.get(t.categoria_id) ?? null : null,
     });
   }
   lancamentos.sort((a, b) => (b.data ?? "").localeCompare(a.data ?? ""));

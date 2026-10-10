@@ -24,7 +24,7 @@ describe("Etapa 277 — aviso de movimentação", () => {
     expect(textoDoAviso("Ana", "Itaú", { acao: "confirmou", tipo: "despesa", valor: 180, descricao: "Luz" }).corpo).toContain("marcou como pago: Luz");
   });
   it("novidades 277 no topo", () => {
-    expect(VERSAO_NOVIDADES).toBe("277");
-    expect(NOVIDADES[0].versao).toBe("277");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(277);
+    expect(NOVIDADES.some((g) => g.versao === "277")).toBe(true);
   });
 });

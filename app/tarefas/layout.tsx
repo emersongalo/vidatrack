@@ -1,3 +1,4 @@
+import { AuroraArea } from "@/components/AuroraArea";
 import { MenuLateralDesktop } from "@/components/MenuLateralDesktop";
 import { SubmenuTarefas } from "@/components/SubmenuTarefas";
 import { BarraInferiorApp } from "@/components/BarraInferiorApp";
@@ -8,7 +9,9 @@ import { LinkVoltar } from "@/components/LinkVoltar";
 // As telas continuam as mesmas (moram em app/habitos/tarefas e são reaproveitadas aqui).
 export default function TarefasLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="pb-24 lg:pb-0 lg:pl-64">
+    <div className="relative isolate pb-24 lg:pb-0 lg:pl-64">
+      {/* Etapa 279 — brilho da cor da área no topo */}
+      <AuroraArea area="tarefa" />
       <MenuLateralDesktop corAtiva="tarefa" submenu={<SubmenuTarefas />} />
       <div className="lg:hidden max-w-2xl mx-auto px-6 md:px-12 pt-4">
         <LinkVoltar href="/dashboard" texto="Painel" />

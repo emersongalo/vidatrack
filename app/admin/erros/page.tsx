@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { agruparErros, type OrigemErro } from "@/lib/app/erros";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,14 @@ const ADMINS = (process.env.ADMIN_EMAILS ?? "emerprojetos@gmail.com")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
 
-export default async function PainelErrosPage({ searchParams }: { searchParams: { dias?: string } }) {
+const ORIGENS: { valor: OrigemErro | "todas"; rotulo: string }[] = [
+  { valor: "todas", rotulo: "Todos" },
+  { valor: "js", rotulo: "Tela (JS)" },
+  { valor: "promise", rotulo: "Ação" },
+  { valor: "http", rotulo: "Servidor" },
+];
+
+export default async function PainelErrosPage({ searchParams }: { searchParams: { dias?: string; origem?: string } }) {
   const supabase = createClient();
   const {
     data: { user },
@@ -34,16 +42,18 @@ export default async function PainelErrosPage({ searchParams }: { searchParams: 
     .order("criado_em", { ascending: false })
     .limit(1000);
 
-  // agrupa pela mensagem (sem a parte variável depois de ":", quando dá)
-  const grupos = new Map<string, { total: number; ultimo: string; exemplo: string }>();
-  for (const e of eventos ?? []) {
-    const chave = String(e.pagina).slice(0, 120);
-    const g = grupos.get(chave) ?? { total: 0, ultimo: e.criado_em as string, exemplo: String(e.pagina) };
-    g.total++;
-    if ((e.criado_em as string) > g.ultimo) g.ultimo = e.criado_em as string;
-    grupos.set(chave, g);
-  }
-  const lista = [...grupos.entries()].sort((a, b) => b[1].total - a[1].total);
+  // Etapa 280 — agrupa erros parecidos (sem ids/números), marca os novos
+  const origem = (ORIGENS.find((o) => o.valor === searchParams.origem)?.valor ?? "todas") as OrigemErro | "todas";
+  const todos = agruparErros((eventos ?? []) as { pagina: string; criado_em: string }[]);
+  const lista = origem === "todas" ? todos : todos.filter((g) => g.origem === origem);
+  const umDia = new Date(Date.now() - 86400000).toISOString();
+  const doisDias = new Date(Date.now() - 2 * 86400000).toISOString();
+  const hoje = (eventos ?? []).filter((e) => (e.criado_em as string) >= umDia).length;
+  const ontem = (eventos ?? []).filter((e) => (e.criado_em as string) >= doisDias && (e.criado_em as string) < umDia).length;
+  const porTela = new Map<string, number>();
+  for (const g of todos) porTela.set(g.tela, (porTela.get(g.tela) ?? 0) + g.total);
+  const telas = [...porTela.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const link = (d: number, o: string) => `/admin/erros?dias=${d}${o !== "todas" ? `&origem=${o}` : ""}`;
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina">
@@ -55,16 +65,53 @@ export default async function PainelErrosPage({ searchParams }: { searchParams: 
         Erros que apareceram pra alguém no app (anônimos). {eventos?.length ?? 0} no período.
       </p>
 
+      {/* Etapa 280 — últimas 24h x dia anterior e telas com mais erros */}
+      <div className="grid grid-cols-2 gap-2 mb-5">
+        <div className="bg-base-800 border border-base-600 rounded-2xl p-4">
+          <p className="text-xs text-ink-400">Últimas 24h</p>
+          <p className="text-2xl font-semibold">{hoje}</p>
+          <p className={`text-xs ${hoje > ontem ? "text-red-400" : "text-habito"}`}>
+            {hoje === ontem ? "igual ao dia anterior" : hoje > ontem ? `▲ ${hoje - ontem} a mais que ontem` : `▼ ${ontem - hoje} a menos que ontem`}
+          </p>
+        </div>
+        <div className="bg-base-800 border border-base-600 rounded-2xl p-4">
+          <p className="text-xs text-ink-400 mb-1">Telas com mais erros</p>
+          {telas.length === 0 ? (
+            <p className="text-sm">—</p>
+          ) : (
+            telas.map(([t, n]) => (
+              <p key={t} className="text-xs truncate">
+                <span className="font-mono text-red-400">{n}×</span> {t}
+              </p>
+            ))
+          )}
+        </div>
+      </div>
+
       <div className="flex gap-2 mb-5">
         {[1, 7, 30].map((d) => (
           <Link
             key={d}
-            href={`/admin/erros?dias=${d}`}
+            href={link(d, origem)}
             className={`text-sm rounded-full px-3.5 py-1.5 border transition ${
               d === dias ? "bg-ink-100 text-base-900 border-ink-100" : "border-base-600 text-ink-400 hover:text-ink-100"
             }`}
           >
             {d === 1 ? "24 horas" : `${d} dias`}
+          </Link>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-none">
+        {ORIGENS.map((o) => (
+          <Link
+            key={o.valor}
+            href={link(dias, o.valor)}
+            className={`shrink-0 text-xs rounded-full px-3 py-1.5 border transition ${
+              o.valor === origem ? "border-red-400 text-red-400 bg-red-400/10" : "border-base-600 text-ink-400 hover:text-ink-100"
+            }`}
+          >
+            {o.rotulo}
           </Link>
         ))}
       </div>
@@ -76,13 +123,19 @@ export default async function PainelErrosPage({ searchParams }: { searchParams: 
         </div>
       ) : (
         <ul className="space-y-2">
-          {lista.map(([chave, g]) => (
-            <li key={chave} className="bg-base-800 border border-base-600 rounded-2xl p-4 flex items-start gap-3">
+          {lista.map((g) => (
+            <li key={g.chave} className="bg-base-800 border border-base-600 rounded-2xl p-4 flex items-start gap-3">
               <span className="font-mono text-sm bg-red-400/15 text-red-400 rounded-md px-2 py-0.5 shrink-0">{g.total}×</span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm break-words">{g.exemplo}</p>
+                <p className="text-sm break-words">
+                  {g.primeiro >= umDia && (
+                    <span className="mr-1.5 text-[10px] font-bold uppercase rounded bg-financa text-base-900 px-1.5 py-0.5 align-middle">novo</span>
+                  )}
+                  {g.exemplo}
+                </p>
                 <p className="text-xs text-ink-400 mt-1">
                   Último: {new Date(g.ultimo).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                  {g.app + g.web > 0 && ` · 📱 ${g.app} app · 🌐 ${g.web} web`}
                 </p>
               </div>
             </li>

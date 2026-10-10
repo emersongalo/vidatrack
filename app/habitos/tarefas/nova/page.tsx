@@ -28,9 +28,10 @@ function NovaTarefaConteudo() {
       hoje={hojeISO()}
       // Etapa 259 — vindo da lista filtrada, já abre na categoria escolhida
       valoresIniciais={
-        searchParams.get("categoria")
+        // Etapa 279 — vindo da busca, já abre com o título digitado
+        searchParams.get("categoria") || searchParams.get("titulo")
           ? {
-              titulo: "",
+              titulo: (searchParams.get("titulo") ?? "").slice(0, 200),
               icone: "NotebookPen",
               categoriaId: searchParams.get("categoria"),
               repetir: "nenhuma",
