@@ -106,7 +106,7 @@ describe("Etapa 281/282 — design", () => {
   });
 
   it("novidades 281", () => {
-    expect(VERSAO_NOVIDADES).toBe("281");
-    expect(NOVIDADES[0].versao).toBe("281");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(281);
+    expect(NOVIDADES.some((g) => g.versao === "281")).toBe(true);
   });
 });

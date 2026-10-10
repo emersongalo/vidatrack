@@ -3,13 +3,11 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { habitoDevidoNoDia, emPausa, pausaAtualOuFutura } from "@/lib/habitos/pausa";
 import Link from "next/link";
-import { ContasDoDia } from "@/components/ContasDoDia";
 import { DiarioDoDia } from "@/components/DiarioDoDia";
 import { SugestoesLembrete } from "@/components/SugestoesLembrete";
 import { useSearchParams } from "next/navigation";
 import { hojeISO } from "@/lib/habitos/streak";
 import { diaBateComFrequencia, feitosNaSemana } from "@/lib/agenda/dias";
-import { tarefaApareceNoDia, tarefaAtrasada } from "@/lib/agenda/recorrencia";
 import { TiraDeDiasAgenda } from "@/components/TiraDeDiasAgenda";
 import { SugestoesHabito } from "@/components/SugestoesHabito";
 import { ListaHojeComOffline } from "@/components/ListaHojeComOffline";
@@ -26,7 +24,7 @@ import { createClient } from "@/lib/supabase/client";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { infoDupla, type Parceiro } from "@/lib/habitos/dupla";
 import { Esqueleto } from "@/components/Esqueleto";
-import { Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff, Sun, Clock3 } from "lucide-react";
 import {
   NOMES_BLOCOS_HOJE,
   alternarVisivel,
@@ -104,16 +102,13 @@ function HojeConteudo() {
 
   const categorias = snapshot?.categoriasProdutividade ?? [];
 
-  const { itens, temAlgumItemCadastrado, tarefasDoDia } = useMemo(() => {
-    if (!snapshot) return { itens: null as ItemAgenda[] | null, temAlgumItemCadastrado: true, tarefasDoDia: { total: 0, feitas: 0 } };
+  const { itens, temAlgumItemCadastrado } = useMemo(() => {
+    if (!snapshot) return { itens: null as ItemAgenda[] | null, temAlgumItemCadastrado: true };
 
     const checkinsPorHabito = new Map<string, number>();
     for (const c of snapshot.habitoCheckins) {
       if (c.data === dataSelecionada) checkinsPorHabito.set(c.habito_id, c.quantidade ?? 1);
     }
-    const tarefasFeitasHoje = new Set(
-      snapshot.conclusoesTarefas.filter((c) => c.data === dataSelecionada).map((c) => c.tarefa_id)
-    );
 
     const lista: ItemAgenda[] = [];
 
@@ -163,28 +158,14 @@ function HojeConteudo() {
       });
     }
 
-    // Etapa 264 — tarefas agora têm área própria (/tarefas): aqui ficam só
-    // os hábitos, e as tarefas do dia viram um atalho logo abaixo.
-    const tarefasDoDia = { total: 0, feitas: 0 };
-    for (const t of snapshot.tarefas as any[]) {
-      // Etapa 193 — regra única de repetição (lib/agenda/recorrencia) +
-      // tarefa única atrasada aparece no dia de HOJE até ser concluída.
-      const atrasada = dataSelecionada === hoje && tarefaAtrasada(t, hoje);
-      const apareceHoje = atrasada || tarefaApareceNoDia(t, dataSelecionada);
-      if (!apareceHoje) continue;
-      if (categoriaFiltro && t.categoria_id !== categoriaFiltro) continue;
-
-      tarefasDoDia.total++;
-      if (t.repetir === "nenhuma" ? t.concluida : tarefasFeitasHoje.has(t.id)) tarefasDoDia.feitas++;
-    }
+    // Etapa 285 — a aba Hábitos mostra só hábitos (tarefas e contas têm aba própria).
 
     lista.sort(ordenarItensAgenda);
     encadearHabitos(lista, snapshot.habitos as any[]);
 
     return {
       itens: lista,
-      temAlgumItemCadastrado: snapshot.habitos.length > 0 || snapshot.tarefas.length > 0,
-      tarefasDoDia,
+      temAlgumItemCadastrado: snapshot.habitos.length > 0,
     };
   }, [snapshot, dataSelecionada, categoriaFiltro]);
 
@@ -296,15 +277,9 @@ function HojeConteudo() {
               <div className="flex gap-2 justify-center mt-4">
                 <Link
                   href="/habitos/novo"
-                  className="text-sm bg-ink-100 text-base-900 font-medium rounded-lg px-3.5 py-2 hover:opacity-90 transition"
+                  className="text-sm bg-habito text-base-900 font-semibold rounded-full px-4 py-2 hover:opacity-90 transition"
                 >
-                  + Hábito
-                </Link>
-                <Link
-                  href="/tarefas/nova"
-                  className="text-sm border border-base-600 rounded-lg px-3.5 py-2 hover:bg-base-700 transition"
-                >
-                  + Tarefa
+                  + Criar hábito
                 </Link>
               </div>
             </div>
@@ -326,21 +301,6 @@ function HojeConteudo() {
               )}
             </>
           )}
-          {tarefasDoDia.total > 0 && (
-            <Link
-              href="/tarefas"
-              className="mt-3 flex items-center gap-3 rounded-2xl px-4 py-3 border border-nota/30 bg-nota/10 hover:border-nota transition"
-            >
-              <span className="text-2xl">📋</span>
-              <span className="flex-1 min-w-0">
-                <span className="block text-base font-medium">Tarefas de {dataSelecionada === hoje ? "hoje" : "nesse dia"}</span>
-                <span className="block text-xs text-ink-400">
-                  {tarefasDoDia.feitas === tarefasDoDia.total ? "Todas feitas ✓" : `${tarefasDoDia.feitas} de ${tarefasDoDia.total} feitas`}
-                </span>
-              </span>
-              <span className="text-nota text-sm font-medium">Abrir ›</span>
-            </Link>
-          )}
       </div>
     ),
     pausados: !snapshot
@@ -356,7 +316,6 @@ function HojeConteudo() {
                 </p>
               );
             })(),
-    contas: snapshot ? <ContasDoDia snapshot={snapshot} dataISO={dataSelecionada} hojeISO={hoje} /> : null,
     diario: snapshot ? <DiarioDoDia snapshot={snapshot} dataISO={dataSelecionada} hojeISO={hoje} /> : null,
     sugestoes:
       snapshot && dataSelecionada === hoje ? (
@@ -366,25 +325,33 @@ function HojeConteudo() {
       ) : null,
   };
 
+  const chip =
+    "flex items-center gap-1.5 h-9 px-3 rounded-full bg-base-800 border border-base-600 text-sm text-ink-400 hover:text-ink-100 hover:border-ink-400 transition";
   const botaoLayout = "w-8 h-8 rounded-lg flex items-center justify-center bg-base-700 text-ink-100 disabled:opacity-30";
 
   return (
     <main className="max-w-2xl lg:max-w-3xl mx-auto px-6 md:px-12 pt-2 pb-6">
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <h1 className="text-3xl font-display font-bold">Hoje</h1>
-        <div className="flex items-center gap-3 text-sm text-ink-400">
+      {/* Etapa 285 — topo mais limpo: título da área + atalhos em chips */}
+      <div className="flex items-end justify-between gap-3 mb-4">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-display font-bold leading-tight">Hábitos</h1>
+          <p className="text-sm text-ink-400 capitalize truncate">
+            {new Date(dataSelecionada + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Etapa 221 — rotina da manhã / da noite */}
-          <Link href="/habitos/rotina" className="hover:text-ink-100 transition">
-            ☀️ Rotina
+          <Link href="/habitos/rotina" aria-label="Rotina" className={chip}>
+            <Sun size={15} /> <span className="hidden min-[400px]:inline">Rotina</span>
           </Link>
-          <Link href={`/habitos/planejador?data=${dataSelecionada}`} className="hover:text-ink-100 transition">
-            🕐 Blocos
+          <Link href={`/habitos/planejador?data=${dataSelecionada}`} aria-label="Blocos do dia" className={chip}>
+            <Clock3 size={15} /> <span className="hidden min-[400px]:inline">Blocos</span>
           </Link>
           {editandoLayout ? (
             <button
               onClick={salvarLayout}
               disabled={salvandoLayout}
-              className="flex items-center gap-1 bg-habito text-base-900 font-semibold rounded-full px-3 py-1.5 disabled:opacity-50"
+              className="flex items-center gap-1 bg-habito text-base-900 text-sm font-semibold rounded-full px-3 py-1.5 disabled:opacity-50"
             >
               <Check size={14} /> {salvandoLayout ? "..." : "Salvar"}
             </button>
@@ -396,9 +363,9 @@ function HojeConteudo() {
                 setEditandoLayout(true);
               }}
               aria-label="Personalizar a tela"
-              className="hover:text-ink-100 transition"
+              className={`${chip} px-2`}
             >
-              <Settings2 size={18} />
+              <Settings2 size={16} />
             </button>
           )}
         </div>

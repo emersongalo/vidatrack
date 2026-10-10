@@ -1,15 +1,15 @@
 // Etapa 227 — "Personalizar início" também na tela Hoje (salvo por login
 // em perfis.ordem_blocos_habitos; "!" na frente = escondido).
-export type BlocoHojeId = "resumo" | "lista" | "pausados" | "contas" | "diario" | "sugestoes";
+// Etapa 285 — "contas" saiu: a aba Hábitos mostra só hábitos (finanças ficam em Finanças).
+export type BlocoHojeId = "resumo" | "lista" | "pausados" | "diario" | "sugestoes";
 export type BlocoHoje = { id: BlocoHojeId; visivel: boolean };
 
-export const BLOCOS_HOJE_PADRAO: BlocoHojeId[] = ["resumo", "lista", "pausados", "contas", "diario", "sugestoes"];
+export const BLOCOS_HOJE_PADRAO: BlocoHojeId[] = ["resumo", "lista", "pausados", "diario", "sugestoes"];
 
 export const NOMES_BLOCOS_HOJE: Record<BlocoHojeId, string> = {
   resumo: "🎯 Resumo do dia",
-  lista: "✅ Hábitos e tarefas",
+  lista: "✅ Hábitos",
   pausados: "⏸ Hábitos pausados",
-  contas: "🧾 Contas do dia",
   diario: "🙂 Como foi seu dia",
   sugestoes: "💡 Sugestões de lembrete",
 };

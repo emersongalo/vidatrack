@@ -100,6 +100,7 @@ export function ItemLinhaAgenda({
   aoAlternarLocal,
   aoAjustarLocal,
   aoConcluirMutacao,
+  aoNotaAberta,
 }: {
   item: ItemAgenda;
   dataISO: string;
@@ -119,11 +120,18 @@ export function ItemLinhaAgenda({
    *  voltar, a tela recalculava a partir do retrato ANTIGO e parecia
    *  que a marcação tinha "sumido", mesmo já estando salva no banco. */
   aoConcluirMutacao?: () => void;
+  /** Etapa 285 — avisa a lista enquanto o campo de anotação está aberto
+   *  (ela segura a linha no lugar pra não sumir no meio da digitação) */
+  aoNotaAberta?: (aberta: boolean) => void;
 }) {
   const [pendente, iniciarTransicao] = useTransition();
   const [marcoAtingido, setMarcoAtingido] = useState<number | null>(null);
   const [mostrarNota, setMostrarNota] = useState(false);
   const [textoNota, setTextoNota] = useState("");
+  useEffect(() => {
+    aoNotaAberta?.(mostrarNota);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mostrarNota]);
   const ehNumerico = item.tipo === "habito" && item.meta && item.meta.alvo > 1;
   // Etapa 282 — hábito de minutos ganha um timer embutido
   const temTimer = !!ehNumerico && ehUnidadeDeMinuto(item.meta?.unidade);

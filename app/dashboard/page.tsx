@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlternadorTema } from "@/components/AlternadorTema";
 import { FotoPerfil } from "@/components/FotoPerfil";
 import { sair } from "../login/actions";
-import { Bell, Search, CalendarDays } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { calcularPendencias } from "@/lib/notificacoes/calculo";
 import { useFotoPerfilCache } from "@/lib/perfil/useFotoCache";
@@ -79,11 +79,11 @@ export default function DashboardPage() {
             <FotoPerfil url={urlFoto} tamanho={48} className="rounded-full w-12 h-12 object-cover" />
           </Link>
           <div className="min-w-0">
-            <p className="text-ink-400 text-sm">{saudacao(new Date().getHours())},</p>
+            <p className="text-ink-400 text-sm whitespace-nowrap">{saudacao(new Date().getHours())},</p>
             <h1 className="text-xl font-display font-semibold truncate">{nome.split(" ")[0]}</h1>
           </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0 -mr-2">
           {/* Etapa 215 — busca geral */}
           <Link
             href="/buscar"
@@ -91,14 +91,6 @@ export default function DashboardPage() {
             className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
           >
             <Search size={18} strokeWidth={2} />
-          </Link>
-          {/* Etapa 281 — calendário único */}
-          <Link
-            href="/calendario"
-            aria-label="Calendário"
-            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-400 hover:text-ink-100 hover:bg-base-800 transition"
-          >
-            <CalendarDays size={18} strokeWidth={2} />
           </Link>
           <Link
             href="/notificacoes"
@@ -110,7 +102,10 @@ export default function DashboardPage() {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-400" />
             )}
           </Link>
-          <AlternadorTema />
+          {/* Etapa 284 — no celular o tema fica em Perfil → Aparência (sobra espaço pro nome) */}
+          <span className="hidden sm:contents">
+            <AlternadorTema />
+          </span>
           <form action={sair}>
             <button
               aria-label="Sair"

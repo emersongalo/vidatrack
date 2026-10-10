@@ -36,6 +36,8 @@ export default function TarefasPage() {
   const [mostrarConcluidas, setMostrarConcluidas] = useState(false);
   // marcações feitas agora (antes do retrato atualizar)
   const [local, setLocal] = useState<Record<string, boolean>>({});
+  // Etapa 285 — a tarefa concluída fica um instante no lugar (vê o ✓) e só depois desce
+  const [segurando, setSegurando] = useState<Set<string>>(new Set());
   // adicionar rápido
   const [texto, setTexto] = useState("");
   const [quando, setQuando] = useState<"hoje" | "amanha">("hoje");
@@ -78,7 +80,13 @@ export default function TarefasPage() {
   );
 
   const filtradas = comLocal.filter((t) => (filtro === "todas" ? true : filtro === "sem" ? !t.categoria_id || !mapaCat.has(t.categoria_id) : t.categoria_id === filtro));
-  const grupos = useMemo(() => agruparTarefas(filtradas, hoje, conclusoesHoje), [filtradas, hoje, conclusoesHoje]);
+  // pra agrupar, quem está "segurando" ainda conta como pendente
+  const grupos = useMemo(() => {
+    if (!segurando.size) return agruparTarefas(filtradas, hoje, conclusoesHoje);
+    const conc = new Set([...conclusoesHoje].filter((id) => !segurando.has(id)));
+    const lista = filtradas.map((t) => (segurando.has(t.id) && t.repetir === "nenhuma" ? { ...t, concluida: false } : t));
+    return agruparTarefas(lista, hoje, conc);
+  }, [filtradas, hoje, conclusoesHoje, segurando]);
   const resumo = resumoTarefas(filtradas, hoje, conclusoesHoje);
 
   const contagemCat = (id: string | "sem") =>
@@ -89,6 +97,18 @@ export default function TarefasPage() {
     vibrar(feitaAgora ? 10 : [15, 40, 25]);
     marcouAgora.current = !feitaAgora;
     setLocal((l) => ({ ...l, [t.id]: !feitaAgora }));
+    if (!feitaAgora) {
+      setSegurando((s) => new Set(s).add(t.id));
+      setTimeout(
+        () =>
+          setSegurando((s) => {
+            const n = new Set(s);
+            n.delete(t.id);
+            return n;
+          }),
+        900
+      );
+    }
     try {
       if (!navigator.onLine) {
         adicionarNaFila({ tipo: "conclusao_tarefa", tarefaId: t.id, data: hoje });
@@ -146,7 +166,7 @@ export default function TarefasPage() {
     <LinhaTarefa
       key={t.id}
       tarefa={t}
-      feita={t._feita}
+      feita={segurando.has(t.id) || t._feita}
       proxima={t._proxima}
       hoje={hoje}
       atrasada={tarefaAtrasada(t, hoje)}
@@ -195,9 +215,9 @@ export default function TarefasPage() {
       ) : (
         <>
           {/* Resumo do dia */}
-          <section className="relative overflow-hidden rounded-3xl p-5 mb-4 border border-nota/30" style={{ background: "linear-gradient(135deg, rgba(156,143,217,0.22), rgba(156,143,217,0.05))" }}>
+          <section className="relative overflow-hidden rounded-3xl p-4 mb-4 border border-nota/30" style={{ background: "linear-gradient(135deg, rgba(156,143,217,0.22), rgba(156,143,217,0.05))" }}>
             <div className="flex items-center gap-4">
-              <div className="relative w-20 h-20 shrink-0">
+              <div className="relative w-[4.5rem] h-[4.5rem] shrink-0">
                 <svg viewBox="0 0 72 72" className="w-full h-full -rotate-90">
                   <circle cx="36" cy="36" r={raio} fill="none" stroke="rgb(var(--c-ink-400) / 0.2)" strokeWidth="7" />
                   <circle cx="36" cy="36" r={raio} fill="none" stroke="#9C8FD9" strokeWidth="7" strokeLinecap="round" strokeDasharray={volta} strokeDashoffset={volta * (1 - pctHoje / 100)} style={{ transition: "stroke-dashoffset .8s ease-out" }} />
@@ -213,32 +233,19 @@ export default function TarefasPage() {
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {resumo.atrasadas > 0 && <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-400/15 text-red-400">⏰ {resumo.atrasadas} atrasada{resumo.atrasadas > 1 ? "s" : ""}</span>}
                   <span className="text-xs px-2 py-0.5 rounded-full bg-base-900/50 text-ink-400">📅 {resumo.semana} nos próximos dias</span>
+                  {/* Etapa 275/285 — revisão semanal guiada, agora dentro do resumo */}
+                  <Link
+                    href="/tarefas/revisao"
+                    className={`text-xs font-medium px-2 py-0.5 rounded-full transition ${
+                      paraRevisar > 0 ? "bg-nota text-base-900" : "bg-base-900/50 text-ink-400 hover:text-ink-100"
+                    }`}
+                  >
+                    🧹 {paraRevisar > 0 ? `Revisar ${paraRevisar}` : "Revisar semana"}
+                  </Link>
                 </div>
               </div>
             </div>
           </section>
-
-          {/* Etapa 275 — revisão semanal guiada */}
-          <Link
-            href="/tarefas/revisao"
-            className="flex items-center gap-3 rounded-2xl border border-base-600 bg-base-800 px-4 py-3 mb-4 hover:border-nota/60 transition active:scale-[0.99]"
-          >
-            <span className="text-2xl">🧹</span>
-            <span className="flex-1 min-w-0">
-              <span className="block text-sm font-medium">Revisar a semana</span>
-              <span className="block text-xs text-ink-400">
-                {paraRevisar > 0
-                  ? `${paraRevisar} tarefa${paraRevisar > 1 ? "s" : ""} esperando uma decisão`
-                  : "Tudo em dia — dá uma olhada nos próximos 7 dias"}
-              </span>
-            </span>
-            {paraRevisar > 0 && (
-              <span className="text-xs font-semibold bg-nota text-base-900 rounded-full min-w-[1.5rem] h-6 px-2 flex items-center justify-center">
-                {paraRevisar}
-              </span>
-            )}
-            <span className="text-ink-400">→</span>
-          </Link>
 
           {/* Adicionar rápido */}
           <form
@@ -269,7 +276,7 @@ export default function TarefasPage() {
             </button>
           </form>
           {erro && <p className="text-xs text-red-400 mb-2">{erro}</p>}
-          <p className="text-xs text-ink-400 mb-4">Pra repetir, lembrete ou subtarefas, use o <Link href="/tarefas/nova" className="underline">+ Nova</Link>.</p>
+          <div className="mb-4" />
 
           {/* Categorias */}
           <div className="flex gap-2 overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 pb-1 mb-3">

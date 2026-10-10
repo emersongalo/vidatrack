@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { movimentoReduzido } from "@/lib/app/festa";
 import { ItemLinhaAgenda, ItemAgenda } from "@/components/ItemLinhaAgenda";
 import { adicionarNaFila, salvarCacheHoje } from "@/lib/offline/fila";
 import { EVENTO_SINCRONIZACAO_CONCLUIDA } from "@/components/GerenciadorSincronizacaoOffline";
@@ -32,6 +34,60 @@ export function ListaHojeComOffline({
     marcouAgora.current = false;
   }, [tudoFeito, itens]);
   const refLista = useRef<HTMLDivElement>(null);
+
+  // Etapa 285 — os feitos descem pra "Feitos hoje" (depois de um
+  // instantinho, pra dar tempo de ver o ✓) e a lista desliza suave.
+  const [segurando, setSegurando] = useState<Set<string>>(new Set());
+  const [comNota, setComNota] = useState<Set<string>>(new Set());
+  const [mostrarFeitos, setMostrarFeitos] = useState(true);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("vt-hoje-feitos") === "0") setMostrarFeitos(false);
+    } catch {}
+  }, []);
+  function alternarFeitos() {
+    setMostrarFeitos((v) => {
+      try {
+        localStorage.setItem("vt-hoje-feitos", v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
+  }
+  function segurar(id: string) {
+    setSegurando((s) => new Set(s).add(id));
+    setTimeout(() => {
+      setSegurando((s) => {
+        const n = new Set(s);
+        n.delete(id);
+        return n;
+      });
+    }, 750);
+  }
+
+  // FLIP: guarda onde cada linha estava e anima até onde ela foi parar
+  const posicoes = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    const raiz = refLista.current;
+    if (!raiz) return;
+    const base = raiz.getBoundingClientRect().top;
+    const novas = new Map<string, number>();
+    const animar = !movimentoReduzido();
+    raiz.querySelectorAll<HTMLElement>("[data-flip]").forEach((el) => {
+      const id = el.dataset.flip!;
+      const topo = el.getBoundingClientRect().top - base;
+      novas.set(id, topo);
+      const antes = posicoes.current.get(id);
+      if (animar && antes !== undefined && Math.abs(antes - topo) > 2 && typeof el.animate === "function") {
+        el.style.zIndex = "5";
+        const a = el.animate([{ transform: `translateY(${antes - topo}px)` }, { transform: "translateY(0)" }], {
+          duration: 420,
+          easing: "cubic-bezier(.2,.8,.2,1)",
+        });
+        a.onfinish = () => (el.style.zIndex = "");
+      }
+    });
+    posicoes.current = novas;
+  });
 
   // Sempre que os dados do servidor mudam (nova renderização, revalidação),
   // atualiza o cache local pra essa data.
@@ -91,11 +147,13 @@ export function ListaHojeComOffline({
 
   function atualizarVisualmente(item: ItemAgenda) {
     marcouAgora.current = !item.feito;
+    if (!item.feito) segurar(item.id);
     setItens((atual) => atual.map((it) => (it.id === item.id ? { ...it, feito: !it.feito } : it)));
   }
 
   function ajustarVisualmente(item: ItemAgenda, delta: number) {
     marcouAgora.current = delta > 0;
+    if (item.meta && !item.feito && item.meta.atual + delta >= item.meta.alvo) segurar(item.id);
     setItens((atual) =>
       atual.map((it) => {
         if (it.id !== item.id || !it.meta) return it;
@@ -117,6 +175,50 @@ export function ListaHojeComOffline({
     adicionarNaFila({ tipo: "ajuste_habito", habitoId: item.id, data: dataISO, delta });
   }
 
+  const fica = (i: ItemAgenda) => segurando.has(i.id) || comNota.has(i.id);
+  const pendentes = itens.filter((i) => !i.feito || fica(i));
+  const feitosLista = itens.filter((i) => i.feito && !fica(i));
+  type Bloco =
+    | { tipo: "titulo"; chave: string; titulo: string; detalhe: string }
+    | { tipo: "feitos"; chave: string }
+    | { tipo: "item"; chave: string; item: ItemAgenda; primeiro: boolean; ultimo: boolean };
+  const blocos: Bloco[] = [];
+  for (const g of agruparItensHoje(pendentes)) {
+    const falta = g.itens.length - g.feitos;
+    blocos.push({ tipo: "titulo", chave: `t-${g.id}`, titulo: g.titulo, detalhe: falta > 0 ? `${falta} pra fazer` : "✓" });
+    g.itens.forEach((it, k) =>
+      blocos.push({ tipo: "item", chave: `${it.tipo}-${it.id}`, item: it, primeiro: k === 0, ultimo: k === g.itens.length - 1 })
+    );
+  }
+  if (feitosLista.length > 0) {
+    blocos.push({ tipo: "feitos", chave: "t-feitos" });
+    if (mostrarFeitos)
+      feitosLista.forEach((it, k) =>
+        blocos.push({ tipo: "item", chave: `${it.tipo}-${it.id}`, item: it, primeiro: k === 0, ultimo: k === feitosLista.length - 1 })
+      );
+  }
+  const linha = (item: ItemAgenda) => (
+    <ItemLinhaAgenda
+      key={`${item.tipo}-${item.id}`}
+      item={item}
+      dataISO={dataISO}
+      aoAlternarLocal={() => atualizarVisualmente(item)}
+      aoAjustarLocal={(delta) => ajustarVisualmente(item, delta)}
+      aoClicarOffline={() => enfileirarOffline(item)}
+      aoAjustarOffline={(delta) => enfileirarAjusteOffline(item, delta)}
+      aoConcluirMutacao={aoConcluirMutacao}
+      aoNotaAberta={(aberta) =>
+        setComNota((s) => {
+          if (aberta === s.has(item.id)) return s;
+          const n = new Set(s);
+          if (aberta) n.add(item.id);
+          else n.delete(item.id);
+          return n;
+        })
+      }
+    />
+  );
+
   return (
     <div>
       {comemorar && <ComemoracaoDia aoFechar={() => setComemorar(false)} />}
@@ -129,36 +231,44 @@ export function ListaHojeComOffline({
       <p className="hidden lg:block text-xs text-ink-400 mb-2">
         Dica: teclas 1-9 marcam os itens na ordem da lista
       </p>
-      {/* Etapa 227 — agrupado (Manhã / Tarde / Noite / Tarefas), cada grupo num cartão */}
-      <div ref={refLista} className="space-y-5">
-        {agruparItensHoje(itens).map((g) => (
-          <section key={g.id}>
-            <div className="flex items-baseline justify-between px-1 mb-2">
-              <h3 className="text-base font-semibold">{g.titulo}</h3>
-              <span
-                key={`${g.id}-${g.feitos}`}
-                className={`text-sm inline-block animate-pop ${g.feitos === g.itens.length ? "text-habito font-semibold" : "text-ink-400"}`}
-              >
-                {g.feitos === g.itens.length ? "✓ " : ""}
-                {g.feitos}/{g.itens.length}
-              </span>
+      {/* Etapa 227 — agrupado (Manhã / Tarde / Noite), cada grupo num cartão.
+         Etapa 285 — os feitos vão pro cartão "Feitos hoje" no fim. */}
+      {/* Um contêiner só, com chave em cada linha: a linha muda de grupo
+         sem ser recriada (não perde a comemoração nem a anotação). */}
+      <div ref={refLista}>
+        {pendentes.length === 0 && feitosLista.length > 0 && (
+          <div className="mb-5 text-center rounded-2xl border border-habito/30 bg-habito/10 px-4 py-4 animate-surgir">
+            <p className="text-2xl mb-1">🌿</p>
+            <p className="text-base font-semibold">Tudo feito por aqui</p>
+            <p className="text-sm text-ink-400">Seus hábitos do dia estão em dia.</p>
+          </div>
+        )}
+        {blocos.map((b) =>
+          b.tipo === "titulo" ? (
+            <div key={b.chave} className="flex items-baseline justify-between px-1 mb-2">
+              <h3 className="text-base font-semibold">{b.titulo}</h3>
+              <span className="text-sm text-ink-400">{b.detalhe}</span>
             </div>
-            <ul className="lista-entrar bg-base-800 border border-base-600 rounded-2xl overflow-hidden divide-y divide-base-600">
-              {g.itens.map((item) => (
-                <ItemLinhaAgenda
-                  key={`${item.tipo}-${item.id}`}
-                  item={item}
-                  dataISO={dataISO}
-                  aoAlternarLocal={() => atualizarVisualmente(item)}
-                  aoAjustarLocal={(delta) => ajustarVisualmente(item, delta)}
-                  aoClicarOffline={() => enfileirarOffline(item)}
-                  aoAjustarOffline={(delta) => enfileirarAjusteOffline(item, delta)}
-                  aoConcluirMutacao={aoConcluirMutacao}
-                />
-              ))}
+          ) : b.tipo === "feitos" ? (
+            <button key={b.chave} type="button" onClick={alternarFeitos} className="w-full flex items-center gap-2 px-1 mb-2 text-left">
+              <h3 className="text-base font-semibold text-habito">✓ Feitos</h3>
+              <span key={feitosLista.length} className="text-xs text-habito bg-habito/15 rounded-full px-2 py-0.5 animate-pop">
+                {feitosLista.length}
+              </span>
+              <ChevronDown size={16} className={`ml-auto text-ink-400 transition-transform duration-300 ${mostrarFeitos ? "rotate-180" : ""}`} />
+            </button>
+          ) : (
+            <ul
+              key={b.chave}
+              data-flip={b.chave}
+              className={`relative bg-base-800 border-x border-t border-base-600 overflow-hidden ${b.primeiro ? "rounded-t-2xl" : ""} ${
+                b.ultimo ? "rounded-b-2xl border-b mb-5" : ""
+              }`}
+            >
+              {linha(b.item)}
             </ul>
-          </section>
-        ))}
+          )
+        )}
       </div>
     </div>
   );

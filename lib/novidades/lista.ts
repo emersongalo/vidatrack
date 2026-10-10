@@ -1,13 +1,22 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "281";
+export const VERSAO_NOVIDADES = "285";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "285",
+    titulo: "Hábitos e Tarefas mais leves",
+    itens: [
+      { emoji: "🌱", titulo: "Aba Hábitos só com hábitos", texto: "Contas e tarefas saíram de lá — cada coisa na sua aba. O topo virou um cartão só, com anel, sequência e semana." },
+      { emoji: "✨", titulo: "Lista que desliza", texto: "Marcou um hábito? Ele mostra o ✓ e desce suave pro grupo Feitos (dá pra recolher)." },
+      { emoji: "📝", titulo: "Ler a nota e concluir", texto: "Tarefa com anotação ou subtarefas abre ali mesmo na lista: leia, marque as subtarefas e toque em Li e concluí.", href: "/tarefas" },
+    ],
+  },
   {
     versao: "281",
     titulo: "Cara nova e atalhos",
