@@ -30,7 +30,7 @@ describe("Etapa 303 — mascote no Início e compartilhar", () => {
   });
 
   it("novidades 303", () => {
-    expect(VERSAO_NOVIDADES).toBe("303");
-    expect(NOVIDADES[0].versao).toBe("303");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(303);
+    expect(NOVIDADES.some((g) => g.versao === "303")).toBe(true);
   });
 });

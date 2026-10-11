@@ -1,13 +1,21 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "303";
+export const VERSAO_NOVIDADES = "304";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "304",
+    titulo: "Mascote com cara de 3D",
+    itens: [
+      { emoji: "✨", titulo: "Volume e luz de verdade", texto: "Seu bichinho ganhou sombreado redondo, brilho, olhos com reflexo e luz que muda com a hora — dourada de manhã, alaranjada no pôr do sol e azulada à noite.", href: "/habitos/mascote" },
+      { emoji: "🌄", titulo: "Lugares com profundidade", texto: "Neblina no horizonte, raios de sol, luz no chão onde ele pisa e o cenário acompanhando o giro." },
+    ],
+  },
   {
     versao: "303",
     titulo: "Mascote no Início e compartilhar mais fácil",

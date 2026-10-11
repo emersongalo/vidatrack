@@ -564,3 +564,8 @@ html[data-fonte="maior"] { font-size: 125%; }
   .vtm-raios, .vtm-nuvem, .vtm-pingo, .vtm-onda, .vtm-fogo, .vtm-floco, .vtm-fumaca, .vtm-ronco, .vtm-regar, .vtm-gota { animation: none !important; }
   .vtm-pingo, .vtm-floco { display: none; }
 }
+
+/* Etapa 304 · raios de luz respirando */
+@keyframes vtm-raio-luz { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+.vtm-raio-luz { animation: vtm-raio-luz 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .vtm-raio-luz { animation: none !important; } }

@@ -2,7 +2,7 @@
 
 // Etapa 298 — o mascote, todo em SVG (sem imagens). Cresce por fase, muda
 // de humor com o dia e veste o que a pessoa comprou na lojinha.
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
 import { CORES_MASCOTE, type CorMascote, type Humor, type Slot } from "@/lib/mascote/mascote";
 
 type Props = {
@@ -20,6 +20,16 @@ type Props = {
   angulo?: number;
   /** Etapa 302 — hora do dia do lugar (sem passar, usa a hora atual) */
   periodo?: Periodo;
+  /** Etapa 304 — luz e volume "3D" (filtro de iluminação). Por padrão só nos tamanhos grandes. */
+  volume?: boolean;
+};
+
+// Etapa 304 — luz de cada hora: cor do brilho (contorno/especular) e da luz geral
+const LUZ: Record<Periodo, { brilho: string; difusa: string; azimute: number }> = {
+  manha: { brilho: "#FFE9B8", difusa: "#FFF8EC", azimute: 215 },
+  tarde: { brilho: "#FFFFFF", difusa: "#FFFFFF", azimute: 240 },
+  entardecer: { brilho: "#FFB27A", difusa: "#FFE6D2", azimute: 320 },
+  noite: { brilho: "#A9BCFF", difusa: "#C9D2F2", azimute: 250 },
 };
 
 // Etapa 302 — lugares vivos: o cenário é onde ele mora. Muda com a hora
@@ -55,7 +65,7 @@ export const LUGAR_PADRAO = "casinha";
 
 const OLHO = "#1F2421";
 
-export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFundo = false, animado = true, className = "", aoTocar, angulo = 0, periodo }: Props) {
+export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFundo = false, animado = true, className = "", aoTocar, angulo = 0, periodo, volume }: Props) {
   const uid = useId().replace(/:/g, "");
   const c = CORES_MASCOTE[cor] ?? CORES_MASCOTE.verde;
   const corpo = cor === "arcoiris" ? `url(#vtm-arco-${uid})` : c.corpo;
@@ -72,6 +82,20 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
   const costas = Math.cos(rad) < 0;
   const desvio = seno * r * 0.62;
   const larg = 0.9 + 0.1 * Math.abs(Math.cos(rad));
+  // Etapa 304 — luz
+  const per = periodo ?? periodoDaHora(new Date().getHours());
+  const luz = LUZ[per];
+  // celular mais fraco: fica só o sombreado (sem o filtro de luz, que pesa mais)
+  const [fraco, setFraco] = useState(false);
+  useEffect(() => {
+    try {
+      const n = navigator as any;
+      if ((n.deviceMemory && n.deviceMemory <= 3) || (n.hardwareConcurrency && n.hardwareConcurrency <= 4)) setFraco(true);
+    } catch {}
+  }, []);
+  const comVolume = (volume ?? tamanho >= 110) && !fraco;
+  // o sol "anda": sombra no chão vai pro lado oposto
+  const sombraX = per === "manha" ? 8 : per === "entardecer" ? -10 : per === "noite" ? 0 : 3;
 
   return (
     <svg
@@ -96,6 +120,51 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
         <clipPath id={`vtm-clip-${uid}`}>
           <rect x="0" y="0" width="200" height="200" rx="36" />
         </clipPath>
+        {/* Etapa 304 — volume: sombreado redondo, oclusão embaixo, contorno de luz */}
+        <radialGradient id={`vtm-vol-${uid}`} cx="34%" cy="26%" r="78%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
+          <stop offset="38%" stopColor="#FFFFFF" stopOpacity="0.08" />
+          <stop offset="72%" stopColor="#000000" stopOpacity="0.06" />
+          <stop offset="100%" stopColor="#1A1020" stopOpacity="0.38" />
+        </radialGradient>
+        <linearGradient id={`vtm-ao-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="55%" stopColor="#000" stopOpacity="0" />
+          <stop offset="100%" stopColor="#140C1C" stopOpacity="0.3" />
+        </linearGradient>
+        <radialGradient id={`vtm-membro-${uid}`} cx="35%" cy="30%" r="80%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0.3" />
+        </radialGradient>
+        <radialGradient id={`vtm-olho-${uid}`} cx="40%" cy="35%" r="70%">
+          <stop offset="0%" stopColor="#4A3A33" />
+          <stop offset="70%" stopColor="#1B1412" />
+          <stop offset="100%" stopColor="#050304" />
+        </radialGradient>
+        <radialGradient id={`vtm-chao-${uid}`}>
+          <stop offset="0%" stopColor="#000" stopOpacity="0.38" />
+          <stop offset="60%" stopColor="#000" stopOpacity="0.16" />
+          <stop offset="100%" stopColor="#000" stopOpacity="0" />
+        </radialGradient>
+        <mask id={`vtm-aro-${uid}`}>
+          <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill="#fff" />
+          <ellipse cx={100 - (per === "entardecer" ? -5 : 5)} cy={cy - 4} rx={r} ry={r * 0.95} fill="#000" />
+        </mask>
+        <filter id={`vtm-borra-${uid}`} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.2" />
+        </filter>
+        {/* luz de verdade em tudo (corpo e acessórios): relevo suave + brilho */}
+        <filter id={`vtm-luz-${uid}`} x="-15%" y="-15%" width="130%" height="130%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="alt" />
+          <feDiffuseLighting in="alt" surfaceScale="3.2" diffuseConstant="1.12" lightingColor={luz.difusa} result="dif">
+            <feDistantLight azimuth={luz.azimute} elevation="58" />
+          </feDiffuseLighting>
+          <feComposite in="SourceGraphic" in2="dif" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="iluminado" />
+          <feSpecularLighting in="alt" surfaceScale="3.2" specularConstant="0.6" specularExponent="24" lightingColor={luz.brilho} result="esp">
+            <feDistantLight azimuth={luz.azimute} elevation="42" />
+          </feSpecularLighting>
+          <feComposite in="esp" in2="SourceAlpha" operator="in" result="esp2" />
+          <feComposite in="iluminado" in2="esp2" operator="arithmetic" k1="0" k2="1" k3="0.55" k4="0" />
+        </filter>
         <radialGradient id={`vtm-brilho-${uid}`}>
           <stop offset="0%" stopColor={c.sombra} stopOpacity="0.35" />
           <stop offset="100%" stopColor={c.sombra} stopOpacity="0" />
@@ -104,18 +173,25 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
 
       {comFundo ? (
         <g clipPath={`url(#vtm-clip-${uid})`}>
-          <Fundo id={equipados.fundo ?? LUGAR_PADRAO} periodo={periodo ?? periodoDaHora(new Date().getHours())} clima={climaDoHumor(humor)} uid={uid} />
+          {/* Etapa 304 — o lugar acompanha o giro de leve (profundidade) */}
+          <g transform={`translate(${(-seno * 6).toFixed(2)} 0) translate(100 100) scale(1.06) translate(-100 -100)`}>
+            <Fundo id={equipados.fundo ?? LUGAR_PADRAO} periodo={per} clima={climaDoHumor(humor)} uid={uid} />
+          </g>
+          <Atmosfera lugar={equipados.fundo ?? LUGAR_PADRAO} periodo={per} clima={climaDoHumor(humor)} uid={uid} />
         </g>
       ) : (
         <circle cx="100" cy={cy} r={r * 1.7} fill={`url(#vtm-brilho-${uid})`} />
       )}
 
       {/* sombra no chão */}
-      <ellipse cx="100" cy="176" rx={fase === 0 ? 30 : r * 0.85} ry="6" fill="#000" opacity="0.18" className="vtm-sombra" />
+      {/* Etapa 304 — sombra macia (some pro lado contrário da luz) + sombra de contato */}
+      <ellipse cx={100 + sombraX} cy="177" rx={(fase === 0 ? 34 : r * 1.05) + Math.abs(sombraX)} ry="8" fill={`url(#vtm-chao-${uid})`} className="vtm-sombra" />
+      <ellipse cx="100" cy="175.5" rx={fase === 0 ? 22 : r * 0.62} ry="3.2" fill="#000" opacity={per === "noite" ? 0.22 : 0.3} filter={comVolume ? `url(#vtm-borra-${uid})` : undefined} />
 
       {fase >= 5 && <Aura cy={cy} r={r} />}
 
       <g className={fase === 0 ? "vtm-ovo" : "vtm-respira"}>
+      <g filter={comVolume ? `url(#vtm-luz-${uid})` : undefined}>
       <g transform={`translate(100 0) scale(${larg.toFixed(3)} 1) translate(-100 0)`}>
         {fase === 0 ? (
           <Ovo corpo={corpo} sombra={c.sombra} humor={humor} desvio={seno * 22} costas={costas} />
@@ -128,21 +204,31 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
               </g>
             )}
             {/* pés */}
-            <ellipse cx={100 - r * 0.45} cy={cy + r * 0.88} rx={r * 0.3} ry={r * 0.15} fill={c.sombra} />
-            <ellipse cx={100 + r * 0.45} cy={cy + r * 0.88} rx={r * 0.3} ry={r * 0.15} fill={c.sombra} />
+            {[-1, 1].map((l) => (
+              <g key={l}>
+                <ellipse cx={100 + l * r * 0.45} cy={cy + r * 0.88} rx={r * 0.3} ry={r * 0.15} fill={c.sombra} />
+                <ellipse cx={100 + l * r * 0.45} cy={cy + r * 0.88} rx={r * 0.3} ry={r * 0.15} fill={`url(#vtm-membro-${uid})`} />
+              </g>
+            ))}
             {/* orelhas (a partir de Crescido) */}
             {fase >= 3 && (
               <>
                 <path d={`M${100 - r * 0.62} ${topo + r * 0.42} L${100 - r * 0.78} ${topo - r * 0.22} L${100 - r * 0.22} ${topo + r * 0.12} Z`} fill={corpo} stroke={c.sombra} strokeWidth="2" strokeLinejoin="round" />
                 <path d={`M${100 + r * 0.62} ${topo + r * 0.42} L${100 + r * 0.78} ${topo - r * 0.22} L${100 + r * 0.22} ${topo + r * 0.12} Z`} fill={corpo} stroke={c.sombra} strokeWidth="2" strokeLinejoin="round" />
+                {/* dentro da orelha */}
+                <path d={`M${100 - r * 0.58} ${topo + r * 0.3} L${100 - r * 0.7} ${topo - r * 0.08} L${100 - r * 0.34} ${topo + r * 0.14} Z`} fill={c.barriga} opacity="0.7" />
+                <path d={`M${100 + r * 0.58} ${topo + r * 0.3} L${100 + r * 0.7} ${topo - r * 0.08} L${100 + r * 0.34} ${topo + r * 0.14} Z`} fill={c.barriga} opacity="0.7" />
               </>
             )}
             {/* braços */}
-            <ellipse cx={100 - r * 0.95} cy={cy + r * 0.15} rx={r * 0.17} ry={r * 0.28} transform={`rotate(25 ${100 - r * 0.95} ${cy + r * 0.15})`} fill={c.sombra} />
-            <ellipse cx={100 + r * 0.95} cy={cy + r * 0.15} rx={r * 0.17} ry={r * 0.28} transform={`rotate(-25 ${100 + r * 0.95} ${cy + r * 0.15})`} fill={c.sombra} />
+            {[-1, 1].map((l) => (
+              <g key={l} transform={`rotate(${-l * 25} ${100 + l * r * 0.95} ${cy + r * 0.15})`}>
+                <ellipse cx={100 + l * r * 0.95} cy={cy + r * 0.15} rx={r * 0.17} ry={r * 0.28} fill={c.sombra} />
+                <ellipse cx={100 + l * r * 0.95} cy={cy + r * 0.15} rx={r * 0.17} ry={r * 0.28} fill={`url(#vtm-membro-${uid})`} />
+              </g>
+            ))}
             {/* corpo */}
             <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill={corpo} />
-            <ellipse cx={100 - r * 0.38} cy={cy - r * 0.55} rx={r * 0.22} ry={r * 0.12} fill="#fff" opacity="0.35" transform={`rotate(-25 ${100 - r * 0.38} ${cy - r * 0.55})`} />
             {humor === "doente" && <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill="#9CA3AF" opacity="0.28" />}
             {costas ? (
               <g clipPath={`url(#vtm-corpo-${uid})`}>
@@ -154,6 +240,20 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
                 <ellipse cx={100 + desvio} cy={cy + r * 0.32} rx={r * 0.6} ry={r * 0.48} fill={c.barriga} opacity="0.85" />
               </g>
             )}
+            {/* Etapa 304 — volume do corpo: sombreado redondo, oclusão, contorno de luz e brilho */}
+            <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill={`url(#vtm-vol-${uid})`} />
+            <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill={`url(#vtm-ao-${uid})`} />
+            <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill={luz.brilho} opacity={per === "tarde" ? 0.35 : 0.6} mask={`url(#vtm-aro-${uid})`} />
+            <ellipse
+              cx={100 - r * 0.36 + desvio * 0.25}
+              cy={cy - r * 0.52}
+              rx={r * 0.24}
+              ry={r * 0.13}
+              fill="#fff"
+              opacity="0.6"
+              transform={`rotate(-25 ${100 - r * 0.36} ${cy - r * 0.52})`}
+              filter={comVolume ? `url(#vtm-borra-${uid})` : undefined}
+            />
             {/* brotinho na cabeça (Pequeno e Campeão) */}
             {(fase === 2 || fase === 4) && !equipados.chapeu && (
               <g transform={`translate(100 ${topo + 2}) scale(${k})`}>
@@ -167,7 +267,7 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
             {!costas && (
               <g clipPath={`url(#vtm-corpo-${uid})`}>
                 <g transform={`translate(${desvio.toFixed(2)} 0)`}>
-                  <Rosto humor={humor} cy={olhoY} r={r} />
+                  <Rosto humor={humor} cy={olhoY} r={r} olho={`url(#vtm-olho-${uid})`} />
                 </g>
               </g>
             )}
@@ -202,6 +302,7 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
             )}
           </>
         )}
+      </g>
       </g>
       </g>
 
@@ -264,7 +365,7 @@ function estrela(x: number, y: number, t: number) {
   return `M${p.join(" L")} Z`;
 }
 
-function Rosto({ humor, cy, r }: { humor: Humor; cy: number; r: number }) {
+function Rosto({ humor, cy, r, olho = OLHO }: { humor: Humor; cy: number; r: number; olho?: string }) {
   const dx = r * 0.36;
   const er = r * 0.13;
   const bocaY = cy + r * 0.32;
@@ -289,10 +390,10 @@ function Rosto({ humor, cy, r }: { humor: Humor; cy: number; r: number }) {
       ) : humor === "fome" ? (
         <>
           {/* olhão pidão */}
-          <circle cx={100 - dx} cy={cy} r={er * 1.25} fill={OLHO} />
+          <circle cx={100 - dx} cy={cy} r={er * 1.25} fill={olho} />
           <circle cx={100 - dx + er * 0.4} cy={cy - er * 0.45} r={er * 0.5} fill="#fff" />
           <circle cx={100 - dx - er * 0.45} cy={cy + er * 0.4} r={er * 0.22} fill="#fff" />
-          <circle cx={100 + dx} cy={cy} r={er * 1.25} fill={OLHO} />
+          <circle cx={100 + dx} cy={cy} r={er * 1.25} fill={olho} />
           <circle cx={100 + dx + er * 0.4} cy={cy - er * 0.45} r={er * 0.5} fill="#fff" />
           <circle cx={100 + dx - er * 0.45} cy={cy + er * 0.4} r={er * 0.22} fill="#fff" />
         </>
@@ -309,12 +410,14 @@ function Rosto({ humor, cy, r }: { humor: Humor; cy: number; r: number }) {
       ) : (
         <>
           <g className="vtm-piscar">
-            <circle cx={100 - dx} cy={cy} r={er} fill={OLHO} />
-            <circle cx={100 - dx + er * 0.35} cy={cy - er * 0.35} r={er * 0.35} fill="#fff" />
+            <circle cx={100 - dx} cy={cy} r={er * 1.08} fill={olho} />
+            <circle cx={100 - dx + er * 0.38} cy={cy - er * 0.38} r={er * 0.38} fill="#fff" />
+            <circle cx={100 - dx - er * 0.4} cy={cy + er * 0.42} r={er * 0.16} fill="#fff" opacity="0.8" />
           </g>
           <g className="vtm-piscar">
-            <circle cx={100 + dx} cy={cy} r={er} fill={OLHO} />
-            <circle cx={100 + dx + er * 0.35} cy={cy - er * 0.35} r={er * 0.35} fill="#fff" />
+            <circle cx={100 + dx} cy={cy} r={er * 1.08} fill={olho} />
+            <circle cx={100 + dx + er * 0.38} cy={cy - er * 0.38} r={er * 0.38} fill="#fff" />
+            <circle cx={100 + dx - er * 0.4} cy={cy + er * 0.42} r={er * 0.16} fill="#fff" opacity="0.8" />
           </g>
           {humor === "triste" && (
             <>
@@ -1159,4 +1262,66 @@ function Amigo({ id }: { id: string }) {
     default:
       return null;
   }
+}
+
+// ---- Etapa 304 — atmosfera: neblina no horizonte, raios de luz e vinheta ----
+
+const NEBLINA: Record<Periodo, [string, number]> = {
+  manha: ["#FFF3DD", 0.32],
+  tarde: ["#E8F6FF", 0.22],
+  entardecer: ["#FFC9A0", 0.34],
+  noite: ["#3A4A8A", 0.16],
+};
+
+function Atmosfera({ lugar, periodo, clima, uid }: { lugar: string; periodo: Periodo; clima: Clima; uid: string }) {
+  const [cor, forca] = NEBLINA[periodo];
+  const ceuAberto = lugar !== "quarto" && lugar !== "espaco";
+  const raios = ceuAberto && periodo !== "noite" && (clima === "sol" || clima === "limpo");
+  const sol = periodo === "manha" ? [40, 56] : periodo === "tarde" ? [156, 34] : [166, 98];
+  return (
+    <g pointerEvents="none">
+      <defs>
+        <linearGradient id={`vtm-neblina-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0.42" stopColor={cor} stopOpacity="0" />
+          <stop offset="0.7" stopColor={cor} stopOpacity={forca} />
+          <stop offset="0.92" stopColor={cor} stopOpacity="0" />
+        </linearGradient>
+        <radialGradient id={`vtm-vinheta-${uid}`} cx="50%" cy="45%" r="72%">
+          <stop offset="0.62" stopColor="#000" stopOpacity="0" />
+          <stop offset="1" stopColor="#000" stopOpacity={periodo === "noite" ? 0.45 : 0.28} />
+        </radialGradient>
+        {/* chão: luz onde ele pisa e primeiro plano mais escuro (profundidade) */}
+        <radialGradient id={`vtm-pisa-${uid}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0" stopColor={periodo === "noite" ? "#9DB4FF" : "#FFF6DA"} stopOpacity={periodo === "noite" ? 0.12 : 0.3} />
+          <stop offset="1" stopColor="#FFF6DA" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id={`vtm-frente-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0.82" stopColor="#000" stopOpacity="0" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.22" />
+        </linearGradient>
+        <linearGradient id={`vtm-raio-${uid}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#FFFBEA" stopOpacity="0.38" />
+          <stop offset="1" stopColor="#FFFBEA" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {ceuAberto && lugar !== "espaco" && <rect width="200" height="200" fill={`url(#vtm-neblina-${uid})`} />}
+      {raios && (
+        <g className="vtm-raio-luz" style={{ transformOrigin: `${sol[0]}px ${sol[1]}px` }}>
+          {[-26, -8, 12].map((a, i) => (
+            <path
+              key={a}
+              d={`M${sol[0]} ${sol[1]} L${sol[0] + Math.cos(((a + (sol[0] > 100 ? 110 : 40)) * Math.PI) / 180) * 260} ${sol[1] + Math.sin(((a + (sol[0] > 100 ? 110 : 40)) * Math.PI) / 180) * 260} L${sol[0] + Math.cos(((a + 7 + (sol[0] > 100 ? 110 : 40)) * Math.PI) / 180) * 260} ${sol[1] + Math.sin(((a + 7 + (sol[0] > 100 ? 110 : 40)) * Math.PI) / 180) * 260} Z`}
+              fill={`url(#vtm-raio-${uid})`}
+              opacity={0.55 - i * 0.12}
+            />
+          ))}
+        </g>
+      )}
+      {/* luz entrando pela janela do quarto */}
+      {lugar === "quarto" && periodo !== "noite" && <path d="M128 72 L176 72 L150 196 L64 196 Z" fill="#FFF3C4" opacity="0.12" />}
+      {lugar !== "espaco" && <ellipse cx="100" cy="176" rx="80" ry="20" fill={`url(#vtm-pisa-${uid})`} />}
+      <rect width="200" height="200" fill={`url(#vtm-frente-${uid})`} />
+      <rect width="200" height="200" fill={`url(#vtm-vinheta-${uid})`} />
+    </g>
+  );
 }
