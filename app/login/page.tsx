@@ -3,6 +3,7 @@ import Image from "next/image";
 import { entrar, cadastrar } from "./actions";
 import { BotaoInstalarSempre } from "@/components/BotaoInstalarSempre";
 import { BotaoEntrarGoogle } from "@/components/BotaoEntrarGoogle";
+import { AvisoLoginApp } from "@/components/AvisoLoginApp";
 
 export default function LoginPage({
   searchParams,
@@ -69,6 +70,8 @@ export default function LoginPage({
           </div>
 
           <BotaoInstalarSempre />
+          {/* Etapa 296 — app da tela de início: login separado do navegador */}
+          <AvisoLoginApp />
 
           <h2 className="text-xl font-display font-semibold mb-6">
             Entrar na sua conta

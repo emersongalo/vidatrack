@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { reenviarConfirmacao } from "@/app/login/actions";
+import { DicaIphoneConfirmacao } from "@/components/DicaIphoneConfirmacao";
 
 export default function VerifiqueEmailPage() {
   return (
@@ -55,6 +56,8 @@ function Conteudo() {
             )}
           </div>
         )}
+
+        <DicaIphoneConfirmacao />
 
         <Link
           href="/login"

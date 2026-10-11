@@ -3,6 +3,7 @@ import Image from "next/image";
 import { entrarComoDemonstracao } from "./actions";
 import { AoRolar } from "@/components/AoRolar";
 import { DemoJuntos } from "@/components/DemoJuntos";
+import { RedirecionarAppInstalado } from "@/components/RedirecionarAppInstalado";
 
 export const metadata = {
   title: "VidaTrack — Hábitos e finanças, num único lugar",
@@ -34,6 +35,8 @@ function Print({ src, alt }: { src: string; alt: string }) {
 export default function ApresentacaoPage() {
   return (
     <main className="bg-base-900 text-ink-100 font-body overflow-x-hidden">
+      {/* Etapa 296 — aberto pelo ícone da tela de início: vai pro login */}
+      <RedirecionarAppInstalado />
       {/* Cabeçalho */}
       <header className="max-w-5xl mx-auto flex items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2.5">
