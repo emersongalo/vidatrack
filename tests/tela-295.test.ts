@@ -31,7 +31,7 @@ describe("Etapa 295 — vários hábitos de tela", () => {
     expect(situacaoDaVersao(43)).toBe("atualizado");
   });
   it("novidades 295", () => {
-    expect(VERSAO_NOVIDADES).toBe("295");
-    expect(NOVIDADES[0].versao).toBe("295");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(295);
+    expect(NOVIDADES.some((g) => g.versao === "295")).toBe(true);
   });
 });

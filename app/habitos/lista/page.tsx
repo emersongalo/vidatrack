@@ -31,6 +31,10 @@ export default function ListaHabitosPage() {
         acoes={<BotaoNovoHabitoOffline />}
       >
         <div className="flex gap-2 flex-wrap">
+          {/* Etapa 298 */}
+          <Link href="/habitos/mascote" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
+            🐣 Mascote
+          </Link>
           <Link href="/habitos/jardim" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
             🌳 Jardim
           </Link>

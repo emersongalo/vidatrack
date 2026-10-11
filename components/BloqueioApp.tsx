@@ -116,7 +116,8 @@ export function BloqueioApp() {
   const esqueci = async () => {
     removerPin();
     try {
-      await createClient().auth.signOut();
+      // Etapa 299 — só neste aparelho
+      await createClient().auth.signOut({ scope: "local" });
     } catch {}
     window.location.href = "/login";
   };

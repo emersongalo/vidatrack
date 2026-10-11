@@ -3,6 +3,8 @@
 // solta faíscas, aparece "VidaTrack" e a tela some sozinha (~2,3s).
 // É HTML/CSS puro (fica pronto antes do React carregar) e aparece só
 // 1 vez por sessão; quem pede "reduzir animações" no celular não vê.
+// Etapa 297 — no app da tela de início, a apresentação nunca aparece:
+// o logo cobre a tela e já vai pro app.
 
 const L1 = Math.hypot(42 - 25, 69 - 51).toFixed(2); // verde → creme
 const L2 = Math.hypot(74 - 42, 31 - 69).toFixed(2); // creme → laranja
@@ -66,10 +68,15 @@ export const HTML_ABERTURA = `
 
 /**
  * Roda antes do React: decide se mostra a abertura e some com ela no tempo certo.
+ * Etapa 297 — aberto pelo ícone da tela de início (iPhone/PWA) caindo na
+ * apresentação: o logo cobre a tela e já vai pra /dashboard (que manda pro
+ * login se ainda não entrou) — a apresentação não chega a aparecer.
  * Não remove nada do DOM (só muda um atributo no <html>), pra não brigar com o React.
  */
 export const SCRIPT_ABERTURA = `(function(){try{
 var h=document.documentElement,p=location.pathname;
+var app=(navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches))&&!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+if(app&&/^\\/(apresentacao\\/?)?$/.test(p)){location.replace('/dashboard');return;}
 var pular=/^\\/(apresentacao|api|auth|privacidade)/.test(p)||sessionStorage.getItem('vt-abertura')==='1'||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 if(pular){h.setAttribute('data-abertura','vista');return;}
 sessionStorage.setItem('vt-abertura','1');

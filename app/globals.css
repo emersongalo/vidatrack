@@ -476,3 +476,38 @@ html[data-fonte="maior"] { font-size: 125%; }
 @keyframes vt-onda { from { transform: translateX(0); } to { transform: translateX(40px); } }
 .onda-pote { animation: vt-onda 2.4s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .onda-pote { animation: none; } }
+
+/* Etapa 298 · mascote dos hábitos (SVG) */
+.vtm :is(.vtm-respira, .vtm-sombra, .vtm-ovo, .vtm-piscar, .vtm-z, .vtm-brilha, .vtm-lagrima, .vtm-aura, .vtm-broto, .vtm-vapor, .vtm-balao) { transform-box: fill-box; }
+@keyframes vtm-respira { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, 0.97); } }
+.vtm-respira { transform-origin: 50% 100%; animation: vtm-respira 3.2s ease-in-out infinite; }
+@keyframes vtm-sombra { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.05); } }
+.vtm-sombra { transform-origin: 50% 50%; animation: vtm-sombra 3.2s ease-in-out infinite; }
+@keyframes vtm-ovo { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(-7deg); } 80% { transform: rotate(6deg); } 85% { transform: rotate(-4deg); } 90% { transform: rotate(2deg); } }
+.vtm-ovo { transform-origin: 50% 100%; animation: vtm-ovo 3s ease-in-out infinite; }
+@keyframes vtm-piscar { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+.vtm-piscar { transform-origin: 50% 50%; animation: vtm-piscar 4.5s ease-in-out infinite; }
+@keyframes vtm-z { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 0.9; } 100% { transform: translate(8px, -22px); opacity: 0; } }
+.vtm-z { fill: currentColor; opacity: 0; animation: vtm-z 2.4s ease-out infinite; }
+@keyframes vtm-brilha { 0%, 100% { transform: scale(0.6); opacity: 0.35; } 50% { transform: scale(1.15); opacity: 1; } }
+.vtm-brilha { transform-origin: 50% 50%; animation: vtm-brilha 1.8s ease-in-out infinite; }
+@keyframes vtm-lagrima { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(14px); opacity: 0; } }
+.vtm-lagrima { animation: vtm-lagrima 2.6s ease-in infinite; }
+@keyframes vtm-aura { 0%, 100% { opacity: 0.55; transform: scale(0.97); } 50% { opacity: 1; transform: scale(1.04); } }
+.vtm-aura { transform-origin: 50% 50%; animation: vtm-aura 2.8s ease-in-out infinite; }
+@keyframes vtm-broto { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+.vtm-broto { transform-origin: 50% 100%; animation: vtm-broto 2.6s ease-in-out infinite; }
+@keyframes vtm-vapor { 0% { transform: translateY(2px); opacity: 0; } 40% { opacity: 0.9; } 100% { transform: translateY(-6px); opacity: 0; } }
+.vtm-vapor { animation: vtm-vapor 2s ease-out infinite; }
+@keyframes vtm-balao { 0%, 100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(5deg) translateY(-3px); } }
+.vtm-balao { transform-origin: 50% 100%; animation: vtm-balao 3s ease-in-out infinite; }
+/* reação ao toque e quando sobe de fase */
+@keyframes vtm-pulo { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-14px) scale(1.04, 0.96); } 55% { transform: translateY(0) scale(1.06, 0.94); } 75% { transform: translateY(-4px); } 100% { transform: translateY(0); } }
+.vtm-pulo { animation: vtm-pulo 0.6s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes vtm-fala { from { opacity: 0; transform: translateY(6px) scale(0.9); } to { opacity: 1; transform: none; } }
+.vtm-fala { animation: vtm-fala 0.3s cubic-bezier(.2,.9,.3,1.3) both; }
+.vtm-parado, .vtm-parado * { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .vtm, .vtm *, .vtm-pulo, .vtm-fala { animation: none !important; }
+  .vtm-z { opacity: 0.8; }
+}

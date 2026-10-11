@@ -121,9 +121,12 @@ export async function reenviarConfirmacao(email: string) {
   return { erro: error ? traduzirErroAuth(error.message) : null };
 }
 
+// Etapa 299 — "Sair" desconecta SÓ este aparelho. O padrão do Supabase
+// ("global") derrubava a sessão de todos os aparelhos da pessoa: saía no
+// computador ou no iPhone e o app Android pedia login de novo.
 export async function sair() {
   const supabase = createClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
   revalidatePath("/", "layout");
   redirect("/login");
 }

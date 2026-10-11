@@ -43,6 +43,10 @@ export type SnapshotOffline = {
     ordem_blocos_habitos?: string[] | null;
     /** Etapa 235 — blocos escolhidos pro Início */
     ordem_blocos_inicio?: string[] | null;
+    /** Etapa 298 — mascote dos hábitos (JSON livre, ver lib/mascote) */
+    mascote?: unknown;
+    /** Etapa 298 — hábitos feitos desde sempre (moedas do mascote) */
+    checkins_total?: number | null;
   };
   /** Etapa 215 — diário do dia (humor + frase). Campo novo: retrato antigo vem sem, lido como []. */
   diario?: { data: string; humor: number; texto: string | null }[];
@@ -154,6 +158,8 @@ function normalizar(dados: any): SnapshotOffline | null {
         teto_mensal: dados.perfil?.teto_mensal != null ? Number(dados.perfil.teto_mensal) : null,
         ordem_blocos_habitos: Array.isArray(dados.perfil?.ordem_blocos_habitos) ? dados.perfil.ordem_blocos_habitos : null,
         ordem_blocos_inicio: Array.isArray(dados.perfil?.ordem_blocos_inicio) ? dados.perfil.ordem_blocos_inicio : null,
+        mascote: dados.perfil?.mascote ?? null,
+        checkins_total: typeof dados.perfil?.checkins_total === "number" ? dados.perfil.checkins_total : null,
       },
     };
   } catch {

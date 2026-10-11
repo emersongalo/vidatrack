@@ -47,7 +47,7 @@ export async function GET() {
       .select("id, nome, quantidade_quadrados, valor_alvo, valor_guardado, concluido, conta_origem_id")
       .eq("arquivado", false),
     supabase.from("financa_recorrencias").select("id, tipo, valor, dia_mes, data_fim, data_inicio, ativo, descricao, conta_id, categoria_id"),
-    supabase.from("perfis").select("nome, foto_url, ordem_blocos_financas, teto_mensal, ordem_blocos_habitos, ordem_blocos_inicio").eq("id", user.id).maybeSingle(),
+    supabase.from("perfis").select("nome, foto_url, ordem_blocos_financas, teto_mensal, ordem_blocos_habitos, ordem_blocos_inicio, mascote").eq("id", user.id).maybeSingle(),
   ]);
 
   const idsDesafios = (desafios ?? []).map((d) => d.id);
@@ -140,6 +140,18 @@ export async function GET() {
     parceiros = [...porHabito.entries()].flatMap(([h, us]) => [...us].map((u) => ({ habito_id: h, usuario_id: u, nome: nomes.get(u) ?? "Seu par" })));
   }
 
+  // Etapa 298 — moedas do mascote: total de hábitos feitos desde sempre
+  // (só contagem, sem baixar as linhas; hábitos de "parar" não contam)
+  let checkinsTotal: number | null = null;
+  try {
+    const { count, error } = await supabase
+      .from("habito_checkins")
+      .select("habito_id, habitos!inner(eh_negativo)", { count: "exact", head: true })
+      .eq("usuario_id", user.id)
+      .eq("habitos.eh_negativo", false);
+    if (!error) checkinsTotal = count ?? 0;
+  } catch {}
+
   // Etapa 203 — saldo de HOJE (lançamento com data futura não sai ainda)
   const hojeBrasil = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
   const contasComSaldo = calcularSaldoPorConta(contas ?? [], todasTransacoes, hojeBrasil);
@@ -190,6 +202,9 @@ export async function GET() {
       ordem_blocos_habitos: (perfil as any)?.ordem_blocos_habitos ?? null,
       // Etapa 235 — blocos do Início (por login)
       ordem_blocos_inicio: (perfil as any)?.ordem_blocos_inicio ?? null,
+      // Etapa 298 — mascote (roupas, cor…) e hábitos feitos desde sempre
+      mascote: (perfil as any)?.mascote ?? null,
+      checkins_total: checkinsTotal,
       id: user.id,
     },
   });
