@@ -29,7 +29,7 @@ describe("Etapa 289 — extrato na ordem do banco", () => {
     ]);
   });
   it("novidades 289", () => {
-    expect(VERSAO_NOVIDADES).toBe("289");
-    expect(NOVIDADES[0].versao).toBe("289");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(289);
+    expect(NOVIDADES.some((g) => g.versao === "289")).toBe(true);
   });
 });

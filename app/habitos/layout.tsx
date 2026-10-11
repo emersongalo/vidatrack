@@ -4,6 +4,7 @@ import { MenuLateralDesktop } from "@/components/MenuLateralDesktop";
 import { AbasArea } from "@/components/AbasArea";
 import { DeslizarEntreAbas } from "@/components/DeslizarEntreAbas";
 import { TransicaoPagina } from "@/components/TransicaoPagina";
+import { SincronizadorTela } from "@/components/SincronizadorTela";
 
 const ABAS_HABITOS = [
   { href: "/habitos" },
@@ -24,6 +25,8 @@ export default function HabitosLayout({ children }: { children: React.ReactNode 
         <TransicaoPagina>{children}</TransicaoPagina>
       </DeslizarEntreAbas>
       <BarraNavegacaoAgenda />
+      {/* Etapa 292 — hábito de tela (opcional): confere os dias que fecharam */}
+      <SincronizadorTela />
     </div>
   );
 }

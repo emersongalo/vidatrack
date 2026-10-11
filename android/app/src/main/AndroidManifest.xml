@@ -165,6 +165,31 @@
                 android:resource="@xml/semana_widget_info" />
         </receiver>
 
+        <!-- Etapa 293: widgets animados "Meu dia" e "Pode gastar hoje" -->
+        <receiver
+            android:name="com.vidatrack.app.widget.MeuDiaWidgetProvider"
+            android:label="Meu dia"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/meu_dia_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.vidatrack.app.widget.PodeGastarWidgetProvider"
+            android:label="Pode gastar hoje"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pode_gastar_widget_info" />
+        </receiver>
+
         <!-- Etapa 195: botões da notificação de hábito ("✓ Feito" e
              "Lembrar em 30 min"). -->
         <receiver
@@ -190,4 +215,22 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Etapa 248: vibração curtinha ao concluir hábito / salvar gasto -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Etapa 292: tempo de tela (opcional). A pessoa ativa em
+         Configurações → Acesso ao uso; sem isso o app não lê nada. -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- Etapa 292: pra mostrar o nome dos apps (só os que têm ícone na
+         gaveta). Não usa QUERY_ALL_PACKAGES. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
+    </queries>
 </manifest>

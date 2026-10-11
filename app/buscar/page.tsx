@@ -33,6 +33,7 @@ const ATALHOS = [
   { href: "/calendario", emoji: "📅", titulo: "Calendário" },
   { href: "/rapido", emoji: "⚡", titulo: "Modo rápido" },
   { href: "/habitos/jardim", emoji: "🌳", titulo: "Jardim" },
+  { href: "/habitos/tela", emoji: "📱", titulo: "Tempo de tela" },
   { href: "/resumo-dia", emoji: "🌙", titulo: "Resumo do dia" },
   { href: "/financas/metas", emoji: "🎯", titulo: "Metas" },
   { href: "/convites", emoji: "📩", titulo: "Convites" },

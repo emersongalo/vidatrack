@@ -17,4 +17,7 @@
     <string name="atalho_tarefa_longo">Criar uma tarefa</string>
     <string name="atalho_resumo_curto">Meu dia</string>
     <string name="atalho_resumo_longo">Resumo do meu dia</string>
+    <!-- Etapa 293 -->
+    <string name="widget_meu_dia_descricao">Meu dia: hábitos, próxima tarefa, quanto dá pra gastar e sequência, trocando sozinho</string>
+    <string name="widget_pode_gastar_descricao">Quanto dá pra gastar hoje e o gasto do mês</string>
 </resources>

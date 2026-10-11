@@ -189,6 +189,10 @@ export default function EstatisticasHabitosPage() {
         <Link href="/habitos/desafios" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-habito/60 transition">
           🤝 Desafios
         </Link>
+        {/* Etapa 292 — tempo de tela (app Android) */}
+        <Link href="/habitos/tela" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-nota/60 transition">
+          📱 Tempo de tela
+        </Link>
         {/* Etapa 221 */}
         <Link href="/habitos/semana" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-habito/60 transition">
           📊 Sua semana
