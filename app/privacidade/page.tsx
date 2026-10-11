@@ -84,6 +84,27 @@ export default function PrivacidadePage() {
           </ul>
         </section>
 
+        <section id="tempo-de-tela">
+          <h2 className="font-display font-semibold text-lg mb-2 text-nota">
+            Tempo de tela (opcional, só no app Android)
+          </h2>
+          <p className="text-sm text-ink-100 leading-relaxed mb-2">
+            Se você quiser, o VidaTrack pode mostrar quanto tempo você passou em cada app e
+            conferir um hábito como &quot;Redes sociais até 1h&quot;. Pra isso, ele usa a permissão
+            do Android <strong>&quot;Acesso ao uso&quot;</strong>, que só funciona se{" "}
+            <strong>você mesmo</strong> ativar nas configurações do celular.
+          </p>
+          <ul className="space-y-1.5 text-sm text-ink-100">
+            <li>• A lista de apps e os minutos de uso ficam <strong>só no seu celular</strong> — não são enviados pro nosso servidor nem pra ninguém.</li>
+            <li>• O que vai pro servidor é apenas a marcação do hábito (feito ou não no dia), como qualquer outro hábito.</li>
+            <li>• Não lemos o conteúdo dos apps, mensagens ou o que você faz neles — só quanto tempo cada um ficou aberto.</li>
+            <li>
+              • Pra parar, desative o VidaTrack em <strong>Configurações → Acesso ao uso</strong> ou toque em
+              &quot;Desligar&quot; na tela Tempo de tela.
+            </li>
+          </ul>
+        </section>
+
         <section id="exclusao-de-dados">
           <h2 className="font-display font-semibold text-lg mb-2">Seus dados são só seus</h2>
           <p className="text-sm text-ink-100 leading-relaxed mb-2">
