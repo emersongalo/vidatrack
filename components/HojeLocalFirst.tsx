@@ -24,7 +24,7 @@ import { CartaoEscudo } from "@/components/CartaoEscudo";
 import { createClient } from "@/lib/supabase/client";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { CartaoTempoTela } from "@/components/CartaoTempoTela";
-import { CartaoMascote } from "@/components/mascote/CartaoMascote";
+import { PalcoMascote } from "@/components/mascote/PalcoMascote";
 import { infoDupla, type Parceiro } from "@/lib/habitos/dupla";
 import { EsqueletoHabitos } from "@/components/Esqueleto";
 import { Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff, Sun, Clock3 } from "lucide-react";
@@ -224,6 +224,8 @@ function HojeConteudo() {
   }
 
   const blocos: Record<BlocoHojeId, React.ReactNode> = {
+    // Etapa 300 — mascote girável no topo, com o humor do dia
+    mascote: snapshot ? <PalcoMascote snapshot={snapshot} hoje={hoje} /> : null,
     resumo: snapshot ? (
       <HeroHoje
         feitos={feitos}
@@ -294,8 +296,6 @@ function HojeConteudo() {
               <ListaHojeComOffline itensServidor={itens!} dataISO={dataSelecionada} aoConcluirMutacao={recarregar} />
               {/* Etapa 295 — convite pro Tempo de tela (Android, dá pra dispensar) */}
               {dataSelecionada === hoje && <CartaoTempoTela />}
-              {/* Etapa 298 — mascote dos hábitos */}
-              {dataSelecionada === hoje && <CartaoMascote snapshot={snapshot} hoje={hoje} />}
               {/* Etapa 233 — atalho pro jardim quando tem hábito em dupla */}
               {itens!.some((i) => i.dupla) && (
                 <Link

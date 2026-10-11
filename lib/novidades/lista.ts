@@ -1,13 +1,30 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "298";
+export const VERSAO_NOVIDADES = "301";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "301",
+    titulo: "Armário do mascote e itens novos",
+    itens: [
+      { emoji: "🎒", titulo: "Armário", texto: "Tudo que você compra fica guardado no Armário: veja o que está vestindo, tire tudo de uma vez e salve até 4 looks pra trocar com um toque.", href: "/habitos/mascote" },
+      { emoji: "👀", titulo: "Prove antes de comprar", texto: "Toque num item da lojinha e ele aparece no seu bichinho. Gostou? Compra ali mesmo.", href: "/habitos/mascote" },
+      { emoji: "🐾", titulo: "25 itens novos", texto: "Chapéu de mago, pirata, chef, fones, monóculo, máscara de mergulho, violão, varinha, sorvete, cenários de montanha, neve, cidade e arco-íris — e amiguinhos: passarinho, borboleta, patinho, caracol e estrelinha.", href: "/habitos/mascote" },
+    ],
+  },
+  {
+    versao: "300",
+    titulo: "Mascote na aba Hábitos",
+    itens: [
+      { emoji: "🔄", titulo: "Gire seu bichinho", texto: "O mascote agora mora no topo da aba Hábitos: arraste pro lado pra girar e ver as costas, toque pra ele pular. Cada hábito marcado ele comemora e mostra +10 🪙." },
+      { emoji: "🌦️", titulo: "O palco muda com seu dia", texto: "Dia completo tem sol, dia parado tem chuvinha e à noite ele dorme sob as estrelas. Dá pra mudar de lugar ou esconder em ⚙️ Personalizar." },
+    ],
+  },
   {
     versao: "298",
     titulo: "Seu mascote dos hábitos",

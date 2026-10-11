@@ -478,7 +478,7 @@ html[data-fonte="maior"] { font-size: 125%; }
 @media (prefers-reduced-motion: reduce) { .onda-pote { animation: none; } }
 
 /* Etapa 298 · mascote dos hábitos (SVG) */
-.vtm :is(.vtm-respira, .vtm-sombra, .vtm-ovo, .vtm-piscar, .vtm-z, .vtm-brilha, .vtm-lagrima, .vtm-aura, .vtm-broto, .vtm-vapor, .vtm-balao) { transform-box: fill-box; }
+.vtm :is(.vtm-respira, .vtm-sombra, .vtm-ovo, .vtm-piscar, .vtm-z, .vtm-brilha, .vtm-lagrima, .vtm-aura, .vtm-broto, .vtm-vapor, .vtm-balao, .vtm-voa, .vtm-asa, .vtm-gingar) { transform-box: fill-box; }
 @keyframes vtm-respira { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, 0.97); } }
 .vtm-respira { transform-origin: 50% 100%; animation: vtm-respira 3.2s ease-in-out infinite; }
 @keyframes vtm-sombra { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.05); } }
@@ -511,3 +511,25 @@ html[data-fonte="maior"] { font-size: 125%; }
   .vtm, .vtm *, .vtm-pulo, .vtm-fala { animation: none !important; }
   .vtm-z { opacity: 0.8; }
 }
+
+/* Etapa 300 · palco do mascote na aba Hábitos */
+@keyframes vtm-ganho { 0% { opacity: 0; transform: translateY(6px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
+.vtm-ganho { animation: vtm-ganho 1.2s ease-out forwards; pointer-events: none; }
+@keyframes vtm-dica { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(calc(-50% - 6px)); } 75% { transform: translateX(calc(-50% + 6px)); } }
+.vtm-dica { animation: vtm-dica 1.6s ease-in-out infinite; }
+@keyframes vtm-chuva { from { transform: translateY(-12px); opacity: 0; } 20% { opacity: 1; } to { transform: translateY(190px); opacity: 0; } }
+.vtm-chuva { animation: vtm-chuva 1.9s linear infinite; }
+@keyframes vtm-sol { 0%, 100% { transform: scale(1); opacity: .8; } 50% { transform: scale(1.12); opacity: 1; } }
+.vtm-sol { animation: vtm-sol 3.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .vtm-ganho, .vtm-dica, .vtm-chuva, .vtm-sol { animation: none !important; }
+  .vtm-chuva { display: none; }
+}
+
+/* Etapa 301 · amiguinhos do mascote */
+@keyframes vtm-voa { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.vtm-voa { animation: vtm-voa 2.6s ease-in-out infinite; }
+@keyframes vtm-asa { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.45); } }
+.vtm-asa { transform-origin: 50% 50%; animation: vtm-asa 0.5s ease-in-out infinite; }
+@keyframes vtm-gingar { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+.vtm-gingar { transform-origin: 50% 100%; animation: vtm-gingar 1.1s ease-in-out infinite; }

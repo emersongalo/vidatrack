@@ -3,7 +3,7 @@
 // perfis.mascote (nome, cor, o que comprou e o que está vestindo).
 // As moedas vêm dos check-ins: cada hábito feito = 10 🪙.
 
-export type Slot = "chapeu" | "oculos" | "roupa" | "mao" | "fundo";
+export type Slot = "chapeu" | "oculos" | "roupa" | "mao" | "amigo" | "fundo";
 export type CorMascote = "verde" | "lilas" | "dourado" | "rosa" | "azul" | "laranja" | "arcoiris";
 
 export type DadosMascote = {
@@ -13,8 +13,13 @@ export type DadosMascote = {
   equipados: Partial<Record<Slot, string>>;
   /** moedas já gastas na lojinha */
   gastos: number;
+  /** Etapa 301 — combinações salvas no armário (até 4) */
+  looks?: Look[];
   criadoEm?: string;
 };
+
+export type Look = { nome: string; equipados: Partial<Record<Slot, string>> };
+export const MAX_LOOKS = 4;
 
 export const MOEDAS_POR_HABITO = 10;
 
@@ -40,29 +45,56 @@ export const ITENS: Item[] = [
   { id: "cartola", slot: "chapeu", nome: "Cartola", preco: 260, nivel: 3, emoji: "🎩" },
   { id: "coroa", slot: "chapeu", nome: "Coroa", preco: 600, nivel: 4, emoji: "👑" },
   { id: "aureola", slot: "chapeu", nome: "Auréola", preco: 1200, nivel: 5, emoji: "😇" },
+  // Etapa 301 — mais chapéus
+  { id: "palha", slot: "chapeu", nome: "Chapéu de palha", preco: 90, nivel: 1, emoji: "👒" },
+  { id: "fones", slot: "chapeu", nome: "Fones de ouvido", preco: 140, nivel: 2, emoji: "🎧" },
+  { id: "chef", slot: "chapeu", nome: "Chapéu de chef", preco: 170, nivel: 2, emoji: "👨‍🍳" },
+  { id: "floral", slot: "chapeu", nome: "Coroa de flores", preco: 220, nivel: 2, emoji: "💐" },
+  { id: "pirata", slot: "chapeu", nome: "Chapéu pirata", preco: 320, nivel: 3, emoji: "🏴‍☠️" },
+  { id: "mago", slot: "chapeu", nome: "Chapéu de mago", preco: 420, nivel: 3, emoji: "🧙" },
   // óculos
   { id: "redondos", slot: "oculos", nome: "Óculos redondos", preco: 80, nivel: 1, emoji: "👓" },
   { id: "escuros", slot: "oculos", nome: "Óculos escuros", preco: 140, nivel: 2, emoji: "🕶️" },
   { id: "coracao", slot: "oculos", nome: "Óculos de coração", preco: 220, nivel: 3, emoji: "😍" },
   { id: "estrela", slot: "oculos", nome: "Óculos de estrela", preco: 320, nivel: 3, emoji: "🤩" },
+  { id: "monoculo", slot: "oculos", nome: "Monóculo", preco: 180, nivel: 2, emoji: "🧐" },
+  { id: "aviador", slot: "oculos", nome: "Óculos aviador", preco: 260, nivel: 3, emoji: "🛩️" },
+  { id: "mergulho", slot: "oculos", nome: "Máscara de mergulho", preco: 300, nivel: 3, emoji: "🤿" },
   // roupas
   { id: "gravata", slot: "roupa", nome: "Gravata borboleta", preco: 70, nivel: 1, emoji: "🎀" },
   { id: "cachecol", slot: "roupa", nome: "Cachecol", preco: 110, nivel: 1, emoji: "🧣" },
   { id: "colar", slot: "roupa", nome: "Colar de pérolas", preco: 180, nivel: 2, emoji: "📿" },
   { id: "medalha", slot: "roupa", nome: "Medalha", preco: 300, nivel: 3, emoji: "🏅" },
   { id: "capa", slot: "roupa", nome: "Capa de herói", preco: 450, nivel: 4, emoji: "🦸" },
+  { id: "lenco", slot: "roupa", nome: "Lencinho", preco: 60, nivel: 1, emoji: "🧣" },
+  { id: "havaiano", slot: "roupa", nome: "Colar havaiano", preco: 150, nivel: 2, emoji: "🌺" },
+  { id: "faixa", slot: "roupa", nome: "Faixa de campeão", preco: 380, nivel: 4, emoji: "🎗️" },
   // na mão
   { id: "cafe", slot: "mao", nome: "Cafezinho", preco: 50, nivel: 1, emoji: "☕" },
   { id: "livro", slot: "mao", nome: "Livro", preco: 90, nivel: 1, emoji: "📖" },
   { id: "halter", slot: "mao", nome: "Halter", preco: 120, nivel: 2, emoji: "🏋️" },
   { id: "balao", slot: "mao", nome: "Balão", preco: 150, nivel: 2, emoji: "🎈" },
   { id: "trofeu", slot: "mao", nome: "Troféu", preco: 500, nivel: 4, emoji: "🏆" },
+  { id: "sorvete", slot: "mao", nome: "Sorvete", preco: 70, nivel: 1, emoji: "🍦" },
+  { id: "regador", slot: "mao", nome: "Regador", preco: 120, nivel: 2, emoji: "🪴" },
+  { id: "violao", slot: "mao", nome: "Violão", preco: 280, nivel: 3, emoji: "🎸" },
+  { id: "varinha", slot: "mao", nome: "Varinha mágica", preco: 420, nivel: 4, emoji: "🪄" },
+  // amigos (ficam do ladinho)
+  { id: "passarinho", slot: "amigo", nome: "Passarinho", preco: 120, nivel: 1, emoji: "🐦" },
+  { id: "borboleta", slot: "amigo", nome: "Borboleta", preco: 160, nivel: 2, emoji: "🦋" },
+  { id: "patinho", slot: "amigo", nome: "Patinho", preco: 220, nivel: 2, emoji: "🐥" },
+  { id: "caracol", slot: "amigo", nome: "Caracol", preco: 260, nivel: 3, emoji: "🐌" },
+  { id: "estrelinha", slot: "amigo", nome: "Estrelinha", preco: 550, nivel: 4, emoji: "⭐" },
   // cenários
   { id: "quarto", slot: "fundo", nome: "Quartinho", preco: 100, nivel: 1, emoji: "🛋️" },
   { id: "jardim", slot: "fundo", nome: "Jardim", preco: 160, nivel: 2, emoji: "🌳" },
   { id: "praia", slot: "fundo", nome: "Praia", preco: 240, nivel: 2, emoji: "🏖️" },
   { id: "noite", slot: "fundo", nome: "Noite estrelada", preco: 320, nivel: 3, emoji: "🌙" },
   { id: "espaco", slot: "fundo", nome: "Espaço", preco: 700, nivel: 4, emoji: "🚀" },
+  { id: "montanha", slot: "fundo", nome: "Montanhas", preco: 260, nivel: 3, emoji: "⛰️" },
+  { id: "neve", slot: "fundo", nome: "Dia de neve", preco: 300, nivel: 3, emoji: "❄️" },
+  { id: "cidade", slot: "fundo", nome: "Cidade à noite", preco: 450, nivel: 4, emoji: "🌃" },
+  { id: "ceuarco", slot: "fundo", nome: "Céu de arco-íris", preco: 900, nivel: 5, emoji: "🌈" },
 ];
 
 export const NOMES_SLOT: Record<Slot, string> = {
@@ -70,6 +102,7 @@ export const NOMES_SLOT: Record<Slot, string> = {
   oculos: "Óculos",
   roupa: "Roupas",
   mao: "Na mão",
+  amigo: "Amigos",
   fundo: "Cenários",
 };
 
@@ -131,12 +164,23 @@ export function lerMascote(bruto: unknown): DadosMascote | null {
   if (typeof b.nome !== "string") return null;
   const cor: CorMascote = b.cor in CORES_MASCOTE ? b.cor : "verde";
   const inventario = Array.isArray(b.inventario) ? b.inventario.filter((x: unknown) => typeof x === "string") : [];
+  const looks: Look[] = (Array.isArray(b.looks) ? b.looks : [])
+    .filter((l: any) => l && typeof l.nome === "string")
+    .slice(0, MAX_LOOKS)
+    .map((l: any) => ({ nome: l.nome.slice(0, 16), equipados: equipadosValidos(l.equipados, inventario) }));
+  const m: DadosMascote = { nome: b.nome.slice(0, 20), cor, inventario, equipados: equipadosValidos(b.equipados, inventario), gastos: Math.max(0, Number(b.gastos) || 0), criadoEm: b.criadoEm };
+  if (looks.length) m.looks = looks;
+  return m;
+}
+
+/** Só fica o que existe, está no lugar certo e foi comprado. */
+function equipadosValidos(bruto: unknown, inventario: string[]): Partial<Record<Slot, string>> {
   const equipados: Partial<Record<Slot, string>> = {};
-  for (const [slot, id] of Object.entries(b.equipados ?? {})) {
+  for (const [slot, id] of Object.entries((bruto as any) ?? {})) {
     const item = ITENS.find((i) => i.id === id);
     if (item && item.slot === slot && inventario.includes(item.id)) equipados[slot as Slot] = item.id;
   }
-  return { nome: b.nome.slice(0, 20), cor, inventario, equipados, gastos: Math.max(0, Number(b.gastos) || 0), criadoEm: b.criadoEm };
+  return equipados;
 }
 
 /** Tenta comprar; devolve o novo estado ou o motivo de não dar. */
@@ -172,4 +216,47 @@ export function alternarEquipado(m: DadosMascote, id: string): DadosMascote {
   if (eq[item.slot] === id) delete eq[item.slot];
   else eq[item.slot] = id;
   return { ...m, equipados: eq };
+}
+
+// ---- Etapa 301 — armário (o que já é seu) e looks salvos ----
+
+/** Itens comprados, na ordem da lojinha, agrupados por lugar. */
+export function itensDoArmario(m: DadosMascote): { slot: Slot; itens: Item[] }[] {
+  const ordem: Slot[] = ["chapeu", "oculos", "roupa", "mao", "amigo", "fundo"];
+  return ordem
+    .map((slot) => ({ slot, itens: ITENS.filter((i) => i.slot === slot && m.inventario.includes(i.id)) }))
+    .filter((g) => g.itens.length > 0);
+}
+
+export function quantosNoArmario(m: DadosMascote) {
+  return m.inventario.filter((id) => ITENS.some((i) => i.id === id)).length;
+}
+
+export function tirarTudo(m: DadosMascote): DadosMascote {
+  return { ...m, equipados: {} };
+}
+
+export function salvarLook(m: DadosMascote, nome: string): DadosMascote {
+  const looks = [...(m.looks ?? [])];
+  const novo: Look = { nome: (nome.trim() || `Look ${looks.length + 1}`).slice(0, 16), equipados: { ...m.equipados } };
+  if (looks.length >= MAX_LOOKS) looks.shift();
+  return { ...m, looks: [...looks, novo] };
+}
+
+export function usarLook(m: DadosMascote, i: number): DadosMascote {
+  const l = m.looks?.[i];
+  if (!l) return m;
+  const equipados: Partial<Record<Slot, string>> = {};
+  for (const [slot, id] of Object.entries(l.equipados)) if (id && m.inventario.includes(id)) equipados[slot as Slot] = id;
+  return { ...m, equipados };
+}
+
+export function apagarLook(m: DadosMascote, i: number): DadosMascote {
+  return { ...m, looks: (m.looks ?? []).filter((_, k) => k !== i) };
+}
+
+export function mesmoLook(a: Partial<Record<Slot, string>>, b: Partial<Record<Slot, string>>) {
+  const ka = Object.entries(a).filter(([, v]) => v).sort().join("|");
+  const kb = Object.entries(b).filter(([, v]) => v).sort().join("|");
+  return ka === kb;
 }

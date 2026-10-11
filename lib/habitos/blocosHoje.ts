@@ -1,12 +1,14 @@
 // Etapa 227 — "Personalizar início" também na tela Hoje (salvo por login
 // em perfis.ordem_blocos_habitos; "!" na frente = escondido).
 // Etapa 285 — "contas" saiu: a aba Hábitos mostra só hábitos (finanças ficam em Finanças).
-export type BlocoHojeId = "resumo" | "lista" | "pausados" | "diario" | "sugestoes";
+// Etapa 300 — "mascote": o bichinho fica no topo da aba Hábitos.
+export type BlocoHojeId = "mascote" | "resumo" | "lista" | "pausados" | "diario" | "sugestoes";
 export type BlocoHoje = { id: BlocoHojeId; visivel: boolean };
 
-export const BLOCOS_HOJE_PADRAO: BlocoHojeId[] = ["resumo", "lista", "pausados", "diario", "sugestoes"];
+export const BLOCOS_HOJE_PADRAO: BlocoHojeId[] = ["mascote", "resumo", "lista", "pausados", "diario", "sugestoes"];
 
 export const NOMES_BLOCOS_HOJE: Record<BlocoHojeId, string> = {
+  mascote: "🐣 Mascote",
   resumo: "🎯 Resumo do dia",
   lista: "✅ Hábitos",
   pausados: "⏸ Hábitos pausados",
@@ -24,7 +26,9 @@ export function lerLayoutHoje(salvo: string[] | null | undefined): BlocoHoje[] {
     lidos.push({ id: id as BlocoHojeId, visivel: !bruto.startsWith("!") });
   }
   const faltando = BLOCOS_HOJE_PADRAO.filter((id) => !lidos.some((b) => b.id === id)).map((id) => ({ id, visivel: true }));
-  return [...lidos, ...faltando];
+  // Etapa 300 — quem já tinha a tela organizada ganha o mascote no topo
+  const novosNoTopo = faltando.filter((b) => b.id === "mascote");
+  return [...novosNoTopo, ...lidos, ...faltando.filter((b) => b.id !== "mascote")];
 }
 
 export function salvarLayoutHoje(layout: BlocoHoje[]): string[] {

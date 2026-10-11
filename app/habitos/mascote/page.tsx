@@ -3,9 +3,11 @@
 // Etapa 298 — o mascote dos hábitos: nasce de um ovinho, cresce conforme
 // você faz seus hábitos, muda de humor com o seu dia e veste o que você
 // compra na lojinha com as moedas (cada hábito feito = 10 🪙).
+// Etapa 301 — o que você compra vai pro Armário (com looks salvos), dá pra
+// provar antes de comprar, girar o bichinho e tem muito mais itens.
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Lock, Check, Pencil } from "lucide-react";
+import { Lock, Check, Pencil, X, Shirt, ShoppingBag, Bookmark, Trash2 } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
 import { useMascote } from "@/lib/mascote/useMascote";
@@ -16,12 +18,21 @@ import {
   MOEDAS_POR_HABITO,
   NOMES_SLOT,
   alternarEquipado,
+  apagarLook,
   comprar,
+  itensDoArmario,
+  MAX_LOOKS,
+  mesmoLook,
+  quantosNoArmario,
+  salvarLook,
+  tirarTudo,
+  usarLook,
   fraseDoHumor,
   mascotePadrao,
   type CorMascote,
   type Slot,
 } from "@/lib/mascote/mascote";
+import { useGiro } from "@/lib/mascote/useGiro";
 import { Mascote } from "@/components/mascote/Mascote";
 import { CarregandoTela } from "@/components/Esqueleto";
 import { CabecalhoPagina } from "@/components/CabecalhoPagina";
@@ -35,6 +46,7 @@ const ABAS: { id: Aba; nome: string }[] = [
   { id: "oculos", nome: "🕶️ Óculos" },
   { id: "roupa", nome: "🧣 Roupas" },
   { id: "mao", nome: "☕ Na mão" },
+  { id: "amigo", nome: "🐾 Amigos" },
   { id: "fundo", nome: "🏖️ Cenários" },
   { id: "cores", nome: "🎨 Cores" },
 ];
@@ -52,6 +64,14 @@ export default function MascotePage() {
   const refPalco = useRef<HTMLDivElement>(null);
   const moedasAnim = useContagem(moedas, 700);
   const frase = useMemo(() => fraseDoHumor(humor, toques), [humor, toques]);
+  const [modo, setModo] = useState<"loja" | "armario">("loja");
+  const [provando, setProvando] = useState<{ slot: Slot; id: string } | null>(null);
+  const [nomeLook, setNomeLook] = useState("");
+  const { angulo, eventos } = useGiro(() => {
+    setToques((n) => n + 1);
+    vibrar(10);
+    textoFlutuante(refPalco.current, "💚", "#8FD3A6");
+  });
 
   if (snapshot === undefined) return <CarregandoTela cartoes={2} linhas={3} />;
   if (!snapshot) return <main className="pagina px-6 pt-6 text-ink-400">Abra o app com internet uma vez pra conhecer seu mascote.</main>;
@@ -112,7 +132,13 @@ export default function MascotePage() {
     );
   }
 
-  const fundo = mascote.equipados.fundo;
+  const vestindo: Partial<Record<Slot, string>> = provando ? { ...mascote.equipados, [provando.slot]: provando.id } : mascote.equipados;
+  const fundo = vestindo.fundo;
+  const itemProvando = provando ? ITENS.find((i) => i.id === provando.id) : null;
+  const armario = itensDoArmario(mascote);
+  const noArmario = quantosNoArmario(mascote);
+  const looks = mascote.looks ?? [];
+  const algoVestido = Object.values(mascote.equipados).some(Boolean);
 
   async function tentarComprar(alvo: { tipo: "item"; id: string } | { tipo: "cor"; cor: CorMascote }, chave: string) {
     if (!mascote) return;
@@ -125,16 +151,24 @@ export default function MascotePage() {
     const r = comprar(mascote, feitos, alvo);
     if (!r.ok) return;
     if (await salvar(r.mascote)) {
+      setProvando(null);
       vibrar([15, 40, 25]);
       chuvaDeConfete({ quantidade: 40 });
-      textoFlutuante(refPalco.current, "Presente novo! 🎁", "#F2C46D");
+      textoFlutuante(refPalco.current, "Guardado no armário! 🎒", "#F2C46D");
     }
   }
 
   function vestir(id: string) {
     if (!mascote) return;
     vibrar(10);
+    setProvando(null);
     void salvar(alternarEquipado(mascote, id));
+  }
+
+  function provar(slot: Slot, id: string) {
+    vibrar(6);
+    setConfirmar(null);
+    setProvando((p) => (p?.id === id ? null : { slot, id }));
   }
 
   return (
@@ -146,29 +180,41 @@ export default function MascotePage() {
         className="relative overflow-hidden rounded-3xl border border-habito/30 mb-4"
         style={fundo ? undefined : { background: "linear-gradient(160deg, rgb(var(--c-habito) / 0.18), rgb(var(--c-nota) / 0.08))" }}
       >
-        <div ref={refPalco} className="relative flex justify-center">
+        <div ref={refPalco} className="relative flex justify-center cursor-grab active:cursor-grabbing select-none" {...eventos}>
           <div key={toques} className={toques ? "vtm-pulo" : ""}>
-            <Mascote
-              cor={mascote.cor}
-              fase={fase.nivel}
-              humor={humor}
-              equipados={mascote.equipados}
-              comFundo={!!fundo}
-              tamanho={260}
-              aoTocar={() => {
-                setToques((n) => n + 1);
-                vibrar(10);
-                textoFlutuante(refPalco.current, "💚", "#8FD3A6");
-              }}
-            />
+            <Mascote cor={mascote.cor} fase={fase.nivel} humor={humor} equipados={vestindo} comFundo={!!fundo} tamanho={260} angulo={angulo} />
           </div>
           {/* balão de fala */}
           <div className="absolute top-3 left-3 right-3 flex justify-center pointer-events-none">
-            <span key={frase} className="vtm-fala bg-base-900/80 backdrop-blur text-ink-100 text-sm rounded-2xl px-3 py-1.5 shadow-lg max-w-[85%] text-center">
-              {frase}
+            <span key={itemProvando ? itemProvando.id : frase} className="vtm-fala bg-base-900/80 backdrop-blur text-ink-100 text-sm rounded-2xl px-3 py-1.5 shadow-lg max-w-[85%] text-center">
+              {itemProvando ? `Provando: ${itemProvando.emoji} ${itemProvando.nome}` : frase}
             </span>
           </div>
+          <span className="absolute bottom-2 right-3 text-[10px] text-ink-100/70 pointer-events-none">↔ gire</span>
         </div>
+
+        {itemProvando && (
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-financa/15 border-t border-financa/30">
+            <p className="text-sm flex-1 min-w-0 truncate">
+              {itemProvando.emoji} <strong>{itemProvando.nome}</strong>
+            </p>
+            {fase.nivel < itemProvando.nivel ? (
+              <span className="text-xs text-ink-400">Libera: {FASES[itemProvando.nivel].nome}</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void tentarComprar({ tipo: "item", id: itemProvando.id }, itemProvando.id)}
+                disabled={moedas < itemProvando.preco || salvando}
+                className={`text-xs font-semibold rounded-full px-3 py-1.5 disabled:opacity-50 ${confirmar === itemProvando.id ? "bg-financa text-base-900" : "border border-financa/60 text-financa"}`}
+              >
+                {confirmar === itemProvando.id ? `Comprar por ${itemProvando.preco} 🪙?` : moedas < itemProvando.preco ? `Faltam ${itemProvando.preco - moedas} 🪙` : `Comprar · ${itemProvando.preco} 🪙`}
+              </button>
+            )}
+            <button type="button" aria-label="Parar de provar" onClick={() => setProvando(null)} className="p-1.5 text-ink-400">
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         <div className="bg-base-800/90 backdrop-blur border-t border-base-600 px-4 py-3">
           <div className="flex items-center gap-2">
@@ -225,115 +271,252 @@ export default function MascotePage() {
       </section>
 
       <p className="text-xs text-ink-400 mb-4 text-center">
-        Cada hábito feito vale {MOEDAS_POR_HABITO} 🪙 · fica feliz quando você cumpre o dia · toque nele 💚
+        Cada hábito feito vale {MOEDAS_POR_HABITO} 🪙 · arraste pro lado pra girar · toque nele 💚
       </p>
       {erro && <p className="text-sm text-red-400 mb-3">{erro}</p>}
 
-      {/* lojinha / armário */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-6 px-6 md:mx-0 md:px-0 mb-3 scrollbar-none">
-        {ABAS.map((a) => (
+      {/* Etapa 301 — Lojinha × Armário */}
+      <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-base-800 border border-base-600 mb-3">
+        {(
+          [
+            ["loja", <ShoppingBag key="i" size={15} />, "Lojinha"],
+            ["armario", <Shirt key="i" size={15} />, `Armário${noArmario ? ` (${noArmario})` : ""}`],
+          ] as const
+        ).map(([id, icone, rotulo]) => (
           <button
-            key={a.id}
+            key={id}
             type="button"
             onClick={() => {
-              setAba(a.id);
+              setModo(id);
               setConfirmar(null);
+              setProvando(null);
             }}
-            className={`shrink-0 text-sm rounded-full px-3.5 py-1.5 border transition ${aba === a.id ? "bg-ink-100 text-base-900 border-ink-100 font-medium" : "border-base-600 text-ink-400"}`}
+            className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-semibold transition ${modo === id ? "bg-ink-100 text-base-900" : "text-ink-400"}`}
           >
-            {a.nome}
+            {icone} {rotulo}
           </button>
         ))}
       </div>
 
-      {aba === "cores" ? (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-          {(Object.keys(CORES_MASCOTE) as CorMascote[]).map((c) => {
-            const info = CORES_MASCOTE[c];
-            const tem = info.preco === 0 || mascote.inventario.includes(`cor:${c}`);
-            const usando = mascote.cor === c;
-            const chave = `cor:${c}`;
-            const pode = tem || moedas >= info.preco;
-            return (
-              <button
-                key={c}
-                type="button"
-                disabled={usando || salvando || (!tem && !pode)}
-                onClick={() => (tem ? void salvar({ ...mascote, cor: c }) : void tentarComprar({ tipo: "cor", cor: c }, chave))}
-                className={`rounded-2xl border p-2 flex flex-col items-center gap-1 transition ${
-                  usando ? "border-habito bg-habito/10" : confirmar === chave ? "border-financa bg-financa/10" : "border-base-600 bg-base-800"
-                } ${!tem && !pode ? "opacity-50" : ""}`}
-              >
-                <Mascote cor={c} fase={Math.max(1, fase.nivel)} humor="feliz" tamanho={70} animado={false} />
-                <span className="text-xs font-medium">{info.nome}</span>
-                <span className="text-[11px] text-ink-400">
-                  {usando ? "usando" : tem ? "usar" : confirmar === chave ? "confirmar?" : `${info.preco} 🪙`}
-                </span>
+      {modo === "armario" ? (
+        <div className="space-y-5 animate-entrar">
+          {/* vestindo agora + looks */}
+          <section className="rounded-2xl border border-base-600 bg-base-800 p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-sm font-semibold">Vestindo agora</p>
+              {algoVestido && (
+                <button type="button" onClick={() => void salvar(tirarTudo(mascote))} disabled={salvando} className="ml-auto text-xs text-ink-400 hover:text-ink-100">
+                  Tirar tudo
+                </button>
+              )}
+            </div>
+            {algoVestido ? (
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(mascote.equipados).map(([slot, id]) => {
+                  const it = ITENS.find((i) => i.id === id);
+                  if (!it) return null;
+                  return (
+                    <button key={slot} type="button" onClick={() => vestir(it.id)} className="flex items-center gap-1 text-xs rounded-full bg-habito/15 text-habito px-2.5 py-1">
+                      {it.emoji} {it.nome} <X size={11} />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-ink-400">Nada por enquanto — toque num item abaixo pra vestir.</p>
+            )}
+
+            <p className="text-sm font-semibold mt-4 mb-2">Meus looks</p>
+            <div className="grid grid-cols-4 gap-2">
+              {looks.map((l, i) => {
+                const atual = mesmoLook(l.equipados, mascote.equipados);
+                return (
+                  <div key={i} className={`relative rounded-xl border p-1 flex flex-col items-center ${atual ? "border-habito bg-habito/10" : "border-base-600"}`}>
+                    <button type="button" onClick={() => void salvar(usarLook(mascote, i))} disabled={salvando} className="flex flex-col items-center">
+                      <Mascote cor={mascote.cor} fase={Math.max(1, fase.nivel)} humor="feliz" equipados={l.equipados} comFundo={!!l.equipados.fundo} tamanho={64} animado={false} />
+                      <span className="text-[10px] leading-tight truncate max-w-full">{l.nome}</span>
+                    </button>
+                    <button type="button" aria-label="Apagar look" onClick={() => void salvar(apagarLook(mascote, i))} className="absolute -top-1.5 -right-1.5 bg-base-700 rounded-full p-1 text-ink-400">
+                      <Trash2 size={10} />
+                    </button>
+                  </div>
+                );
+              })}
+              {algoVestido && !looks.some((l) => mesmoLook(l.equipados, mascote.equipados)) && (
+                <form
+                  className="rounded-xl border border-dashed border-base-500 p-1.5 flex flex-col items-center justify-center gap-1"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void salvar(salvarLook(mascote, nomeLook));
+                    setNomeLook("");
+                    vibrar(10);
+                  }}
+                >
+                  <Bookmark size={16} className="text-ink-400" />
+                  <input
+                    value={nomeLook}
+                    onChange={(e) => setNomeLook(e.target.value)}
+                    maxLength={16}
+                    placeholder="Nome"
+                    className="w-full bg-transparent text-[11px] text-center outline-none border-b border-base-600"
+                  />
+                  <button type="submit" disabled={salvando} className="text-[11px] text-habito font-semibold">
+                    Salvar look
+                  </button>
+                </form>
+              )}
+            </div>
+            {looks.length >= MAX_LOOKS && <p className="text-[11px] text-ink-400 mt-2">Até {MAX_LOOKS} looks — salvar outro substitui o mais antigo.</p>}
+          </section>
+
+          {armario.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-4xl">🎒</p>
+              <p className="font-semibold mt-2">Seu armário está vazio</p>
+              <p className="text-sm text-ink-400 mt-1">Tudo que você comprar na lojinha fica guardado aqui.</p>
+              <button type="button" onClick={() => setModo("loja")} className="mt-4 text-sm font-semibold rounded-full bg-habito text-base-900 px-4 py-2">
+                Ir pra lojinha
               </button>
-            );
-          })}
+            </div>
+          ) : (
+            armario.map((g) => (
+              <section key={g.slot}>
+                <p className="text-xs uppercase tracking-wide text-ink-400 mb-2">
+                  {NOMES_SLOT[g.slot]} · {g.itens.length}
+                </p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {g.itens.map((item) => {
+                    const usando = mascote.equipados[item.slot] === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => vestir(item.id)}
+                        disabled={salvando}
+                        className={`relative rounded-2xl border p-1.5 flex flex-col items-center transition ${usando ? "border-habito bg-habito/10" : "border-base-600 bg-base-800"}`}
+                      >
+                        <Mascote cor={mascote.cor} fase={Math.max(1, fase.nivel)} humor="feliz" equipados={{ [item.slot]: item.id }} comFundo={item.slot === "fundo"} tamanho={74} animado={false} />
+                        <span className="text-[11px] font-medium leading-tight mt-0.5">{item.nome}</span>
+                        <span className={`text-[10px] mt-0.5 ${usando ? "text-habito font-semibold" : "text-ink-400"}`}>{usando ? "✓ usando" : "vestir"}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {ITENS.filter((i) => i.slot === aba).map((item) => {
-            const tem = mascote.inventario.includes(item.id);
-            const usando = mascote.equipados[item.slot] === item.id;
-            const bloqueado = !tem && fase.nivel < item.nivel;
-            const pode = !bloqueado && moedas >= item.preco;
-            const chave = item.id;
-            return (
-              <div
-                key={item.id}
-                className={`rounded-2xl border p-2.5 flex flex-col items-center text-center transition ${
-                  usando ? "border-habito bg-habito/10" : confirmar === chave ? "border-financa bg-financa/10" : "border-base-600 bg-base-800"
-                }`}
+        <>
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-6 px-6 md:mx-0 md:px-0 mb-3 scrollbar-none">
+            {ABAS.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => {
+                  setAba(a.id);
+                  setConfirmar(null);
+                }}
+                className={`shrink-0 text-sm rounded-full px-3.5 py-1.5 border transition ${aba === a.id ? "bg-ink-100 text-base-900 border-ink-100 font-medium" : "border-base-600 text-ink-400"}`}
               >
-                <div className={`relative ${bloqueado ? "opacity-40 grayscale" : ""}`}>
-                  <Mascote
-                    cor={mascote.cor}
-                    fase={Math.max(1, fase.nivel)}
-                    humor="feliz"
-                    equipados={{ [item.slot]: item.id }}
-                    comFundo={item.slot === "fundo"}
-                    tamanho={92}
-                    animado={false}
-                  />
-                  {bloqueado && <Lock size={18} className="absolute inset-0 m-auto text-ink-100" />}
-                </div>
-                <p className="text-sm font-medium leading-tight mt-1">{item.nome}</p>
-                {tem ? (
+                {a.nome}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-ink-400 mb-2">Toque no desenho pra provar antes de comprar 👀</p>
+
+          {aba === "cores" ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {(Object.keys(CORES_MASCOTE) as CorMascote[]).map((c) => {
+                const info = CORES_MASCOTE[c];
+                const tem = info.preco === 0 || mascote.inventario.includes(`cor:${c}`);
+                const usando = mascote.cor === c;
+                const chave = `cor:${c}`;
+                const pode = tem || moedas >= info.preco;
+                return (
                   <button
+                    key={c}
                     type="button"
-                    onClick={() => vestir(item.id)}
-                    disabled={salvando}
-                    className={`mt-2 w-full rounded-xl py-1.5 text-xs font-semibold ${usando ? "bg-habito text-base-900" : "border border-base-600 text-ink-100"}`}
+                    disabled={usando || salvando || (!tem && !pode)}
+                    onClick={() => (tem ? void salvar({ ...mascote, cor: c }) : void tentarComprar({ tipo: "cor", cor: c }, chave))}
+                    className={`rounded-2xl border p-2 flex flex-col items-center gap-1 transition ${
+                      usando ? "border-habito bg-habito/10" : confirmar === chave ? "border-financa bg-financa/10" : "border-base-600 bg-base-800"
+                    } ${!tem && !pode ? "opacity-50" : ""}`}
                   >
-                    {usando ? (
-                      <span className="inline-flex items-center gap-1">
-                        <Check size={12} strokeWidth={3} /> Usando
-                      </span>
-                    ) : (
-                      "Usar"
-                    )}
+                    <Mascote cor={c} fase={Math.max(1, fase.nivel)} humor="feliz" tamanho={70} animado={false} />
+                    <span className="text-xs font-medium">{info.nome}</span>
+                    <span className="text-[11px] text-ink-400">
+                      {usando ? "usando" : tem ? "usar" : confirmar === chave ? "confirmar?" : `${info.preco} 🪙`}
+                    </span>
                   </button>
-                ) : bloqueado ? (
-                  <p className="mt-2 text-[11px] text-ink-400">Libera: {FASES[item.nivel].nome}</p>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => void tentarComprar({ tipo: "item", id: item.id }, chave)}
-                    disabled={!pode || salvando}
-                    className={`mt-2 w-full rounded-xl py-1.5 text-xs font-semibold transition ${
-                      confirmar === chave ? "bg-financa text-base-900" : pode ? "border border-financa/50 text-financa" : "border border-base-600 text-ink-400 opacity-60"
-                    }`}
-                  >
-                    {confirmar === chave ? `Comprar por ${item.preco} 🪙?` : `${item.preco} 🪙`}
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {ITENS.filter((i) => i.slot === aba)
+                .slice()
+                .sort((a, b) => a.nivel - b.nivel || a.preco - b.preco)
+                .map((item) => {
+                  const tem = mascote.inventario.includes(item.id);
+                  const usando = mascote.equipados[item.slot] === item.id;
+                  const bloqueado = !tem && fase.nivel < item.nivel;
+                  const pode = !bloqueado && moedas >= item.preco;
+                  const chave = item.id;
+                  const naProva = provando?.id === item.id;
+                  return (
+                    <div
+                      key={item.id}
+                      className={`rounded-2xl border p-2.5 flex flex-col items-center text-center transition ${
+                        usando || naProva ? "border-habito bg-habito/10" : confirmar === chave ? "border-financa bg-financa/10" : "border-base-600 bg-base-800"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => (tem ? vestir(item.id) : provar(item.slot, item.id))}
+                        className={`relative ${bloqueado ? "opacity-40 grayscale" : ""}`}
+                        aria-label={tem ? `Vestir ${item.nome}` : `Provar ${item.nome}`}
+                      >
+                        <Mascote cor={mascote.cor} fase={Math.max(1, fase.nivel)} humor="feliz" equipados={{ [item.slot]: item.id }} comFundo={item.slot === "fundo"} tamanho={92} animado={false} />
+                        {bloqueado && <Lock size={18} className="absolute inset-0 m-auto text-ink-100" />}
+                        {tem && <span className="absolute top-0 right-0 text-[10px] rounded-full bg-habito text-base-900 font-semibold px-1.5">✓ seu</span>}
+                      </button>
+                      <p className="text-sm font-medium leading-tight mt-1">{item.nome}</p>
+                      {tem ? (
+                        <button
+                          type="button"
+                          onClick={() => vestir(item.id)}
+                          disabled={salvando}
+                          className={`mt-2 w-full rounded-xl py-1.5 text-xs font-semibold ${usando ? "bg-habito text-base-900" : "border border-base-600 text-ink-100"}`}
+                        >
+                          {usando ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Check size={12} strokeWidth={3} /> Usando
+                            </span>
+                          ) : (
+                            "No armário · usar"
+                          )}
+                        </button>
+                      ) : bloqueado ? (
+                        <p className="mt-2 text-[11px] text-ink-400">Libera: {FASES[item.nivel].nome}</p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void tentarComprar({ tipo: "item", id: item.id }, chave)}
+                          disabled={!pode || salvando}
+                          className={`mt-2 w-full rounded-xl py-1.5 text-xs font-semibold transition ${
+                            confirmar === chave ? "bg-financa text-base-900" : pode ? "border border-financa/50 text-financa" : "border border-base-600 text-ink-400 opacity-60"
+                          }`}
+                        >
+                          {confirmar === chave ? `Comprar por ${item.preco} 🪙?` : `${item.preco} 🪙`}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </>
       )}
 
       <Link href="/habitos" className="block text-center text-sm text-ink-400 mt-8 hover:text-ink-100">

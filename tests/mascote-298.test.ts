@@ -73,7 +73,7 @@ describe("Etapa 298 — mascote dos hábitos", () => {
   it("CSS do mascote e novidades", () => {
     const css = readFileSync("app/globals.css", "utf8");
     for (const c of ["vtm-respira", "vtm-piscar", "vtm-ovo", "vtm-z", "vtm-brilha", "vtm-parado"]) expect(css).toContain(`.${c}`);
-    expect(VERSAO_NOVIDADES).toBe("298");
-    expect(NOVIDADES[0].versao).toBe("298");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(298);
+    expect(NOVIDADES.some((g) => g.versao === "298")).toBe(true);
   });
 });
