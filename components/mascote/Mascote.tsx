@@ -18,11 +18,44 @@ type Props = {
   aoTocar?: () => void;
   /** Etapa 300 — virar o bichinho (graus). 0 = de frente, 180 = de costas. */
   angulo?: number;
+  /** Etapa 302 — hora do dia do lugar (sem passar, usa a hora atual) */
+  periodo?: Periodo;
 };
+
+// Etapa 302 — lugares vivos: o cenário é onde ele mora. Muda com a hora
+// (manhã, tarde, fim de tarde, noite) e o tempo segue o humor do dia.
+export type Periodo = "manha" | "tarde" | "entardecer" | "noite";
+export type Clima = "sol" | "limpo" | "nuvens" | "chuva" | "cinza";
+
+export function periodoDaHora(h: number): Periodo {
+  if (h >= 5 && h < 11) return "manha";
+  if (h >= 11 && h < 17) return "tarde";
+  if (h >= 17 && h < 19) return "entardecer";
+  return "noite";
+}
+
+export function climaDoHumor(h: Humor): Clima {
+  switch (h) {
+    case "radiante":
+      return "sol";
+    case "triste":
+      return "chuva";
+    case "doente":
+      return "cinza";
+    case "neutro":
+    case "fome":
+      return "nuvens";
+    default:
+      return "limpo";
+  }
+}
+
+/** Lugar de quem ainda não comprou nenhum. */
+export const LUGAR_PADRAO = "casinha";
 
 const OLHO = "#1F2421";
 
-export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFundo = false, animado = true, className = "", aoTocar, angulo = 0 }: Props) {
+export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFundo = false, animado = true, className = "", aoTocar, angulo = 0, periodo }: Props) {
   const uid = useId().replace(/:/g, "");
   const c = CORES_MASCOTE[cor] ?? CORES_MASCOTE.verde;
   const corpo = cor === "arcoiris" ? `url(#vtm-arco-${uid})` : c.corpo;
@@ -69,9 +102,9 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
         </radialGradient>
       </defs>
 
-      {comFundo && equipados.fundo ? (
+      {comFundo ? (
         <g clipPath={`url(#vtm-clip-${uid})`}>
-          <Fundo id={equipados.fundo} />
+          <Fundo id={equipados.fundo ?? LUGAR_PADRAO} periodo={periodo ?? periodoDaHora(new Date().getHours())} clima={climaDoHumor(humor)} uid={uid} />
         </g>
       ) : (
         <circle cx="100" cy={cy} r={r * 1.7} fill={`url(#vtm-brilho-${uid})`} />
@@ -110,6 +143,7 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
             {/* corpo */}
             <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill={corpo} />
             <ellipse cx={100 - r * 0.38} cy={cy - r * 0.55} rx={r * 0.22} ry={r * 0.12} fill="#fff" opacity="0.35" transform={`rotate(-25 ${100 - r * 0.38} ${cy - r * 0.55})`} />
+            {humor === "doente" && <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill="#9CA3AF" opacity="0.28" />}
             {costas ? (
               <g clipPath={`url(#vtm-corpo-${uid})`}>
                 {/* de costas: rabinho e uma manchinha */}
@@ -184,6 +218,27 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
           <text x={100 + r * 0.9} y={topo - 8} fontSize="11" className="vtm-z" style={{ animationDelay: "0.8s" }}>z</text>
         </g>
       )}
+      {/* Etapa 302 — dodói: bolsa de gelo, termômetro e suorzinho */}
+      {humor === "doente" && fase > 0 && !costas && (
+        <g>
+          {!equipados.chapeu && (
+            <g transform={`translate(${100 + r * 0.25} ${topo + 4}) rotate(-12)`}>
+              <ellipse cx="0" cy="0" rx={r * 0.34} ry={r * 0.16} fill="#7DD3FC" stroke="#38BDF8" strokeWidth="1.5" />
+              <rect x={-r * 0.06} y={-r * 0.24} width={r * 0.12} height={r * 0.1} rx="1.5" fill="#F87171" />
+            </g>
+          )}
+          <g transform={`translate(${100 + desvio + r * 0.12} ${cy + r * 0.34}) rotate(28)`}>
+            <rect x="0" y="-1.6" width={r * 0.42} height="3.2" rx="1.6" fill="#F8FAFC" stroke="#CBD5E1" strokeWidth="0.6" />
+            <circle cx={r * 0.42} cy="0" r="2.6" fill="#EF4444" />
+          </g>
+          <path d={`M${100 - r * 0.78} ${cy - r * 0.42} q-3 6 0 8 q3 -2 0 -8 Z`} fill="#BAE6FD" className="vtm-lagrima" />
+        </g>
+      )}
+      {humor === "fome" && fase > 0 && !costas && (
+        <text x={100 + r * 0.55} y={cy + r * 0.75} fontSize="11" fontWeight="700" fill="#F59E0B" fontFamily="sans-serif" className="vtm-ronco">
+          ronc
+        </text>
+      )}
       {humor === "radiante" && (
         <g fill="#FBBF24">
           {[
@@ -223,6 +278,24 @@ function Rosto({ humor, cy, r }: { humor: Humor; cy: number; r: number }) {
           <path d={`M${100 - dx - er} ${cy} Q${100 - dx} ${cy + er} ${100 - dx + er} ${cy}`} stroke={OLHO} strokeWidth="2.5" fill="none" strokeLinecap="round" />
           <path d={`M${100 + dx - er} ${cy} Q${100 + dx} ${cy + er} ${100 + dx + er} ${cy}`} stroke={OLHO} strokeWidth="2.5" fill="none" strokeLinecap="round" />
         </>
+      ) : humor === "doente" ? (
+        <>
+          {/* olhinhos cansados (meio fechados) */}
+          <path d={`M${100 - dx - er} ${cy - er * 0.2} L${100 - dx + er} ${cy + er * 0.3}`} stroke={OLHO} strokeWidth="2.6" strokeLinecap="round" />
+          <path d={`M${100 + dx + er} ${cy - er * 0.2} L${100 + dx - er} ${cy + er * 0.3}`} stroke={OLHO} strokeWidth="2.6" strokeLinecap="round" />
+          <ellipse cx={100 - dx} cy={cy + er * 0.9} rx={er * 0.9} ry={er * 0.35} fill="#6B7280" opacity="0.35" />
+          <ellipse cx={100 + dx} cy={cy + er * 0.9} rx={er * 0.9} ry={er * 0.35} fill="#6B7280" opacity="0.35" />
+        </>
+      ) : humor === "fome" ? (
+        <>
+          {/* olhão pidão */}
+          <circle cx={100 - dx} cy={cy} r={er * 1.25} fill={OLHO} />
+          <circle cx={100 - dx + er * 0.4} cy={cy - er * 0.45} r={er * 0.5} fill="#fff" />
+          <circle cx={100 - dx - er * 0.45} cy={cy + er * 0.4} r={er * 0.22} fill="#fff" />
+          <circle cx={100 + dx} cy={cy} r={er * 1.25} fill={OLHO} />
+          <circle cx={100 + dx + er * 0.4} cy={cy - er * 0.45} r={er * 0.5} fill="#fff" />
+          <circle cx={100 + dx - er * 0.45} cy={cy + er * 0.4} r={er * 0.22} fill="#fff" />
+        </>
       ) : humor === "radiante" ? (
         <>
           <path d={estrela(100 - dx, cy, er * 1.5)} fill={OLHO} />
@@ -261,6 +334,13 @@ function Rosto({ humor, cy, r }: { humor: Humor; cy: number; r: number }) {
         <path d={`M${100 - r * 0.12} ${bocaY + 4} Q100 ${bocaY - r * 0.08} ${100 + r * 0.12} ${bocaY + 4}`} stroke={OLHO} strokeWidth="2.4" fill="none" strokeLinecap="round" />
       ) : humor === "dormindo" ? (
         <ellipse cx="100" cy={bocaY + 2} rx={r * 0.06} ry={r * 0.08} fill={OLHO} opacity="0.7" />
+      ) : humor === "doente" ? (
+        <path d={`M${100 - r * 0.16} ${bocaY + 2} q${r * 0.08} -4 ${r * 0.16} 0 t${r * 0.16} 0`} stroke={OLHO} strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      ) : humor === "fome" ? (
+        <>
+          <ellipse cx="100" cy={bocaY + 2} rx={r * 0.08} ry={r * 0.1} fill="#7A2E3B" />
+          <path d={`M${100 + r * 0.05} ${bocaY + r * 0.1} q-2 5 0 7 q2 -2 0 -7 Z`} fill="#BAE6FD" className="vtm-lagrima" />
+        </>
       ) : (
         <path d={`M${100 - r * 0.1} ${bocaY} Q100 ${bocaY + r * 0.1} ${100 + r * 0.1} ${bocaY}`} stroke={OLHO} strokeWidth="2.4" fill="none" strokeLinecap="round" />
       )}
@@ -686,107 +766,208 @@ function Mao({ id }: { id: string }) {
   }
 }
 
-function Fundo({ id }: { id: string }) {
+// ---- Etapa 302 — lugares vivos ----
+
+const CEUS: Record<Periodo, [string, string]> = {
+  manha: ["#9FD4F5", "#FCE7C8"],
+  tarde: ["#6EC1F2", "#CBEBFF"],
+  entardecer: ["#7C6BB5", "#F7A97C"],
+  noite: ["#0E1738", "#273469"],
+};
+
+function Ceu({ periodo, clima, uid }: { periodo: Periodo; clima: Clima; uid: string }) {
+  const [a, b] = CEUS[periodo];
+  const g = `vtm-ceu-${uid}`;
+  const escuro = clima === "chuva" || clima === "cinza";
+  return (
+    <g>
+      <defs>
+        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={a} />
+          <stop offset="1" stopColor={b} />
+        </linearGradient>
+      </defs>
+      <rect width="200" height="200" fill={`url(#${g})`} />
+      {periodo === "noite" ? (
+        <g>
+          {!escuro &&
+            [[18, 22], [52, 12], [84, 34], [118, 16], [178, 58], [30, 64], [140, 48], [100, 8]].map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r="1.3" fill="#fff" className="vtm-brilha" style={{ animationDelay: `${i * 0.35}s` }} />
+            ))}
+          <path d="M156 22 a14 14 0 1 0 12 22 a10 10 0 1 1 -12 -22 Z" fill="#FDF3C4" opacity={escuro ? 0.5 : 1} />
+        </g>
+      ) : (
+        <Sol periodo={periodo} raios={clima === "sol"} apagado={escuro} />
+      )}
+      {escuro && <rect width="200" height="200" fill="#475569" opacity={clima === "chuva" ? 0.45 : 0.32} />}
+      {clima !== "sol" && <Nuvens escuras={escuro} poucas={clima === "limpo"} noite={periodo === "noite"} />}
+    </g>
+  );
+}
+
+function Sol({ periodo, raios, apagado }: { periodo: Periodo; raios: boolean; apagado: boolean }) {
+  const [x, y, r, cor] =
+    periodo === "manha" ? [40, 56, 12, "#FFE58A"] : periodo === "tarde" ? [156, 34, 14, "#FFE066"] : [166, 98, 17, "#FF9F5A"];
+  return (
+    <g opacity={apagado ? 0.35 : 1}>
+      <circle cx={x} cy={y} r={r * 1.8} fill={cor} opacity="0.25" />
+      {raios && (
+        <g transform={`translate(${x} ${y})`}>
+          <g className="vtm-raios">
+            {Array.from({ length: 10 }, (_, i) => (
+              <rect key={i} x="-1.5" y={-r - 12} width="3" height="7" rx="1.5" fill={cor} transform={`rotate(${i * 36})`} />
+            ))}
+          </g>
+        </g>
+      )}
+      <circle cx={x} cy={y} r={r} fill={cor} />
+    </g>
+  );
+}
+
+function Nuvem({ x, y, k, cor }: { x: number; y: number; k: number; cor: string }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${k})`} fill={cor}>
+      <ellipse cx="0" cy="0" rx="18" ry="8" />
+      <ellipse cx="-9" cy="-5" rx="9" ry="7" />
+      <ellipse cx="6" cy="-7" rx="11" ry="9" />
+    </g>
+  );
+}
+
+function Nuvens({ escuras, poucas, noite }: { escuras: boolean; poucas: boolean; noite: boolean }) {
+  const cor = escuras ? "#94A3B8" : noite ? "#3B4A7A" : "#FFFFFF";
+  return (
+    <g opacity={poucas ? 0.75 : 0.95}>
+      <g className="vtm-nuvem">
+        <Nuvem x={58} y={40} k={1.1} cor={cor} />
+      </g>
+      {!poucas && (
+        <g className="vtm-nuvem" style={{ animationDelay: "-4s", animationDuration: "11s" }}>
+          <Nuvem x={132} y={60} k={0.9} cor={cor} />
+          {escuras && <Nuvem x={20} y={26} k={0.8} cor={cor} />}
+          {escuras && <Nuvem x={170} y={22} k={1} cor={cor} />}
+        </g>
+      )}
+    </g>
+  );
+}
+
+function Chuva() {
+  return (
+    <g stroke="#BFDBFE" strokeWidth="1.4" strokeLinecap="round" opacity="0.8">
+      {[12, 30, 47, 66, 83, 101, 118, 137, 152, 171, 188].map((x, i) => (
+        <line key={x} x1={x} y1="0" x2={x - 3} y2="10" className="vtm-pingo" style={{ animationDelay: `${(i * 0.17) % 1}s` }} />
+      ))}
+    </g>
+  );
+}
+
+/** Escurece o chão à noite / no fim da tarde (as luzes vêm depois). */
+function Penumbra({ periodo }: { periodo: Periodo }) {
+  if (periodo === "noite") return <rect width="200" height="200" fill="#0B1026" opacity="0.38" />;
+  if (periodo === "entardecer") return <rect width="200" height="200" fill="#7C2D12" opacity="0.1" />;
+  return null;
+}
+
+function Luz({ x, y, w, h, acesa }: { x: number; y: number; w: number; h: number; acesa: boolean }) {
+  return <rect x={x} y={y} width={w} height={h} rx="1" fill={acesa ? "#FDE68A" : "#BFE3F5"} opacity={acesa ? 1 : 0.85} />;
+}
+
+function Fundo({ id, periodo, clima, uid }: { id: string; periodo: Periodo; clima: Clima; uid: string }) {
+  const noite = periodo === "noite";
+  const acesa = noite || periodo === "entardecer";
+  const chuva = clima === "chuva";
+  const ceu = <Ceu periodo={periodo} clima={clima} uid={uid} />;
+
   switch (id) {
     case "quarto":
       return (
         <g>
-          <rect width="200" height="200" fill="#3B2F4A" />
-          <rect y="150" width="200" height="50" fill="#5B4636" />
-          <rect x="128" y="34" width="46" height="40" rx="4" fill="#A5D8FF" stroke="#E7DCC8" strokeWidth="4" />
-          <path d="M151 34 L151 74 M128 54 L174 54" stroke="#E7DCC8" strokeWidth="3" />
+          <rect width="200" height="200" fill={noite ? "#2A2140" : "#4A3B5E"} />
+          <rect y="150" width="200" height="50" fill={noite ? "#3E2F24" : "#5B4636"} />
+          {/* janela com o céu de verdade lá fora */}
+          <svg x="126" y="30" width="50" height="44" viewBox="40 0 120 106" preserveAspectRatio="xMidYMid slice">
+            {ceu}
+            {chuva && <Chuva />}
+          </svg>
+          <rect x="126" y="30" width="50" height="44" rx="4" fill="none" stroke="#E7DCC8" strokeWidth="4" />
+          <path d="M151 30 L151 74 M126 52 L176 52" stroke="#E7DCC8" strokeWidth="3" />
           <rect x="22" y="40" width="30" height="38" rx="3" fill="#F2C46D" />
+          <path d="M27 70 L33 56 L39 64 L43 58 L48 70 Z" fill="#8FD3A6" />
+          {/* abajur: acende de noite */}
+          <rect x="62" y="120" width="4" height="30" fill="#7C6A55" />
+          <path d="M52 120 L76 120 L70 104 L58 104 Z" fill={acesa ? "#FDE68A" : "#E7DCC8"} />
+          {acesa && <circle cx="64" cy="118" r="26" fill="#FDE68A" opacity="0.18" />}
           <ellipse cx="100" cy="182" rx="70" ry="12" fill="#B7A9F0" opacity="0.6" />
         </g>
       );
     case "jardim":
       return (
         <g>
-          <rect width="200" height="200" fill="#CDEBFF" />
-          <circle cx="164" cy="36" r="16" fill="#FDE68A" />
+          {ceu}
           <path d="M0 150 Q60 120 120 145 Q170 160 200 140 L200 200 L0 200 Z" fill="#7FC88F" />
           <path d="M0 170 Q80 150 200 172 L200 200 L0 200 Z" fill="#5EA875" />
-          {[[24, 160, "#F472B6"], [50, 176, "#FBBF24"], [158, 168, "#F87171"], [182, 182, "#FFFFFF"]].map(([x, y, cor], i) => (
+          {[[24, 160, "#F472B6"], [50, 176, "#FBBF24"], [158, 168, "#F87171"], [182, 182, "#FFFFFF"], [140, 186, "#A78BFA"]].map(([x, y, cor], i) => (
             <g key={i}>
+              <path d={`M${x} ${y} l0 8`} stroke="#3F7D55" strokeWidth="1.5" />
               <circle cx={x as number} cy={y as number} r="4" fill={cor as string} />
               <circle cx={x as number} cy={y as number} r="1.5" fill="#FDE68A" />
             </g>
           ))}
+          <Penumbra periodo={periodo} />
+          {noite
+            ? [[30, 120], [70, 136], [150, 118], [176, 140], [110, 128]].map(([x, y], i) => (
+                <circle key={i} cx={x} cy={y} r="1.8" fill="#FDE047" className="vtm-brilha" style={{ animationDelay: `${i * 0.4}s` }} />
+              ))
+            : !chuva && (
+                <g className="vtm-voa">
+                  <path d="M150 110 q4 -6 8 0 q4 -6 8 0" stroke="#334155" strokeWidth="1.6" fill="none" />
+                </g>
+              )}
+          {chuva && <Chuva />}
         </g>
       );
     case "praia":
       return (
         <g>
-          <rect width="200" height="200" fill="#FDBA8C" />
-          <rect width="200" height="110" fill="#FCD6B5" />
-          <circle cx="100" cy="112" r="26" fill="#FDE68A" />
-          <rect y="112" width="200" height="40" fill="#60A5FA" />
-          <path d="M0 126 q10 -4 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="#BFDBFE" strokeWidth="2" fill="none" />
-          <rect y="150" width="200" height="50" fill="#F3D9A4" />
+          {ceu}
+          <rect y="112" width="200" height="40" fill={noite ? "#1E3A8A" : periodo === "entardecer" ? "#5B7FD6" : "#3B9BEA"} />
+          {noite && <rect x="150" y="114" width="12" height="30" fill="#FDF3C4" opacity="0.25" />}
+          <g className="vtm-onda">
+            <path d="M-20 122 q10 -4 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="#BFDBFE" strokeWidth="2" fill="none" />
+            <path d="M-10 136 q10 -4 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="#DBEAFE" strokeWidth="1.5" fill="none" opacity="0.7" />
+          </g>
+          <path d="M0 150 Q100 142 200 150 L200 200 L0 200 Z" fill="#F3D9A4" />
+          {/* coqueiro */}
+          <path d="M28 196 Q24 160 34 128" stroke="#8B5A2B" strokeWidth="5" fill="none" strokeLinecap="round" />
+          <g transform="translate(34 128)" className="vtm-broto">
+            <path d="M0 0 Q-18 -10 -32 2 Q-16 -2 0 0 Z M0 0 Q16 -14 32 -2 Q16 -4 0 0 Z M0 0 Q-6 -20 -20 -24 Q-6 -12 0 0 Z M0 0 Q8 -20 22 -22 Q8 -10 0 0 Z" fill="#3F9D5A" />
+          </g>
+          <Penumbra periodo={periodo} />
+          {chuva && <Chuva />}
         </g>
       );
-    case "noite":
+    case "noite": // acampamento
       return (
         <g>
-          <rect width="200" height="200" fill="#16204A" />
-          <path d="M150 30 a16 16 0 1 0 14 24 a12 12 0 1 1 -14 -24 Z" fill="#FDE68A" />
-          {[[20, 30], [60, 18], [90, 44], [40, 70], [180, 90], [130, 70], [12, 110], [170, 130]].map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="1.6" fill="#fff" className="vtm-brilha" style={{ animationDelay: `${i * 0.3}s` }} />
-          ))}
-          <path d="M0 160 Q100 140 200 160 L200 200 L0 200 Z" fill="#1E2B5E" />
-        </g>
-      );
-    case "montanha":
-      return (
-        <g>
-          <rect width="200" height="200" fill="#BFE3F5" />
-          <circle cx="44" cy="40" r="14" fill="#FEF3C7" />
-          <path d="M-10 160 L50 70 L95 130 L130 80 L210 160 Z" fill="#7C8DA8" />
-          <path d="M50 70 L38 88 L46 86 L52 94 L60 84 Z M130 80 L120 94 L128 92 L134 100 L141 92 Z" fill="#F8FAFC" />
-          <path d="M0 150 Q60 130 120 150 Q170 165 200 148 L200 200 L0 200 Z" fill="#6FBF85" />
-          <path d="M0 176 Q100 160 200 178 L200 200 L0 200 Z" fill="#4E9E66" />
-          <path d="M160 140 l8 -20 l8 20 Z M176 146 l7 -16 l7 16 Z" fill="#2F6B45" />
-        </g>
-      );
-    case "neve":
-      return (
-        <g>
-          <rect width="200" height="200" fill="#C7D7EE" />
-          <path d="M0 150 Q100 132 200 150 L200 200 L0 200 Z" fill="#F8FAFC" />
-          <path d="M150 150 l10 -34 l10 34 Z" fill="#2F6B45" />
-          <path d="M146 126 l14 -26 l14 26 Z" fill="#3E8357" />
-          <path d="M150 104 Q160 98 170 104" stroke="#fff" strokeWidth="3" fill="none" />
-          {[[20, 30], [52, 64], [90, 20], [120, 52], [176, 30], [30, 100], [70, 118], [186, 90], [140, 14]].map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="2.4" fill="#fff" className="vtm-brilha" style={{ animationDelay: `${i * 0.2}s` }} />
-          ))}
-        </g>
-      );
-    case "cidade":
-      return (
-        <g>
-          <rect width="200" height="200" fill="#1E1B4B" />
-          <circle cx="160" cy="34" r="12" fill="#FEF3C7" />
-          {[[0, 90, 30], [28, 70, 26], [52, 100, 22], [72, 60, 30], [100, 86, 24], [122, 50, 28], [148, 94, 26], [172, 74, 28]].map(([x, y, w], i) => (
-            <g key={i}>
-              <rect x={x} y={y} width={w} height={200 - y} fill={i % 2 ? "#312E81" : "#3730A3"} />
-              {Array.from({ length: 6 }, (_, j) => (
-                <rect key={j} x={x + 5 + (j % 2) * (w / 2 - 2)} y={y + 8 + Math.floor(j / 2) * 14} width="5" height="6" fill={(i + j) % 3 ? "#FDE68A" : "#4338CA"} opacity="0.9" />
-              ))}
+          {ceu}
+          <path d="M0 140 L14 112 L28 140 Z M20 140 L36 104 L52 140 Z M150 140 L166 108 L182 140 Z M172 140 L186 116 L200 140 Z" fill="#1E4D3A" />
+          <rect y="140" width="200" height="60" fill="#3F6B3F" />
+          {/* barraca */}
+          <path d="M120 176 L148 132 L176 176 Z" fill="#E9875B" />
+          <path d="M148 132 L141 176 L155 176 Z" fill="#9A4A26" />
+          <Penumbra periodo={periodo} />
+          {/* fogueira sempre acesa */}
+          <g transform="translate(50 178)">
+            <path d="M-12 4 L12 -2 M-12 -2 L12 4" stroke="#7C4A21" strokeWidth="4" strokeLinecap="round" />
+            {acesa && <circle cx="0" cy="-6" r="30" fill="#F59E0B" opacity="0.18" />}
+            <g className="vtm-fogo">
+              <path d="M0 -24 Q10 -10 6 0 L-6 0 Q-10 -10 0 -24 Z" fill="#F97316" />
+              <path d="M0 -14 Q5 -6 3 0 L-3 0 Q-5 -6 0 -14 Z" fill="#FDE047" />
             </g>
-          ))}
-          <rect y="168" width="200" height="32" fill="#111827" />
-        </g>
-      );
-    case "ceuarco":
-      return (
-        <g>
-          <rect width="200" height="200" fill="#E0F2FE" />
-          {["#F87171", "#FB923C", "#FDE047", "#4ADE80", "#60A5FA", "#A78BFA"].map((cor, i) => (
-            <path key={cor} d={`M${10 + i * 8} 170 A ${90 - i * 8} ${90 - i * 8} 0 0 1 ${190 - i * 8} 170`} stroke={cor} strokeWidth="8" fill="none" opacity="0.85" />
-          ))}
-          <ellipse cx="34" cy="168" rx="30" ry="14" fill="#fff" />
-          <ellipse cx="166" cy="168" rx="30" ry="14" fill="#fff" />
-          <rect y="176" width="200" height="24" fill="#BBF7D0" />
+          </g>
+          {chuva && <Chuva />}
         </g>
       );
     case "espaco":
@@ -796,13 +977,115 @@ function Fundo({ id }: { id: string }) {
           <circle cx="40" cy="44" r="18" fill="#9C8FD9" />
           <ellipse cx="40" cy="44" rx="30" ry="6" fill="none" stroke="#F2C46D" strokeWidth="3" transform="rotate(-18 40 44)" />
           <circle cx="168" cy="150" r="10" fill="#F87171" />
-          {[[90, 20], [120, 60], [180, 30], [20, 120], [70, 180], [150, 100], [110, 150]].map(([x, y], i) => (
+          <g className="vtm-voa" style={{ animationDuration: "5s" }}>
+            <path d="M150 50 l14 -6 l-4 10 Z" fill="#E5E7EB" />
+            <path d="M150 50 l-6 2" stroke="#F97316" strokeWidth="3" strokeLinecap="round" />
+          </g>
+          {[[90, 20], [120, 60], [180, 30], [20, 120], [70, 180], [150, 100], [110, 150], [10, 80]].map(([x, y], i) => (
             <circle key={i} cx={x} cy={y} r="1.4" fill="#fff" className="vtm-brilha" style={{ animationDelay: `${i * 0.25}s` }} />
           ))}
         </g>
       );
+    case "montanha":
+      return (
+        <g>
+          {ceu}
+          <path d="M-10 160 L50 70 L95 130 L130 80 L210 160 Z" fill={noite ? "#3B4663" : "#7C8DA8"} />
+          <path d="M50 70 L38 88 L46 86 L52 94 L60 84 Z M130 80 L120 94 L128 92 L134 100 L141 92 Z" fill="#F8FAFC" />
+          <path d="M0 150 Q60 130 120 150 Q170 165 200 148 L200 200 L0 200 Z" fill="#6FBF85" />
+          <path d="M0 176 Q100 160 200 178 L200 200 L0 200 Z" fill="#4E9E66" />
+          <path d="M160 140 l8 -20 l8 20 Z M176 146 l7 -16 l7 16 Z" fill="#2F6B45" />
+          <Penumbra periodo={periodo} />
+          {chuva && <Chuva />}
+        </g>
+      );
+    case "neve":
+      return (
+        <g>
+          {ceu}
+          <path d="M0 150 Q100 132 200 150 L200 200 L0 200 Z" fill="#F1F5F9" />
+          <path d="M150 150 l10 -34 l10 34 Z" fill="#2F6B45" />
+          <path d="M146 126 l14 -26 l14 26 Z" fill="#3E8357" />
+          <path d="M150 104 Q160 98 170 104" stroke="#fff" strokeWidth="3" fill="none" />
+          {/* bonequinho de neve */}
+          <circle cx="34" cy="166" r="12" fill="#fff" stroke="#E2E8F0" />
+          <circle cx="34" cy="148" r="8" fill="#fff" stroke="#E2E8F0" />
+          <path d="M34 148 l7 2 l-7 1 Z" fill="#F97316" />
+          <circle cx="31" cy="146" r="1" fill="#1F2421" />
+          <circle cx="37" cy="146" r="1" fill="#1F2421" />
+          <Penumbra periodo={periodo} />
+          <g fill="#fff">
+            {[14, 38, 62, 88, 112, 136, 160, 184].map((x, i) => (
+              <circle key={x} cx={x} cy="0" r={i % 2 ? 1.6 : 2.2} className="vtm-floco" style={{ animationDelay: `${(i * 0.45) % 3}s` }} />
+            ))}
+          </g>
+        </g>
+      );
+    case "cidade":
+      return (
+        <g>
+          {ceu}
+          {[[0, 90, 30], [28, 70, 26], [52, 100, 22], [72, 60, 30], [100, 86, 24], [122, 50, 28], [148, 94, 26], [172, 74, 28]].map(([x, y, w], i) => (
+            <rect key={i} x={x} y={y} width={w} height={200 - y} fill={noite ? (i % 2 ? "#312E81" : "#3730A3") : i % 2 ? "#64748B" : "#7C8BA1"} />
+          ))}
+          <rect y="168" width="200" height="32" fill="#1F2937" />
+          <path d="M0 184 L200 184" stroke="#FDE68A" strokeWidth="1.5" strokeDasharray="8 8" opacity="0.6" />
+          <Penumbra periodo={periodo} />
+          {[[0, 90, 30], [28, 70, 26], [52, 100, 22], [72, 60, 30], [100, 86, 24], [122, 50, 28], [148, 94, 26], [172, 74, 28]].map(([x, y, w], i) => (
+            <g key={i}>
+              {Array.from({ length: 6 }, (_, j) => (
+                <Luz key={j} x={x + 5 + (j % 2) * (w / 2 - 2)} y={y + 8 + Math.floor(j / 2) * 14} w={5} h={6} acesa={acesa && (i + j) % 3 !== 0} />
+              ))}
+            </g>
+          ))}
+          {chuva && <Chuva />}
+        </g>
+      );
+    case "ceuarco":
+      return (
+        <g>
+          {ceu}
+          <g opacity={noite ? 0.35 : 0.85}>
+            {["#F87171", "#FB923C", "#FDE047", "#4ADE80", "#60A5FA", "#A78BFA"].map((cor, i) => (
+              <path key={cor} d={`M${10 + i * 8} 170 A ${90 - i * 8} ${90 - i * 8} 0 0 1 ${190 - i * 8} 170`} stroke={cor} strokeWidth="8" fill="none" />
+            ))}
+          </g>
+          <ellipse cx="34" cy="168" rx="30" ry="14" fill="#fff" />
+          <ellipse cx="166" cy="168" rx="30" ry="14" fill="#fff" />
+          <rect y="176" width="200" height="24" fill="#BBF7D0" />
+          <Penumbra periodo={periodo} />
+          {chuva && <Chuva />}
+        </g>
+      );
+    case "casinha":
     default:
-      return null;
+      return (
+        <g>
+          {ceu}
+          <path d="M0 152 Q100 136 200 152 L200 200 L0 200 Z" fill="#8FCB8F" />
+          <path d="M0 176 Q100 166 200 178 L200 200 L0 200 Z" fill="#6DB06D" />
+          {/* casinha */}
+          <rect x="14" y="112" width="46" height="44" fill="#F2E3C6" />
+          <path d="M8 114 L37 88 L66 114 Z" fill="#D9734E" />
+          <rect x="48" y="92" width="7" height="14" fill="#B65A3B" />
+          <rect x="31" y="132" width="12" height="24" rx="2" fill="#9A6B47" />
+          {/* cerquinha */}
+          {[128, 140, 152, 164, 176, 188].map((x) => (
+            <path key={x} d={`M${x} 168 L${x} 152 L${x + 3} 148 L${x + 6} 152 L${x + 6} 168 Z`} fill="#FFFFFF" opacity="0.9" />
+          ))}
+          <rect x="124" y="156" width="76" height="3" fill="#FFFFFF" opacity="0.9" />
+          <Penumbra periodo={periodo} />
+          <Luz x={18} y={120} w={10} h={9} acesa={acesa} />
+          <Luz x={46} y={120} w={10} h={9} acesa={acesa} />
+          {(periodo === "manha" || noite) && (
+            <g fill="#E5E7EB" opacity="0.8">
+              <circle cx="51" cy="86" r="3" className="vtm-fumaca" />
+              <circle cx="53" cy="86" r="4" className="vtm-fumaca" style={{ animationDelay: "1s" }} />
+            </g>
+          )}
+          {chuva && <Chuva />}
+        </g>
+      );
   }
 }
 

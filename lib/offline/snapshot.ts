@@ -21,6 +21,8 @@ export type SnapshotOffline = {
   checkinsCompartilhados?: { habito_id: string; data: string; quantidade: number; usuario_id: string }[];
   /** Etapa 233 — quem faz cada hábito junto comigo */
   parceiros?: { habito_id: string; usuario_id: string; nome: string }[];
+  /** Etapa 302 — mascote de quem divide hábito comigo (jardim da dupla) */
+  parceirosMascote?: { usuario_id: string; mascote: unknown; feitos: number | null }[];
   tarefas: any[];
   conclusoesTarefas: { tarefa_id: string; data: string }[];
   categoriasProdutividade: any[];
@@ -135,6 +137,7 @@ function normalizar(dados: any): SnapshotOffline | null {
         ...(dados.habitoCheckins ?? []).filter((c: any) => c.usuario_id && dados.perfil?.id && c.usuario_id !== dados.perfil.id),
       ],
       parceiros: Array.isArray(dados.parceiros) ? dados.parceiros : [],
+      parceirosMascote: Array.isArray(dados.parceirosMascote) ? dados.parceirosMascote : [],
       tarefas: dados.tarefas ?? [],
       conclusoesTarefas: dados.conclusoesTarefas ?? [],
       categoriasProdutividade: dados.categoriasProdutividade ?? [],

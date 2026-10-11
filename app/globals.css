@@ -478,7 +478,7 @@ html[data-fonte="maior"] { font-size: 125%; }
 @media (prefers-reduced-motion: reduce) { .onda-pote { animation: none; } }
 
 /* Etapa 298 · mascote dos hábitos (SVG) */
-.vtm :is(.vtm-respira, .vtm-sombra, .vtm-ovo, .vtm-piscar, .vtm-z, .vtm-brilha, .vtm-lagrima, .vtm-aura, .vtm-broto, .vtm-vapor, .vtm-balao, .vtm-voa, .vtm-asa, .vtm-gingar) { transform-box: fill-box; }
+.vtm :is(.vtm-respira, .vtm-sombra, .vtm-ovo, .vtm-piscar, .vtm-z, .vtm-brilha, .vtm-lagrima, .vtm-aura, .vtm-broto, .vtm-vapor, .vtm-balao, .vtm-voa, .vtm-asa, .vtm-gingar, .vtm-raios, .vtm-fogo, .vtm-fumaca, .vtm-ronco) { transform-box: fill-box; }
 @keyframes vtm-respira { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, 0.97); } }
 .vtm-respira { transform-origin: 50% 100%; animation: vtm-respira 3.2s ease-in-out infinite; }
 @keyframes vtm-sombra { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.05); } }
@@ -533,3 +533,34 @@ html[data-fonte="maior"] { font-size: 125%; }
 .vtm-asa { transform-origin: 50% 50%; animation: vtm-asa 0.5s ease-in-out infinite; }
 @keyframes vtm-gingar { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
 .vtm-gingar { transform-origin: 50% 100%; animation: vtm-gingar 1.1s ease-in-out infinite; }
+
+/* Etapa 302 · lugares vivos (hora do dia + tempo) e bichinho com fome/dodói */
+@keyframes vtm-raios { to { transform: rotate(360deg); } }
+.vtm-raios { transform-origin: 50% 50%; animation: vtm-raios 18s linear infinite; }
+@keyframes vtm-nuvem { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(14px); } }
+.vtm-nuvem { animation: vtm-nuvem 9s ease-in-out infinite; }
+@keyframes vtm-pingo { from { transform: translate(0, -14px); opacity: 0; } 15% { opacity: 1; } to { transform: translate(-10px, 205px); opacity: 0.6; } }
+.vtm-pingo { animation: vtm-pingo 1s linear infinite; }
+@keyframes vtm-onda { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-10px); } }
+.vtm-onda { animation: vtm-onda 3s ease-in-out infinite; }
+@keyframes vtm-fogo { 0%, 100% { transform: scale(1, 1); } 33% { transform: scale(0.9, 1.12); } 66% { transform: scale(1.08, 0.92); } }
+.vtm-fogo { transform-origin: 50% 100%; animation: vtm-fogo 0.6s ease-in-out infinite; }
+@keyframes vtm-floco { from { transform: translate(0, -6px); } 50% { transform: translate(6px, 100px); } to { transform: translate(-4px, 205px); } }
+.vtm-floco { animation: vtm-floco 4.5s linear infinite; }
+@keyframes vtm-fumaca { from { transform: translate(0, 0) scale(0.6); opacity: 0.8; } to { transform: translate(6px, -26px) scale(1.6); opacity: 0; } }
+.vtm-fumaca { transform-origin: 50% 50%; animation: vtm-fumaca 2.4s ease-out infinite; }
+@keyframes vtm-ronco { 0%, 100% { transform: translate(0, 0); opacity: 0; } 20%, 60% { opacity: 1; } 30% { transform: translate(-1px, -1px); } 40% { transform: translate(1px, 1px); } 80% { transform: translate(2px, -6px); opacity: 0; } }
+.vtm-ronco { animation: vtm-ronco 2.2s ease-in-out infinite; }
+/* comidinha voando até a boca */
+@keyframes vtm-comer { 0% { transform: translate(var(--de-x, 0), var(--de-y, 60px)) scale(1); opacity: 1; } 80% { transform: translate(0, 0) scale(0.9); opacity: 1; } 100% { transform: translate(0, 0) scale(0.2); opacity: 0; } }
+.vtm-comer { animation: vtm-comer 0.7s cubic-bezier(.3,.7,.3,1) forwards; pointer-events: none; }
+@keyframes vtm-colher { 0% { transform: translateY(0) scale(1); } 40% { transform: translateY(-14px) scale(1.25); } 100% { transform: translateY(40px) scale(0.3); opacity: 0; } }
+.vtm-colher { animation: vtm-colher 0.7s ease-in forwards; pointer-events: none; }
+@keyframes vtm-regar { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-18deg); } }
+.vtm-regar { transform-origin: 30% 80%; animation: vtm-regar 1.4s ease-in-out infinite; }
+@keyframes vtm-gota { from { transform: translate(0, 0); opacity: 1; } to { transform: translate(-4px, 26px); opacity: 0; } }
+.vtm-gota { animation: vtm-gota 0.9s ease-in infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .vtm-raios, .vtm-nuvem, .vtm-pingo, .vtm-onda, .vtm-fogo, .vtm-floco, .vtm-fumaca, .vtm-ronco, .vtm-regar, .vtm-gota { animation: none !important; }
+  .vtm-pingo, .vtm-floco { display: none; }
+}

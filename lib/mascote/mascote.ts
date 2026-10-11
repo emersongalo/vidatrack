@@ -16,7 +16,15 @@ export type DadosMascote = {
   /** Etapa 301 — combinações salvas no armário (até 4) */
   looks?: Look[];
   criadoEm?: string;
+  /** Etapa 302 — comidinhas/remédios/adubo comprados e ainda não usados */
+  estoque?: Record<string, number>;
+  /** Etapa 302 — o que foi dado (últimos ~30 dias): d = dia, t = consumível, h = hábito (adubo) */
+  consumos?: Consumo[];
+  /** Etapa 302 — frutos já colhidos por planta compartilhada (id do hábito → quantos) */
+  colhidos?: Record<string, number>;
 };
+
+export type Consumo = { d: string; t: string; h?: string };
 
 export type Look = { nome: string; equipados: Partial<Record<Slot, string>> };
 export const MAX_LOOKS = 4;
@@ -89,11 +97,11 @@ export const ITENS: Item[] = [
   { id: "quarto", slot: "fundo", nome: "Quartinho", preco: 100, nivel: 1, emoji: "🛋️" },
   { id: "jardim", slot: "fundo", nome: "Jardim", preco: 160, nivel: 2, emoji: "🌳" },
   { id: "praia", slot: "fundo", nome: "Praia", preco: 240, nivel: 2, emoji: "🏖️" },
-  { id: "noite", slot: "fundo", nome: "Noite estrelada", preco: 320, nivel: 3, emoji: "🌙" },
+  { id: "noite", slot: "fundo", nome: "Acampamento", preco: 320, nivel: 3, emoji: "🏕️" },
   { id: "espaco", slot: "fundo", nome: "Espaço", preco: 700, nivel: 4, emoji: "🚀" },
   { id: "montanha", slot: "fundo", nome: "Montanhas", preco: 260, nivel: 3, emoji: "⛰️" },
   { id: "neve", slot: "fundo", nome: "Dia de neve", preco: 300, nivel: 3, emoji: "❄️" },
-  { id: "cidade", slot: "fundo", nome: "Cidade à noite", preco: 450, nivel: 4, emoji: "🌃" },
+  { id: "cidade", slot: "fundo", nome: "Cidade grande", preco: 450, nivel: 4, emoji: "🌃" },
   { id: "ceuarco", slot: "fundo", nome: "Céu de arco-íris", preco: 900, nivel: 5, emoji: "🌈" },
 ];
 
@@ -103,7 +111,7 @@ export const NOMES_SLOT: Record<Slot, string> = {
   roupa: "Roupas",
   mao: "Na mão",
   amigo: "Amigos",
-  fundo: "Cenários",
+  fundo: "Lugares",
 };
 
 /** Fases do mascote pelo total de hábitos feitos (desde sempre). */
@@ -129,7 +137,8 @@ export function moedasDisponiveis(feitos: number, gastos: number) {
   return Math.max(0, (feitos || 0) * MOEDAS_POR_HABITO - (gastos || 0));
 }
 
-export type Humor = "radiante" | "feliz" | "neutro" | "triste" | "dormindo";
+// Etapa 302 — "fome" e "doente" vêm do cuidado dos últimos dias (lib/mascote/vida.ts)
+export type Humor = "radiante" | "feliz" | "neutro" | "triste" | "dormindo" | "fome" | "doente";
 
 /** Humor pelo dia de hoje (feitos/total) e pela hora. */
 export function humorDoMascote(feitosHoje: number, totalHoje: number, hora: number): Humor {
@@ -147,6 +156,8 @@ export const FRASES_HUMOR: Record<Humor, string[]> = {
   neutro: ["Bora começar? Um de cada vez 🙂", "Tô aqui torcendo por você!", "Que tal marcar o primeiro?"],
   triste: ["Ainda dá tempo hoje… 🥺", "Senti sua falta hoje", "Só um hábito já me anima!"],
   dormindo: ["Zzz… amanhã tem mais 😴", "Boa noite! Descansa também 🌙"],
+  fome: ["Minha barriga tá roncando… 🍎", "Faz um hábito? Me alimenta! 🥺", "Tô com fominha…"],
+  doente: ["Tô dodói… 🤒 cuida de mim?", "Um remedinho e uns hábitos me curam 💊", "Fiquei doente sem cuidado… mas eu melhoro!"],
 };
 
 export function fraseDoHumor(h: Humor, semente = 0) {
@@ -170,6 +181,23 @@ export function lerMascote(bruto: unknown): DadosMascote | null {
     .map((l: any) => ({ nome: l.nome.slice(0, 16), equipados: equipadosValidos(l.equipados, inventario) }));
   const m: DadosMascote = { nome: b.nome.slice(0, 20), cor, inventario, equipados: equipadosValidos(b.equipados, inventario), gastos: Math.max(0, Number(b.gastos) || 0), criadoEm: b.criadoEm };
   if (looks.length) m.looks = looks;
+  // Etapa 302 — cuidados
+  const estoque: Record<string, number> = {};
+  for (const [id, q] of Object.entries(b.estoque ?? {})) {
+    const n = Math.floor(Number(q));
+    if (CONSUMIVEIS.some((c) => c.id === id) && n > 0) estoque[id] = Math.min(99, n);
+  }
+  if (Object.keys(estoque).length) m.estoque = estoque;
+  const consumos: Consumo[] = (Array.isArray(b.consumos) ? b.consumos : [])
+    .filter((c: any) => c && typeof c.d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.d) && CONSUMIVEIS.some((x) => x.id === c.t))
+    .map((c: any) => (typeof c.h === "string" ? { d: c.d, t: c.t, h: c.h } : { d: c.d, t: c.t }));
+  if (consumos.length) m.consumos = aparar(consumos);
+  const colhidos: Record<string, number> = {};
+  for (const [h, q] of Object.entries(b.colhidos ?? {})) {
+    const n = Math.floor(Number(q));
+    if (n > 0) colhidos[h] = n;
+  }
+  if (Object.keys(colhidos).length) m.colhidos = colhidos;
   return m;
 }
 
@@ -259,4 +287,130 @@ export function mesmoLook(a: Partial<Record<Slot, string>>, b: Partial<Record<Sl
   const ka = Object.entries(a).filter(([, v]) => v).sort().join("|");
   const kb = Object.entries(b).filter(([, v]) => v).sort().join("|");
   return ka === kb;
+}
+
+// ---- Etapa 302 — cuidados: comidinhas, farmácia e jardim (gastam moedas) ----
+
+export type Consumivel = {
+  id: string;
+  nome: string;
+  emoji: string;
+  preco: number;
+  /** quanto enche a barriga / cura (0–100) */
+  barriga: number;
+  saude: number;
+  tipo: "comida" | "remedio" | "planta";
+  descricao: string;
+};
+
+export const CONSUMIVEIS: Consumivel[] = [
+  { id: "maca", nome: "Maçã", emoji: "🍎", preco: 15, barriga: 12, saude: 2, tipo: "comida", descricao: "Lanchinho leve" },
+  { id: "sanduiche", nome: "Sanduíche", emoji: "🥪", preco: 35, barriga: 28, saude: 0, tipo: "comida", descricao: "Enche bem a barriga" },
+  { id: "sopa", nome: "Sopinha", emoji: "🍲", preco: 45, barriga: 22, saude: 10, tipo: "comida", descricao: "Quentinha, ajuda a sarar" },
+  { id: "bolo", nome: "Bolo", emoji: "🍰", preco: 70, barriga: 35, saude: 0, tipo: "comida", descricao: "Festa! Deixa ele radiante" },
+  { id: "vitamina", nome: "Vitamina", emoji: "🧃", preco: 50, barriga: 5, saude: 20, tipo: "remedio", descricao: "Reforço pra saúde" },
+  { id: "remedio", nome: "Remédio", emoji: "💊", preco: 90, barriga: 0, saude: 50, tipo: "remedio", descricao: "Cura quando está doente" },
+  { id: "adubo", nome: "Adubo", emoji: "🌿", preco: 120, barriga: 0, saude: 0, tipo: "planta", descricao: "Planta de dupla cresce +2 dias (1 por dia)" },
+  // fruto colhido nas plantas de dupla (não se compra)
+  { id: "fruta", nome: "Fruta do jardim", emoji: "🍓", preco: 0, barriga: 20, saude: 10, tipo: "comida", descricao: "Colhida na planta de vocês" },
+];
+
+export const MAX_CONSUMOS = 60;
+export const DIAS_ADUBO = 2;
+
+export function consumivel(id: string) {
+  return CONSUMIVEIS.find((c) => c.id === id) ?? null;
+}
+
+/** Compra comidinha/remédio/adubo (vai pro estoque). */
+export function comprarConsumivel(
+  m: DadosMascote,
+  feitos: number,
+  id: string,
+  qtd = 1
+): { ok: true; mascote: DadosMascote } | { ok: false; motivo: string } {
+  const c = consumivel(id);
+  if (!c || c.preco <= 0) return { ok: false, motivo: "Não está à venda" };
+  const total = c.preco * qtd;
+  const saldo = moedasDisponiveis(feitos, m.gastos);
+  if (saldo < total) return { ok: false, motivo: `Faltam ${total - saldo} 🪙` };
+  const estoque = { ...(m.estoque ?? {}) };
+  estoque[id] = Math.min(99, (estoque[id] ?? 0) + qtd);
+  return { ok: true, mascote: { ...m, gastos: m.gastos + total, estoque } };
+}
+
+/** Dá um consumível (sai do estoque e entra no histórico do dia). */
+export function usarConsumivel(
+  m: DadosMascote,
+  id: string,
+  hoje: string,
+  habitoId?: string
+): { ok: true; mascote: DadosMascote } | { ok: false; motivo: string } {
+  const c = consumivel(id);
+  if (!c) return { ok: false, motivo: "Não existe" };
+  if ((m.estoque?.[id] ?? 0) <= 0) return { ok: false, motivo: "Acabou — compre na lojinha" };
+  if (c.tipo === "planta") {
+    if (!habitoId) return { ok: false, motivo: "Escolha a planta" };
+    if ((m.consumos ?? []).some((x) => x.t === id && x.h === habitoId && x.d === hoje)) return { ok: false, motivo: "Essa planta já ganhou adubo hoje" };
+  }
+  const estoque = { ...(m.estoque ?? {}) };
+  estoque[id] -= 1;
+  if (estoque[id] <= 0) delete estoque[id];
+  const novo: Consumo = habitoId ? { d: hoje, t: id, h: habitoId } : { d: hoje, t: id };
+  // guarda só ~30 dias, mas o adubo fica pra sempre (conta no crescimento da planta)
+  const limite = somarDiasISO(hoje, -30);
+  const consumos = aparar([...(m.consumos ?? []).filter((x) => x.t === "adubo" || x.d >= limite), novo]);
+  return { ok: true, mascote: { ...m, estoque, consumos } };
+}
+
+/** Adubo fica sempre (conta no crescimento); o resto, só os últimos. */
+function aparar(l: Consumo[]): Consumo[] {
+  const adubos = l.filter((c) => c.t === "adubo").slice(-200);
+  const outros = l.filter((c) => c.t !== "adubo").slice(-MAX_CONSUMOS);
+  return [...adubos, ...outros].sort((a, b) => a.d.localeCompare(b.d));
+}
+
+export function somarDiasISO(iso: string, n: number) {
+  const [a, mm, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(a, mm - 1, d + n)).toISOString().slice(0, 10);
+}
+
+// ---- frutos das plantas de dupla ----
+
+export const FRUTO_A_PARTIR = 30; // dias de crescimento (estágio Flor)
+export const FRUTO_A_CADA = 3;
+export const MAX_FRUTOS_ESPERANDO = 5;
+const FRUTAS = ["🍓", "🍎", "🍊", "🍋", "🍇", "🍑", "🍒", "🫐"];
+
+/** Fruta da planta (sempre a mesma pro mesmo hábito). */
+export function frutaDaPlanta(habitoId: string) {
+  let h = 0;
+  for (const ch of habitoId) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return FRUTAS[h % FRUTAS.length];
+}
+
+/** Quantos frutos a planta já deu desde sempre. */
+export function frutosProduzidos(crescimento: number) {
+  if (crescimento < FRUTO_A_PARTIR) return 0;
+  return 1 + Math.floor((crescimento - FRUTO_A_PARTIR) / FRUTO_A_CADA);
+}
+
+export function frutosParaColher(m: DadosMascote | null, habitoId: string, crescimento: number) {
+  const ja = m?.colhidos?.[habitoId] ?? 0;
+  return Math.max(0, Math.min(MAX_FRUTOS_ESPERANDO, frutosProduzidos(crescimento) - ja));
+}
+
+/** Colhe tudo que está maduro: vira "fruta" no estoque. */
+export function colherFrutos(m: DadosMascote, habitoId: string, crescimento: number): { mascote: DadosMascote; colhidos: number } {
+  const n = frutosParaColher(m, habitoId, crescimento);
+  if (n <= 0) return { mascote: m, colhidos: 0 };
+  const estoque = { ...(m.estoque ?? {}) };
+  estoque.fruta = Math.min(99, (estoque.fruta ?? 0) + n);
+  const colhidos = { ...(m.colhidos ?? {}), [habitoId]: frutosProduzidos(crescimento) };
+  return { mascote: { ...m, estoque, colhidos }, colhidos: n };
+}
+
+/** Adubos dados numa planta (por uma pessoa). */
+export function adubosNaPlanta(m: DadosMascote | null, habitoId: string) {
+  return (m?.consumos ?? []).filter((c) => c.t === "adubo" && c.h === habitoId).length;
 }

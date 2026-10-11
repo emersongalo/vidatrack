@@ -5,7 +5,7 @@
 // compra na lojinha com as moedas (cada hábito feito = 10 🪙).
 // Etapa 301 — o que você compra vai pro Armário (com looks salvos), dá pra
 // provar antes de comprar, girar o bichinho e tem muito mais itens.
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Lock, Check, Pencil, X, Shirt, ShoppingBag, Bookmark, Trash2 } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
@@ -19,6 +19,8 @@ import {
   NOMES_SLOT,
   alternarEquipado,
   apagarLook,
+  CONSUMIVEIS,
+  comprarConsumivel,
   comprar,
   itensDoArmario,
   MAX_LOOKS,
@@ -33,6 +35,7 @@ import {
   type Slot,
 } from "@/lib/mascote/mascote";
 import { useGiro } from "@/lib/mascote/useGiro";
+import { BandejaComida, BarrasVida } from "@/components/mascote/BandejaComida";
 import { Mascote } from "@/components/mascote/Mascote";
 import { CarregandoTela } from "@/components/Esqueleto";
 import { CabecalhoPagina } from "@/components/CabecalhoPagina";
@@ -40,21 +43,30 @@ import { chuvaDeConfete, textoFlutuante } from "@/lib/app/festa";
 import { vibrar } from "@/lib/app/vibrar";
 import { useContagem } from "@/components/NumeroAnimado";
 
-type Aba = Slot | "cores";
+type Aba = Slot | "cores" | "comidas";
 const ABAS: { id: Aba; nome: string }[] = [
+  { id: "comidas", nome: "🍎 Comidinhas" },
   { id: "chapeu", nome: "🎩 Chapéus" },
   { id: "oculos", nome: "🕶️ Óculos" },
   { id: "roupa", nome: "🧣 Roupas" },
   { id: "mao", nome: "☕ Na mão" },
   { id: "amigo", nome: "🐾 Amigos" },
-  { id: "fundo", nome: "🏖️ Cenários" },
+  { id: "fundo", nome: "🏡 Lugares" },
   { id: "cores", nome: "🎨 Cores" },
 ];
 
 export default function MascotePage() {
   const { snapshot } = useSnapshotOffline();
   const hoje = hojeISO();
-  const { mascote, feitos, fase, humor, moedas, salvar, salvando, erro } = useMascote(snapshot, hoje);
+  const { mascote, feitos, fase, humor, moedas, vida, salvar, salvando, erro } = useMascote(snapshot, hoje);
+  const [comendo, setComendo] = useState<{ emoji: string; n: number } | null>(null);
+  // Etapa 302 — /habitos/mascote?aba=comidas abre direto nas comidinhas
+  useEffect(() => {
+    try {
+      const a = new URLSearchParams(window.location.search).get("aba");
+      if (a && ABAS.some((x) => x.id === a)) setAba(a as Aba);
+    } catch {}
+  }, []);
   const [aba, setAba] = useState<Aba>("chapeu");
   const [confirmar, setConfirmar] = useState<string | null>(null);
   const [toques, setToques] = useState(0);
@@ -178,12 +190,17 @@ export default function MascotePage() {
       {/* palco */}
       <section
         className="relative overflow-hidden rounded-3xl border border-habito/30 mb-4"
-        style={fundo ? undefined : { background: "linear-gradient(160deg, rgb(var(--c-habito) / 0.18), rgb(var(--c-nota) / 0.08))" }}
+        style={{ background: "linear-gradient(160deg, rgb(var(--c-habito) / 0.18), rgb(var(--c-nota) / 0.08))" }}
       >
         <div ref={refPalco} className="relative flex justify-center cursor-grab active:cursor-grabbing select-none" {...eventos}>
           <div key={toques} className={toques ? "vtm-pulo" : ""}>
-            <Mascote cor={mascote.cor} fase={fase.nivel} humor={humor} equipados={vestindo} comFundo={!!fundo} tamanho={260} angulo={angulo} />
+            <Mascote cor={mascote.cor} fase={fase.nivel} humor={humor} equipados={vestindo} comFundo tamanho={260} angulo={angulo} />
           </div>
+          {comendo && (
+            <span key={comendo.n} className="absolute left-1/2 top-1/2 -ml-4 -mt-2 text-4xl vtm-comer" style={{ ["--de-x" as any]: "0px", ["--de-y" as any]: "120px" }}>
+              {comendo.emoji}
+            </span>
+          )}
           {/* balão de fala */}
           <div className="absolute top-3 left-3 right-3 flex justify-center pointer-events-none">
             <span key={itemProvando ? itemProvando.id : frase} className="vtm-fala bg-base-900/80 backdrop-blur text-ink-100 text-sm rounded-2xl px-3 py-1.5 shadow-lg max-w-[85%] text-center">
@@ -269,6 +286,40 @@ export default function MascotePage() {
           )}
         </div>
       </section>
+
+      {/* Etapa 302 — cuidar: barriga, saúde e despensa */}
+      {vida && (
+        <section className="rounded-3xl border border-base-600 bg-base-800 p-4 mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="font-semibold">Cuidar de {mascote.nome}</p>
+            {vida.estado !== "bem" && (
+              <span className={`text-xs font-semibold rounded-full px-2.5 py-1 ${vida.estado === "doente" ? "bg-red-500/15 text-red-300" : "bg-amber-500/15 text-amber-300"}`}>
+                {vida.estado === "doente" ? "🤒 Doente" : "🍎 Com fome"}
+              </span>
+            )}
+          </div>
+          <BarrasVida vida={vida} />
+          <p className="text-[11px] text-ink-400 mt-2 mb-3">
+            {vida.estado === "doente"
+              ? "Ficou dodói por falta de cuidado. Faça seus hábitos e dê um 💊 remédio — ele melhora rapidinho (e nunca morre)."
+              : vida.diasSemCuidar > 0
+                ? `Ficou ${vida.diasSemCuidar} ${vida.diasSemCuidar === 1 ? "dia" : "dias"} sem hábitos — cuide dele hoje!`
+                : "Cada hábito feito alimenta ele. Comidinhas e frutas do jardim dão um reforço."}
+          </p>
+          <BandejaComida
+            mascote={mascote}
+            vida={vida}
+            hoje={hoje}
+            salvar={salvar}
+            salvando={salvando}
+            aoComer={(emoji) => {
+              setComendo({ emoji, n: Date.now() });
+              setTimeout(() => setToques((n) => n + 1), 650);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </section>
+      )}
 
       <p className="text-xs text-ink-400 mb-4 text-center">
         Cada hábito feito vale {MOEDAS_POR_HABITO} 🪙 · arraste pro lado pra girar · toque nele 💚
@@ -369,6 +420,20 @@ export default function MascotePage() {
             {looks.length >= MAX_LOOKS && <p className="text-[11px] text-ink-400 mt-2">Até {MAX_LOOKS} looks — salvar outro substitui o mais antigo.</p>}
           </section>
 
+          {/* Etapa 302 — despensa */}
+          {CONSUMIVEIS.some((c) => (mascote.estoque?.[c.id] ?? 0) > 0) && (
+            <section>
+              <p className="text-xs uppercase tracking-wide text-ink-400 mb-2">Despensa</p>
+              <div className="flex flex-wrap gap-2">
+                {CONSUMIVEIS.filter((c) => (mascote.estoque?.[c.id] ?? 0) > 0).map((c) => (
+                  <span key={c.id} className="flex items-center gap-1.5 text-sm rounded-full bg-base-800 border border-base-600 px-3 py-1.5">
+                    {c.emoji} {c.nome} <strong>×{mascote.estoque?.[c.id]}</strong>
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
           {armario.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-4xl">🎒</p>
@@ -423,9 +488,46 @@ export default function MascotePage() {
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-ink-400 mb-2">Toque no desenho pra provar antes de comprar 👀</p>
+          <p className="text-[11px] text-ink-400 mb-2">
+            {aba === "comidas" ? "Comidinhas e remédios vão pra despensa; o adubo é pras plantas de dupla 🌱" : "Toque no desenho pra provar antes de comprar 👀"}
+          </p>
 
-          {aba === "cores" ? (
+          {aba === "comidas" ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {CONSUMIVEIS.filter((c) => c.preco > 0).map((c) => {
+                const tem = mascote.estoque?.[c.id] ?? 0;
+                const pode = moedas >= c.preco;
+                return (
+                  <div key={c.id} className="rounded-2xl border border-base-600 bg-base-800 p-3 flex flex-col items-center text-center">
+                    <span className="text-4xl">{c.emoji}</span>
+                    <p className="text-sm font-medium mt-1">{c.nome}</p>
+                    <p className="text-[11px] text-ink-400 leading-tight mt-0.5 min-h-[28px]">{c.descricao}</p>
+                    <p className="text-[10px] text-ink-400 mt-1">
+                      {c.barriga > 0 && `🍗 +${c.barriga} `}
+                      {c.saude > 0 && `❤️ +${c.saude}`}
+                      {c.tipo === "planta" && "🌱 +2 dias"}
+                      {tem > 0 && <span className="text-habito font-semibold"> · tem {tem}</span>}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={!pode || salvando}
+                      onClick={async () => {
+                        const r = comprarConsumivel(mascote, feitos, c.id);
+                        if (!r.ok) return;
+                        if (await salvar(r.mascote)) {
+                          vibrar(12);
+                          textoFlutuante(refPalco.current, `+1 ${c.emoji}`, "#F2C46D");
+                        }
+                      }}
+                      className={`mt-2 w-full rounded-xl py-1.5 text-xs font-semibold ${pode ? "border border-financa/50 text-financa" : "border border-base-600 text-ink-400 opacity-60"}`}
+                    >
+                      Comprar · {c.preco} 🪙
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : aba === "cores" ? (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {(Object.keys(CORES_MASCOTE) as CorMascote[]).map((c) => {
                 const info = CORES_MASCOTE[c];

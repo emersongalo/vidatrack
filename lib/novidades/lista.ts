@@ -1,13 +1,23 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "301";
+export const VERSAO_NOVIDADES = "302";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "302",
+    titulo: "Mascote de verdade e jardim da dupla",
+    itens: [
+      { emoji: "🍗", titulo: "Ele sente fome", texto: "Seu mascote agora tem barriga e saúde. Cada hábito feito alimenta; dias sem hábitos deixam ele com fome e, depois, dodói (ele nunca morre — melhora com hábitos e remédio).", href: "/habitos/mascote" },
+      { emoji: "🍎", titulo: "Comidinhas e farmácia", texto: "Use as moedas pra comprar maçã, sanduíche, sopinha, bolo, vitamina e remédio. Dê direto no palco da aba Hábitos.", href: "/habitos/mascote?aba=comidas" },
+      { emoji: "🌳", titulo: "Jardim da dupla com mascotes", texto: "Nos hábitos em dupla, os mascotes de vocês cuidam da planta: quem fez o hábito aparece regando. A partir da flor ela dá frutos — colha e alimente seu bichinho. Adubo faz crescer mais rápido.", href: "/habitos/juntos" },
+      { emoji: "🌅", titulo: "Lugares vivos", texto: "O cenário virou a casa dele: muda com a hora (manhã, tarde, pôr do sol, noite) e o tempo segue o humor — sol, nuvens, chuva. Quem não comprou nenhum mora na casinha." },
+    ],
+  },
   {
     versao: "301",
     titulo: "Armário do mascote e itens novos",

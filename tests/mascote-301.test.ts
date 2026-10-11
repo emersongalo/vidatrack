@@ -77,7 +77,7 @@ describe("Etapa 301 — armário, looks e itens novos", () => {
 
   it("giro e novidades 301", () => {
     expect(frenteMaisPerto(190)).toBe(360);
-    expect(VERSAO_NOVIDADES).toBe("301");
-    expect(NOVIDADES[0].versao).toBe("301");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(301);
+    expect(NOVIDADES.some((g) => g.versao === "301")).toBe(true);
   });
 });

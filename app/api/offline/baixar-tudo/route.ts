@@ -111,6 +111,8 @@ export async function GET() {
   const meusCheckins = (checkins ?? []).filter((c: any) => !c.usuario_id || c.usuario_id === user.id);
   const checkinsCompartilhados = (checkins ?? []).filter((c: any) => c.usuario_id && c.usuario_id !== user.id);
   let parceiros: { habito_id: string; usuario_id: string; nome: string }[] = [];
+  // Etapa 302 — o mascote de quem divide hábito comigo (pro jardim da dupla)
+  let parceirosMascote: { usuario_id: string; mascote: unknown; feitos: number | null }[] = [];
   if (idsHabitos.length) {
     const { data: convites } = await supabase
       .from("compartilhamentos")
@@ -138,6 +140,18 @@ export async function GET() {
       })
     );
     parceiros = [...porHabito.entries()].flatMap(([h, us]) => [...us].map((u) => ({ habito_id: h, usuario_id: u, nome: nomes.get(u) ?? "Seu par" })));
+    try {
+      type PM = { usuario_id: string; mascote: unknown; feitos: number | null };
+      const lidos = await Promise.all(
+        ids.map(async (u): Promise<PM | null> => {
+          const { data, error } = await supabase.rpc("mascote_do_parceiro", { p_user_id: u });
+          if (error || !data) return null;
+          const d = data as { mascote?: unknown; feitos?: number };
+          return { usuario_id: u, mascote: d.mascote ?? null, feitos: typeof d.feitos === "number" ? d.feitos : null };
+        })
+      );
+      parceirosMascote = lidos.filter((x): x is PM => x !== null);
+    } catch {}
   }
 
   // Etapa 298 — moedas do mascote: total de hábitos feitos desde sempre
@@ -178,6 +192,7 @@ export async function GET() {
     habitoCheckins: meusCheckins,
     checkinsCompartilhados,
     parceiros,
+    parceirosMascote,
     tarefas: tarefas ?? [],
     conclusoesTarefas: conclusoesTarefas ?? [],
     categoriasProdutividade: categoriasProdutividade ?? [],

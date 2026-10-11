@@ -3,11 +3,14 @@
 // Etapa 298 — junta tudo que o mascote precisa a partir do retrato local:
 // dados salvos (perfis.mascote), hábitos feitos desde sempre (moedas),
 // como está o dia de hoje (humor) e a função de salvar.
+// Etapa 302 — barriga e saúde (lib/mascote/vida.ts): com fome ou doente,
+// o humor muda pra "fome"/"doente".
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { resumoDoDia } from "@/lib/painel/seuDia";
-import { faseDoMascote, humorDoMascote, lerMascote, moedasDisponiveis, type DadosMascote } from "@/lib/mascote/mascote";
+import { faseDoMascote, humorDoMascote, lerMascote, moedasDisponiveis, type DadosMascote, type Humor } from "@/lib/mascote/mascote";
+import { calcularVida, type Vida } from "@/lib/mascote/vida";
 
 /** Hábitos feitos desde sempre; sem o número do servidor, conta o que tem no retrato. */
 export function feitosDesdeSempre(snapshot: any): number {
@@ -15,6 +18,14 @@ export function feitosDesdeSempre(snapshot: any): number {
   if (typeof total === "number") return total;
   const negativos = new Set(((snapshot?.habitos ?? []) as any[]).filter((h) => h.eh_negativo).map((h) => h.id));
   return ((snapshot?.habitoCheckins ?? []) as any[]).filter((c) => !negativos.has(c.habito_id)).length;
+}
+
+/** Humor final: doente pesa mais que tudo; fome só não ganha do sono. */
+export function humorComVida(base: Humor, vida: Vida | null): Humor {
+  if (!vida) return base;
+  if (vida.estado === "doente") return "doente";
+  if (vida.estado === "fome" && base !== "dormindo" && base !== "radiante") return "fome";
+  return base;
 }
 
 export function useMascote(snapshot: any, hoje: string) {
@@ -27,7 +38,9 @@ export function useMascote(snapshot: any, hoje: string) {
   const feitos = feitosDesdeSempre(snapshot);
   const dia = snapshot ? resumoDoDia(snapshot, hoje) : null;
   const fase = faseDoMascote(feitos);
-  const humor = humorDoMascote(dia?.habitos.feitos ?? 0, dia?.habitos.total ?? 0, new Date().getHours());
+  const hora = new Date().getHours();
+  const vida = snapshot && mascote ? calcularVida(snapshot, hoje, hora, mascote.consumos ?? [], mascote.criadoEm) : null;
+  const humor = humorComVida(humorDoMascote(dia?.habitos.feitos ?? 0, dia?.habitos.total ?? 0, hora), vida);
   const moedas = mascote ? moedasDisponiveis(feitos, mascote.gastos) : feitos * 10;
 
   async function salvar(novo: DadosMascote): Promise<boolean> {
@@ -51,5 +64,5 @@ export function useMascote(snapshot: any, hoje: string) {
     }
   }
 
-  return { mascote, feitos, fase, humor, moedas, dia, salvar, salvando, erro };
+  return { mascote, feitos, fase, humor, moedas, dia, vida, salvar, salvando, erro };
 }

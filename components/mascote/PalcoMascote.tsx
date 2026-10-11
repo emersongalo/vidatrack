@@ -13,6 +13,7 @@ import { fraseDoHumor, MOEDAS_POR_HABITO, type Humor } from "@/lib/mascote/masco
 import { Mascote } from "@/components/mascote/Mascote";
 import { vibrar } from "@/lib/app/vibrar";
 import { useGiro } from "@/lib/mascote/useGiro";
+import { BandejaComida, BarrasVida } from "@/components/mascote/BandejaComida";
 
 export const PALCO_HUMOR: Record<Humor, { rotulo: string; fundo: string }> = {
   radiante: { rotulo: "🤩 Radiante", fundo: "linear-gradient(170deg, rgba(251,191,36,.32), rgba(251,146,60,.12) 60%, rgba(251,191,36,.05))" },
@@ -20,6 +21,8 @@ export const PALCO_HUMOR: Record<Humor, { rotulo: string; fundo: string }> = {
   neutro: { rotulo: "🙂 Esperando você", fundo: "linear-gradient(170deg, rgba(148,163,184,.22), rgba(148,163,184,.05))" },
   triste: { rotulo: "🥺 Com saudade", fundo: "linear-gradient(170deg, rgba(96,165,250,.26), rgba(71,85,105,.12))" },
   dormindo: { rotulo: "😴 Dormindo", fundo: "linear-gradient(170deg, rgba(49,46,129,.55), rgba(30,27,75,.25))" },
+  fome: { rotulo: "🍎 Com fome", fundo: "linear-gradient(170deg, rgba(245,158,11,.22), rgba(120,53,15,.08))" },
+  doente: { rotulo: "🤒 Dodói", fundo: "linear-gradient(170deg, rgba(100,116,139,.32), rgba(51,65,85,.14))" },
 };
 
 const CHAVE_DICA = "vt-mascote-girou";
@@ -27,7 +30,8 @@ const CHAVE_DICA = "vt-mascote-girou";
 export { frenteMaisPerto } from "@/lib/mascote/useGiro";
 
 export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }) {
-  const { mascote, fase, humor, moedas, dia } = useMascote(snapshot, hoje);
+  const { mascote, fase, humor, moedas, dia, vida, salvar, salvando } = useMascote(snapshot, hoje);
+  const [comendo, setComendo] = useState<{ emoji: string; n: number } | null>(null);
   const [pulos, setPulos] = useState(0);
   const [semente, setSemente] = useState(() => new Date().getDate());
   const [ganho, setGanho] = useState(0);
@@ -109,8 +113,14 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
           aria-label="Arraste pro lado para girar o mascote, toque para ele pular"
         >
           <div key={pulos} className={pulos ? "vtm-pulo" : ""}>
-            <Mascote cor={cor} fase={nivel} humor={humor} equipados={mascote?.equipados} tamanho={150} angulo={angulo} />
+            {/* Etapa 302 — ele aparece no lugar onde mora (muda com a hora e o tempo) */}
+            <Mascote cor={cor} fase={nivel} humor={humor} equipados={mascote?.equipados} tamanho={150} angulo={angulo} comFundo={!!mascote} />
           </div>
+          {comendo && (
+            <span key={comendo.n} className="absolute left-1/2 top-1/2 -ml-3 -mt-3 text-2xl vtm-comer" style={{ ["--de-x" as any]: "50px", ["--de-y" as any]: "50px" }}>
+              {comendo.emoji}
+            </span>
+          )}
           {dica && (
             <span className="absolute bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] text-ink-300 bg-base-900/60 rounded-full px-2 py-0.5 pointer-events-none vtm-dica">
               ↔ arraste pra girar
@@ -125,8 +135,13 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
           </p>
           {mascote ? (
             <>
+              {vida && (
+                <div className="mt-2.5">
+                  <BarrasVida vida={vida} compacto />
+                </div>
+              )}
               {fase.proxima ? (
-                <div className="mt-3">
+                <div className="mt-2">
                   <div className="h-1.5 rounded-full bg-base-900/50 overflow-hidden">
                     <div className="h-full rounded-full bg-habito transition-all duration-700" style={{ width: `${Math.round(fase.progresso * 100)}%` }} />
                   </div>
@@ -137,12 +152,6 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
               ) : (
                 <p className="text-[11px] text-ink-400 mt-2">Fase máxima — lendário! ✨</p>
               )}
-              <Link
-                href="/habitos/mascote"
-                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full bg-base-900/50 hover:bg-base-900/70 px-3 py-1.5 transition"
-              >
-                <ShoppingBag size={13} /> Lojinha e roupas
-              </Link>
             </>
           ) : (
             <Link
@@ -154,6 +163,31 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
           )}
         </div>
       </div>
+
+      {/* Etapa 302 — cuidar: dar comidinha/remédio direto daqui */}
+      {mascote && (
+        <div className="relative flex items-center gap-2 px-3 pb-3">
+          <div className="min-w-0 flex-1">
+            <BandejaComida
+              mascote={mascote}
+              vida={vida}
+              hoje={hoje}
+              salvar={salvar}
+              salvando={salvando}
+              aoComer={(emoji) => {
+                setComendo({ emoji, n: Date.now() });
+                setTimeout(() => setPulos((p) => p + 1), 650);
+              }}
+            />
+          </div>
+          <Link
+            href="/habitos/mascote"
+            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full bg-base-900/50 hover:bg-base-900/70 px-3 py-2 transition"
+          >
+            <ShoppingBag size={13} /> Lojinha
+          </Link>
+        </div>
+      )}
     </section>
   );
 }
