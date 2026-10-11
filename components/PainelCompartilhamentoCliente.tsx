@@ -6,6 +6,7 @@ import {
   convidarPorEmail,
   convidarPessoaConhecida,
   removerCompartilhamento,
+  descompartilharHabito,
   removerConvite,
   reenviarConvite,
   type TipoItem,
@@ -192,10 +193,23 @@ export function PainelCompartilhamentoCliente({
                     {RÓTULOS_PERMISSAO[c.permissao]} · <span className="text-habito">✓ aceitou</span>
                   </p>
                 </div>
+                {/* Etapa 303 — hábito: descompartilha avisando a pessoa (ela fica com uma cópia e o histórico dela) */}
                 <BotaoComConfirmacao
-                  acao={() => removerCompartilhamento(c.id, caminhoRetorno)}
-                  textoBotao="Remover"
-                  textoConfirmacao="Essa pessoa perde o acesso:"
+                  acao={
+                    tipoItem === "habito" && c.usuario_convidado_id
+                      ? async () => {
+                          const r = await descompartilharHabito(itemId, c.usuario_convidado_id);
+                          if (!r.ok) setErro(r.erro ?? "Não deu pra descompartilhar");
+                          else setAviso(r.saiu ? "Você saiu do hábito compartilhado." : "Descompartilhado — a pessoa foi avisada.");
+                        }
+                      : () => removerCompartilhamento(c.id, caminhoRetorno)
+                  }
+                  textoBotao={tipoItem === "habito" ? "Descompartilhar" : "Remover"}
+                  textoConfirmacao={
+                    tipoItem === "habito"
+                      ? "Tem certeza? A pessoa sai do hábito (fica com uma cópia com o histórico dela) e recebe um aviso:"
+                      : "Essa pessoa perde o acesso:"
+                  }
                   aoConcluir={buscar}
                 />
               </li>

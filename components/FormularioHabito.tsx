@@ -1,5 +1,6 @@
 "use client";
 
+import { EscolherCompartilhar } from "@/components/EscolherCompartilhar";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
@@ -38,7 +39,10 @@ export function FormularioHabito({
   textoBotao,
   topo,
   outrosHabitos = [],
+  comCompartilhar = false,
 }: {
+  /** Etapa 303 — mostra "Compartilhar com…" (só ao criar) */
+  comCompartilhar?: boolean;
   /** Etapa 249 — pra escolher "fazer logo depois de…" */
   outrosHabitos?: { id: string; nome: string }[];
   /** Etapa 227 — topo colorido (na cor do hábito) com o nome em destaque */
@@ -381,6 +385,9 @@ export function FormularioHabito({
         ehContador={!ehNegativo && metaDiaria > 1}
         unidade={unidadeTexto.trim() || undefined}
       />
+
+      {/* Etapa 303 — já compartilhar ao criar (opcional) */}
+      {comCompartilhar && <EscolherCompartilhar tipo="habito" />}
 
       </div>
       </div>

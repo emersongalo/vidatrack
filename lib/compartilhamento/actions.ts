@@ -317,3 +317,62 @@ export async function responderConvite(
   revalidatePath("/convites");
   return { ok: true, tipoItem: r.tipo_item, itemId: r.item_id };
 }
+
+/**
+ * Etapa 303 — descompartilhar um hábito em dupla. Funciona dos dois lados:
+ * quem criou tira o par (outroId) ou quem foi convidado sai. Quem era
+ * convidado fica com uma cópia só dele, com o próprio histórico (função
+ * `descompartilhar_habito` no banco). O outro recebe uma notificação.
+ */
+export async function descompartilharHabito(habitoId: string, outroId?: string | null): Promise<{ ok: boolean; erro?: string; saiu?: boolean }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, erro: "Entre de novo na sua conta" };
+  if (!/^[0-9a-f-]{36}$/i.test(habitoId) || (outroId && !/^[0-9a-f-]{36}$/i.test(outroId))) return { ok: false, erro: "Pedido inválido" };
+
+  const { data, error } = await supabase.rpc("descompartilhar_habito", { p_habito: habitoId, p_outro: outroId ?? null });
+  if (error) {
+    if (/function .*descompartilhar_habito/i.test(error.message)) return { ok: false, erro: "Falta atualizar o banco (rode o SQL da Etapa 303 no Supabase)" };
+    return { ok: false, erro: "Não deu pra descompartilhar agora — tente de novo" };
+  }
+  const r = (data ?? {}) as { avisar?: string; nome?: string; saiu?: boolean; meu_nome?: string };
+  if (r.avisar) {
+    try {
+      const admin = criarClienteAdmin("aviso_descompartilhar", "Avisar que um hábito em dupla foi descompartilhado");
+      const quem = r.meu_nome || "Seu par";
+      await avisarUsuario(
+        admin,
+        r.avisar,
+        "💔 Hábito descompartilhado",
+        r.saiu
+          ? `${quem} saiu do hábito "${r.nome ?? ""}". Ele continua com você, agora só seu.`
+          : `${quem} descompartilhou o hábito "${r.nome ?? ""}". Você ficou com uma cópia só sua, com todo o seu histórico.`,
+        "/habitos"
+      );
+    } catch {
+      /* aviso é extra */
+    }
+  }
+  revalidatePath("/habitos");
+  revalidatePath("/habitos/juntos");
+  return { ok: true, saiu: !!r.saiu };
+}
+
+/**
+ * Etapa 303 — já convidar na hora de criar o hábito/tarefa (campo
+ * opcional "Compartilhar com…" do formulário). Não trava a criação: se o
+ * convite falhar, devolve o motivo pra mostrar.
+ */
+export async function convidarAoCriar(tipoItem: TipoItem, itemId: string, formData: FormData): Promise<string | null> {
+  const usuarioId = String(formData.get("compartilharUsuario") ?? "").trim();
+  const email = String(formData.get("compartilharEmail") ?? "").trim().toLowerCase();
+  const permissao = formData.get("compartilharPermissao") === "edicao" ? "edicao" : "leitura";
+  if (!usuarioId && !email) return null;
+  const caminho = tipoItem === "tarefa" ? "/tarefas" : "/habitos";
+  const r = usuarioId
+    ? await convidarPessoaConhecida(tipoItem, itemId, caminho, { usuarioId }, permissao)
+    : await convidarPorEmail(tipoItem, itemId, caminho, email, permissao);
+  return r.ok ? null : r.erro ?? "Não deu pra enviar o convite";
+}

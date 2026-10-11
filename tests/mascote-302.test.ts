@@ -133,7 +133,7 @@ describe("Etapa 302 — bichinho virtual", () => {
   });
 
   it("novidades 302", () => {
-    expect(VERSAO_NOVIDADES).toBe("302");
-    expect(NOVIDADES[0].versao).toBe("302");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(302);
+    expect(NOVIDADES.some((g) => g.versao === "302")).toBe(true);
   });
 });

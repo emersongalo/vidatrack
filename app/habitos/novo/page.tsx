@@ -36,6 +36,7 @@ function NovoHabitoConteudo() {
         categorias={(snapshot?.categoriasProdutividade ?? []) as any}
         outrosHabitos={((snapshot?.habitos ?? []) as any[]).filter((h) => !h.eh_negativo).map((h) => ({ id: h.id, nome: h.nome }))}
         textoBotao="Criar hábito"
+        comCompartilhar
         topo={{ titulo: "Novo hábito", voltarHref: "/habitos" }}
       />
       <div className="px-6 md:px-12 mt-2">

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { criarTarefa } from "@/app/habitos/tarefas/actions";
+import { EscolherCompartilhar } from "@/components/EscolherCompartilhar";
 import { SeletorIcone } from "@/components/SeletorIcone";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { PRIORIDADES, descreverRepeticao } from "@/lib/agenda/recorrencia";
@@ -57,7 +58,10 @@ export function FormularioTarefa({
   valoresIniciais,
   contasFinancas = [],
   categoriasFinancas = [],
+  comCompartilhar = false,
 }: {
+  /** Etapa 303 — mostra "Compartilhar com…" (só ao criar) */
+  comCompartilhar?: boolean;
   /** Etapa 194 — pra vincular a tarefa a um lançamento */
   contasFinancas?: { id: string; nome: string }[];
   categoriasFinancas?: { id: string; nome: string; tipo: string }[];
@@ -454,6 +458,9 @@ export function FormularioTarefa({
             )}
           </div>
         </div>
+
+        {/* Etapa 303 — já compartilhar ao criar (opcional) */}
+        {comCompartilhar && <EscolherCompartilhar tipo="tarefa" />}
 
         <div className="mt-8 lg:max-w-sm lg:ml-auto">
           <BotaoSalvarFormulario>{textoBotao}</BotaoSalvarFormulario>

@@ -1,13 +1,23 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "302";
+export const VERSAO_NOVIDADES = "303";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "303",
+    titulo: "Mascote no Início e compartilhar mais fácil",
+    itens: [
+      { emoji: "🐣", titulo: "Mascote no Início", texto: "Dá pra colocar seu bichinho no Início: toque em Organizar e ligue \"Seu mascote\"." },
+      { emoji: "🌱", titulo: "Juntos com os mascotes", texto: "O cartão Juntos do Início agora mostra o seu mascote e o do seu par cuidando das plantas — quem já fez aparece regando.", href: "/habitos/juntos" },
+      { emoji: "🤝", titulo: "Compartilhar ao criar", texto: "Ao criar um hábito ou uma tarefa, escolha se quer compartilhar e com quem — é opcional. O convite sai junto." },
+      { emoji: "💔", titulo: "Descompartilhar", texto: "Em Juntos dá pra descompartilhar um hábito (com confirmação). Cada um fica com o seu hábito e o próprio histórico, e o outro recebe um aviso.", href: "/habitos/juntos" },
+    ],
+  },
   {
     versao: "302",
     titulo: "Mascote de verdade e jardim da dupla",

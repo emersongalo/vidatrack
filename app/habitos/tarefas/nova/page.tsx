@@ -25,6 +25,7 @@ function NovaTarefaConteudo() {
       contasFinancas={((snapshot?.financas.contas ?? []) as any[]).filter((c) => c.dono_id === undefined || c.dono_id === snapshot?.perfil.id)}
       categoriasFinancas={((snapshot?.financas.categorias ?? []) as any[]).filter((c) => c.dono_id === snapshot?.perfil.id)}
       erro={searchParams.get("erro") ?? undefined}
+      comCompartilhar
       hoje={hojeISO()}
       // Etapa 259 — vindo da lista filtrada, já abre na categoria escolhida
       valoresIniciais={

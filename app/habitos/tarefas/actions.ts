@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hojeISO } from "@/lib/habitos/streak";
+import { convidarAoCriar } from "@/lib/compartilhamento/actions";
 
 // Etapa 193 — lê os campos de repetição/prioridade do formulário e
 // devolve já no formato das colunas. Compartilhado por criar e editar
@@ -86,7 +87,7 @@ export async function criarTarefa(formData: FormData) {
     feita: false,
   }));
 
-  const { error } = await supabase.from("tarefas").insert({
+  const { data: criada, error } = await supabase.from("tarefas").insert({
     dono_id: user!.id,
     titulo,
     icone,
@@ -97,10 +98,19 @@ export async function criarTarefa(formData: FormData) {
     observacoes: observacoes || null,
     ordem: count ?? 0,
     ...financa.campos,
-  });
+  }).select("id").single();
 
   if (error) {
     redirect(`/tarefas/nova?erro=${encodeURIComponent(error.message)}`);
+  }
+
+  // Etapa 303 — "Compartilhar com…" escolhido no formulário
+  if (criada?.id) {
+    const erroConvite = await convidarAoCriar("tarefa", criada.id as string, formData);
+    if (erroConvite) {
+      revalidatePath("/tarefas");
+      redirect(`/tarefas/${criada.id}?erro=${encodeURIComponent(`Tarefa criada, mas o convite não saiu: ${erroConvite}`)}`);
+    }
   }
 
   revalidatePath("/habitos");

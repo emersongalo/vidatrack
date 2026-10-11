@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 import { rotuloDoDia } from "@/lib/financas/agruparPorDia";
 import { Dica } from "@/components/Dica";
 import { JardimDupla, type ParceiroMascote } from "@/components/mascote/JardimDupla";
+import { BotaoDescompartilhar } from "@/components/BotaoDescompartilhar";
 import { useMascote } from "@/lib/mascote/useMascote";
 
 type Recado = { id: string; tipo: string; emoji: string | null; de_nome: string | null; habito_nome: string | null; de_usuario: string; criado_em: string };
@@ -158,6 +159,22 @@ export default function JuntosPage() {
                   <p className="text-base font-medium">{fraseDoHumor(info.humor, nomes)}</p>
                 </div>
                 <FaixaDupla habitoId={habito.id} dupla={info} dataISO={hoje} ehHoje />
+                {/* Etapa 303 — descompartilhar (com confirmação; o outro é avisado) */}
+                <div className="flex flex-wrap justify-end gap-3 px-5 py-3 border-t border-base-600">
+                  {habito.dono_id === eu ? (
+                    info.parceiros.map((p) => (
+                      <BotaoDescompartilhar key={p.id} habitoId={habito.id} habitoNome={habito.nome} souDono parceiro={{ id: p.id, nome: p.nome }} compacto />
+                    ))
+                  ) : (
+                    <BotaoDescompartilhar
+                      habitoId={habito.id}
+                      habitoNome={habito.nome}
+                      souDono={false}
+                      parceiro={info.parceiros.find((p) => p.id === habito.dono_id) ?? info.parceiros[0]}
+                      compacto
+                    />
+                  )}
+                </div>
               </section>
             );
           })}
@@ -178,8 +195,12 @@ export default function JuntosPage() {
                     ? `${quem} reagiu ${r.emoji ?? ""} a ${r.habito_nome}`
                     : r.tipo === "dupla"
                       ? `Toque duplo em ${r.habito_nome} 🙌`
-                      : `${quem} fez ${r.habito_nome}`;
-              const icone = r.tipo === "cutucar" ? "👉" : r.tipo === "reacao" ? r.emoji ?? "❤️" : r.tipo === "dupla" ? "🙌" : "💚";
+                      : r.tipo === "descompartilhou"
+                        ? deMim
+                          ? `Você descompartilhou ${r.habito_nome}`
+                          : `${quem} descompartilhou ${r.habito_nome}`
+                        : `${quem} fez ${r.habito_nome}`;
+              const icone = r.tipo === "descompartilhou" ? "💔" : r.tipo === "cutucar" ? "👉" : r.tipo === "reacao" ? r.emoji ?? "❤️" : r.tipo === "dupla" ? "🙌" : "💚";
               return (
                 <li key={r.id} className="flex items-center gap-3 px-4 py-3">
                   <span className="text-2xl w-8 text-center">{icone}</span>

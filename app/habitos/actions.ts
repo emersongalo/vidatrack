@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hojeISO, calcularStreak, MARCOS_CONQUISTA } from "@/lib/habitos/streak";
 import { normalizarHorarios } from "@/lib/habitos/horariosLembrete";
+import { convidarAoCriar } from "@/lib/compartilhamento/actions";
 
 export async function criarHabito(formData: FormData) {
   const supabase = createClient();
@@ -42,7 +43,7 @@ export async function criarHabito(formData: FormData) {
     redirect(`/habitos/novo?erro=${encodeURIComponent("Dê um nome para o hábito")}`);
   }
 
-  const { error } = await supabase.from("habitos").insert({
+  const { data: criado, error } = await supabase.from("habitos").insert({
     dono_id: user!.id,
     nome,
     cor,
@@ -59,10 +60,19 @@ export async function criarHabito(formData: FormData) {
     economia_dia: economiaDia,
     depois_de: depoisDe,
     ordem: count ?? 0,
-  });
+  }).select("id").single();
 
   if (error) {
     redirect(`/habitos/novo?erro=${encodeURIComponent(error.message)}`);
+  }
+
+  // Etapa 303 — "Compartilhar com…" escolhido no formulário
+  if (criado?.id) {
+    const erroConvite = await convidarAoCriar("habito", criado.id as string, formData);
+    if (erroConvite) {
+      revalidatePath("/habitos");
+      redirect(`/habitos/${criado.id}/compartilhar?erro=${encodeURIComponent(`Hábito criado, mas o convite não saiu: ${erroConvite}`)}`);
+    }
   }
 
   revalidatePath("/habitos");

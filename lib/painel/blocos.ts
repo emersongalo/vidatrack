@@ -7,6 +7,7 @@ export type AreaBloco = "habitos" | "financas" | "geral";
 
 export type IdBloco =
   | "seuDia"
+  | "mascote"
   | "juntos"
   | "sequencias"
   | "semanaHabitos"
@@ -25,6 +26,8 @@ export type IdBloco =
 
 export const BLOCOS: { id: IdBloco; nome: string; emoji: string; area: AreaBloco; texto: string }[] = [
   { id: "seuDia", nome: "Seu dia", emoji: "✅", area: "habitos", texto: "Anel dos hábitos de hoje e o que falta" },
+  // Etapa 303 — o mascote no Início (opcional, liga em Organizar)
+  { id: "mascote", nome: "Seu mascote", emoji: "🐣", area: "habitos", texto: "O bichinho que cresce com seus hábitos — dá pra girar e alimentar" },
   { id: "juntos", nome: "Juntos", emoji: "🌱", area: "habitos", texto: "A cena dos hábitos em dupla, com as plantinhas" },
   { id: "sequencias", nome: "Sequências", emoji: "🔥", area: "habitos", texto: "Seus hábitos com as maiores sequências" },
   { id: "semanaHabitos", nome: "Semana dos hábitos", emoji: "📊", area: "habitos", texto: "Quanto você fez em cada dia dos últimos 7" },
@@ -46,7 +49,7 @@ export type ModoInicio = "habitos" | "financas" | "ambos";
 
 export const MODELOS: Record<ModoInicio, { nome: string; emoji: string; blocos: IdBloco[] }> = {
   ambos: { nome: "Os dois", emoji: "✨", blocos: ["seuDia", "juntos", "saldo", "proximos", "gastosSemana", "sequencias", "resumo"] },
-  habitos: { nome: "Só hábitos", emoji: "✅", blocos: ["seuDia", "juntos", "sequencias", "semanaHabitos", "humor", "proximos"] },
+  habitos: { nome: "Só hábitos", emoji: "✅", blocos: ["seuDia", "mascote", "juntos", "sequencias", "semanaHabitos", "humor", "proximos"] },
   financas: { nome: "Só finanças", emoji: "💰", blocos: ["saldo", "gastosSemana", "teto", "categorias", "faturas", "metasFinanceiras", "proximos"] },
 };
 

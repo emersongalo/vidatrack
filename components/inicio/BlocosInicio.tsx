@@ -11,6 +11,7 @@ import { CHAVE_INICIO, lerBlocosInicio, type IdBloco } from "@/lib/painel/blocos
 import { resumoDoDia } from "@/lib/painel/seuDia";
 import type { ResumoDia } from "@/lib/painel/seuDia";
 import { JuntosPainel } from "@/components/JuntosPainel";
+import { PalcoMascote } from "@/components/mascote/PalcoMascote";
 import { ProximosPainel } from "@/components/ProximosPainel";
 import { PainelCartoes } from "@/components/PainelCartoes";
 import { CaixaAssistente } from "@/components/CaixaAssistente";
@@ -78,6 +79,8 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
   const blocos: Record<IdBloco, React.ReactNode> = {
     // Etapa 287 — o anel do dia foi pro topo; aqui fica o que falta, com um toque pra abrir
     seuDia: <PraFazer resumo={resumoHoje} />,
+    // Etapa 303
+    mascote: <PalcoMascote snapshot={snapshot} hoje={hoje} />,
     juntos: <JuntosPainel snapshot={snapshot} hoje={hoje} />,
     sequencias: <SequenciasInicio s={snapshot} hoje={hoje} />,
     semanaHabitos: <SemanaHabitosInicio s={snapshot} hoje={hoje} />,
