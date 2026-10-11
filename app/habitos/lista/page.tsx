@@ -37,6 +37,10 @@ export default function ListaHabitosPage() {
           <Link href="/habitos/estatisticas" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
             📊 Estatísticas
           </Link>
+          {/* Etapa 295 */}
+          <Link href="/habitos/tela" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
+            📱 Tempo de tela
+          </Link>
           <Link href="/habitos/lixeira" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
             🗑️ Lixeira
           </Link>

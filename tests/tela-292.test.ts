@@ -46,10 +46,10 @@ describe("Etapa 292 — tempo de tela", () => {
   });
   it("nome do hábito", () => {
     expect(nomeDoHabitoTela(["redes"], 60)).toBe("Redes sociais até 1h");
-    expect(nomeDoHabitoTela(["redes", "video"], 90)).toBe("Tempo de tela até 90 min");
+    expect(nomeDoHabitoTela(["redes", "video"], 90)).toBe("Redes sociais + Vídeo e streaming até 90 min");
   });
   it("novidades 292", () => {
-    expect(VERSAO_NOVIDADES).toBe("292");
-    expect(NOVIDADES[0].versao).toBe("292");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(292);
+    expect(NOVIDADES.some((g) => g.versao === "292")).toBe(true);
   });
 });

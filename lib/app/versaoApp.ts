@@ -9,9 +9,13 @@
 // funcionar (ex: mudou algo no app nativo que o site precisa). Abaixo
 // dela, o aviso não deixa fechar.
 export const VERSAO_NA_LOJA = {
-  codigo: 41,
-  nome: "1.1.0",
-  novidades: ["Barra de cima do celular com a cor da tela", "Widgets abrindo na página certa"],
+  codigo: 43,
+  nome: "1.2.0",
+  novidades: [
+    "📱 Tempo de tela: veja quanto usa cada app",
+    "📵 Hábitos de tela que se marcam sozinhos",
+    "🧩 Widgets novos: Meu dia e Pode gastar hoje",
+  ],
 };
 export const VERSAO_MINIMA = 0;
 

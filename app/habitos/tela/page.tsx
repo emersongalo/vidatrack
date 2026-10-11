@@ -6,11 +6,11 @@
 // Os dados de uso ficam só no celular — nada disso vai pro servidor.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ShieldCheck, Smartphone, RefreshCw } from "lucide-react";
+import { ShieldCheck, Smartphone, RefreshCw, Plus, X } from "lucide-react";
 import { CabecalhoPagina } from "@/components/CabecalhoPagina";
 import { estadoTela, abrirPermissaoTela, lerUsoPorDia, type EstadoTela } from "@/lib/tela/nativo";
-import { CATEGORIAS_TELA, formatarMinutos, minutosNasCategorias, resumirDia, type CategoriaTela, type DiaUso } from "@/lib/tela/categorias";
-import { gravarConfigTela, lerConfigTela, nomeDoHabitoTela, type ConfigHabitoTela } from "@/lib/tela/habitoTela";
+import { CATEGORIAS_TELA, formatarMinutos, resumirDia, type CategoriaTela, type DiaUso } from "@/lib/tela/categorias";
+import { gravarRegrasTela, lerRegrasTela, minutosDaRegra, nomeDaRegra, SUGESTOES_TELA, type RegraTela } from "@/lib/tela/habitoTela";
 import { conferirHabitoTela } from "@/components/SincronizadorTela";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
@@ -18,7 +18,7 @@ import { hojeISO } from "@/lib/habitos/streak";
 import { useContagem } from "@/components/NumeroAnimado";
 import { vibrar } from "@/lib/app/vibrar";
 
-const LIMITES = [30, 60, 90, 120, 180];
+const LIMITES = [15, 30, 60, 90, 120, 180, 240];
 const LETRAS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 function Barra({ pct, cor }: { pct: number; cor: string }) {
@@ -33,8 +33,12 @@ function Barra({ pct, cor }: { pct: number; cor: string }) {
 export default function TempoDeTelaPage() {
   const [estado, setEstado] = useState<EstadoTela | null>(null);
   const [dias, setDias] = useState<DiaUso[] | null>(null);
-  const [config, setConfig] = useState<ConfigHabitoTela | null>(null);
+  // Etapa 295 — vários hábitos de tela
+  const [regras, setRegras] = useState<RegraTela[]>([]);
+  const [criando, setCriando] = useState(false);
+  const [modo, setModo] = useState<"tipo" | "apps" | "tudo">("tipo");
   const [escolhidas, setEscolhidas] = useState<CategoriaTela[]>(["redes"]);
+  const [appsEscolhidos, setAppsEscolhidos] = useState<{ pacote: string; nome: string }[]>([]);
   const [limite, setLimite] = useState(60);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -47,7 +51,7 @@ export default function TempoDeTelaPage() {
   }, []);
 
   useEffect(() => {
-    setConfig(lerConfigTela());
+    setRegras(lerRegrasTela());
     void carregar();
     // voltou das configurações do Android → confere de novo
     const aoVoltar = () => document.visibilityState === "visible" && void carregar();
@@ -64,8 +68,20 @@ export default function TempoDeTelaPage() {
   const media = totais.length ? Math.round(totais.reduce((s, t) => s + t.total, 0) / totais.length) : 0;
   const totalAnimado = useContagem(resumo?.total ?? 0, 900);
 
-  async function criarHabito() {
-    if (!escolhidas.length || salvando) return;
+  // apps usados nos últimos 7 dias (pra escolher), do mais usado pro menos
+  const appsDaSemana = useMemo(() => {
+    const soma = new Map<string, { pacote: string; nome: string; minutos: number }>();
+    for (const d of dias ?? [])
+      for (const a of d.apps) {
+        const atual = soma.get(a.pacote) ?? { pacote: a.pacote, nome: a.nome, minutos: 0 };
+        atual.minutos += a.minutos;
+        soma.set(a.pacote, atual);
+      }
+    return [...soma.values()].sort((a, b) => b.minutos - a.minutos).slice(0, 24);
+  }, [dias]);
+
+  async function criarHabito(base: Pick<RegraTela, "categorias" | "apps" | "tudo" | "limiteMin">) {
+    if (salvando) return;
     setSalvando(true);
     setAviso(null);
     try {
@@ -77,7 +93,7 @@ export default function TempoDeTelaPage() {
         .from("habitos")
         .insert({
           dono_id: u.user.id,
-          nome: nomeDoHabitoTela(escolhidas, limite),
+          nome: nomeDaRegra(base),
           cor: "nota",
           icone: "📵",
           frequencia: "diaria",
@@ -88,11 +104,14 @@ export default function TempoDeTelaPage() {
         .select("id")
         .single();
       if (error || !data) throw error ?? new Error("não criou");
-      const nova: ConfigHabitoTela = { habitoId: data.id, limiteMin: limite, categorias: escolhidas, desde: hoje, conferidos: [] };
-      gravarConfigTela(nova);
-      setConfig(nova);
+      const nova: RegraTela = { ...base, habitoId: data.id, desde: hoje, conferidos: [] };
+      const lista = [...lerRegrasTela(), nova];
+      gravarRegrasTela(lista);
+      setRegras(lista);
+      setCriando(false);
+      setAppsEscolhidos([]);
       vibrar([15, 40, 25]);
-      setAviso("Hábito criado! A partir de amanhã o app confere sozinho como foi o dia.");
+      setAviso(`“${nomeDaRegra(base)}” criado! A partir de amanhã o app confere sozinho como foi o dia.`);
       await atualizarSnapshotEmTodasAsTelas();
     } catch {
       setAviso("Não consegui criar agora — confira a internet e tente de novo.");
@@ -103,17 +122,22 @@ export default function TempoDeTelaPage() {
   async function conferirAgora() {
     setAviso(null);
     const n = await conferirHabitoTela();
-    setConfig(lerConfigTela());
-    setAviso(n ? `Pronto! ${n} ${n === 1 ? "dia marcado" : "dias marcados"} no hábito. 🎉` : "Tudo conferido — nenhum dia novo pra marcar.");
+    setRegras(lerRegrasTela());
+    setAviso(n ? `Pronto! ${n} ${n === 1 ? "dia marcado" : "dias marcados"} nos hábitos. 🎉` : "Tudo conferido — nenhum dia novo pra marcar.");
   }
 
-  function desligar() {
-    gravarConfigTela(null);
-    setConfig(null);
-    setAviso("O app parou de conferir. O hábito continua na sua lista — dá pra arquivar se quiser.");
+  function desligar(habitoId: string) {
+    const lista = lerRegrasTela().filter((r) => r.habitoId !== habitoId);
+    gravarRegrasTela(lista);
+    setRegras(lista);
+    setAviso("O app parou de conferir esse. O hábito continua na sua lista — dá pra arquivar se quiser.");
   }
 
-  const usadoHojeNoHabito = config && diaHoje ? minutosNasCategorias(diaHoje.apps, config.categorias) : 0;
+  const nomesExistentes = new Set(regras.map((r) => nomeDaRegra(r)));
+  const baseCustom: Pick<RegraTela, "categorias" | "apps" | "tudo" | "limiteMin"> =
+    modo === "tudo" ? { categorias: [], tudo: true, limiteMin: limite } : modo === "apps" ? { categorias: [], apps: appsEscolhidos, limiteMin: limite } : { categorias: escolhidas, limiteMin: limite };
+  const customValido = modo === "tudo" || (modo === "apps" ? appsEscolhidos.length > 0 : escolhidas.length > 0);
+
 
   return (
     <main className="pagina px-6 md:px-12 pt-4 pb-12">
@@ -222,61 +246,157 @@ export default function TempoDeTelaPage() {
             </section>
           )}
 
-          {/* hábito de tela (opcional) */}
+          {/* hábitos de tela (opcionais) — Etapa 295: vários e com apps escolhidos */}
           <section className="bg-base-800 border border-base-600 rounded-3xl p-5 mb-4">
-            <h2 className="text-base font-semibold mb-1">📵 Hábito de tela (opcional)</h2>
-            {config ? (
-              <>
-                <p className="text-sm text-ink-400 mb-3">
-                  O app confere sozinho cada dia que termina e marca o hábito quando você fica dentro do limite.
-                </p>
-                <div className="rounded-2xl bg-base-900/50 p-4">
-                  <p className="text-sm font-medium">{nomeDoHabitoTela(config.categorias, config.limiteMin)}</p>
-                  <div className="flex items-baseline justify-between text-sm mt-2 mb-1">
-                    <span className="text-ink-400">Hoje até agora</span>
-                    <span className={`font-mono ${usadoHojeNoHabito > config.limiteMin ? "text-red-400" : "text-habito"}`}>
-                      {formatarMinutos(usadoHojeNoHabito)} de {formatarMinutos(config.limiteMin)}
-                    </span>
+            <div className="flex items-baseline justify-between gap-2 mb-1">
+              <h2 className="text-base font-semibold">📵 Hábitos de tela</h2>
+              {regras.length > 0 && (
+                <button type="button" onClick={() => void conferirAgora()} className="text-xs text-ink-400 hover:text-ink-100">
+                  Conferir agora
+                </button>
+              )}
+            </div>
+            <p className="text-sm text-ink-400 mb-3">
+              Opcional. O app confere sozinho cada dia que termina e marca o hábito quando você fica dentro do limite.
+            </p>
+
+            {regras.length > 0 && (
+              <ul className="space-y-2.5 mb-4">
+                {regras.map((r) => {
+                  const usado = diaHoje ? minutosDaRegra(diaHoje.apps, r) : 0;
+                  const passou = usado > r.limiteMin;
+                  return (
+                    <li key={r.habitoId} className="rounded-2xl bg-base-900/50 p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium min-w-0 break-words">{nomeDaRegra(r)}</p>
+                        <button
+                          type="button"
+                          onClick={() => desligar(r.habitoId)}
+                          aria-label="Parar de conferir"
+                          className="text-ink-400 hover:text-red-400 p-1 -m-1 shrink-0"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                      <div className="flex items-baseline justify-between text-sm mt-2 mb-1">
+                        <span className="text-ink-400">Hoje até agora</span>
+                        <span className={`font-mono ${passou ? "text-red-400" : "text-habito"}`}>
+                          {formatarMinutos(usado)} de {formatarMinutos(r.limiteMin)}
+                        </span>
+                      </div>
+                      <Barra
+                        pct={(usado / r.limiteMin) * 100}
+                        cor={passou ? "#F87171" : usado > r.limiteMin * 0.8 ? "#FBBF24" : "rgb(var(--c-habito))"}
+                      />
+                      <p className="text-xs text-ink-400 mt-2">
+                        {passou ? "Passou do limite hoje — amanhã é um novo dia. 💪" : `Ainda cabem ${formatarMinutos(r.limiteMin - usado)} hoje.`}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            {/* sugestões de um toque */}
+            <p className="text-xs uppercase tracking-wide text-ink-400 mb-2">Ideias prontas</p>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {SUGESTOES_TELA.map((sug) => {
+                const existe = nomesExistentes.has(nomeDaRegra(sug.regra));
+                return (
+                  <button
+                    key={sug.titulo}
+                    type="button"
+                    disabled={existe || salvando}
+                    onClick={() => void criarHabito(sug.regra)}
+                    className={`flex items-center gap-2 rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
+                      existe ? "border-habito/40 bg-habito/10 text-habito" : "border-base-600 hover:border-nota/60"
+                    }`}
+                  >
+                    <span className="text-lg">{existe ? "✓" : sug.emoji}</span>
+                    <span className="leading-tight">{sug.titulo}</span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setCriando((v) => !v)}
+                className="flex items-center gap-2 rounded-2xl border border-dashed border-nota/50 px-3 py-2.5 text-left text-sm text-nota"
+              >
+                <Plus size={18} /> <span className="leading-tight">Montar o meu</span>
+              </button>
+            </div>
+
+            {criando && (
+              <div className="rounded-2xl border border-nota/30 bg-nota/5 p-4 animate-surgir">
+                <div className="flex items-center gap-1 bg-base-900/60 rounded-xl p-1 mb-4">
+                  {([
+                    ["tipo", "Por tipo"],
+                    ["apps", "Escolher apps"],
+                    ["tudo", "Celular todo"],
+                  ] as const).map(([m, rotulo]) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setModo(m)}
+                      className={`flex-1 text-sm py-2 rounded-lg transition ${modo === m ? "bg-base-700 text-ink-100 font-medium" : "text-ink-400"}`}
+                    >
+                      {rotulo}
+                    </button>
+                  ))}
+                </div>
+
+                {modo === "tipo" && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {CATEGORIAS_TELA.map((c) => {
+                      const ativo = escolhidas.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setEscolhidas((l) => (ativo ? l.filter((x) => x !== c.id) : [...l, c.id]))}
+                          aria-pressed={ativo}
+                          className={`text-sm rounded-full px-3 py-1.5 border transition ${ativo ? "bg-ink-100 text-base-900 border-ink-100 font-medium" : "border-base-600 text-ink-400"}`}
+                        >
+                          {c.emoji} {c.nome}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <Barra
-                    pct={(usadoHojeNoHabito / config.limiteMin) * 100}
-                    cor={usadoHojeNoHabito > config.limiteMin ? "#F87171" : usadoHojeNoHabito > config.limiteMin * 0.8 ? "#FBBF24" : "rgb(var(--c-habito))"}
-                  />
-                  <p className="text-xs text-ink-400 mt-2">
-                    {usadoHojeNoHabito > config.limiteMin
-                      ? "Passou do limite hoje — amanhã é um novo dia. 💪"
-                      : `Ainda cabem ${formatarMinutos(config.limiteMin - usadoHojeNoHabito)} hoje.`}
-                  </p>
-                </div>
-                <div className="flex gap-2 mt-3">
-                  <button type="button" onClick={() => void conferirAgora()} className="flex-1 rounded-xl border border-base-600 py-2.5 text-sm hover:border-ink-400">
-                    Conferir agora
-                  </button>
-                  <button type="button" onClick={desligar} className="rounded-xl border border-base-600 px-4 py-2.5 text-sm text-ink-400 hover:text-red-400">
-                    Desligar
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm text-ink-400 mb-3">Escolha o que quer usar menos e o limite por dia. O hábito entra na sua lista e se marca sozinho.</p>
-                <p className="text-xs uppercase tracking-wide text-ink-400 mb-2">O que contar</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {CATEGORIAS_TELA.filter((c) => c.id !== "outros").map((c) => {
-                    const ativo = escolhidas.includes(c.id);
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setEscolhidas((l) => (ativo ? l.filter((x) => x !== c.id) : [...l, c.id]))}
-                        aria-pressed={ativo}
-                        className={`text-sm rounded-full px-3 py-1.5 border transition ${ativo ? "bg-ink-100 text-base-900 border-ink-100 font-medium" : "border-base-600 text-ink-400"}`}
-                      >
-                        {c.emoji} {c.nome}
-                      </button>
-                    );
-                  })}
-                </div>
+                )}
+
+                {modo === "apps" && (
+                  <div className="mb-4">
+                    <p className="text-xs text-ink-400 mb-2">Apps que você usou nos últimos 7 dias (escolha até 5):</p>
+                    {appsDaSemana.length === 0 ? (
+                      <p className="text-sm text-ink-400">Nenhum app ainda — use o celular um pouco e volte aqui.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                        {appsDaSemana.map((a) => {
+                          const ativo = appsEscolhidos.some((x) => x.pacote === a.pacote);
+                          return (
+                            <button
+                              key={a.pacote}
+                              type="button"
+                              disabled={!ativo && appsEscolhidos.length >= 5}
+                              onClick={() =>
+                                setAppsEscolhidos((l) => (ativo ? l.filter((x) => x.pacote !== a.pacote) : [...l, { pacote: a.pacote, nome: a.nome }]))
+                              }
+                              aria-pressed={ativo}
+                              className={`text-sm rounded-full px-3 py-1.5 border transition disabled:opacity-40 ${
+                                ativo ? "bg-ink-100 text-base-900 border-ink-100 font-medium" : "border-base-600 text-ink-400"
+                              }`}
+                            >
+                              {a.nome} <span className="opacity-60 text-xs">{formatarMinutos(a.minutos / Math.max(1, (dias ?? []).length))}/dia</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {modo === "tudo" && <p className="text-sm text-ink-400 mb-4">Conta o tempo de todos os apps juntos (menos o VidaTrack).</p>}
+
                 <p className="text-xs uppercase tracking-wide text-ink-400 mb-2">Limite por dia</p>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {LIMITES.map((l) => (
@@ -293,13 +413,13 @@ export default function TempoDeTelaPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => void criarHabito()}
-                  disabled={!escolhidas.length || salvando}
+                  onClick={() => void criarHabito(baseCustom)}
+                  disabled={!customValido || salvando || nomesExistentes.has(nomeDaRegra(baseCustom))}
                   className="w-full bg-nota text-base-900 font-semibold rounded-2xl py-3 disabled:opacity-40"
                 >
-                  {salvando ? "Criando…" : `Criar “${nomeDoHabitoTela(escolhidas.length ? escolhidas : ["redes"], limite)}”`}
+                  {salvando ? "Criando…" : customValido ? `Criar “${nomeDaRegra(baseCustom)}”` : "Escolha o que contar"}
                 </button>
-              </>
+              </div>
             )}
             {aviso && <p className="text-sm text-ink-100 mt-3">{aviso}</p>}
           </section>

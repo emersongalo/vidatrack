@@ -1,13 +1,21 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "292";
+export const VERSAO_NOVIDADES = "295";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "295",
+    titulo: "Mais hábitos de tela",
+    itens: [
+      { emoji: "📵", titulo: "Vários hábitos de tela", texto: "Agora dá pra ter mais de um: por tipo (redes, vídeos, jogos), por apps que você escolhe (ex: Instagram até 30 min) ou o celular todo. Tem ideias prontas de um toque.", href: "/habitos/tela" },
+      { emoji: "📲", titulo: "Aviso de app novo", texto: "Quando sair versão nova do app na Play Store, o VidaTrack avisa e leva direto pra atualizar." },
+    ],
+  },
   {
     versao: "292",
     titulo: "Tempo de tela (Android)",

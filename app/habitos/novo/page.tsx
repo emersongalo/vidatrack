@@ -6,6 +6,7 @@ import { criarHabito } from "../actions";
 import { FormularioHabito } from "@/components/FormularioHabito";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { Dica } from "@/components/Dica";
+import { CartaoTempoTela } from "@/components/CartaoTempoTela";
 
 // Etapa 132
 export default function NovoHabitoPage() {
@@ -38,6 +39,8 @@ function NovoHabitoConteudo() {
         topo={{ titulo: "Novo hábito", voltarHref: "/habitos" }}
       />
       <div className="px-6 md:px-12 mt-2">
+        {/* Etapa 295 — hábitos de tela (Android) */}
+        <CartaoTempoTela compacto />
         <Dica contexto="novoHabito" />
       </div>
     </main>
