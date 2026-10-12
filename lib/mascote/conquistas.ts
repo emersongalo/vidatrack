@@ -19,6 +19,32 @@ export type Conquista = {
   premio: number;
   alcancada: boolean;
   resgatada: boolean;
+  /** Etapa 311 — o que aparece na ilha do Mundo quando resgata */
+  monumento: { nome: string; emoji: string };
+};
+
+/** Etapa 311 — cada conquista resgatada põe um monumento na ilha. */
+export const MONUMENTOS: Record<string, { nome: string; emoji: string }> = {
+  h1: { nome: "Placa de boas-vindas", emoji: "🪧" },
+  h50: { nome: "Bandeira", emoji: "🚩" },
+  h200: { nome: "Árvore antiga", emoji: "🌳" },
+  h500: { nome: "Moinho", emoji: "🌾" },
+  h1000: { nome: "Castelo", emoji: "🏰" },
+  s7: { nome: "Fogueira", emoji: "🔥" },
+  s30: { nome: "Obelisco do cometa", emoji: "☄️" },
+  s100: { nome: "Vulcão", emoji: "🌋" },
+  f1: { nome: "Ninho", emoji: "🪺" },
+  f3: { nome: "Estátua de pedra", emoji: "🗿" },
+  f5: { nome: "Estátua dourada", emoji: "👑" },
+  c3: { nome: "Poço dos desejos", emoji: "🪣" },
+  c10: { nome: "Fonte", emoji: "⛲" },
+  cv: { nome: "Carrinho na praça", emoji: "🚙" },
+  m10: { nome: "Alvo", emoji: "🎯" },
+  m50: { nome: "Torre de vigia", emoji: "🗼" },
+  b1: { nome: "Baú do tesouro", emoji: "💰" },
+  b5: { nome: "Navio pirata", emoji: "🏴‍☠️" },
+  d1: { nome: "Banco dos namorados", emoji: "💞" },
+  d2: { nome: "Árvore de frutas", emoji: "🍊" },
 };
 
 export const NOMES_CATEGORIA_CONQUISTA: Record<CategoriaConquista, string> = {
@@ -69,6 +95,7 @@ export function listarConquistas(s: any, m: DadosMascote | null, feitos: number)
     premio,
     alcancada: atual >= meta,
     resgatada: ja.has(id),
+    monumento: MONUMENTOS[id] ?? { nome: "Enfeite", emoji: "✨" },
   });
 
   return [

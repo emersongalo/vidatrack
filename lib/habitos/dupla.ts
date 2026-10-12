@@ -40,6 +40,8 @@ export type InfoDupla = {
   /** 2 viçosa, 1 murchando, 0 murcha (dias recentes em que ninguém fez) */
   saude: 0 | 1 | 2;
   ultimos14: { dia: string; eu: boolean; parceiros: boolean; valia: boolean }[];
+  /** Etapa 311 — quantos fizeram hoje, de quantos, e quantos precisam */
+  grupo: { feitosHoje: number; total: number; precisa: number };
 };
 
 export function somarDias(iso: string, n: number) {
@@ -67,6 +69,13 @@ function diasFeitosPorPessoa(habito: any, checkins: Checkin[], eu: string): Map<
   return porPessoa;
 }
 
+/** Etapa 311 — família/grupo: em dupla os dois precisam fazer; de 3 pessoas
+ *  pra cima (até 6), basta metade ou mais pra contar como "dia juntos". */
+export const MAX_PESSOAS_GRUPO = 6;
+export function precisaParaContar(total: number) {
+  return total <= 2 ? total : Math.ceil(total / 2);
+}
+
 export function estagioDaPlanta(diasJuntos: number): { estagio: number; proximoEm: number | null } {
   let estagio = 0;
   ESTAGIOS_PLANTA.forEach((e, i) => {
@@ -87,7 +96,11 @@ export function infoDupla(
   const porPessoa = diasFeitosPorPessoa(habito, checkins, eu);
   const meus = porPessoa.get(eu) ?? new Set<string>();
   const deles = parceiros.map((p) => porPessoa.get(p.id) ?? new Set<string>());
-  const todos = (dia: string) => meus.has(dia) && deles.every((s) => s.has(dia));
+  const total = parceiros.length + 1;
+  const precisa = precisaParaContar(total);
+  const quantos = (dia: string) => (meus.has(dia) ? 1 : 0) + deles.filter((s) => s.has(dia)).length;
+  // dia que conta pra planta/sequência: dupla = os dois; grupo = maioria
+  const todos = (dia: string) => quantos(dia) >= precisa;
   const ninguem = (dia: string) => !meus.has(dia) && deles.every((s) => !s.has(dia));
   const vale = (dia: string) => habitoDevidoNoDia(habito, dia);
   const criado = String(habito.criado_em ?? "").slice(0, 10) || "0000-00-00";
@@ -132,7 +145,7 @@ export function infoDupla(
   const quebrouOntem = anteriores.length >= 2 && !todos(anteriores[0]) && todos(anteriores[1]);
 
   let humor: HumorDupla;
-  if (euFiz && deles.every((s) => s.has(hoje))) humor = "festa";
+  if (euFiz && todos(hoje)) humor = "festa";
   else if (euFiz) humor = "esperandoParceiro";
   else if (algumParceiro) humor = "esperandoVoce";
   else if (quebrouOntem) humor = "triste";
@@ -143,7 +156,7 @@ export function infoDupla(
 
   const ultimos14 = Array.from({ length: 14 }, (_, i) => {
     const dia = somarDias(hoje, i - 13);
-    return { dia, eu: meus.has(dia), parceiros: deles.every((s) => s.has(dia)), valia: vale(dia) && dia >= criado };
+    return { dia, eu: meus.has(dia), parceiros: total <= 2 ? deles.every((s) => s.has(dia)) : todos(dia), valia: vale(dia) && dia >= criado };
   });
 
   return {
@@ -157,6 +170,7 @@ export function infoDupla(
     proximoEstagioEm: proximoEm,
     saude,
     ultimos14,
+    grupo: { feitosHoje: quantos(hoje), total, precisa },
   };
 }
 
@@ -165,7 +179,7 @@ export function fraseDoHumor(humor: HumorDupla, nomes: string[]): string {
   const quem = nomes.length === 1 ? nomes[0] : "o pessoal";
   switch (humor) {
     case "festa":
-      return nomes.length === 1 ? `Você e ${nomes[0]} fizeram hoje!` : "Todo mundo fez hoje!";
+      return nomes.length === 1 ? `Você e ${nomes[0]} fizeram hoje!` : "A família regou a planta hoje!";
     case "esperandoParceiro":
       return `Você fez! Falta ${quem}`;
     case "esperandoVoce":

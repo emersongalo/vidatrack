@@ -27,7 +27,7 @@ export default function ConquistasPage() {
 
   return (
     <main ref={ref} className="pagina-curta px-6 md:px-12 pt-4 pb-12">
-      <CabecalhoPagina voltarHref="/habitos/mundo" voltarTexto="Mundo" emoji="🏆" titulo="Conquistas" subtitulo={`${feitas} de ${lista.length} conquistadas`} />
+      <CabecalhoPagina voltarHref="/habitos/mundo" voltarTexto="Mundo" emoji="🏆" titulo="Conquistas" subtitulo={`${feitas} de ${lista.length} · cada uma põe um monumento na sua ilha`} />
 
       <div className="h-2 rounded-full bg-base-700 overflow-hidden mb-2">
         <div className="h-full rounded-full bg-financa transition-all duration-700" style={{ width: `${Math.round((feitas / Math.max(1, lista.length)) * 100)}%` }} />
@@ -53,6 +53,11 @@ export default function ConquistasPage() {
                   </span>
                   <p className="text-sm font-semibold mt-2 leading-tight">{c.titulo}</p>
                   <p className="text-[11px] text-ink-400 leading-tight mt-0.5 min-h-[28px]">{c.texto}</p>
+                  {/* Etapa 311 — o que ganha na ilha */}
+                  <p className={`text-[10px] mt-1 ${c.resgatada ? "text-habito" : "text-ink-500"}`}>
+                    {c.resgatada ? "✓ " : "🏝️ "}
+                    {c.monumento.emoji} {c.monumento.nome}
+                  </p>
                   {c.resgatada ? (
                     <p className="text-xs text-financa font-semibold mt-2">✓ +{c.premio} 🪙</p>
                   ) : c.alcancada ? (

@@ -177,7 +177,15 @@ export default function JuntosPage() {
 
                 <div className="flex items-center gap-3 border-t border-base-600 px-5 py-3 bg-base-900/30">
                   <CarinhaDupla humor={info.humor} tamanho={44} />
-                  <p className="text-base font-medium">{fraseDoHumor(info.humor, nomes)}</p>
+                  <div className="min-w-0">
+                    <p className="text-base font-medium">{fraseDoHumor(info.humor, nomes)}</p>
+                    {/* Etapa 311 — em família/grupo, basta a maioria pra regar */}
+                    {info.grupo.total > 2 && (
+                      <p className="text-xs text-ink-400 mt-0.5">
+                        👨‍👩‍👧 {info.grupo.feitosHoje}/{info.grupo.total} fizeram hoje · {info.grupo.feitosHoje >= info.grupo.precisa ? "planta regada 💧" : `faltam ${info.grupo.precisa - info.grupo.feitosHoje} pra regar`}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <FaixaDupla habitoId={habito.id} dupla={info} dataISO={hoje} ehHoje />
                 {/* Etapa 303 — descompartilhar (com confirmação; o outro é avisado) */}

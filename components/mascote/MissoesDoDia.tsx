@@ -2,7 +2,7 @@
 
 // Etapa 309 — missões do dia (3 por dia, com prêmio em moedas) e o baú
 // da semana (feche as 3 missões em 5 dias e abra um prêmio surpresa).
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useMascote } from "@/lib/mascote/useMascote";
 import { abrirBau, missoesDoDia, resgatadas, resgatarMissao, semanaDoBau, DIAS_PRO_BAU, type Premio } from "@/lib/mascote/missoes";
@@ -10,6 +10,7 @@ import { vibrar } from "@/lib/app/vibrar";
 import { chuvaDeConfete, textoFlutuante } from "@/lib/app/festa";
 
 const DIAS = ["S", "T", "Q", "Q", "S", "S", "D"];
+const CHAVE_ABERTO = "vt-missoes-aberto";
 
 export function MissoesDoDia({ snapshot, hoje }: { snapshot: any; hoje: string }) {
   const { mascote, salvar, salvando } = useMascote(snapshot, hoje);
@@ -17,6 +18,20 @@ export function MissoesDoDia({ snapshot, hoje }: { snapshot: any; hoje: string }
   const [abrindo, setAbrindo] = useState(false);
   const [premio, setPremio] = useState<Premio | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  // Etapa 311 — fica recolhido numa linha (menos informação na aba Hábitos)
+  const [aberto, setAberto] = useState(false);
+  useEffect(() => {
+    try {
+      setAberto(localStorage.getItem(CHAVE_ABERTO) === "1");
+    } catch {}
+  }, []);
+  const alternar = () =>
+    setAberto((a) => {
+      try {
+        localStorage.setItem(CHAVE_ABERTO, a ? "0" : "1");
+      } catch {}
+      return !a;
+    });
   if (!snapshot || !missoes.length) return null;
 
   const ja = resgatadas(mascote, hoje);
@@ -47,12 +62,25 @@ export function MissoesDoDia({ snapshot, hoje }: { snapshot: any; hoje: string }
   }
 
   return (
-    <section ref={ref} className="relative mb-4 rounded-3xl border border-base-600/70 bg-base-800 p-4 animate-entrar">
-      <div className="flex items-center justify-between mb-2">
-        <p className="font-semibold">🎯 Missões de hoje</p>
-        {prontas > 0 && <span className="text-[11px] font-semibold rounded-full bg-financa/20 text-financa px-2 py-0.5 animate-surgir">{prontas} pra resgatar!</span>}
-      </div>
+    <section ref={ref} className={`relative mb-4 rounded-3xl border bg-base-800 animate-entrar ${prontas > 0 || bau.disponivel ? "border-financa/50" : "border-base-600/70"} ${aberto ? "p-4" : "px-4 py-3"}`}>
+      <button type="button" onClick={alternar} aria-expanded={aberto} className={`w-full flex items-center gap-2 text-left ${aberto ? "mb-3" : ""}`}>
+        <p className="font-semibold shrink-0">🎯 Missões</p>
+        <span className="flex gap-1" aria-label={`${ja.length} de ${missoes.length} resgatadas`}>
+          {missoes.map((m) => (
+            <span key={m.id} className={`w-2.5 h-2.5 rounded-full ${ja.includes(m.id) ? "bg-habito" : m.feita ? "bg-financa animate-pulse" : "bg-base-600"}`} />
+          ))}
+        </span>
+        {mascote && <span className="text-[11px] text-ink-400 shrink-0">🎁 {bau.aberto ? "✓" : `${bau.completos}/${DIAS_PRO_BAU}`}</span>}
+        <span className="ml-auto flex items-center gap-2 shrink-0">
+          {(prontas > 0 || bau.disponivel) && (
+            <span className="text-[11px] font-semibold rounded-full bg-financa/20 text-financa px-2 py-0.5">{prontas > 0 ? `${prontas} pra resgatar!` : "Baú liberado!"}</span>
+          )}
+          <span className={`text-ink-400 transition-transform ${aberto ? "rotate-180" : ""}`}>⌄</span>
+        </span>
+      </button>
 
+      {aberto && (
+      <>
       <ul className="space-y-2">
         {missoes.map((m, i) => {
           const pego = ja.includes(m.id);
@@ -128,6 +156,9 @@ export function MissoesDoDia({ snapshot, hoje }: { snapshot: any; hoje: string }
             </div>
           </div>
         </div>
+      )}
+
+      </>
       )}
 
       {premio && (

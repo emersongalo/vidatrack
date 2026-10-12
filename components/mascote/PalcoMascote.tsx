@@ -9,12 +9,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { useMascote } from "@/lib/mascote/useMascote";
-import { fraseDoHumor, MOEDAS_POR_HABITO, type Humor } from "@/lib/mascote/mascote";
+import { CONSUMIVEIS, fraseDoHumor, MOEDAS_POR_HABITO, type Humor } from "@/lib/mascote/mascote";
 import { Mascote } from "@/components/mascote/Mascote";
 import { vibrar } from "@/lib/app/vibrar";
 import { useGiro } from "@/lib/mascote/useGiro";
-import { progressoDoDesejo } from "@/lib/mascote/casa";
-import { BandejaComida, BarrasVida } from "@/components/mascote/BandejaComida";
+import { BandejaComida } from "@/components/mascote/BandejaComida";
 
 export const PALCO_HUMOR: Record<Humor, { rotulo: string; fundo: string }> = {
   radiante: { rotulo: "🤩 Radiante", fundo: "linear-gradient(170deg, rgba(251,191,36,.32), rgba(251,146,60,.12) 60%, rgba(251,191,36,.05))" },
@@ -37,6 +36,7 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
   const [semente, setSemente] = useState(() => new Date().getDate());
   const [ganho, setGanho] = useState(0);
   const [dica, setDica] = useState(false);
+  const [bandeja, setBandeja] = useState(false);
   const feitosAntes = useRef<number | null>(null);
   const feitosHoje = dia?.habitos.feitos ?? 0;
 
@@ -79,20 +79,22 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
   const cor = mascote?.cor ?? "verde";
   const nivel = mascote ? fase.nivel : 0;
   const palco = PALCO_HUMOR[humor];
+  const precisaCuidar = !!vida && vida.estado !== "bem";
+  const naDespensa = mascote ? CONSUMIVEIS.filter((c) => c.tipo !== "planta").reduce((n, c) => n + (mascote.estoque?.[c.id] ?? 0), 0) : 0;
   const frase = mascote ? fraseDoHumor(humor, semente) : "Me choca? Eu cresço com seus hábitos 🥚";
 
   return (
     <section
+      aria-label={palco.rotulo}
       className="relative mb-4 overflow-hidden rounded-3xl border border-base-600/70 animate-entrar"
       style={{ background: palco.fundo }}
     >
       <Clima humor={humor} />
 
-      {/* topo: nome, fase, moedas */}
+      {/* topo: nome, fase, moedas (Etapa 311 — enxuto) */}
       <div className="relative flex items-center gap-2 px-4 pt-3">
         <p className="font-display font-bold truncate">{mascote ? mascote.nome : "Seu ovinho"}</p>
         {mascote && <span className="text-[10px] font-semibold rounded-full bg-habito/15 text-habito px-2 py-0.5 shrink-0">{fase.nome}</span>}
-        <span className="text-[11px] text-ink-300 rounded-full bg-base-900/40 px-2 py-0.5 shrink-0">{palco.rotulo}</span>
         {mascote && (
           <span className="ml-auto relative text-sm font-mono font-semibold rounded-full bg-financa/15 text-financa px-2.5 py-0.5 shrink-0">
             🪙 {moedas}
@@ -105,7 +107,7 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
         )}
       </div>
 
-      <div className="relative flex items-end gap-1 px-2">
+      <div className="relative flex items-center gap-2 px-2">
         {/* o bichinho girável */}
         <div
           className="relative shrink-0 cursor-grab active:cursor-grabbing select-none"
@@ -115,7 +117,7 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
         >
           <div key={pulos} className={pulos ? "vtm-pulo" : ""}>
             {/* Etapa 302 — ele aparece no lugar onde mora (muda com a hora e o tempo) */}
-            <Mascote cor={cor} fase={nivel} humor={humor} equipados={mascote?.equipados} tamanho={150} angulo={angulo} comFundo={!!mascote} />
+            <Mascote cor={cor} fase={nivel} humor={humor} equipados={mascote?.equipados} tamanho={136} angulo={angulo} comFundo={!!mascote} />
           </div>
           {comendo && (
             <span key={comendo.n} className="absolute left-1/2 top-1/2 -ml-3 -mt-3 text-2xl vtm-comer" style={{ ["--de-x" as any]: "50px", ["--de-y" as any]: "50px" }}>
@@ -129,31 +131,31 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
           )}
         </div>
 
-        {/* fala + progresso */}
-        <div className="min-w-0 flex-1 pb-4 pr-2">
-          <p key={frase} className="vtm-fala relative text-sm text-ink-100 bg-base-900/55 backdrop-blur rounded-2xl rounded-bl-md px-3 py-2">
+        {/* fala + barrinhas (sem texto sobrando) */}
+        <div className="min-w-0 flex-1 py-3 pr-2">
+          <p key={frase} className="vtm-fala relative text-sm leading-snug text-ink-100 bg-base-900/55 backdrop-blur rounded-2xl rounded-bl-md px-3 py-2">
             {frase}
           </p>
           {mascote ? (
-            <>
+            <div className="mt-3 space-y-2">
               {vida && (
-                <div className="mt-2.5">
-                  <BarrasVida vida={vida} compacto />
+                <div className="flex items-center gap-3">
+                  <BarraMini emoji="🍗" valor={vida.barriga} cor={vida.barriga < 25 ? "#F59E0B" : "rgb(var(--c-habito))"} titulo="Barriga" />
+                  <BarraMini emoji="❤️" valor={vida.saude} cor={vida.saude < 35 ? "#EF4444" : vida.saude < 50 ? "#F59E0B" : "#F472B6"} titulo="Saúde" />
                 </div>
               )}
               {fase.proxima ? (
-                <div className="mt-2">
-                  <div className="h-1.5 rounded-full bg-base-900/50 overflow-hidden">
+                <div className="flex items-center gap-2" title={`Mais ${fase.faltam} hábitos pra virar ${fase.proxima.nome}`}>
+                  <span className="text-xs shrink-0">⭐</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-base-900/50 overflow-hidden">
                     <div className="h-full rounded-full bg-habito transition-all duration-700" style={{ width: `${Math.round(fase.progresso * 100)}%` }} />
                   </div>
-                  <p className="text-[11px] text-ink-400 mt-1">
-                    Mais {fase.faltam} {fase.faltam === 1 ? "hábito" : "hábitos"} pra virar {fase.proxima.nome}
-                  </p>
+                  <span className="text-[10px] text-ink-400 shrink-0">{fase.proxima.nome} em {fase.faltam}</span>
                 </div>
               ) : (
-                <p className="text-[11px] text-ink-400 mt-2">Fase máxima — lendário! ✨</p>
+                <p className="text-[11px] text-ink-400">Fase máxima — lendário! ✨</p>
               )}
-            </>
+            </div>
           ) : (
             <Link
               href="/habitos/mascote"
@@ -165,59 +167,60 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
         </div>
       </div>
 
-      {/* Etapa 308 — o sonho: barrinha rumo ao carro, moto… */}
-      {mascote &&
-        (() => {
-          const p = progressoDoDesejo(mascote.casa, moedas);
-          if (!p) return null;
-          return (
-            <Link href="/habitos/mascote/casa" className="relative mx-3 mb-2 flex items-center gap-2 rounded-2xl bg-base-900/45 px-3 py-2">
-              <span className="text-xl">{p.movel.emoji}</span>
-              <span className="flex-1 min-w-0">
-                <span className="flex justify-between text-[11px]">
-                  <span className="font-semibold truncate">⭐ {p.movel.nome}</span>
-                  <span className="text-ink-400 shrink-0">{p.pronto ? "dá pra comprar! 🎉" : `faltam ~${p.habitos} hábitos`}</span>
-                </span>
-                <span className="block h-1.5 rounded-full bg-base-900/60 overflow-hidden mt-1">
-                  <span className="block h-full rounded-full bg-amber-400 transition-all duration-700" style={{ width: `${Math.round(p.progresso * 100)}%` }} />
-                </span>
-              </span>
-            </Link>
-          );
-        })()}
-
-      {/* Etapa 302 — cuidar: dar comidinha/remédio direto daqui */}
+      {/* Etapa 311 — uma fileira só de ações; a despensa abre ao tocar em Comer */}
       {mascote && (
-        <div className="relative flex items-center gap-2 px-3 pb-3">
-          <div className="min-w-0 flex-1">
-            <BandejaComida
-              mascote={mascote}
-              vida={vida}
-              hoje={hoje}
-              salvar={salvar}
-              salvando={salvando}
-              aoComer={(emoji) => {
-                setComendo({ emoji, n: Date.now() });
-                setTimeout(() => setPulos((p) => p + 1), 650);
-              }}
-            />
+        <div className="relative px-3 pb-3">
+          {bandeja && (
+            <div className="mb-2 rounded-2xl bg-base-900/45 p-2 animate-surgir">
+              <BandejaComida
+                mascote={mascote}
+                vida={vida}
+                hoje={hoje}
+                salvar={salvar}
+                salvando={salvando}
+                aoComer={(emoji) => {
+                  setComendo({ emoji, n: Date.now() });
+                  setTimeout(() => setPulos((p) => p + 1), 650);
+                }}
+              />
+            </div>
+          )}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => setBandeja((b) => !b)}
+              aria-expanded={bandeja}
+              className={`relative inline-flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full px-3 py-2 transition ${
+                precisaCuidar ? "bg-amber-400/25 text-amber-200 animate-pulse" : bandeja ? "bg-base-900/75" : "bg-base-900/50 hover:bg-base-900/70"
+              }`}
+            >
+              🍎 Comer
+              {naDespensa > 0 && (
+                <span className="min-w-[16px] h-4 rounded-full bg-ink-100 text-base-900 text-[10px] font-bold flex items-center justify-center px-1">{naDespensa}</span>
+              )}
+            </button>
+            <Link href="/habitos/mundo" className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full bg-base-900/50 hover:bg-base-900/70 px-3 py-2 transition">
+              🗺️ Mundo
+            </Link>
+            <Link href="/habitos/mascote" className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full bg-base-900/50 hover:bg-base-900/70 px-3 py-2 transition">
+              <ShoppingBag size={13} /> Loja
+            </Link>
           </div>
-          {/* Etapa 305 — a casa dele */}
-          <Link
-            href="/habitos/mundo"
-            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full bg-base-900/50 hover:bg-base-900/70 px-3 py-2 transition"
-          >
-            🗺️ Mundo
-          </Link>
-          <Link
-            href="/habitos/mascote"
-            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full bg-base-900/50 hover:bg-base-900/70 px-3 py-2 transition"
-          >
-            <ShoppingBag size={13} /> Lojinha
-          </Link>
         </div>
       )}
     </section>
+  );
+}
+
+/** Etapa 311 — barrinha só com o ícone (o texto fica no toque longo/título). */
+function BarraMini({ emoji, valor, cor, titulo }: { emoji: string; valor: number; cor: string; titulo: string }) {
+  return (
+    <div className="flex-1 flex items-center gap-1.5 min-w-0" title={`${titulo}: ${Math.round(valor)}%`}>
+      <span className="text-xs shrink-0">{emoji}</span>
+      <div className="flex-1 h-1.5 rounded-full bg-base-900/50 overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.max(4, valor)}%`, background: cor }} />
+      </div>
+    </div>
   );
 }
 

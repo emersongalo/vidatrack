@@ -1,6 +1,6 @@
 // Etapa 306 — monta o que o jardim isométrico precisa (plantas e mascotes)
 // a partir dos hábitos em dupla do retrato.
-import { estagioDaPlanta, type InfoDupla } from "@/lib/habitos/dupla";
+import { estagioDaPlanta, MAX_PESSOAS_GRUPO, type InfoDupla } from "@/lib/habitos/dupla";
 import { montarJardim } from "@/lib/habitos/jardim";
 import { adubosNaPlanta, DIAS_ADUBO, faseDoMascote, frutaDaPlanta, frutosParaColher, lerMascote, type DadosMascote } from "@/lib/mascote/mascote";
 import type { MascoteIso, PlantaIso } from "@/components/mascote/JardimIso";
@@ -47,7 +47,7 @@ export function dadosDoJardim(
     meu
       ? { chave: "eu", nome: "Você", cor: meu.cor, fase: minhaFase, equipados: meu.equipados, regou: duplas.some((d) => d.info.euFiz) }
       : { chave: "eu", nome: "Você", cor: "verde", fase: 0, equipados: {}, regou: false, ovo: true },
-    ...[...pares.entries()].slice(0, 3).map(([id, p]) =>
+    ...[...pares.entries()].slice(0, MAX_PESSOAS_GRUPO - 1).map(([id, p]) =>
       p.m
         ? { chave: id, nome: p.nome, cor: p.m.cor, fase: p.fase, equipados: p.m.equipados, regou: p.regou }
         : { chave: id, nome: p.nome, cor: "lilas" as const, fase: 0, equipados: {}, regou: p.regou, ovo: true }

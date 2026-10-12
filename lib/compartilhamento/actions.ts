@@ -1,5 +1,6 @@
 "use server";
 
+import { MAX_PESSOAS_GRUPO } from "@/lib/habitos/dupla";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -79,6 +80,17 @@ async function criarConvite(
     .eq("email_convidado", dados.email)
     .limit(1);
   if (jaTem?.length) return { ok: false, erro: "Essa pessoa já tem acesso" };
+
+  // Etapa 311 — família: até 6 pessoas no mesmo hábito (você + 5)
+  if (dados.tipo === "habito") {
+    const [{ count: aceitos }, { count: pendentes }] = await Promise.all([
+      supabase.from("compartilhamentos").select("id", { count: "exact", head: true }).eq("tipo_item", "habito").eq("item_id", dados.itemId),
+      supabase.from("convites_compartilhamento").select("id", { count: "exact", head: true }).eq("tipo_item", "habito").eq("item_id", dados.itemId).eq("status", "pendente"),
+    ]);
+    if ((aceitos ?? 0) + (pendentes ?? 0) >= MAX_PESSOAS_GRUPO - 1) {
+      return { ok: false, erro: `Esse hábito já tem ${MAX_PESSOAS_GRUPO} pessoas (o máximo da família)` };
+    }
+  }
 
   const nomeItem = await nomeDoItem(supabase, dados.tipo, dados.itemId);
   const nomeDono = await meuNome(supabase, user);

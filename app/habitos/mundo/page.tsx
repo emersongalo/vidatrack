@@ -15,6 +15,8 @@ import { jardimPessoal } from "@/lib/mascote/jardimDados";
 import { progressoDoDesejo } from "@/lib/mascote/casa";
 import { MundoIso, type LugarMundo } from "@/components/mascote/MundoIso";
 import { periodoDaHora } from "@/components/mascote/Mascote";
+import { ZoomPan } from "@/components/ZoomPan";
+import { estadosDosMonumentos } from "@/lib/mascote/ilha";
 import { CarregandoTela } from "@/components/Esqueleto";
 import { CabecalhoPagina } from "@/components/CabecalhoPagina";
 
@@ -76,7 +78,8 @@ export default function MundoPage() {
         )}
       </div>
 
-      <div className="rounded-3xl overflow-hidden border border-base-600/70 mb-4" style={{ background: CEU[periodo] }}>
+      <ZoomPan className="rounded-3xl border border-base-600/70 mb-2">
+        <div style={{ background: CEU[periodo] }}>
         <MundoIso
           periodo={periodo}
           mascote={mascote ? { cor: mascote.cor, fase: fase.nivel, equipados: mascote.equipados, nome: mascote.nome } : null}
@@ -84,8 +87,14 @@ export default function MundoPage() {
           plantas={info.plantas.length}
           selos={{ missoes: info.prontasMissao, conquistas: info.prontasConquista }}
           aoTocar={ir}
+          monumentos={estadosDosMonumentos(info.conquistas)}
         />
-      </div>
+        </div>
+      </ZoomPan>
+      <p className="text-xs text-ink-400 mb-4 text-center">
+        🏝️ {feitasConq} de {info.conquistas.length} monumentos na ilha
+        {info.prontasConquista > 0 && <span className="text-financa font-semibold"> · {info.prontasConquista} 🎁 esperando</span>}
+      </p>
 
       {sonho && (
         <Link href="/habitos/mascote/casa" className="block rounded-2xl border border-financa/40 bg-financa/10 px-4 py-3 mb-4">

@@ -1,13 +1,23 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "310";
+export const VERSAO_NOVIDADES = "311";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "311",
+    titulo: "Ilha maior, zoom e família",
+    itens: [
+      { emoji: "🔍", titulo: "Zoom no Mundo", texto: "Pinça com dois dedos, toque duas vezes ou use os botões + e − pra chegar pertinho. Com zoom, é só arrastar pra passear pela ilha.", href: "/habitos/mundo" },
+      { emoji: "🏝️", titulo: "Monumentos das conquistas", texto: "A ilha cresceu: cada conquista resgatada põe algo nela — fogueira, moinho, fonte, vulcão, estátua dourada, castelo e até um navio pirata.", href: "/habitos/mundo" },
+      { emoji: "🐣", titulo: "Mascote mais limpo", texto: "O palco da aba Hábitos ficou mais enxuto: a comidinha abre no botão 🍎 Comer e as missões ficam recolhidas numa linha (toque pra abrir)." },
+      { emoji: "👨‍👩‍👧", titulo: "Hábitos em família", texto: "Dá pra dividir um hábito com até 6 pessoas. Em grupo, a planta cresce quando metade ou mais faz no dia (em dupla continuam os dois)." },
+    ],
+  },
   {
     versao: "310",
     titulo: "Mundo e conquistas",
