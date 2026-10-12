@@ -31,6 +31,10 @@ export default function ListaHabitosPage() {
         acoes={<BotaoNovoHabitoOffline />}
       >
         <div className="flex gap-2 flex-wrap">
+          {/* Etapa 312 */}
+          <Link href="/habitos/trilhas" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
+            🧭 Trilhas
+          </Link>
           {/* Etapa 298 */}
           <Link href="/habitos/mascote" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
             🐣 Mascote
@@ -60,7 +64,7 @@ export default function ListaHabitosPage() {
           tom="habito"
           titulo="Nenhum hábito ainda"
           texto="Comece com um pequeno — beber água, ler 10 páginas, caminhar."
-          acao={{ rotulo: "+ Criar hábito", href: "/habitos/novo" }}
+          acao={{ rotulo: "🧭 Ver hábitos prontos", href: "/habitos/trilhas" }}
         />
       ) : (
         <ListaComStreak snapshot={snapshot} aoMudar={recarregar} />

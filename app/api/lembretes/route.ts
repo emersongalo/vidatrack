@@ -852,15 +852,9 @@ async function notificarResumoSemanal(
     }
     if (!partes.length || (r.feitos === 0 && r.tarefas === 0 && r.gasto === 0)) continue;
     const texto = `📊 Sua semana: ${partes.join(" · ")}. Toque pra ver os detalhes.`;
-    enviados += await notificarUsuariosDoItem(
-      supabase,
-      "resumo_semana",
-      usuarioId,
-      usuarioId,
-      texto,
-      "/habitos/semana",
-      hoje
-    );
+    // Etapa 312 — só finanças? abre a análise de gastos em vez da semana dos hábitos
+    const destino = r.devidos > 0 || r.tarefas > 0 ? "/habitos/semana" : "/financas/analise";
+    enviados += await notificarUsuariosDoItem(supabase, "resumo_semana", usuarioId, usuarioId, texto, destino, hoje);
   }
   return enviados;
 }
@@ -1051,7 +1045,9 @@ async function notificarResumoManha(supabase: ReturnType<typeof criarClienteAdmi
     else if (r.contas.length > 1)
       partes.push(`vencem ${r.contas.length} contas (${formatarMoeda(r.contas.reduce((s, c) => s + c.valor, 0))})`);
     const texto = `☀️ Bom dia! Hoje: ${partes.join(" · ")}`;
-    enviados += await notificarUsuariosDoItem(supabase, "resumo_manha", usuarioId, usuarioId, texto, "/habitos", hoje);
+    // Etapa 312 — quem só tem contas (não usa hábitos/tarefas) cai direto em Finanças
+    const destino = r.habitos ? "/habitos" : r.tarefas ? "/tarefas" : "/financas";
+    enviados += await notificarUsuariosDoItem(supabase, "resumo_manha", usuarioId, usuarioId, texto, destino, hoje);
   }
   return enviados;
 }
@@ -1102,12 +1098,21 @@ async function notificarLembreteLancar(supabase: ReturnType<typeof criarClienteA
       .gte("criado_em", new Date(Date.parse(doisDiasAtras + "T03:00:00Z")).toISOString()),
     supabase.from("lembretes_enviados").select("usuario_id").eq("tipo_item", "lembrete_lancar").gte("data", somarDias(hoje, -1)),
   ]);
+  // Etapa 312 — só lembra quem usa Finanças de verdade (lançou algo à mão nos
+  // últimos 30 dias). Quem só usa hábitos/tarefas não recebe aviso de gasto.
+  const { data: usaram } = await supabase
+    .from("financa_transacoes")
+    .select("dono_id")
+    .in("dono_id", ids)
+    .is("recorrencia_id", null)
+    .gte("criado_em", new Date(Date.parse(somarDias(hoje, -30) + "T03:00:00Z")).toISOString());
+  const usaFinancas = new Set((usaram ?? []).map((t) => t.dono_id as string));
   const temConta = new Set((contas ?? []).map((c) => c.dono_id as string));
   const lancouRecente = new Set((recentes ?? []).map((t) => t.dono_id as string));
   const avisadoRecente = new Set((avisados ?? []).map((a) => a.usuario_id as string));
   let enviados = 0;
   for (const id of ids) {
-    if (!temConta.has(id) || lancouRecente.has(id) || avisadoRecente.has(id)) continue;
+    if (!temConta.has(id) || !usaFinancas.has(id) || lancouRecente.has(id) || avisadoRecente.has(id)) continue;
     enviados += await notificarUsuariosDoItem(
       supabase,
       "lembrete_lancar",

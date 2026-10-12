@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { criarHabito } from "../actions";
 import { FormularioHabito } from "@/components/FormularioHabito";
@@ -40,6 +41,15 @@ function NovoHabitoConteudo() {
         topo={{ titulo: "Novo hábito", voltarHref: "/habitos" }}
       />
       <div className="px-6 md:px-12 mt-2">
+        {/* Etapa 312 — atalho pros hábitos prontos */}
+        <Link href="/habitos/trilhas" className="flex items-center gap-3 rounded-2xl border border-base-600 bg-base-800 px-4 py-3 mb-3 hover:border-habito transition">
+          <span className="text-2xl">🧭</span>
+          <span className="flex-1 min-w-0">
+            <span className="block font-semibold text-sm">Sem ideia? Use um hábito pronto</span>
+            <span className="block text-xs text-ink-400">Trilhas de saúde, mente, casa, dinheiro… com desafio de 7, 21 ou 30 dias</span>
+          </span>
+          <span className="text-ink-400">›</span>
+        </Link>
         {/* Etapa 295 — hábitos de tela (Android) */}
         <CartaoTempoTela compacto />
         <Dica contexto="novoHabito" />

@@ -4,7 +4,7 @@
 // (casa, garagem, jardim, lojinha, missões, conquistas e o jardim juntos).
 // Toque num lugar pra ir até ele; os selinhos avisam o que tem pra pegar.
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
@@ -16,6 +16,8 @@ import { progressoDoDesejo } from "@/lib/mascote/casa";
 import { MundoIso, type LugarMundo } from "@/components/mascote/MundoIso";
 import { periodoDaHora } from "@/components/mascote/Mascote";
 import { ZoomPan } from "@/components/ZoomPan";
+import { comprarTema, temaIlha, TEMAS_ILHA, temTema, usarTema } from "@/lib/mascote/temasIlha";
+import { vibrar } from "@/lib/app/vibrar";
 import { estadosDosMonumentos } from "@/lib/mascote/ilha";
 import { CarregandoTela } from "@/components/Esqueleto";
 import { CabecalhoPagina } from "@/components/CabecalhoPagina";
@@ -41,7 +43,10 @@ export default function MundoPage() {
   const router = useRouter();
   const { snapshot } = useSnapshotOffline();
   const hoje = hojeISO();
-  const { mascote, feitos, fase, moedas } = useMascote(snapshot, hoje);
+  const { mascote, feitos, fase, moedas, salvar, salvando } = useMascote(snapshot, hoje);
+  const [temas, setTemas] = useState(false);
+  const [erroTema, setErroTema] = useState<string | null>(null);
+  const tema = temaIlha(mascote?.temaIlha);
   const periodo = periodoDaHora(new Date().getHours());
 
   const info = useMemo(() => {
@@ -52,7 +57,8 @@ export default function MundoPage() {
     const conquistas = listarConquistas(snapshot, mascote, feitos);
     const plantas = jardimPessoal(snapshot, hoje);
     const temJuntos = ((snapshot.parceiros ?? []) as any[]).length > 0;
-    return { missoes, prontasMissao, conquistas, prontasConquista: conquistasProntas(conquistas), plantas, temJuntos };
+    const desafios = (mascote?.desafios ?? []).filter((d) => !d.resultado).length;
+    return { desafios, missoes, prontasMissao, conquistas, prontasConquista: conquistasProntas(conquistas), plantas, temJuntos };
   }, [snapshot, hoje, mascote, feitos]);
 
   if (snapshot === undefined || !info) return <CarregandoTela cartoes={2} linhas={3} />;
@@ -79,7 +85,7 @@ export default function MundoPage() {
       </div>
 
       <ZoomPan className="rounded-3xl border border-base-600/70 mb-2">
-        <div style={{ background: CEU[periodo] }}>
+        <div style={{ background: tema.particula === "brasas" ? "linear-gradient(180deg, #431407, #7C2D12)" : CEU[periodo] }}>
         <MundoIso
           periodo={periodo}
           mascote={mascote ? { cor: mascote.cor, fase: fase.nivel, equipados: mascote.equipados, nome: mascote.nome } : null}
@@ -88,6 +94,7 @@ export default function MundoPage() {
           selos={{ missoes: info.prontasMissao, conquistas: info.prontasConquista }}
           aoTocar={ir}
           monumentos={estadosDosMonumentos(info.conquistas)}
+          tema={tema}
         />
         </div>
       </ZoomPan>
@@ -116,14 +123,16 @@ export default function MundoPage() {
             ["conquistas", "🏆", "Conquistas", info.prontasConquista ? `${info.prontasConquista} pra resgatar` : `${feitasConq}/${info.conquistas.length}`],
             ["lojinha", "🛍️", "Lojinha", "Roupas e comidinhas"],
             ["juntos", "💞", "Juntos", info.temJuntos ? "Jardim da dupla" : "Convide alguém"],
-          ] as [LugarMundo, string, string, string][]
+            ["trilhas", "🧭", "Trilhas", info.desafios ? `${info.desafios} ${info.desafios === 1 ? "desafio" : "desafios"} em andamento` : "Hábitos prontos e desafios"],
+            ["temas", "🎨", "Temas da ilha", "Inverno, outono, cerejeira…"],
+          ] as [LugarMundo | "trilhas" | "temas", string, string, string][]
         ).map(([l, emoji, titulo, sub]) => {
           const aviso = (l === "missoes" && info.prontasMissao > 0) || (l === "conquistas" && info.prontasConquista > 0);
           return (
             <button
               key={l}
               type="button"
-              onClick={() => ir(l)}
+              onClick={() => (l === "trilhas" ? router.push("/habitos/trilhas") : l === "temas" ? setTemas(true) : ir(l))}
               className={`relative text-left rounded-2xl border px-3 py-2.5 transition ${aviso ? "border-financa bg-financa/10" : "border-base-600 bg-base-800 hover:border-habito"}`}
             >
               <span className="text-xl">{emoji}</span>
@@ -134,6 +143,62 @@ export default function MundoPage() {
           );
         })}
       </div>
+      {/* Etapa 312 — temas da ilha */}
+      {temas && (
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/60" onClick={() => setTemas(false)}>
+          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-base-800 border border-base-600 p-5 animate-entrar" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-display font-bold text-lg">🎨 Temas da ilha</p>
+              <span className="text-sm font-semibold text-financa">🪙 {moedas}</span>
+            </div>
+            {!mascote && <p className="text-sm text-ink-400 mb-3">Choque seu mascote pra comprar temas 🐣</p>}
+            {erroTema && <p className="text-sm text-red-400 mb-2">{erroTema}</p>}
+            <div className="grid grid-cols-2 gap-2">
+              {TEMAS_ILHA.map((t) => {
+                const meu = temTema(mascote, t.id);
+                const usando = tema.id === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    disabled={!mascote || salvando || usando}
+                    onClick={async () => {
+                      if (!mascote) return;
+                      setErroTema(null);
+                      if (meu) {
+                        const novo = usarTema(mascote, t.id);
+                        if (novo) await salvar(novo);
+                        return;
+                      }
+                      const r = comprarTema(mascote, t.id, moedas);
+                      if ("erro" in r) return setErroTema(r.erro);
+                      vibrar([15, 40, 20]);
+                      await salvar(r.mascote);
+                    }}
+                    className={`rounded-2xl border p-2 text-left transition ${usando ? "border-habito bg-habito/10" : "border-base-600 bg-base-900/40 hover:border-habito"}`}
+                  >
+                    <span className="block h-12 rounded-xl relative overflow-hidden" style={{ background: t.agua }}>
+                      <span className="absolute inset-x-3 inset-y-2 rounded-lg" style={{ background: `linear-gradient(135deg, ${t.grama[0]} 50%, ${t.caminho[0]} 50%)` }} />
+                      <span className="absolute right-4 top-1 w-4 h-4 rounded-full" style={{ background: t.copa[0] }} />
+                    </span>
+                    <span className="flex items-center justify-between mt-1.5">
+                      <span className="text-sm font-semibold">
+                        {t.emoji} {t.nome}
+                      </span>
+                    </span>
+                    <span className={`block text-[11px] ${usando ? "text-habito font-semibold" : meu ? "text-ink-300" : moedas >= t.preco ? "text-financa" : "text-ink-500"}`}>
+                      {usando ? "Em uso ✓" : meu ? "Usar" : `${t.preco} 🪙`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button type="button" onClick={() => setTemas(false)} className="mt-4 w-full rounded-2xl bg-base-700 py-3 text-sm font-semibold">
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

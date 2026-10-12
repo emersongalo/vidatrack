@@ -1,13 +1,24 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "311";
+export const VERSAO_NOVIDADES = "312";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "312",
+    titulo: "Trilhas, desafios e mais pra comprar",
+    itens: [
+      { emoji: "🧭", titulo: "Trilhas de hábitos prontos", texto: "Corpo em dia, mente tranquila, aprender, casa organizada, dinheiro sob controle e largar um hábito: adicione com um toque.", href: "/habitos/trilhas" },
+      { emoji: "🥇", titulo: "Desafios de 7, 21 e 30 dias", texto: "Desafie qualquer hábito (tem folga pra algum dia corrido). Cumpriu? Medalha de bronze, prata ou ouro e moedas.", href: "/habitos/trilhas" },
+      { emoji: "🎨", titulo: "Temas da ilha", texto: "Outono com folhas caindo, inverno com neve, cerejeira com pétalas, deserto e até uma ilha vulcânica.", href: "/habitos/mundo" },
+      { emoji: "🏖️", titulo: "Área de lazer na casa", texto: "Piscina grande, guarda-sol, espreguiçadeira, churrasqueira, escorregador, fogueira, deck e areia de praia.", href: "/habitos/mascote/casa" },
+      { emoji: "🔔", titulo: "Avisos do jeito que você usa", texto: "Quem usa só Finanças recebe só avisos de Finanças (e o resumo abre direto lá). Quem não lança gastos não recebe o \"gastou algo hoje?\"." },
+    ],
+  },
   {
     versao: "311",
     titulo: "Ilha maior, zoom e família",

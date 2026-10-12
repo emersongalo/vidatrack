@@ -295,6 +295,97 @@ function DesenhoMovel({ it, mv, periodo }: { it: Colocado; mv: Movel; periodo: P
           <polygon points={pts([C(0.4, 0.5, 3.4), C(1.2, 0.5, 3.4), C(1.2, 0.62, 3.4), C(0.4, 0.62, 3.4)])} fill="#E0F2FE" opacity="0.6" className="vtm-onda" />
         </g>
       );
+    // Etapa 312 — área de lazer
+    case "piscinaG":
+      return (
+        <g>
+          {B(0, 0, 3, 2, 4, 0, "#E2E8F0")}
+          <polygon points={pts([C(0.16, 0.16, 4.2), C(2.84, 0.16, 4.2), C(2.84, 1.84, 4.2), C(0.16, 1.84, 4.2)])} fill="#0EA5E9" />
+          <polygon points={pts([C(0.3, 0.3, 4.3), C(2.7, 0.3, 4.3), C(2.7, 1.7, 4.3), C(0.3, 1.7, 4.3)])} fill="#38BDF8" />
+          {[0.6, 1.2].map((v) => (
+            <polygon key={v} points={pts([C(0.6, v, 4.4), C(2.2, v, 4.4), C(2.2, v + 0.1, 4.4), C(0.6, v + 0.1, 4.4)])} fill="#E0F2FE" opacity="0.6" className="vtm-onda" />
+          ))}
+          {(() => {
+            const [bx, by] = C(2.1, 1.1, 5);
+            return (
+              <g className="vtm-onda">
+                <ellipse cx={bx} cy={by} rx="6" ry="3" fill="#F472B6" />
+                <ellipse cx={bx} cy={by} rx="2.6" ry="1.2" fill="#38BDF8" />
+              </g>
+            );
+          })()}
+          {B(2.7, 0.2, 0.06, 0.06, 14, 0, "#CBD5E1")}
+          {B(2.7, 0.5, 0.06, 0.06, 14, 0, "#CBD5E1")}
+        </g>
+      );
+    case "espreguicadeira":
+      return (
+        <g>
+          {pernas(0.2, 0.1, 0.6, 1.8, 5, "#E5E7EB")}
+          {B(0.18, 0.5, 0.64, 1.4, 2, 5, "#60A5FA")}
+          {B(0.18, 0.1, 0.64, 0.45, 2, 9, "#3B82F6")}
+          {B(0.18, 0.1, 0.64, 0.08, 10, 5, "#3B82F6")}
+        </g>
+      );
+    case "guardasol": {
+      const [cx, cy] = C(0.5, 0.5, 34);
+      return (
+        <g>
+          {B(0.38, 0.38, 0.24, 0.24, 2, 0, "#94A3B8")}
+          {B(0.47, 0.47, 0.06, 0.06, 34, 2, "#F8FAFC")}
+          <path d={`M${cx - 18} ${cy + 6} Q${cx} ${cy - 10} ${cx + 18} ${cy + 6} Z`} fill="#EF4444" />
+          <path d={`M${cx - 6} ${cy + 1} Q${cx} ${cy - 9} ${cx + 6} ${cy + 1} L${cx + 5} ${cy + 4} L${cx - 5} ${cy + 4} Z`} fill="#FFFFFF" />
+        </g>
+      );
+    }
+    case "piquenique":
+      return (
+        <g>
+          {B(0.05, 0.05, 1.9, 0.18, 7, 0, "#8B5A2B")}
+          {B(0.05, 0.77, 1.9, 0.18, 7, 0, "#8B5A2B")}
+          {pernas(0.2, 0.3, 1.6, 0.4, 13, "#7A4E2E")}
+          {B(0.1, 0.25, 1.8, 0.5, 2, 13, "#C0874F")}
+          {B(0.3, 0.3, 0.6, 0.4, 0.5, 15, "#EF4444")}
+          {B(1.3, 0.35, 0.25, 0.25, 5, 15, "#FBBF24")}
+        </g>
+      );
+    case "chuveirao": {
+      const [cx, cy] = C(0.5, 0.25, 38);
+      return (
+        <g>
+          {B(0.2, 0.2, 0.6, 0.6, 1, 0, "#CBD5E1")}
+          {B(0.45, 0.15, 0.08, 0.08, 40, 0, "#94A3B8")}
+          {B(0.4, 0.15, 0.2, 0.3, 3, 38, "#64748B")}
+          {[-3, 0, 3].map((dx, i) => (
+            <circle key={dx} cx={cx + dx + 4} cy={cy + 6} r="1" fill="#7DD3FC" className="vtm-gota" style={{ animationDelay: `${i * 0.3}s` }} />
+          ))}
+        </g>
+      );
+    }
+    case "escorregador":
+      return (
+        <g>
+          {B(0.05, 0.2, 0.5, 0.6, 30, 0, "#F59E0B")}
+          {B(0, 0.15, 0.6, 0.7, 2, 30, "#FBBF24")}
+          <polygon points={pts([C(0.55, 0.25, 30), C(0.55, 0.75, 30), C(1.95, 0.75, 2), C(1.95, 0.25, 2)])} fill="#38BDF8" />
+          <polygon points={pts([C(0.55, 0.75, 30), C(1.95, 0.75, 2), C(1.95, 0.75, 6), C(0.55, 0.75, 34)])} fill="#0284C7" />
+        </g>
+      );
+    case "fogueiraL": {
+      const [cx, cy] = C(0.5, 0.5, 2);
+      return (
+        <g>
+          <ellipse cx={cx} cy={cy} rx="10" ry="5" fill="#57534E" />
+          <rect x={cx - 8} y={cy - 2.5} width="16" height="3" rx="1.5" fill="#7A4E2E" transform={`rotate(18 ${cx} ${cy})`} />
+          <rect x={cx - 8} y={cy - 2.5} width="16" height="3" rx="1.5" fill="#8B5A2B" transform={`rotate(-18 ${cx} ${cy})`} />
+          <g className="vtm-fogo" style={{ transformBox: "fill-box", transformOrigin: "50% 100%" }}>
+            <path d={`M${cx - 6} ${cy - 2} Q${cx - 7} ${cy - 12} ${cx} ${cy - 20} Q${cx + 7} ${cy - 12} ${cx + 6} ${cy - 2} Z`} fill="#F97316" />
+            <path d={`M${cx - 3} ${cy - 2} Q${cx - 3} ${cy - 8} ${cx} ${cy - 13} Q${cx + 3} ${cy - 8} ${cx + 3} ${cy - 2} Z`} fill="#FDE047" />
+          </g>
+          {noite && <circle cx={cx} cy={cy - 6} r="20" fill="#F97316" opacity="0.18" />}
+        </g>
+      );
+    }
     case "poste":
       return (
         <g>

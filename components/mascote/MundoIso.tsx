@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Mascote, type Periodo } from "@/components/mascote/Mascote";
 import type { CorMascote, Slot } from "@/lib/mascote/mascote";
 import { MONUMENTOS_NA_ILHA, type EstadoMonumento } from "@/lib/mascote/ilha";
+import { temaIlha, type TemaIlha } from "@/lib/mascote/temasIlha";
 
 export type LugarMundo = "casa" | "garagem" | "jardim" | "juntos" | "lojinha" | "missoes" | "conquistas";
 
@@ -88,6 +89,7 @@ export function MundoIso({
   selos,
   aoTocar,
   monumentos = {},
+  tema = temaIlha(null),
 }: {
   periodo: Periodo;
   mascote: { cor: CorMascote; fase: number; equipados: Partial<Record<Slot, string>>; nome: string } | null;
@@ -98,6 +100,8 @@ export function MundoIso({
   aoTocar: (l: LugarMundo) => void;
   /** Etapa 311 — estado de cada monumento (id da conquista) */
   monumentos?: Record<string, EstadoMonumento>;
+  /** Etapa 312 — cores e clima da ilha */
+  tema?: TemaIlha;
 }) {
   const noite = periodo === "noite";
   const livres = useMemo(() => [...CAMINHO].map((k) => k.split(",").map(Number) as [number, number]), []);
@@ -351,7 +355,7 @@ export function MundoIso({
   return (
     <svg viewBox={`0 0 ${LARG} ${ALT}`} className="w-full h-auto select-none" role="img" aria-label="Mapa do seu mundo">
       {/* água em volta */}
-      <polygon points={pts([P(-1.5, -1.5), P(N + 1.5, -1.5), P(N + 1.5, N + 1.5), P(-1.5, N + 1.5)])} fill={noite ? "#1E3A8A" : "#60A5FA"} opacity="0.85" />
+      <polygon points={pts([P(-1.5, -1.5), P(N + 1.5, -1.5), P(N + 1.5, N + 1.5), P(-1.5, N + 1.5)])} fill={noite ? tema.aguaNoite : tema.agua} opacity="0.85" />
       <g className="vtm-onda" opacity="0.5">
         {[-0.8, N + 0.6].map((k) => (
           <g key={k}>
@@ -361,7 +365,7 @@ export function MundoIso({
         ))}
       </g>
       {/* ilha: areia + terra */}
-      <polygon points={pts([P(-0.4, -0.4), P(N + 0.4, -0.4), P(N + 0.4, N + 0.4), P(-0.4, N + 0.4)])} fill="#F3D9A4" />
+      <polygon points={pts([P(-0.4, -0.4), P(N + 0.4, -0.4), P(N + 0.4, N + 0.4), P(-0.4, N + 0.4)])} fill={tema.areia} />
       <polygon points={pts([P(0, N), P(N, N), P(N, N, -10), P(0, N, -10)])} fill="#7A5236" />
       <polygon points={pts([P(N, 0), P(N, N), P(N, N, -10), P(N, 0, -10)])} fill="#5E3F29" />
       {Array.from({ length: N }, (_, i) =>
@@ -369,8 +373,8 @@ export function MundoIso({
           <polygon
             key={`${i}-${j}`}
             points={pts([P(i, j), P(i + 1, j), P(i + 1, j + 1), P(i, j + 1)])}
-            fill={CAMINHO.has(`${i},${j}`) ? ((i + j) % 2 ? "#D6CFC0" : "#CFC7B6") : (i + j) % 2 ? "#86C77A" : "#7BBE6F"}
-            stroke={CAMINHO.has(`${i},${j}`) ? "#BFB6A3" : "#6FAE63"}
+            fill={CAMINHO.has(`${i},${j}`) ? tema.caminho[(i + j) % 2 ? 0 : 1] : tema.grama[(i + j) % 2 ? 0 : 1]}
+            stroke={CAMINHO.has(`${i},${j}`) ? tom(tema.caminho[1], -0.1) : tema.linha}
             strokeWidth="0.35"
           />
         ))
@@ -387,15 +391,32 @@ export function MundoIso({
         const [cx, cy] = P(x, y);
         return (
           <g key={i}>
-            <rect x={cx - 1.2} y={cy - 9} width="2.4" height="9" fill="#8B5A2B" />
-            <circle cx={cx} cy={cy - 14} r="7" fill="#3F9D5A" />
-            <circle cx={cx - 3} cy={cy - 17} r="3.5" fill="#5CC27A" />
+            <rect x={cx - 1.2} y={cy - 9} width="2.4" height="9" fill={tema.tronco} />
+            {tema.id === "deserto" ? (
+              <g>
+                <rect x={cx - 2.5} y={cy - 22} width="5" height="20" rx="2.5" fill={tema.copa[0]} />
+                <rect x={cx - 8} y={cy - 16} width="4" height="9" rx="2" fill={tema.copa[1]} />
+                <rect x={cx + 4} y={cy - 19} width="4" height="8" rx="2" fill={tema.copa[1]} />
+              </g>
+            ) : tema.id === "inverno" ? (
+              <g>
+                <polygon points={`${cx - 8},${cy - 6} ${cx + 8},${cy - 6} ${cx},${cy - 20}`} fill={tema.copa[0]} />
+                <polygon points={`${cx - 6},${cy - 14} ${cx + 6},${cy - 14} ${cx},${cy - 26}`} fill={tema.copa[1]} />
+                <polygon points={`${cx - 3},${cy - 22} ${cx + 3},${cy - 22} ${cx},${cy - 27}`} fill="#F8FAFC" />
+              </g>
+            ) : (
+              <g>
+                <circle cx={cx} cy={cy - 14} r="7" fill={tema.copa[0]} />
+                <circle cx={cx - 3} cy={cy - 17} r="3.5" fill={tema.copa[1]} />
+              </g>
+            )}
           </g>
         );
       })}
 
       {ents.map((e) => e.el)}
 
+      {tema.particula && <Particulas tipo={tema.particula} />}
       {(noite || periodo === "entardecer") && <rect width={LARG} height={ALT} fill={noite ? "#0B1026" : "#7C2D12"} opacity={noite ? 0.32 : 0.1} pointerEvents="none" />}
     </svg>
   );
@@ -684,4 +705,28 @@ function desenharMonumento(id: string, x: number, y: number, noite: boolean, cor
     default:
       return null;
   }
+}
+
+/** Etapa 312 — neve, folhas, pétalas ou brasas caindo sobre a ilha. */
+function Particulas({ tipo }: { tipo: NonNullable<TemaIlha["particula"]> }) {
+  const cor = { neve: "#FFFFFF", folhas: "#E07A2E", petalas: "#F9A8D4", brasas: "#FDBA74" }[tipo];
+  const sobe = tipo === "brasas";
+  return (
+    <g pointerEvents="none" aria-hidden>
+      {Array.from({ length: 22 }, (_, i) => {
+        const x = ((i * 97) % LARG) + 4;
+        const atraso = (i * 0.53) % 6;
+        const dur = 6 + (i % 5);
+        return (
+          <g key={i} className={sobe ? "vtm-brasa" : "vtm-cai"} style={{ animationDuration: `${dur}s`, animationDelay: `${-atraso}s` }}>
+            {tipo === "neve" || tipo === "brasas" ? (
+              <circle cx={x} cy={sobe ? ALT - 10 : 0} r={tipo === "neve" ? 1.6 : 1.2} fill={cor} opacity="0.9" />
+            ) : (
+              <ellipse cx={x} cy={0} rx="2.4" ry="1.3" fill={i % 3 ? cor : tom(cor, -0.15)} transform={`rotate(${(i * 47) % 180} ${x} 0)`} />
+            )}
+          </g>
+        );
+      })}
+    </g>
+  );
 }

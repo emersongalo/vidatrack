@@ -574,3 +574,10 @@ html[data-fonte="maior"] { font-size: 125%; }
 @keyframes vtm-bau { 0%, 100% { transform: rotate(0) scale(1); } 15% { transform: rotate(-12deg) scale(1.1); } 30% { transform: rotate(12deg) scale(1.15); } 45% { transform: rotate(-10deg) scale(1.2); } 60% { transform: rotate(10deg) scale(1.25); } 80% { transform: rotate(-4deg) scale(1.35); } }
 .vtm-bau { animation: vtm-bau 1.1s ease-in-out; }
 @media (prefers-reduced-motion: reduce) { .vtm-bau { animation: none !important; } }
+
+/* Etapa 312 · neve/folhas/pétalas caindo e brasas subindo na ilha */
+@keyframes vtm-cai { from { transform: translate(0, -10px); opacity: 0; } 10% { opacity: 1; } 50% { transform: translate(10px, 150px); } 90% { opacity: 1; } to { transform: translate(-6px, 300px); opacity: 0; } }
+.vtm-cai { animation: vtm-cai 7s linear infinite; }
+@keyframes vtm-brasa { from { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } to { transform: translate(8px, -260px); opacity: 0; } }
+.vtm-brasa { animation: vtm-brasa 7s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .vtm-cai, .vtm-brasa { animation: none !important; display: none; } }

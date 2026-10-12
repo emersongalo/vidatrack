@@ -3,7 +3,7 @@
 // qualquer quadradinho. Tudo fica no mesmo JSON do mascote (perfis.mascote.casa)
 // — nada de imagem no servidor.
 
-export type ComodoId = "quarto" | "sala" | "cozinha" | "quintal" | "garagem";
+export type ComodoId = "quarto" | "sala" | "cozinha" | "quintal" | "garagem" | "lazer";
 export const TAM = 6; // cada cômodo tem 6×6 quadradinhos
 
 export type Colocado = { u: string; m: string; x: number; y: number; r: 0 | 1 };
@@ -25,6 +25,8 @@ export const COMODOS: { id: ComodoId; nome: string; emoji: string; preco: number
   { id: "quintal", nome: "Quintal", emoji: "🌳", preco: 600, externo: true },
   // Etapa 308
   { id: "garagem", nome: "Garagem", emoji: "🚗", preco: 900 },
+  // Etapa 312
+  { id: "lazer", nome: "Área de lazer", emoji: "🏖️", preco: 1200, externo: true },
 ];
 
 export type Estilo = { id: string; nome: string; tipo: "piso" | "parede"; preco: number; a: string; b: string; externo?: boolean };
@@ -50,9 +52,12 @@ export const ESTILOS: Estilo[] = [
   { id: "porcelanato", nome: "Porcelanato", tipo: "piso", preco: 260, a: "#F5F5F4", b: "#E7E5E4" },
   { id: "cinza", nome: "Cinza garagem", tipo: "parede", preco: 0, a: "#CBD5E1", b: "#94A3B8" },
   { id: "dourada", nome: "Dourada de luxo", tipo: "parede", preco: 900, a: "#F3D58A", b: "#C9A227" },
+  // Etapa 312 — pisos de fora
+  { id: "deck", nome: "Deck de madeira", tipo: "piso", preco: 220, a: "#B98B5E", b: "#A97C51", externo: true },
+  { id: "areia", nome: "Areia de praia", tipo: "piso", preco: 180, a: "#F3DDA8", b: "#EBD297", externo: true },
 ];
 
-export type CategoriaMovel = "quarto" | "sala" | "cozinha" | "quintal" | "veiculo" | "lazer" | "pet" | "parede" | "enfeite";
+export type CategoriaMovel = "quarto" | "sala" | "cozinha" | "quintal" | "veiculo" | "lazer" | "pet" | "parede" | "enfeite" | "verao";
 export type Movel = {
   id: string;
   nome: string;
@@ -124,6 +129,14 @@ export const MOVEIS: Movel[] = [
   { id: "camaelastica", nome: "Cama elástica", emoji: "🤸", preco: 900, w: 2, d: 2, cat: "lazer" },
   { id: "telescopio", nome: "Telescópio", emoji: "🔭", preco: 950, w: 1, d: 1, cat: "lazer" },
   { id: "estatua", nome: "Estátua dourada", emoji: "🗿", preco: 9000, w: 1, d: 1, cat: "lazer" },
+  // Etapa 312 — área de lazer / verão
+  { id: "piscinaG", nome: "Piscina grande", emoji: "🏊", preco: 1800, w: 3, d: 2, cat: "verao" },
+  { id: "espreguicadeira", nome: "Espreguiçadeira", emoji: "🛋️", preco: 260, w: 1, d: 2, cat: "verao" },
+  { id: "guardasol", nome: "Guarda-sol", emoji: "⛱️", preco: 180, w: 1, d: 1, cat: "verao" },
+  { id: "piquenique", nome: "Mesa de piquenique", emoji: "🧺", preco: 340, w: 2, d: 1, cat: "verao" },
+  { id: "chuveirao", nome: "Chuveirão", emoji: "🚿", preco: 220, w: 1, d: 1, cat: "verao" },
+  { id: "escorregador", nome: "Escorregador", emoji: "🛝", preco: 1300, w: 2, d: 1, cat: "verao" },
+  { id: "fogueiraL", nome: "Fogueira com troncos", emoji: "🔥", preco: 450, w: 1, d: 1, cat: "verao", luz: true },
   // pets
   { id: "cachorro", nome: "Cachorro com casinha", emoji: "🐶", preco: 800, w: 2, d: 1, cat: "pet" },
   { id: "gato", nome: "Gatinho na almofada", emoji: "🐱", preco: 600, w: 1, d: 1, cat: "pet" },
@@ -146,6 +159,7 @@ export const NOMES_CATEGORIA: Record<CategoriaMovel, string> = {
   pet: "🐶 Bichinhos",
   parede: "🖼️ Parede",
   enfeite: "🪴 Enfeites",
+  verao: "🏖️ Área de lazer",
 };
 
 export function movel(id: string) {

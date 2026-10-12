@@ -36,6 +36,21 @@ export type DadosMascote = {
   missoesTotal?: number;
   /** Etapa 310 — conquistas já resgatadas */
   conquistas?: string[];
+  /** Etapa 312 — desafios de 7/21/30 dias (ver lib/habitos/trilhas.ts) */
+  desafios?: DesafioSalvo[];
+  /** Etapa 312 — temas da ilha comprados e o que está em uso */
+  temasIlha?: string[];
+  temaIlha?: string;
+};
+
+export type DesafioSalvo = {
+  id: string;
+  habitoId: string;
+  dias: 7 | 21 | 30;
+  inicio: string;
+  /** quando terminou (medalha, desistência ou perdeu) */
+  fim?: string;
+  resultado?: "medalha" | "perdeu" | "desistiu";
 };
 
 export type Consumo = { d: string; t: string; h?: string };
@@ -231,6 +246,21 @@ export function lerMascote(bruto: unknown): DadosMascote | null {
   if (mt > 0) m.missoesTotal = Math.min(100000, mt);
   const conq = [...new Set((Array.isArray(b.conquistas) ? b.conquistas : []).filter((x: unknown) => typeof x === "string").map((x: string) => x.slice(0, 20)))].slice(0, 200) as string[];
   if (conq.length) m.conquistas = conq;
+  // Etapa 312 — desafios e temas da ilha
+  const ehDia = (x: unknown) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x);
+  const desafios: DesafioSalvo[] = (Array.isArray(b.desafios) ? b.desafios : [])
+    .filter((d: any) => d && typeof d.id === "string" && typeof d.habitoId === "string" && [7, 21, 30].includes(d.dias) && ehDia(d.inicio))
+    .slice(-40)
+    .map((d: any) => {
+      const r: DesafioSalvo = { id: d.id.slice(0, 24), habitoId: d.habitoId.slice(0, 40), dias: d.dias, inicio: d.inicio };
+      if (ehDia(d.fim)) r.fim = d.fim;
+      if (["medalha", "perdeu", "desistiu"].includes(d.resultado)) r.resultado = d.resultado;
+      return r;
+    });
+  if (desafios.length) m.desafios = desafios;
+  const temas = [...new Set((Array.isArray(b.temasIlha) ? b.temasIlha : []).filter((x: unknown) => typeof x === "string").map((x: string) => x.slice(0, 20)))].slice(0, 30) as string[];
+  if (temas.length) m.temasIlha = temas;
+  if (typeof b.temaIlha === "string" && temas.includes(b.temaIlha)) m.temaIlha = b.temaIlha;
   return m;
 }
 
