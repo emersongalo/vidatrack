@@ -7,7 +7,7 @@ describe("Etapa 285 — aba Hábitos só com hábitos", () => {
     expect(BLOCOS_HOJE_PADRAO).not.toContain("contas" as any);
     const l = lerLayoutHoje(["contas", "!diario", "lista"]);
     expect(l.map((b) => b.id)).not.toContain("contas");
-    expect(l[1]).toEqual({ id: "diario", visivel: false }); // Etapa 300: mascote entra no topo
+    expect(l.find((b) => b.id === "diario")).toEqual({ id: "diario", visivel: false }); // Etapa 300/309: mascote e missões entram no topo
     expect(NOMES_BLOCOS_HOJE.lista).toBe("✅ Hábitos");
   });
   it("novidades 285", () => {

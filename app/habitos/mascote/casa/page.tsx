@@ -30,6 +30,8 @@ import {
   podeColocar,
   TAM,
   usarEstilo,
+  definirDesejo,
+  progressoDoDesejo,
   type Casa,
   type CategoriaMovel,
   type ComodoId,
@@ -191,6 +193,29 @@ function CasaConteudo() {
         titulo={visita ? `Casa de ${visita.nome}` : `Casa de ${dono.nome}`}
         subtitulo={visita ? "Você está visitando 👀" : "Monte do seu jeito com as moedas dos hábitos"}
       />
+
+      {/* Etapa 308 — o sonho */}
+      {!visita &&
+        (() => {
+          const p = progressoDoDesejo(casa, moedas);
+          if (!p) return null;
+          return (
+            <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{p.movel.emoji}</span>
+                <p className="text-sm flex-1 min-w-0">
+                  <strong>Sonho: {p.movel.nome}</strong>
+                  <span className="block text-xs text-ink-400">
+                    {p.pronto ? "Você já pode comprar! 🎉 Toque em Decorar → Loja" : `Faltam ${p.faltam} 🪙 · uns ${p.habitos} hábitos feitos`}
+                  </span>
+                </p>
+              </div>
+              <div className="h-2 rounded-full bg-base-900/50 overflow-hidden mt-2">
+                <div className="h-full rounded-full bg-amber-400 transition-all duration-700" style={{ width: `${Math.round(p.progresso * 100)}%` }} />
+              </div>
+            </div>
+          );
+        })()}
 
       {/* cômodos */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 mb-3 scrollbar-none">
@@ -418,6 +443,19 @@ function CasaConteudo() {
                         }`}
                       >
                         {confirmar === `m:${m.id}` ? `Comprar por ${m.preco} 🪙?` : `${m.preco} 🪙`}
+                      </button>
+                      {/* Etapa 308 — marcar como sonho (aparece com barrinha no palco) */}
+                      <button
+                        type="button"
+                        disabled={salvando}
+                        onClick={async () => {
+                          const virou = casa.desejo === m.id ? null : m.id;
+                          vibrar(8);
+                          await gravar(definirDesejo(casa, virou), 0, virou ? `⭐ ${m.nome} virou seu sonho — a barrinha aparece na aba Hábitos` : "Sonho removido");
+                        }}
+                        className={`mt-1.5 w-full rounded-xl py-1 text-[11px] font-semibold ${casa.desejo === m.id ? "bg-amber-400/20 text-amber-300" : "text-ink-400"}`}
+                      >
+                        {casa.desejo === m.id ? "⭐ Meu sonho" : "☆ Quero esse"}
                       </button>
                     </div>
                   );

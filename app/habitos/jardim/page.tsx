@@ -11,6 +11,19 @@ import { NIVEIS } from "@/lib/habitos/nivel";
 import { CarregandoTela } from "@/components/Esqueleto";
 import { CabecalhoPagina } from "@/components/CabecalhoPagina";
 import { EstadoVazio } from "@/components/EstadoVazio";
+// Etapa 307 — o jardim em 3D (isométrico), com o mascote passeando
+import { useRouter } from "next/navigation";
+import { JardimIso } from "@/components/mascote/JardimIso";
+import { periodoDaHora } from "@/components/mascote/Mascote";
+import { jardimPessoal } from "@/lib/mascote/jardimDados";
+import { useMascote } from "@/lib/mascote/useMascote";
+
+const CEU_ISO: Record<string, string> = {
+  manha: "linear-gradient(180deg, #BFE3F7, #FCE7C8)",
+  tarde: "linear-gradient(180deg, #8FD0F5, #DDF1FF)",
+  entardecer: "linear-gradient(180deg, #7C6BB5, #F7A97C)",
+  noite: "linear-gradient(180deg, #0E1738, #273469)",
+};
 
 export default function JardimPage() {
   const { snapshot } = useSnapshotOffline();
@@ -20,6 +33,10 @@ export default function JardimPage() {
     [snapshot, hoje]
   );
   const r = resumoJardim(plantas);
+  const router = useRouter();
+  const { mascote, fase } = useMascote(snapshot, hoje);
+  const plantasIso = useMemo(() => jardimPessoal(snapshot, hoje), [snapshot, hoje]);
+  const periodo = periodoDaHora(new Date().getHours());
 
   if (snapshot === undefined) return <CarregandoTela cartoes={3} linhas={2} />;
 
@@ -49,6 +66,21 @@ export default function JardimPage() {
               <p className="text-xs text-ink-400">dias cuidados</p>
             </div>
           </div>
+
+          {/* Etapa 307 — o jardim isométrico */}
+          <section className="rounded-3xl overflow-hidden border border-habito/30 mb-5" style={{ background: CEU_ISO[periodo] }}>
+            <JardimIso
+              plantas={plantasIso}
+              periodo={periodo}
+              mascotes={[
+                mascote
+                  ? { chave: "eu", nome: mascote.nome, cor: mascote.cor, fase: fase.nivel, equipados: mascote.equipados, regou: r.regadas > 0 }
+                  : { chave: "eu", nome: "Você", cor: "verde", fase: 0, equipados: {}, regou: false, ovo: true },
+              ]}
+              aoTocarPlanta={(id) => router.push(`/habitos/${id}`)}
+            />
+          </section>
+          <p className="text-xs text-ink-400 -mt-3 mb-5 text-center">Toque numa planta pra abrir o hábito · as que ficaram dias sem regar murcham 🥀</p>
 
           {/* o canteiro */}
           <div

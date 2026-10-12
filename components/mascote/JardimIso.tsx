@@ -18,6 +18,8 @@ export type PlantaIso = {
   frutos: number;
   fruta: string;
   regada: boolean;
+  /** Etapa 307 — níveis altos do jardim pessoal: árvore com mais coisa em volta */
+  extra?: "floresta" | "montanha" | "lenda";
 };
 
 export type MascoteIso = {
@@ -39,7 +41,14 @@ export function lugaresDasPlantas(n: number): { tam: number; lugares: [number, n
   if (n <= 1) return { tam: 4, lugares: [[1, 1]] };
   if (n === 2) return { tam: 5, lugares: [[1, 1], [3, 2]] };
   if (n <= 4) return { tam: 6, lugares: ([[1, 1], [4, 1], [1, 4], [4, 4]] as [number, number][]).slice(0, n) };
-  return { tam: 7, lugares: ([[1, 1], [3, 1], [5, 1], [1, 4], [3, 4], [5, 4], [1, 6], [5, 6]] as [number, number][]).slice(0, Math.min(8, n)) };
+  if (n <= 8) return { tam: 7, lugares: ([[1, 1], [3, 1], [5, 1], [1, 4], [3, 4], [5, 4], [1, 6], [5, 6]] as [number, number][]).slice(0, n) };
+  // Etapa 307 — jardim pessoal grande: grade com caminho entre os canteiros
+  const lado = Math.min(6, Math.ceil(Math.sqrt(n)));
+  const lugares: [number, number][] = [];
+  const linhas = Math.ceil(Math.min(n, lado * lado) / lado);
+  const desloc = lado - linhas; // centraliza quando sobra linha
+  for (let j = 0; j < lado && lugares.length < n; j++) for (let i = 0; i < lado && lugares.length < n; i++) lugares.push([1 + i * 2, 1 + j * 2 + desloc]);
+  return { tam: lado * 2 + 1, lugares };
 }
 
 function tom(hex: string, f: number) {
@@ -119,6 +128,19 @@ export function JardimIso({
     if (pos.length !== mascotes.length) setPos(mascotes.map((_, k) => livres[k % Math.max(1, livres.length)] ?? [0, 0]));
   }, [mascotes.length, pos.length, livres]);
 
+  // Etapa 308 — planta que acabou de ser regada dá um pulinho
+  const regadasAntes = useRef<Set<string> | null>(null);
+  const [festa, setFesta] = useState<{ id: string; n: number } | null>(null);
+  const chaveRegadas = plantas.filter((p) => p.regada).map((p) => p.id).join(",");
+  useEffect(() => {
+    const agora = new Set(chaveRegadas ? chaveRegadas.split(",") : []);
+    if (regadasAntes.current) {
+      const nova = [...agora].find((id) => !regadasAntes.current!.has(id));
+      if (nova) setFesta({ id: nova, n: Date.now() });
+    }
+    regadasAntes.current = agora;
+  }, [chaveRegadas]);
+
   // ordem de desenho
   type Ent = { chave: number; el: React.ReactNode };
   const ents: Ent[] = [];
@@ -128,7 +150,14 @@ export function JardimIso({
       chave: x + y + 2,
       el: (
         <g key={pl.id} onClick={aoTocarPlanta ? () => aoTocarPlanta(pl.id) : undefined} style={aoTocarPlanta ? { cursor: "pointer" } : undefined}>
-          <Canteiro x={x} y={y} pl={pl} P={P} Bloco={Bloco} />
+          <g key={festa?.id === pl.id ? festa.n : 0} className={festa?.id === pl.id ? "vtm-pulo" : ""} style={{ transformBox: "fill-box", transformOrigin: "50% 100%" }}>
+            <Canteiro x={x} y={y} pl={pl} P={P} Bloco={Bloco} />
+          </g>
+          {festa?.id === pl.id && (
+            <text key={festa.n} x={P(x + 0.5, y + 0.5, 50)[0]} y={P(x + 0.5, y + 0.5, 50)[1]} textAnchor="middle" fontSize="9" className="vtm-ganho">
+              💧✨
+            </text>
+          )}
         </g>
       ),
     });
@@ -136,7 +165,7 @@ export function JardimIso({
   mascotes.forEach((m, k) => {
     const [mx, my] = pos[k] ?? [0, 0];
     const [px, py] = P(mx + 0.5, my + 0.5);
-    const tm = tam <= 4 ? 46 : tam <= 6 ? 40 : 34; // jardim maior, bichinho menor
+    const tm = tam <= 4 ? 46 : tam <= 6 ? 40 : tam <= 7 ? 34 : 30; // jardim maior, bichinho menor
     ents.push({
       chave: mx + my + 2.001 + k * 0.0001,
       el: (
@@ -271,15 +300,41 @@ function Canteiro({
           {pl.estagio === 5 && <circle cx={cx} cy={topo - 3} r="2.3" fill="#FFD24D" />}
         </g>
       )}
-      {pl.estagio >= 6 && (
-        <g>
-          <path d={`M${cx - 2} ${cy} L${cx - 1.5} ${cy - 20} L${cx + 1.5} ${cy - 20} L${cx + 2} ${cy} Z`} fill="#8B5A2B" />
-          <circle cx={cx} cy={cy - 30} r="13" fill={folha} />
-          <circle cx={cx - 8} cy={cy - 24} r="8.5" fill={tom(folha, -0.08)} />
-          <circle cx={cx + 8} cy={cy - 25} r="8.5" fill={tom(folha, 0.06)} />
-          <circle cx={cx - 3} cy={cy - 37} r="5" fill={tom(folha, 0.2)} opacity="0.7" />
-        </g>
-      )}
+      {pl.estagio >= 6 && (() => {
+        // Etapa 307 — lenda: copa dourada; montanha: em cima de pedras; floresta: pinheirinhos ao lado
+        const copa = pl.extra === "lenda" && pl.saude > 0 ? "#F5C542" : folha;
+        const base = pl.extra === "montanha" ? 6 : 0;
+        return (
+          <g>
+            {pl.extra === "montanha" && (
+              <g>
+                <path d={`M${cx - 13} ${cy + 2} L${cx - 4} ${cy - 9} L${cx + 4} ${cy - 4} L${cx + 13} ${cy + 2} Z`} fill="#9CA3AF" />
+                <path d={`M${cx - 4} ${cy - 9} L${cx - 1} ${cy - 5} L${cx - 7} ${cy - 5} Z`} fill="#F8FAFC" />
+              </g>
+            )}
+            {pl.extra === "floresta" &&
+              [-11, 11].map((dx) => (
+                <g key={dx}>
+                  <path d={`M${cx + dx} ${cy - 22} l-5 14 h10 Z`} fill={tom(folha, -0.15)} />
+                  <path d={`M${cx + dx} ${cy - 16} l-6 14 h12 Z`} fill={tom(folha, -0.22)} />
+                </g>
+              ))}
+            <path d={`M${cx - 2} ${cy - base} L${cx - 1.5} ${cy - 20 - base} L${cx + 1.5} ${cy - 20 - base} L${cx + 2} ${cy - base} Z`} fill="#8B5A2B" />
+            <circle cx={cx} cy={cy - 30 - base} r="13" fill={copa} />
+            <circle cx={cx - 8} cy={cy - 24 - base} r="8.5" fill={tom(copa, -0.08)} />
+            <circle cx={cx + 8} cy={cy - 25 - base} r="8.5" fill={tom(copa, 0.06)} />
+            <circle cx={cx - 3} cy={cy - 37 - base} r="5" fill={tom(copa, 0.2)} opacity="0.7" />
+            {pl.extra === "lenda" &&
+              [
+                [-14, -40],
+                [13, -36],
+                [0, -50],
+              ].map(([dx, dy], i) => (
+                <circle key={i} cx={cx + dx} cy={cy + dy - base} r="1.6" fill="#FEF3C7" className="vtm-brilha" style={{ animationDelay: `${i * 0.4}s` }} />
+              ))}
+          </g>
+        );
+      })()}
 
       {/* frutos maduros */}
       {pl.frutos > 0 &&

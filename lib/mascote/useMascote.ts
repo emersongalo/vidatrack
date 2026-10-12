@@ -41,7 +41,7 @@ export function useMascote(snapshot: any, hoje: string) {
   const hora = new Date().getHours();
   const vida = snapshot && mascote ? calcularVida(snapshot, hoje, hora, mascote.consumos ?? [], mascote.criadoEm) : null;
   const humor = humorComVida(humorDoMascote(dia?.habitos.feitos ?? 0, dia?.habitos.total ?? 0, hora), vida);
-  const moedas = mascote ? moedasDisponiveis(feitos, mascote.gastos) : feitos * 10;
+  const moedas = mascote ? moedasDisponiveis(feitos, mascote.gastos, mascote.bonus) : feitos * 10;
 
   async function salvar(novo: DadosMascote): Promise<boolean> {
     const antes = mascote;

@@ -3,7 +3,7 @@
 // qualquer quadradinho. Tudo fica no mesmo JSON do mascote (perfis.mascote.casa)
 // — nada de imagem no servidor.
 
-export type ComodoId = "quarto" | "sala" | "cozinha" | "quintal";
+export type ComodoId = "quarto" | "sala" | "cozinha" | "quintal" | "garagem";
 export const TAM = 6; // cada cômodo tem 6×6 quadradinhos
 
 export type Colocado = { u: string; m: string; x: number; y: number; r: 0 | 1 };
@@ -14,6 +14,8 @@ export type Casa = {
   moveis: Record<string, number>;
   /** pisos e paredes comprados */
   estilos: string[];
+  /** Etapa 308 — o "sonho": móvel que a pessoa quer comprar (barra de progresso no palco) */
+  desejo?: string;
 };
 
 export const COMODOS: { id: ComodoId; nome: string; emoji: string; preco: number; externo?: boolean }[] = [
@@ -21,6 +23,8 @@ export const COMODOS: { id: ComodoId; nome: string; emoji: string; preco: number
   { id: "sala", nome: "Sala", emoji: "🛋️", preco: 300 },
   { id: "cozinha", nome: "Cozinha", emoji: "🍳", preco: 450 },
   { id: "quintal", nome: "Quintal", emoji: "🌳", preco: 600, externo: true },
+  // Etapa 308
+  { id: "garagem", nome: "Garagem", emoji: "🚗", preco: 900 },
 ];
 
 export type Estilo = { id: string; nome: string; tipo: "piso" | "parede"; preco: number; a: string; b: string; externo?: boolean };
@@ -41,9 +45,14 @@ export const ESTILOS: Estilo[] = [
   { id: "azul", nome: "Azul noite", tipo: "parede", preco: 90, a: "#3D4F7A", b: "#2C3A5E" },
   { id: "tijolo", nome: "Tijolinho", tipo: "parede", preco: 150, a: "#C9775A", b: "#A85E45" },
   { id: "listras", nome: "Listrada", tipo: "parede", preco: 120, a: "#F4E9C9", b: "#E2C98E" },
+  // Etapa 308
+  { id: "concreto", nome: "Concreto", tipo: "piso", preco: 0, a: "#A8A29E", b: "#9C9590" },
+  { id: "porcelanato", nome: "Porcelanato", tipo: "piso", preco: 260, a: "#F5F5F4", b: "#E7E5E4" },
+  { id: "cinza", nome: "Cinza garagem", tipo: "parede", preco: 0, a: "#CBD5E1", b: "#94A3B8" },
+  { id: "dourada", nome: "Dourada de luxo", tipo: "parede", preco: 900, a: "#F3D58A", b: "#C9A227" },
 ];
 
-export type CategoriaMovel = "quarto" | "sala" | "cozinha" | "quintal" | "parede" | "enfeite";
+export type CategoriaMovel = "quarto" | "sala" | "cozinha" | "quintal" | "veiculo" | "lazer" | "pet" | "parede" | "enfeite";
 export type Movel = {
   id: string;
   nome: string;
@@ -96,6 +105,30 @@ export const MOVEIS: Movel[] = [
   { id: "aquario", nome: "Aquário", emoji: "🐠", preco: 340, w: 1, d: 1, cat: "enfeite" },
   { id: "bau", nome: "Baú do tesouro", emoji: "🧰", preco: 900, w: 1, d: 1, cat: "enfeite" },
   { id: "trofeuG", nome: "Troféu gigante", emoji: "🏆", preco: 1500, w: 1, d: 1, cat: "enfeite" },
+  // Etapa 308 — veículos (sonhos maiores!)
+  { id: "skate", nome: "Skate", emoji: "🛹", preco: 150, w: 1, d: 1, cat: "veiculo" },
+  { id: "patinete", nome: "Patinete", emoji: "🛴", preco: 220, w: 1, d: 1, cat: "veiculo" },
+  { id: "bicicleta", nome: "Bicicleta", emoji: "🚲", preco: 380, w: 2, d: 1, cat: "veiculo" },
+  { id: "moto", nome: "Moto", emoji: "🏍️", preco: 1400, w: 2, d: 1, cat: "veiculo", luz: true },
+  { id: "kart", nome: "Kart de corrida", emoji: "🏎️", preco: 1900, w: 2, d: 1, cat: "veiculo" },
+  { id: "carro", nome: "Carro", emoji: "🚗", preco: 2800, w: 2, d: 2, cat: "veiculo", luz: true },
+  { id: "jipe", nome: "Jipe aventureiro", emoji: "🚙", preco: 4200, w: 2, d: 2, cat: "veiculo", luz: true },
+  { id: "esportivo", nome: "Carro esportivo", emoji: "🏁", preco: 7500, w: 2, d: 2, cat: "veiculo", luz: true },
+  { id: "foguete", nome: "Foguete", emoji: "🚀", preco: 20000, w: 1, d: 1, cat: "veiculo", luz: true },
+  // lazer
+  { id: "rede", nome: "Rede de descanso", emoji: "🏝️", preco: 420, w: 2, d: 1, cat: "lazer" },
+  { id: "violaoP", nome: "Violão no suporte", emoji: "🎸", preco: 380, w: 1, d: 1, cat: "lazer" },
+  { id: "piano", nome: "Piano", emoji: "🎹", preco: 1600, w: 2, d: 1, cat: "lazer" },
+  { id: "fliperama", nome: "Fliperama", emoji: "🕹️", preco: 1200, w: 1, d: 1, cat: "lazer", luz: true },
+  { id: "sinuca", nome: "Mesa de sinuca", emoji: "🎱", preco: 2200, w: 2, d: 2, cat: "lazer" },
+  { id: "camaelastica", nome: "Cama elástica", emoji: "🤸", preco: 900, w: 2, d: 2, cat: "lazer" },
+  { id: "telescopio", nome: "Telescópio", emoji: "🔭", preco: 950, w: 1, d: 1, cat: "lazer" },
+  { id: "estatua", nome: "Estátua dourada", emoji: "🗿", preco: 9000, w: 1, d: 1, cat: "lazer" },
+  // pets
+  { id: "cachorro", nome: "Cachorro com casinha", emoji: "🐶", preco: 800, w: 2, d: 1, cat: "pet" },
+  { id: "gato", nome: "Gatinho na almofada", emoji: "🐱", preco: 600, w: 1, d: 1, cat: "pet" },
+  { id: "coelho", nome: "Coelhinho", emoji: "🐰", preco: 500, w: 1, d: 1, cat: "pet" },
+  { id: "passaro", nome: "Gaiola com passarinho", emoji: "🐦", preco: 450, w: 1, d: 1, cat: "pet" },
   // parede (vai nos quadradinhos encostados na parede)
   { id: "quadro", nome: "Quadro", emoji: "🖼️", preco: 80, w: 1, d: 1, cat: "parede", tipo: "parede" },
   { id: "janela", nome: "Janela", emoji: "🪟", preco: 140, w: 1, d: 1, cat: "parede", tipo: "parede" },
@@ -108,6 +141,9 @@ export const NOMES_CATEGORIA: Record<CategoriaMovel, string> = {
   sala: "🛋️ Sala",
   cozinha: "🍳 Cozinha",
   quintal: "🌳 Quintal",
+  veiculo: "🚗 Veículos",
+  lazer: "🎮 Lazer",
+  pet: "🐶 Bichinhos",
   parede: "🖼️ Parede",
   enfeite: "🪴 Enfeites",
 };
@@ -122,6 +158,7 @@ export function estilo(id: string) {
 
 export function comodoPadrao(id: ComodoId): Comodo {
   const externo = COMODOS.find((c) => c.id === id)?.externo;
+  if (id === "garagem") return { piso: "concreto", parede: "cinza", itens: [] };
   return { piso: externo ? "grama" : "madeira", parede: "creme", itens: [] };
 }
 
@@ -145,6 +182,7 @@ export function lerCasa(bruto: unknown): Casa | null {
   }
   const estilos = (Array.isArray(b.estilos) ? b.estilos : []).filter((x: unknown) => typeof x === "string" && estilo(x as string));
   const casa: Casa = { comodos: {}, moveis, estilos };
+  if (typeof b.desejo === "string" && movel(b.desejo)) casa.desejo = b.desejo;
   const usados: Record<string, number> = {};
   for (const c of COMODOS) {
     const raw = b.comodos?.[c.id];
@@ -262,7 +300,9 @@ export function comprarMovel(casa: Casa, id: string, saldo: number): { casa: Cas
   if (!mv) return { erro: "Não existe" };
   if ((casa.moveis[id] ?? 0) >= 20) return { erro: "Já tem bastante desse" };
   if (saldo < mv.preco) return { erro: `Faltam ${mv.preco - saldo} 🪙` };
-  return { casa: { ...casa, moveis: { ...casa.moveis, [id]: (casa.moveis[id] ?? 0) + 1 } }, custo: mv.preco };
+  const nova: Casa = { ...casa, moveis: { ...casa.moveis, [id]: (casa.moveis[id] ?? 0) + 1 } };
+  if (nova.desejo === id) delete nova.desejo; // realizou o sonho!
+  return { casa: nova, custo: mv.preco };
 }
 
 export function desbloquearComodo(casa: Casa, id: ComodoId, saldo: number): { casa: Casa; custo: number } | { erro: string } {
@@ -287,4 +327,21 @@ export function usarEstilo(casa: Casa, comodoId: ComodoId, id: string, saldo: nu
     casa: { ...casa, estilos: tem ? casa.estilos : [...casa.estilos, id], comodos: { ...casa.comodos, [comodoId]: novo } },
     custo: tem ? 0 : e.preco,
   };
+}
+
+// ---- Etapa 308 — o sonho (meta de compra) ----
+
+export function definirDesejo(casa: Casa, id: string | null): Casa {
+  const c = { ...casa };
+  if (id && movel(id)) c.desejo = id;
+  else delete c.desejo;
+  return c;
+}
+
+/** Progresso rumo ao sonho: quanto falta e mais ou menos quantos hábitos. */
+export function progressoDoDesejo(casa: Casa | null | undefined, moedas: number, moedasPorHabito = 10) {
+  const mv = casa?.desejo ? movel(casa.desejo) : null;
+  if (!mv) return null;
+  const faltam = Math.max(0, mv.preco - moedas);
+  return { movel: mv, progresso: Math.min(1, moedas / mv.preco), faltam, habitos: Math.ceil(faltam / moedasPorHabito), pronto: faltam === 0 };
 }

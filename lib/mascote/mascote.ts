@@ -26,6 +26,12 @@ export type DadosMascote = {
   colhidos?: Record<string, number>;
   /** Etapa 305 — a casa (cômodos, móveis comprados e onde estão) — ver lib/mascote/casa.ts */
   casa?: Casa;
+  /** Etapa 309 — moedas ganhas em missões e baús (somam no saldo) */
+  bonus?: number;
+  /** Etapa 309 — missões resgatadas por dia (dia → ids) */
+  missoes?: Record<string, string[]>;
+  /** Etapa 309 — semanas cujo baú já foi aberto (segunda-feira da semana) */
+  baus?: string[];
 };
 
 export type Consumo = { d: string; t: string; h?: string };
@@ -137,8 +143,8 @@ export function faseDoMascote(feitos: number) {
   return { ...atual, proxima, progresso, faltam: proxima ? proxima.minimo - n : 0 };
 }
 
-export function moedasDisponiveis(feitos: number, gastos: number) {
-  return Math.max(0, (feitos || 0) * MOEDAS_POR_HABITO - (gastos || 0));
+export function moedasDisponiveis(feitos: number, gastos: number, bonus = 0) {
+  return Math.max(0, (feitos || 0) * MOEDAS_POR_HABITO + (bonus || 0) - (gastos || 0));
 }
 
 // Etapa 302 — "fome" e "doente" vêm do cuidado dos últimos dias (lib/mascote/vida.ts)
@@ -204,6 +210,18 @@ export function lerMascote(bruto: unknown): DadosMascote | null {
   if (Object.keys(colhidos).length) m.colhidos = colhidos;
   const casa = lerCasa(b.casa);
   if (casa) m.casa = casa;
+  // Etapa 309 — missões e baús
+  const bonus = Math.floor(Number(b.bonus));
+  if (bonus > 0) m.bonus = Math.min(1_000_000, bonus);
+  const missoes: Record<string, string[]> = {};
+  for (const [d, ids] of Object.entries(b.missoes ?? {}).sort().slice(-21)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !Array.isArray(ids)) continue;
+    const l = [...new Set(ids.filter((x: unknown) => typeof x === "string").map((x: string) => x.slice(0, 20)))].slice(0, 6);
+    if (l.length) missoes[d] = l;
+  }
+  if (Object.keys(missoes).length) m.missoes = missoes;
+  const baus = (Array.isArray(b.baus) ? b.baus : []).filter((x: unknown) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x as string)).slice(-20);
+  if (baus.length) m.baus = baus;
   return m;
 }
 
@@ -224,7 +242,7 @@ export function comprar(
   alvo: { tipo: "item"; id: string } | { tipo: "cor"; cor: CorMascote }
 ): { ok: true; mascote: DadosMascote } | { ok: false; motivo: string } {
   const fase = faseDoMascote(feitos).nivel;
-  const saldo = moedasDisponiveis(feitos, m.gastos);
+  const saldo = moedasDisponiveis(feitos, m.gastos, m.bonus);
   if (alvo.tipo === "cor") {
     const c = CORES_MASCOTE[alvo.cor];
     const chave = `cor:${alvo.cor}`;
@@ -338,7 +356,7 @@ export function comprarConsumivel(
   const c = consumivel(id);
   if (!c || c.preco <= 0) return { ok: false, motivo: "Não está à venda" };
   const total = c.preco * qtd;
-  const saldo = moedasDisponiveis(feitos, m.gastos);
+  const saldo = moedasDisponiveis(feitos, m.gastos, m.bonus);
   if (saldo < total) return { ok: false, motivo: `Faltam ${total - saldo} 🪙` };
   const estoque = { ...(m.estoque ?? {}) };
   estoque[id] = Math.min(99, (estoque[id] ?? 0) + qtd);

@@ -569,3 +569,8 @@ html[data-fonte="maior"] { font-size: 125%; }
 @keyframes vtm-raio-luz { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
 .vtm-raio-luz { animation: vtm-raio-luz 5s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .vtm-raio-luz { animation: none !important; } }
+
+/* Etapa 309 · baú chacoalhando antes de abrir */
+@keyframes vtm-bau { 0%, 100% { transform: rotate(0) scale(1); } 15% { transform: rotate(-12deg) scale(1.1); } 30% { transform: rotate(12deg) scale(1.15); } 45% { transform: rotate(-10deg) scale(1.2); } 60% { transform: rotate(10deg) scale(1.25); } 80% { transform: rotate(-4deg) scale(1.35); } }
+.vtm-bau { animation: vtm-bau 1.1s ease-in-out; }
+@media (prefers-reduced-motion: reduce) { .vtm-bau { animation: none !important; } }

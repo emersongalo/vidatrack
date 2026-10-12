@@ -47,7 +47,7 @@ describe("Etapa 306 — jardim isométrico", () => {
   });
 
   it("novidades 306", () => {
-    expect(VERSAO_NOVIDADES).toBe("306");
-    expect(NOVIDADES[0].versao).toBe("306");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(306);
+    expect(NOVIDADES.some((g) => g.versao === "306")).toBe(true);
   });
 });

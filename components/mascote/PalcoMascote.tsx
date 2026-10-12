@@ -13,6 +13,7 @@ import { fraseDoHumor, MOEDAS_POR_HABITO, type Humor } from "@/lib/mascote/masco
 import { Mascote } from "@/components/mascote/Mascote";
 import { vibrar } from "@/lib/app/vibrar";
 import { useGiro } from "@/lib/mascote/useGiro";
+import { progressoDoDesejo } from "@/lib/mascote/casa";
 import { BandejaComida, BarrasVida } from "@/components/mascote/BandejaComida";
 
 export const PALCO_HUMOR: Record<Humor, { rotulo: string; fundo: string }> = {
@@ -163,6 +164,27 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
           )}
         </div>
       </div>
+
+      {/* Etapa 308 — o sonho: barrinha rumo ao carro, moto… */}
+      {mascote &&
+        (() => {
+          const p = progressoDoDesejo(mascote.casa, moedas);
+          if (!p) return null;
+          return (
+            <Link href="/habitos/mascote/casa" className="relative mx-3 mb-2 flex items-center gap-2 rounded-2xl bg-base-900/45 px-3 py-2">
+              <span className="text-xl">{p.movel.emoji}</span>
+              <span className="flex-1 min-w-0">
+                <span className="flex justify-between text-[11px]">
+                  <span className="font-semibold truncate">⭐ {p.movel.nome}</span>
+                  <span className="text-ink-400 shrink-0">{p.pronto ? "dá pra comprar! 🎉" : `faltam ~${p.habitos} hábitos`}</span>
+                </span>
+                <span className="block h-1.5 rounded-full bg-base-900/60 overflow-hidden mt-1">
+                  <span className="block h-full rounded-full bg-amber-400 transition-all duration-700" style={{ width: `${Math.round(p.progresso * 100)}%` }} />
+                </span>
+              </span>
+            </Link>
+          );
+        })()}
 
       {/* Etapa 302 — cuidar: dar comidinha/remédio direto daqui */}
       {mascote && (

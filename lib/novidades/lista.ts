@@ -1,13 +1,38 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "306";
+export const VERSAO_NOVIDADES = "309";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "309",
+    titulo: "Missões do dia e baú da semana",
+    itens: [
+      { emoji: "🎯", titulo: "3 missões por dia", texto: "Todo dia saem missões novas pensadas nos seus hábitos (fazer 3 hábitos, voltar a fazer um esquecido, não quebrar a sequência, fazer um em dupla…). Cumpriu, toque pra resgatar moedas extras." },
+      { emoji: "🎁", titulo: "Baú da semana", texto: "Feche as 3 missões em 5 dias da semana e abra o baú: moedas, uma cesta de comidinhas ou um móvel surpresa pra casa." },
+    ],
+  },
+  {
+    versao: "308",
+    titulo: "Garagem, carros e sonhos",
+    itens: [
+      { emoji: "🚗", titulo: "Garagem e veículos", texto: "Libere a garagem e junte moedas pra skate, bicicleta, moto, kart, carro, jipe, esportivo… e até um foguete 🚀.", href: "/habitos/mascote/casa" },
+      { emoji: "⭐", titulo: "Seu sonho", texto: "Na loja da casa, toque em \"Quero esse\" e uma barrinha aparece no palco da aba Hábitos mostrando quantos hábitos faltam pra conquistar.", href: "/habitos/mascote/casa" },
+      { emoji: "🐶", titulo: "Lazer e bichinhos", texto: "Piano, fliperama, sinuca, cama elástica, telescópio, estátua dourada, cachorro, gatinho, coelho e passarinho.", href: "/habitos/mascote/casa" },
+      { emoji: "🌳", titulo: "Jardim na aba Hábitos", texto: "Marcou um hábito, a planta dele é regada na hora. Dá pra esconder ou mudar de lugar em ⚙️ Personalizar." },
+    ],
+  },
+  {
+    versao: "307",
+    titulo: "Seu jardim em 3D",
+    itens: [
+      { emoji: "🌳", titulo: "Jardim pessoal isométrico", texto: "Em Hábitos → Jardim, cada hábito seu é um canteiro com plaquinha. A planta cresce com o nível (Semente → Lenda dourada), murcha se ficar dias sem regar e o seu mascote passeia por lá.", href: "/habitos/jardim" },
+    ],
+  },
   {
     versao: "306",
     titulo: "Jardim de vocês em 3D",

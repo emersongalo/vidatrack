@@ -25,6 +25,8 @@ import { createClient } from "@/lib/supabase/client";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { CartaoTempoTela } from "@/components/CartaoTempoTela";
 import { PalcoMascote } from "@/components/mascote/PalcoMascote";
+import { BlocoJardim } from "@/components/mascote/BlocoJardim";
+import { MissoesDoDia } from "@/components/mascote/MissoesDoDia";
 import { infoDupla, type Parceiro } from "@/lib/habitos/dupla";
 import { EsqueletoHabitos } from "@/components/Esqueleto";
 import { Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff, Sun, Clock3 } from "lucide-react";
@@ -226,6 +228,10 @@ function HojeConteudo() {
   const blocos: Record<BlocoHojeId, React.ReactNode> = {
     // Etapa 300 — mascote girável no topo, com o humor do dia
     mascote: snapshot ? <PalcoMascote snapshot={snapshot} hoje={hoje} /> : null,
+    // Etapa 309 — missões do dia e baú da semana
+    missoes: snapshot && dataSelecionada === hoje ? <MissoesDoDia snapshot={snapshot} hoje={hoje} /> : null,
+    // Etapa 308 — o jardim (rega na hora em que marca o hábito)
+    jardim: snapshot ? <BlocoJardim snapshot={snapshot} hoje={hoje} /> : null,
     resumo: snapshot ? (
       <HeroHoje
         feitos={feitos}

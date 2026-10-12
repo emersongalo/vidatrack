@@ -4,6 +4,7 @@
 // jogo de tabuleiro): piso quadriculado, paredes do fundo, móveis em
 // blocos com volume e o mascote andando sozinho pelos quadradinhos livres.
 // Tudo em SVG; à noite escurece e as luminárias acendem.
+// Etapa 308 — veículos, lazer e bichinhos; garagem.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Mascote, type Periodo } from "@/components/mascote/Mascote";
 import { COMODOS, estilo, movel, ocupados, tamanhoNoChao, TAM, type Colocado, type Comodo, type ComodoId, type Movel } from "@/lib/mascote/casa";
@@ -340,6 +341,261 @@ function DesenhoMovel({ it, mv, periodo }: { it: Colocado; mv: Movel; periodo: P
           {B(0.44, 0.44, 0.12, 0.12, 6, 7, "#D97706")}
           <path d={`M${cx - 8} ${cy - 6} L${cx + 8} ${cy - 6} L${cx + 5} ${cy + 4} Q${cx} ${cy + 8} ${cx - 5} ${cy + 4} Z`} fill="#FBBF24" stroke="#D97706" strokeWidth="1" />
           <path d={`M${cx - 8} ${cy - 4} q-5 0 -3 5 q2 2 5 1 M${cx + 8} ${cy - 4} q5 0 3 5 q-2 2 -5 1`} stroke="#D97706" strokeWidth="1.4" fill="none" />
+        </g>
+      );
+    }
+    // ---- Etapa 308 — veículos ----
+    case "skate":
+      return (
+        <g>
+          {[0.25, 0.65].map((u) => [0.38, 0.6].map((v) => <g key={`${u}${v}`}>{B(u, v, 0.08, 0.06, 3, 0, "#111827")}</g>))}
+          {B(0.15, 0.36, 0.7, 0.3, 1.5, 3, "#F97316")}
+        </g>
+      );
+    case "patinete":
+      return (
+        <g>
+          {B(0.12, 0.42, 0.7, 0.16, 2, 2, "#3B82F6")}
+          {B(0.14, 0.46, 0.06, 0.06, 26, 4, "#9CA3AF")}
+          {B(0.14, 0.28, 0.06, 0.44, 2.5, 30, "#111827")}
+        </g>
+      );
+    case "bicicleta":
+    case "moto": {
+      const moto = mv.id === "moto";
+      const roda = (u: number) => {
+        const [wx, wy] = C(u, 0.5, moto ? 8 : 9);
+        return <ellipse key={u} cx={wx} cy={wy} rx={moto ? 7 : 7.5} ry={moto ? 8 : 9} fill="none" stroke="#111827" strokeWidth={moto ? 3.2 : 1.6} />;
+      };
+      const [a1, a2] = C(0.4, 0.5, 10);
+      const [b1, b2] = C(1.6, 0.5, 10);
+      const [s1, s2] = C(0.95, 0.5, 20);
+      return (
+        <g>
+          {roda(0.35)}
+          {moto ? (
+            <>
+              {B(0.45, 0.38, 1.1, 0.24, 9, 7, "#DC2626")}
+              {B(0.6, 0.38, 0.5, 0.24, 3, 16, "#111827")}
+              {B(1.45, 0.4, 0.08, 0.2, 14, 12, "#6B7280")}
+              {B(1.5, 0.42, 0.06, 0.16, 4, 14, noite ? "#FDE68A" : "#F1F5F9")}
+            </>
+          ) : (
+            <>
+              <path d={`M${a1} ${a2} L${s1} ${s2} L${b1} ${b2} M${s1} ${s2} L${(a1 + b1) / 2} ${(a2 + b2) / 2 + 4}`} stroke="#10B981" strokeWidth="1.8" fill="none" />
+              <rect x={s1 - 3} y={s2 - 2} width="6" height="2" rx="1" fill="#111827" />
+            </>
+          )}
+          {roda(1.65)}
+        </g>
+      );
+    }
+    case "kart":
+      return (
+        <g>
+          {[0.2, 1.6].map((u) => [0.1, 0.75].map((v) => <g key={`${u}${v}`}>{B(u, v, 0.25, 0.15, 6, 0, "#111827")}</g>))}
+          {B(0.15, 0.25, 1.7, 0.5, 5, 3, "#22C55E")}
+          {B(0.5, 0.33, 0.4, 0.34, 9, 8, "#111827")}
+          {B(1.2, 0.46, 0.06, 0.08, 8, 8, "#6B7280")}
+          {B(1.65, 0.3, 0.2, 0.4, 3, 8, "#FDE047")}
+        </g>
+      );
+    case "carro":
+    case "jipe":
+    case "esportivo": {
+      const cor = mv.id === "carro" ? "#3B82F6" : mv.id === "jipe" ? "#65A30D" : "#EF4444";
+      const alto = mv.id === "jipe" ? 4 : mv.id === "esportivo" ? -3 : 0;
+      return (
+        <g>
+          {[0.3, 1.4].map((u) => [0.18, 1.72].map((v) => <g key={`${u}${v}`}>{B(u, v, 0.32, 0.1, 8 + alto / 2, 0, "#111827")}</g>))}
+          {B(0.08, 0.25, 1.84, 1.5, 9 + alto, 4, cor)}
+          {/* cabine com vidro */}
+          {B(mv.id === "esportivo" ? 0.6 : 0.45, 0.35, mv.id === "esportivo" ? 0.8 : 1, 1.3, mv.id === "esportivo" ? 7 : 10 + alto, 13 + alto, "#93C5FD")}
+          {B(mv.id === "esportivo" ? 0.62 : 0.48, 0.38, mv.id === "esportivo" ? 0.76 : 0.94, 1.24, 1.5, (mv.id === "esportivo" ? 20 : 23 + 2 * alto) + alto * 0, cor)}
+          {/* faróis na frente */}
+          {B(1.9, 0.4, 0.04, 0.25, 3, 8 + alto, noite ? "#FDE68A" : "#F8FAFC")}
+          {B(1.9, 1.35, 0.04, 0.25, 3, 8 + alto, noite ? "#FDE68A" : "#F8FAFC")}
+          {mv.id === "esportivo" && B(0.08, 0.3, 0.12, 1.4, 2, 17, "#111827")}
+          {mv.id === "jipe" && B(0.0, 0.8, 0.08, 0.4, 9, 9, "#111827")}
+        </g>
+      );
+    }
+    case "foguete": {
+      const [tx, ty] = C(0.5, 0.5, 66);
+      const [jx, jy] = C(0.5, 0.82, 40);
+      return (
+        <g>
+          {B(0.12, 0.12, 0.22, 0.22, 12, 0, "#DC2626")}
+          {B(0.66, 0.66, 0.22, 0.22, 12, 0, "#DC2626")}
+          {B(0.3, 0.3, 0.4, 0.4, 56, 6, "#E5E7EB")}
+          <path d={`M${tx - 9} ${ty + 6} L${tx} ${ty - 12} L${tx + 9} ${ty + 6} Z`} fill="#DC2626" />
+          <circle cx={jx} cy={jy} r="4" fill="#60A5FA" stroke="#94A3B8" strokeWidth="1.2" />
+          {noite && <ellipse cx={C(0.5, 0.5, 2)[0]} cy={C(0.5, 0.5, 2)[1]} rx="6" ry="3" fill="#F97316" className="vtm-fogo" />}
+        </g>
+      );
+    }
+    // ---- lazer ----
+    case "rede": {
+      const [a1, a2] = C(0.15, 0.5, 18);
+      const [b1, b2] = C(1.85, 0.5, 18);
+      return (
+        <g>
+          {B(0.05, 0.45, 0.1, 0.1, 24, 0, "#8B5A2B")}
+          <path d={`M${a1} ${a2} Q${(a1 + b1) / 2} ${(a2 + b2) / 2 + 16} ${b1} ${b2} Q${(a1 + b1) / 2} ${(a2 + b2) / 2 + 9} ${a1} ${a2} Z`} fill="#F59E0B" />
+          <path d={`M${a1} ${a2} Q${(a1 + b1) / 2} ${(a2 + b2) / 2 + 13} ${b1} ${b2}`} stroke="#DC2626" strokeWidth="1.5" fill="none" />
+          {B(1.85, 0.45, 0.1, 0.1, 24, 0, "#8B5A2B")}
+        </g>
+      );
+    }
+    case "violaoP": {
+      const [gx, gy] = C(0.5, 0.5, 14);
+      return (
+        <g>
+          {B(0.35, 0.35, 0.3, 0.3, 3, 0, "#374151")}
+          <g transform={`translate(${gx} ${gy}) rotate(-10)`}>
+            <rect x="-1.2" y="-22" width="2.4" height="16" fill="#7C4A21" />
+            <circle cx="0" cy="-3" r="5" fill="#D97706" />
+            <circle cx="0" cy="4" r="6.5" fill="#D97706" />
+            <circle cx="0" cy="1" r="1.8" fill="#5B3416" />
+          </g>
+        </g>
+      );
+    }
+    case "piano":
+      return (
+        <g>
+          {B(0.05, 0.08, 1.9, 0.55, 32, 0, "#111827")}
+          {B(0.1, 0.6, 1.8, 0.25, 2, 17, "#F8FAFC")}
+          {Array.from({ length: 6 }, (_, i) => <g key={i}>{B(0.25 + i * 0.28, 0.6, 0.1, 0.13, 1.5, 19, "#111827")}</g>)}
+          {B(0.5, 0.9, 1, 0.1, 9, 0, "#374151")}
+        </g>
+      );
+    case "fliperama":
+      return (
+        <g>
+          {B(0.15, 0.15, 0.7, 0.65, 42, 0, "#7C3AED")}
+          {B(0.2, 0.76, 0.6, 0.06, 12, 24, noite ? "#67E8F9" : "#22D3EE")}
+          {B(0.18, 0.7, 0.64, 0.2, 2, 17, "#111827")}
+          {B(0.35, 0.78, 0.06, 0.06, 4, 19, "#EF4444")}
+          {B(0.6, 0.78, 0.06, 0.06, 3, 19, "#FDE047")}
+          {B(0.15, 0.15, 0.7, 0.65, 5, 42, "#A78BFA")}
+        </g>
+      );
+    case "sinuca": {
+      const bolas = [
+        [0.6, 0.7, "#EF4444"],
+        [1.2, 0.9, "#FDE047"],
+        [1.0, 1.3, "#3B82F6"],
+        [0.5, 1.4, "#F8FAFC"],
+      ] as const;
+      return (
+        <g>
+          {pernas(0.2, 0.3, 1.6, 1.4, 14, "#5B3416")}
+          {B(0.1, 0.25, 1.8, 1.5, 4, 14, "#7C4A21")}
+          {B(0.22, 0.37, 1.56, 1.26, 0.6, 18, "#15803D")}
+          {bolas.map(([u, v, c], i) => {
+            const [bx, by] = C(u, v, 20);
+            return <circle key={i} cx={bx} cy={by} r="1.8" fill={c} />;
+          })}
+        </g>
+      );
+    }
+    case "camaelastica": {
+      const [mx, my] = C(1, 1, 12);
+      return (
+        <g>
+          {pernas(0.25, 0.25, 1.5, 1.5, 11, "#334155")}
+          <ellipse cx={mx} cy={my} rx="27" ry="13.5" fill="#3B82F6" />
+          <ellipse cx={mx} cy={my} rx="22" ry="11" fill="#111827" />
+        </g>
+      );
+    }
+    case "telescopio": {
+      const [px, py] = C(0.5, 0.5, 0);
+      return (
+        <g>
+          <path d={`M${px} ${py - 18} L${px - 7} ${py} M${px} ${py - 18} L${px + 7} ${py} M${px} ${py - 18} L${px} ${py + 2}`} stroke="#374151" strokeWidth="1.5" />
+          <g transform={`translate(${px} ${py - 20}) rotate(-35)`}>
+            <rect x="-10" y="-3" width="22" height="6" rx="2" fill="#1E3A8A" />
+            <rect x="10" y="-4" width="4" height="8" rx="1" fill="#93C5FD" />
+          </g>
+        </g>
+      );
+    }
+    case "estatua": {
+      const [ex, ey] = C(0.5, 0.5, 26);
+      return (
+        <g>
+          {B(0.2, 0.2, 0.6, 0.6, 10, 0, "#E7E5E4")}
+          <path d={`M${ex - 8} ${ey - 9} l3 -6 l3 5 Z M${ex + 8} ${ey - 9} l-3 -6 l-3 5 Z`} fill="#D4A017" />
+          <ellipse cx={ex} cy={ey} rx="10" ry="11" fill="#F5C542" />
+          <ellipse cx={ex - 3} cy={ey - 4} rx="3" ry="2" fill="#FEF3C7" opacity="0.8" />
+          <circle cx={ex - 3.5} cy={ey - 1} r="1.2" fill="#8A6A10" />
+          <circle cx={ex + 3.5} cy={ey - 1} r="1.2" fill="#8A6A10" />
+          <circle cx={ex + 9} cy={ey - 12} r="1.4" fill="#FEF3C7" className="vtm-brilha" />
+        </g>
+      );
+    }
+    // ---- bichinhos ----
+    case "cachorro": {
+      const [cx2, cy2] = C(1.5, 0.55, 8);
+      const [tx2, ty2] = C(0.5, 0.5, 30);
+      return (
+        <g>
+          {B(0.05, 0.1, 0.9, 0.8, 18, 0, "#B45309")}
+          <path d={`M${C(0.05, 0.9, 18)[0]} ${C(0.05, 0.9, 18)[1]} L${tx2} ${ty2} L${C(0.95, 0.1, 18)[0]} ${C(0.95, 0.1, 18)[1]}`} fill="#7C2D12" />
+          {B(0.95, 0.38, 0.03, 0.3, 11, 0, "#3F1D0B")}
+          <g className="vtm-gingar">
+            <ellipse cx={cx2} cy={cy2} rx="7" ry="5" fill="#D6A26B" />
+            <circle cx={cx2 + 6} cy={cy2 - 5} r="4.5" fill="#D6A26B" />
+            <ellipse cx={cx2 + 4} cy={cy2 - 8} rx="1.8" ry="3" fill="#8B5A2B" />
+            <circle cx={cx2 + 7.5} cy={cy2 - 5.5} r="0.9" fill="#111" />
+            <path d={`M${cx2 - 7} ${cy2 - 2} q-3 -4 -1 -6`} stroke="#D6A26B" strokeWidth="1.8" fill="none" className="vtm-broto" />
+          </g>
+        </g>
+      );
+    }
+    case "gato": {
+      const [gx, gy] = C(0.5, 0.5, 7);
+      return (
+        <g>
+          {B(0.15, 0.15, 0.7, 0.7, 4, 0, "#F472B6")}
+          <g className="vtm-respira">
+            <ellipse cx={gx} cy={gy} rx="7" ry="4.5" fill="#F59E0B" />
+            <circle cx={gx + 5} cy={gy - 3} r="3.6" fill="#F59E0B" />
+            <path d={`M${gx + 3} ${gy - 5.5} l0.8 -3 l1.5 2.4 M${gx + 6.3} ${gy - 5.5} l0.8 -3 l1.2 2.6`} fill="#F59E0B" stroke="#F59E0B" strokeWidth="0.8" />
+            <path d={`M${gx + 3.6} ${gy - 3} q0.8 0.6 1.6 0 M${gx + 5.8} ${gy - 3} q0.8 0.6 1.6 0`} stroke="#7C2D12" strokeWidth="0.6" fill="none" />
+            <path d={`M${gx - 7} ${gy} q-3 -1 -2 -5`} stroke="#F59E0B" strokeWidth="1.8" fill="none" />
+          </g>
+        </g>
+      );
+    }
+    case "coelho": {
+      const [rx, ry] = C(0.5, 0.5, 4);
+      return (
+        <g className="vtm-voa" style={{ animationDuration: "1.2s" }}>
+          <ellipse cx={rx} cy={ry} rx="5.5" ry="4.5" fill="#F8FAFC" />
+          <circle cx={rx + 4} cy={ry - 4} r="3.4" fill="#F8FAFC" />
+          <ellipse cx={rx + 3} cy={ry - 10} rx="1.2" ry="4" fill="#F8FAFC" stroke="#F9A8D4" strokeWidth="0.6" />
+          <ellipse cx={rx + 5.2} cy={ry - 10} rx="1.2" ry="4" fill="#F8FAFC" stroke="#F9A8D4" strokeWidth="0.6" />
+          <circle cx={rx + 5} cy={ry - 4.5} r="0.8" fill="#111" />
+        </g>
+      );
+    }
+    case "passaro": {
+      const [px, py] = C(0.5, 0.5, 0);
+      return (
+        <g>
+          {B(0.44, 0.44, 0.12, 0.12, 22, 0, "#6B7280")}
+          <path d={`M${px - 8} ${py - 22} Q${px} ${py - 40} ${px + 8} ${py - 22} Z`} fill="none" stroke="#D4A017" strokeWidth="1" />
+          {[-5, -2, 1, 4].map((dx) => (
+            <line key={dx} x1={px + dx} y1={py - 22} x2={px + dx * 0.6} y2={py - 35} stroke="#D4A017" strokeWidth="0.6" />
+          ))}
+          <ellipse cx={px - 8} cy={py - 22} rx="8" ry="1.5" fill="#D4A017" transform={`translate(8 0)`} />
+          <g className="vtm-voa" style={{ animationDuration: "1.5s" }}>
+            <ellipse cx={px} cy={py - 27} rx="3" ry="2.4" fill="#FDE047" />
+            <path d={`M${px + 3} ${py - 28} l2 0.8 l-2 0.6 Z`} fill="#F97316" />
+          </g>
         </g>
       );
     }
