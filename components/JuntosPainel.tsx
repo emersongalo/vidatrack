@@ -1,6 +1,7 @@
 "use client";
 
 // Etapa 234 — cena viva dos hábitos em dupla no Início.
+// Etapa 306 — a cena virou o jardim isométrico (igual ao da casa do mascote).
 // Etapa 303 — no lugar das carinhas, os mascotes de vocês cuidando das plantas.
 // Etapa 236 — o céu segue a hora do dia (madrugada, amanhecer, dia, fim
 // de tarde e noite), plantas maiores e a carinha pousada logo em cima de
@@ -14,9 +15,19 @@ import { diasJuntosTexto, periodoDoDia } from "@/lib/painel/periodo";
 // Etapa 303 — os mascotes de vocês na cena (o seu na esquerda, o do par na direita)
 import { Mascote } from "@/components/mascote/Mascote";
 import { useMascote } from "@/lib/mascote/useMascote";
-import { faseDoMascote, lerMascote, type DadosMascote } from "@/lib/mascote/mascote";
-import { crescimentoDaPlanta, type ParceiroMascote } from "@/components/mascote/JardimDupla";
-import { estagioDaPlanta } from "@/lib/habitos/dupla";
+import type { DadosMascote } from "@/lib/mascote/mascote";
+import type { ParceiroMascote } from "@/components/mascote/JardimDupla";
+import { JardimIso } from "@/components/mascote/JardimIso";
+import { dadosDoJardim } from "@/lib/mascote/jardimDados";
+import { periodoDaHora } from "@/components/mascote/Mascote";
+import { useRouter } from "next/navigation";
+
+const CEU_ISO: Record<string, string> = {
+  manha: "linear-gradient(180deg, #BFE3F7, #FCE7C8)",
+  tarde: "linear-gradient(180deg, #8FD0F5, #DDF1FF)",
+  entardecer: "linear-gradient(180deg, #7C6BB5, #F7A97C)",
+  noite: "linear-gradient(180deg, #0E1738, #273469)",
+};
 
 function useHora() {
   const [hora, setHora] = useState(() => new Date().getHours());
@@ -52,6 +63,7 @@ function MiniMascote({ m, fase, regando, espelhar, nome, tamanho }: { m: DadosMa
 export function JuntosPainel({ snapshot, hoje }: { snapshot: any; hoje: string }) {
   const hora = useHora();
   const { mascote: meu, fase: minhaFase } = useMascote(snapshot, hoje);
+  const router = useRouter();
   const periodo = periodoDoDia(hora);
   const duplas = useMemo(() => duplasDoRetrato(snapshot, hoje, hora), [snapshot, hoje, hora]);
   if (!snapshot) return null;
@@ -76,21 +88,11 @@ export function JuntosPainel({ snapshot, hoje }: { snapshot: any; hoje: string }
     );
   }
 
-  const mostrar = duplas.slice(0, 4);
   const feitosJuntos = duplas.filter((d) => d.info.humor === "festa").length;
   const nomes = [...new Set(duplas.flatMap((d) => d.info.parceiros.map((p) => p.nome)))];
-  const tamanho = mostrar.length >= 4 ? 52 : mostrar.length === 3 ? 62 : 76;
-  const tamanhoMascote = mostrar.length >= 3 ? 70 : 84;
-  // mascotes dos pares (até 2 diferentes) e quem já regou hoje
-  const pm = (snapshot.parceirosMascote ?? []) as ParceiroMascote[];
-  const pares = [...new Map(duplas.flatMap((d) => d.info.parceiros).map((p) => [p.id, p])).values()].slice(0, 2).map((p) => {
-    const dado = pm.find((x) => x.usuario_id === p.id);
-    const m = lerMascote(dado?.mascote);
-    return { ...p, m, fase: m ? faseDoMascote(dado?.feitos ?? 0).nivel : 0, regou: duplas.some((d) => d.info.parceiros.some((q) => q.id === p.id && q.feito)) };
-  });
-  const euReguei = duplas.some((d) => d.info.euFiz);
-  const estagioCom = (habitoId: string, diasJuntos: number) =>
-    estagioDaPlanta(crescimentoDaPlanta(diasJuntos, habitoId, meu, pares.map((p) => p.m)).crescimento).estagio;
+  // Etapa 306 — jardim isométrico com os mascotes
+  const jardim = dadosDoJardim(duplas, meu, minhaFase.nivel, (snapshot.parceirosMascote ?? []) as ParceiroMascote[]);
+  const per = periodoDaHora(hora);
 
   return (
     <section className="bg-base-800 border border-base-600 rounded-3xl p-4">
@@ -108,24 +110,14 @@ export function JuntosPainel({ snapshot, hoje }: { snapshot: any; hoje: string }
         </Link>
       </div>
 
-      <CenaJuntos periodo={periodo} festa={feitosJuntos > 0}>
-        <MiniMascote m={meu} fase={minhaFase.nivel} regando={euReguei} nome="Você" tamanho={tamanhoMascote} />
-        {mostrar.map(({ habito, info }) => (
-          <Link key={habito.id} href={`/habitos/juntos#${habito.id}`} aria-label={habito.nome}>
-            <PlantaDupla estagio={estagioCom(habito.id, info.diasJuntos)} saude={info.saude} tamanho={tamanho} />
-          </Link>
-        ))}
-        {pares.map((p) => (
-          <MiniMascote key={p.id} m={p.m} fase={p.fase} regando={p.regou} espelhar nome={p.nome} tamanho={pares.length > 1 ? tamanhoMascote - 14 : tamanhoMascote} />
-        ))}
-      </CenaJuntos>
-
-      <div className="grid gap-2 mt-2" style={{ gridTemplateColumns: `repeat(${mostrar.length}, minmax(0, 1fr))` }}>
-        {mostrar.map(({ habito, info }) => (
-          <div key={habito.id} className="text-center min-w-0">
-            <p className="text-sm font-medium truncate">{habito.nome}</p>
-            <p className="text-xs text-ink-400">{info.sequencia > 0 ? `🔥 ${info.sequencia} seguidos` : diasJuntosTexto(info.diasJuntos)}</p>
-          </div>
+      <div className="rounded-2xl overflow-hidden" style={{ background: CEU_ISO[per] }}>
+        <JardimIso plantas={jardim.plantas} mascotes={jardim.mascotes} periodo={per} aoTocarPlanta={(id) => router.push(`/habitos/juntos#${id}`)} />
+      </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-ink-400">
+        {duplas.slice(0, 6).map(({ habito, info }) => (
+          <span key={habito.id}>
+            <span className="text-ink-200 font-medium">{habito.nome}</span> · {info.sequencia > 0 ? `🔥 ${info.sequencia}` : diasJuntosTexto(info.diasJuntos)}
+          </span>
         ))}
       </div>
     </section>

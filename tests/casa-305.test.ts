@@ -94,7 +94,7 @@ describe("Etapa 305 — casa do mascote", () => {
   });
 
   it("novidades 305", () => {
-    expect(VERSAO_NOVIDADES).toBe("305");
-    expect(NOVIDADES[0].versao).toBe("305");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(305);
+    expect(NOVIDADES.some((g) => g.versao === "305")).toBe(true);
   });
 });

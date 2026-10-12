@@ -5,10 +5,11 @@
 // outro. Quem fez o hábito hoje aparece regando. A planta cresce com os
 // dias em que vocês dois fazem (+ adubo) e, a partir da flor, dá frutos —
 // cada um colhe os seus e eles viram comida pro mascote.
+// Etapa 306 — a cena virou o jardim isométrico (JardimIso).
 import { useState } from "react";
 import Link from "next/link";
-import { Mascote, periodoDaHora } from "@/components/mascote/Mascote";
-import { PlantaDupla } from "@/components/PlantaDupla";
+import { periodoDaHora } from "@/components/mascote/Mascote";
+import { JardimIso } from "@/components/mascote/JardimIso";
 import {
   adubosNaPlanta,
   colherFrutos,
@@ -100,94 +101,33 @@ export function JardimDupla({
 
   return (
     <div>
-      {/* a cena */}
-      <div className="relative rounded-2xl overflow-hidden h-44" style={{ background: CEU[periodo] }}>
-        {periodo === "noite" && <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(253,243,196,.35),transparent_25%)]" />}
-        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-[#7FC88F] to-[#5EA875]" />
-        {periodo === "noite" && <div className="absolute inset-0 bg-[#0B1026]/30" />}
-
-        {/* eu (esquerda) */}
-        <div className="absolute bottom-1 left-1">
-          {meu ? (
-            <Mascote
-              cor={meu.cor}
-              fase={Math.max(1, minhaFase)}
-              humor={info.euFiz ? "feliz" : "neutro"}
-              equipados={{ ...meu.equipados, mao: info.euFiz ? "regador" : meu.equipados.mao, fundo: undefined, amigo: undefined }}
-              tamanho={104}
-            />
-          ) : (
-            <Mascote cor="verde" fase={0} humor="feliz" tamanho={84} />
-          )}
-          <p className="text-center text-[10px] font-semibold text-white drop-shadow -mt-1">Você</p>
-        </div>
-
-        {/* a planta */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-          {(info.euFiz || info.parceiros.some((p) => p.feito)) && (
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex gap-2 pointer-events-none">
-              {[0, 1, 2].map((i) => (
-                <span key={i} className="block w-1.5 h-2.5 rounded-full bg-sky-300 vtm-gota" style={{ animationDelay: `${i * 0.3}s` }} />
-              ))}
-            </div>
-          )}
-          <PlantaDupla estagio={estagio} saude={info.saude} tamanho={92} />
-          {/* frutos maduros: toque pra colher */}
-          {prontos > 0 && meu && (
-            <button type="button" onClick={() => void colher()} disabled={salvando} className="absolute inset-x-0 top-2 h-16" aria-label={`Colher ${prontos} frutos`}>
-              {Array.from({ length: prontos }, (_, i) => {
-                const pos = [
-                  [18, 18],
-                  [62, 14],
-                  [40, 4],
-                  [10, 40],
-                  [70, 38],
-                ][i];
-                return (
-                  <span
-                    key={i}
-                    className={`absolute text-xl ${colhendo ? "vtm-colher" : "animate-quicar"}`}
-                    style={{ left: `${pos[0]}%`, top: pos[1], animationDelay: `${i * 0.12}s` }}
-                  >
-                    {fruta}
-                  </span>
-                );
-              })}
-            </button>
-          )}
-        </div>
-
-        {/* o par (direita, virado pra planta) */}
-        {primeiroParceiro && (
-          <div className="absolute bottom-1 right-1">
-            <div style={{ transform: "scaleX(-1)" }}>
-              {primeiroParceiro.mascote ? (
-                <Mascote
-                  cor={primeiroParceiro.mascote.cor}
-                  fase={primeiroParceiro.fase}
-                  humor={primeiroParceiro.feito ? "feliz" : "neutro"}
-                  equipados={{
-                    ...primeiroParceiro.mascote.equipados,
-                    mao: primeiroParceiro.feito ? "regador" : primeiroParceiro.mascote.equipados.mao,
-                    fundo: undefined,
-                    amigo: undefined,
-                  }}
-                  tamanho={104}
-                />
-              ) : (
-                <Mascote cor="lilas" fase={0} humor="neutro" tamanho={84} />
-              )}
-            </div>
-            <p className="text-center text-[10px] font-semibold text-white drop-shadow -mt-1 truncate max-w-[104px]">{primeiroParceiro.nome}</p>
-          </div>
-        )}
+      {/* a cena — Etapa 306: jardim isométrico, igual ao da casa */}
+      <div className="relative rounded-2xl overflow-hidden" style={{ background: CEU[periodo] }}>
+        <JardimIso
+          periodo={periodo}
+          plantas={[{ id: habitoId, nome: "", estagio, saude: info.saude, frutos: meu ? prontos : 0, fruta, regada: info.euFiz || info.parceiros.some((p) => p.feito) }]}
+          mascotes={[
+            meu
+              ? { chave: "eu", nome: "Você", cor: meu.cor, fase: Math.max(1, minhaFase), equipados: meu.equipados, regou: info.euFiz }
+              : { chave: "eu", nome: "Você", cor: "verde", fase: 0, equipados: {}, regou: info.euFiz, ovo: true },
+            ...(primeiroParceiro
+              ? [
+                  primeiroParceiro.mascote
+                    ? { chave: primeiroParceiro.id, nome: primeiroParceiro.nome, cor: primeiroParceiro.mascote.cor, fase: primeiroParceiro.fase, equipados: primeiroParceiro.mascote.equipados, regou: primeiroParceiro.feito }
+                    : { chave: primeiroParceiro.id, nome: primeiroParceiro.nome, cor: "lilas" as const, fase: 0, equipados: {}, regou: primeiroParceiro.feito, ovo: true },
+                ]
+              : []),
+          ]}
+          aoTocarPlanta={prontos > 0 && meu ? () => void colher() : undefined}
+        />
+        {colhendo > 0 && <span className="absolute inset-x-0 top-1/3 text-center text-2xl vtm-colher">{fruta}</span>}
 
         {/* quem já regou hoje */}
         <div className="absolute top-2 inset-x-2 flex justify-between text-[10px] font-semibold">
-          <span className={`rounded-full px-2 py-0.5 ${info.euFiz ? "bg-sky-500/80 text-white" : "bg-black/30 text-white/80"}`}>{info.euFiz ? "💧 regou" : "ainda não regou"}</span>
+          <span className={`rounded-full px-2 py-0.5 ${info.euFiz ? "bg-sky-500/80 text-white" : "bg-black/30 text-white/80"}`}>{info.euFiz ? "💧 você regou" : "você ainda não regou"}</span>
           {primeiroParceiro && (
             <span className={`rounded-full px-2 py-0.5 ${primeiroParceiro.feito ? "bg-sky-500/80 text-white" : "bg-black/30 text-white/80"}`}>
-              {primeiroParceiro.feito ? "💧 regou" : "ainda não regou"}
+              {primeiroParceiro.feito ? `💧 ${primeiroParceiro.nome} regou` : `${primeiroParceiro.nome} ainda não`}
             </span>
           )}
         </div>

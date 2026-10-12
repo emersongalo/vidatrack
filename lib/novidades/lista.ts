@@ -1,13 +1,21 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "305";
+export const VERSAO_NOVIDADES = "306";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "306",
+    titulo: "Jardim de vocês em 3D",
+    itens: [
+      { emoji: "🌳", titulo: "Jardim isométrico", texto: "O jardim dos hábitos em dupla ficou no mesmo estilo da casa: cada hábito é um canteiro com plaquinha, os mascotes de vocês passeiam entre as plantas e quem fez hoje aparece regando.", href: "/habitos/juntos" },
+      { emoji: "🍓", titulo: "Frutos na planta", texto: "Os frutos maduros aparecem pendurados — toque na planta pra colher. À noite o jardim escurece e surgem vaga-lumes." },
+    ],
+  },
   {
     versao: "305",
     titulo: "A casa do mascote",

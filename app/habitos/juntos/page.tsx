@@ -19,6 +19,16 @@ import { rotuloDoDia } from "@/lib/financas/agruparPorDia";
 import { Dica } from "@/components/Dica";
 import { JardimDupla, type ParceiroMascote } from "@/components/mascote/JardimDupla";
 import { BotaoDescompartilhar } from "@/components/BotaoDescompartilhar";
+import { JardimIso } from "@/components/mascote/JardimIso";
+import { dadosDoJardim } from "@/lib/mascote/jardimDados";
+import { periodoDaHora } from "@/components/mascote/Mascote";
+
+const CEU_ISO: Record<string, string> = {
+  manha: "linear-gradient(180deg, #BFE3F7, #FCE7C8)",
+  tarde: "linear-gradient(180deg, #8FD0F5, #DDF1FF)",
+  entardecer: "linear-gradient(180deg, #7C6BB5, #F7A97C)",
+  noite: "linear-gradient(180deg, #0E1738, #273469)",
+};
 import { useMascote } from "@/lib/mascote/useMascote";
 
 type Recado = { id: string; tipo: string; emoji: string | null; de_nome: string | null; habito_nome: string | null; de_usuario: string; criado_em: string };
@@ -77,6 +87,17 @@ export default function JuntosPage() {
         Cada hábito que vocês fazem juntos vira uma planta. Fazer o hábito é regar: ela cresce nos dias em que os dois regam, murcha um pouco quando ninguém rega e, a partir da flor, dá frutos que viram comida pros mascotes.
       </p>
       <Dica contexto="juntos" />
+
+      {/* Etapa 306 — o jardim inteiro de vocês, com os mascotes passeando */}
+      {duplas && duplas.length > 1 && (
+        <section className="rounded-3xl overflow-hidden border border-base-600 mb-6" style={{ background: CEU_ISO[periodoDaHora(new Date().getHours())] }}>
+          <JardimIso
+            {...dadosDoJardim(duplas, mascote, fase.nivel, (snapshot?.parceirosMascote ?? []) as ParceiroMascote[])}
+            periodo={periodoDaHora(new Date().getHours())}
+            aoTocarPlanta={(id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          />
+        </section>
+      )}
 
       {duplas === null ? (
         <Esqueleto linhas={2} />
