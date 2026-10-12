@@ -120,7 +120,7 @@ export function resgatarMissao(m: DadosMascote, missao: Missao, hoje: string): D
   // guarda só as 3 últimas semanas
   const limite = somarDiasISO(hoje, -21);
   for (const d of Object.keys(missoes)) if (d < limite) delete missoes[d];
-  return { ...m, missoes, bonus: (m.bonus ?? 0) + missao.premio };
+  return { ...m, missoes, bonus: (m.bonus ?? 0) + missao.premio, missoesTotal: (m.missoesTotal ?? 0) + 1 };
 }
 
 /** Segunda-feira da semana do dia. */

@@ -1,13 +1,21 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "309";
+export const VERSAO_NOVIDADES = "310";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "310",
+    titulo: "Mundo e conquistas",
+    itens: [
+      { emoji: "🗺️", titulo: "O Mundo do seu mascote", texto: "Uma ilha que junta tudo: casa, garagem, jardim, lojinha, missões, conquistas e o jardim juntos. Toque num lugar pra ir até ele.", href: "/habitos/mundo" },
+      { emoji: "🏆", titulo: "Conquistas", texto: "20 metas de longo prazo (100 dias de sequência, mascote lendário, primeiro carro, 50 missões…). Cada uma dá moedas de prêmio pra resgatar.", href: "/habitos/mascote/conquistas" },
+    ],
+  },
   {
     versao: "309",
     titulo: "Missões do dia e baú da semana",

@@ -69,7 +69,7 @@ describe("Etapa 309 — missões e baú", () => {
   });
 
   it("novidades 309", () => {
-    expect(VERSAO_NOVIDADES).toBe("309");
-    expect(NOVIDADES[0].versao).toBe("309");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(309);
+    expect(NOVIDADES.some((g) => g.versao === "309")).toBe(true);
   });
 });

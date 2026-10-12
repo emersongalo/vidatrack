@@ -186,6 +186,17 @@ export default function MascotePage() {
   return (
     <main className="pagina-curta px-6 md:px-12 pt-4 pb-12">
       <CabecalhoPagina voltarHref="/habitos" voltarTexto="Hábitos" emoji="🐣" titulo="Seu mascote" subtitulo="Ele cresce com os seus hábitos." />
+      {/* Etapa 310 — mundo e conquistas */}
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <Link href="/habitos/mundo" className="flex items-center gap-2 rounded-2xl border border-base-600 bg-base-800 px-3 py-2.5 hover:border-habito transition">
+          <span className="text-xl">🗺️</span>
+          <span className="font-semibold text-sm">Mundo</span>
+        </Link>
+        <Link href="/habitos/mascote/conquistas" className="flex items-center gap-2 rounded-2xl border border-base-600 bg-base-800 px-3 py-2.5 hover:border-habito transition">
+          <span className="text-xl">🏆</span>
+          <span className="font-semibold text-sm">Conquistas</span>
+        </Link>
+      </div>
       {/* Etapa 305 — a casa dele */}
       <Link
         href="/habitos/mascote/casa"

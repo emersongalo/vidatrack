@@ -32,6 +32,10 @@ export type DadosMascote = {
   missoes?: Record<string, string[]>;
   /** Etapa 309 — semanas cujo baú já foi aberto (segunda-feira da semana) */
   baus?: string[];
+  /** Etapa 310 — total de missões resgatadas desde sempre */
+  missoesTotal?: number;
+  /** Etapa 310 — conquistas já resgatadas */
+  conquistas?: string[];
 };
 
 export type Consumo = { d: string; t: string; h?: string };
@@ -222,6 +226,11 @@ export function lerMascote(bruto: unknown): DadosMascote | null {
   if (Object.keys(missoes).length) m.missoes = missoes;
   const baus = (Array.isArray(b.baus) ? b.baus : []).filter((x: unknown) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x as string)).slice(-20);
   if (baus.length) m.baus = baus;
+  // Etapa 310
+  const mt = Math.floor(Number(b.missoesTotal));
+  if (mt > 0) m.missoesTotal = Math.min(100000, mt);
+  const conq = [...new Set((Array.isArray(b.conquistas) ? b.conquistas : []).filter((x: unknown) => typeof x === "string").map((x: string) => x.slice(0, 20)))].slice(0, 200) as string[];
+  if (conq.length) m.conquistas = conq;
   return m;
 }
 
