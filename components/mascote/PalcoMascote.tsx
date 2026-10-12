@@ -180,6 +180,13 @@ export function PalcoMascote({ snapshot, hoje }: { snapshot: any; hoje: string }
               }}
             />
           </div>
+          {/* Etapa 305 — a casa dele */}
+          <Link
+            href="/habitos/mascote/casa"
+            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full bg-base-900/50 hover:bg-base-900/70 px-3 py-2 transition"
+          >
+            🏠 Casa
+          </Link>
           <Link
             href="/habitos/mascote"
             className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full bg-base-900/50 hover:bg-base-900/70 px-3 py-2 transition"

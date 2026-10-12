@@ -3,6 +3,8 @@
 // perfis.mascote (nome, cor, o que comprou e o que está vestindo).
 // As moedas vêm dos check-ins: cada hábito feito = 10 🪙.
 
+import { lerCasa, type Casa } from "@/lib/mascote/casa";
+
 export type Slot = "chapeu" | "oculos" | "roupa" | "mao" | "amigo" | "fundo";
 export type CorMascote = "verde" | "lilas" | "dourado" | "rosa" | "azul" | "laranja" | "arcoiris";
 
@@ -22,6 +24,8 @@ export type DadosMascote = {
   consumos?: Consumo[];
   /** Etapa 302 — frutos já colhidos por planta compartilhada (id do hábito → quantos) */
   colhidos?: Record<string, number>;
+  /** Etapa 305 — a casa (cômodos, móveis comprados e onde estão) — ver lib/mascote/casa.ts */
+  casa?: Casa;
 };
 
 export type Consumo = { d: string; t: string; h?: string };
@@ -198,6 +202,8 @@ export function lerMascote(bruto: unknown): DadosMascote | null {
     if (n > 0) colhidos[h] = n;
   }
   if (Object.keys(colhidos).length) m.colhidos = colhidos;
+  const casa = lerCasa(b.casa);
+  if (casa) m.casa = casa;
   return m;
 }
 

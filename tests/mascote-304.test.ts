@@ -32,7 +32,7 @@ describe("Etapa 304 — mascote com volume e luz", () => {
   });
 
   it("novidades 304", () => {
-    expect(VERSAO_NOVIDADES).toBe("304");
-    expect(NOVIDADES[0].versao).toBe("304");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(304);
+    expect(NOVIDADES.some((g) => g.versao === "304")).toBe(true);
   });
 });

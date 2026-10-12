@@ -1,13 +1,22 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "304";
+export const VERSAO_NOVIDADES = "305";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "305",
+    titulo: "A casa do mascote",
+    itens: [
+      { emoji: "🏠", titulo: "Monte a casa dele", texto: "Quarto, sala, cozinha e quintal em 3D (visão de cima, estilo joguinho). Libere cômodos e compre mais de 30 móveis com as moedas dos hábitos — coloque em qualquer quadradinho, gire e guarde.", href: "/habitos/mascote/casa" },
+      { emoji: "🎨", titulo: "Piso e parede", texto: "Madeira, xadrez, azulejo, tijolinho, listrada… e à noite a casa escurece e as luminárias acendem.", href: "/habitos/mascote/casa" },
+      { emoji: "👀", titulo: "Visite seu par", texto: "Em Juntos, toque em \"Visitar a casa\" pra ver como a pessoa decorou.", href: "/habitos/juntos" },
+    ],
+  },
   {
     versao: "304",
     titulo: "Mascote com cara de 3D",

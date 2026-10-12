@@ -186,6 +186,18 @@ export default function MascotePage() {
   return (
     <main className="pagina-curta px-6 md:px-12 pt-4 pb-12">
       <CabecalhoPagina voltarHref="/habitos" voltarTexto="Hábitos" emoji="🐣" titulo="Seu mascote" subtitulo="Ele cresce com os seus hábitos." />
+      {/* Etapa 305 — a casa dele */}
+      <Link
+        href="/habitos/mascote/casa"
+        className="flex items-center gap-3 rounded-2xl border border-base-600 bg-base-800 px-4 py-3 mb-4 hover:border-habito transition"
+      >
+        <span className="text-2xl">🏠</span>
+        <span className="flex-1 min-w-0">
+          <span className="block font-semibold">Casa de {mascote.nome}</span>
+          <span className="block text-xs text-ink-400">Monte quarto, sala, cozinha e quintal com as moedas dos hábitos</span>
+        </span>
+        <span className="text-ink-400">›</span>
+      </Link>
 
       {/* palco */}
       <section

@@ -6,6 +6,7 @@
 // dias em que vocês dois fazem (+ adubo) e, a partir da flor, dá frutos —
 // cada um colhe os seus e eles viram comida pro mascote.
 import { useState } from "react";
+import Link from "next/link";
 import { Mascote, periodoDaHora } from "@/components/mascote/Mascote";
 import { PlantaDupla } from "@/components/PlantaDupla";
 import {
@@ -239,6 +240,12 @@ export function JardimDupla({
       </div>
       {aviso && <p className="text-xs text-habito mt-2 animate-surgir">{aviso}</p>}
       {!meu && <p className="text-xs text-ink-400 mt-2">Choque seu mascote em Hábitos → 🐣 pra ele aparecer aqui regando.</p>}
+      {/* Etapa 305 — visitar a casa do par */}
+      {primeiroParceiro?.mascote?.casa && (
+        <Link href={`/habitos/mascote/casa?de=${primeiroParceiro.id}`} className="inline-block mt-2 text-xs font-semibold text-habito">
+          🏠 Visitar a casa de {primeiroParceiro.nome} →
+        </Link>
+      )}
     </div>
   );
 }
