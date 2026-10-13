@@ -180,6 +180,10 @@ export default function EstatisticasHabitosPage() {
 
       {/* Etapa 215 */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-6 scrollbar-none">
+        {/* Etapa 314 */}
+        <Link href="/habitos/relatorio" className="shrink-0 text-base px-4 py-2 rounded-full bg-habito/15 border border-habito/50 hover:border-habito transition">
+          📅 Relatório do mês
+        </Link>
         <Link href="/habitos/diario" className="shrink-0 text-base px-4 py-2 rounded-full bg-base-800 border border-base-600 hover:border-nota/60 transition">
           🙂 Diário
         </Link>

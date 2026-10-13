@@ -5,6 +5,7 @@
 // compra na lojinha com as moedas (cada hábito feito = 10 🪙).
 // Etapa 301 — o que você compra vai pro Armário (com looks salvos), dá pra
 // provar antes de comprar, girar o bichinho e tem muito mais itens.
+import { itemNaLoja } from "@/lib/mascote/eventos";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Lock, Check, Pencil, X, Shirt, ShoppingBag, Bookmark, Trash2 } from "lucide-react";
@@ -579,7 +580,8 @@ export default function MascotePage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {ITENS.filter((i) => i.slot === aba)
+              {/* Etapa 316 — itens de evento só durante o evento; prêmio exclusivo só pra quem ganhou */}
+              {ITENS.filter((i) => i.slot === aba && itemNaLoja(i, mascote, hoje))
                 .slice()
                 .sort((a, b) => a.nivel - b.nivel || a.preco - b.preco)
                 .map((item) => {

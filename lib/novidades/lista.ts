@@ -1,13 +1,49 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "312";
+export const VERSAO_NOVIDADES = "316";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "316",
+    titulo: "Pescaria e eventos na ilha",
+    itens: [
+      { emoji: "🎣", titulo: "Pescaria no píer", texto: "Cada hábito feito vale uma isca (até 5 por dia). Lance, espere o ❗ e puxe na hora certa! São 14 achados pra colecionar — de bota velha a peixe dourado — e os repetidos viram moedas.", href: "/habitos/mundo/pesca" },
+      { emoji: "🎃", titulo: "Halloween na ilha (20/10 a 2/11)", texto: "Abóboras e morcegos na ilha, chapéu de bruxa, gravata de morcego e vassoura na lojinha. Faça 25 hábitos no evento e ganhe a Abóbora-lanterna, que só sai como prêmio.", href: "/habitos/mundo" },
+      { emoji: "🎄", titulo: "E no fim do ano, Natal (10/12 a 6/1)", texto: "Pinheiros com luzinhas, neve, gorro de Natal e a Renazinha de prêmio." },
+    ],
+  },
+  {
+    versao: "315",
+    titulo: "Mundo mais vivo e hora de dormir",
+    itens: [
+      { emoji: "😴", titulo: "De madrugada ele dorme em todo lugar", texto: "Das 23h às 6h o mascote dorme com touquinha: na casa ele deita na cama (se tiver uma no cômodo), no jardim e no Mundo para de passear." },
+      { emoji: "🛒", titulo: "Feirinha do dia", texto: "Um vendedor aparece na ilha com 3 itens pro mascote com 30% de desconto. Dá pra provar antes de comprar, e amanhã ele traz outros.", href: "/habitos/mundo" },
+      { emoji: "💞", titulo: "Visitas na ilha", texto: "Os mascotes de quem divide hábito com você passeiam pela sua ilha, com o nome em cima.", href: "/habitos/mundo" },
+      { emoji: "🌧️", titulo: "O tempo da ilha segue o humor", texto: "Dia tristinho tem chuvinha e nuvens passando; dia bom fica limpo. Toque no mascote no Mundo e ele fala com você." },
+    ],
+  },
+  {
+    versao: "314",
+    titulo: "Desafios no dia, relatório do mês e semana flexível",
+    itens: [
+      { emoji: "🥇", titulo: "Desafios na aba Hábitos", texto: "Os desafios de 7, 21 e 30 dias aparecem direto no dia (\"Ler: 5 de 7\") e a medalha sai dali mesmo. Dá pra mudar de lugar em ⚙️ Personalizar." },
+      { emoji: "📅", titulo: "Relatório do mês", texto: "Quanto foi cumprido, dias perfeitos, melhor sequência, o dia da semana mais forte e o mais difícil, o hábito destaque, o que caiu e dicas de ajuste. No dia 1 chega um aviso com o resumo.", href: "/habitos/relatorio" },
+      { emoji: "⏳", titulo: "Hábitos \"X vezes por semana\" mais espertos", texto: "Se a semana estiver acabando e a meta apertar, às 18h chega um aviso: \"faltam 2 de 3 e restam 2 dias\"." },
+    ],
+  },
+  {
+    versao: "313",
+    titulo: "Bichinhos soltos e roupas novas",
+    itens: [
+      { emoji: "🐶", titulo: "Os bichinhos passeiam pela casa", texto: "Cachorro, gatinho e coelho agora saem andando pelos cômodos de dia (e voltam pra casinha à noite). Toque neles pra fazer carinho ❤️.", href: "/habitos/mascote/casa" },
+      { emoji: "🧢", titulo: "17 itens novos pro mascote", texto: "Capacete viking, sombrero, orelhinhas de gato, óculos nerd, visor neon, gravata social, correntinha de ouro, pipoca, microfone, raquete… e amigos novos: joaninha, abelhinha, fantasminha e um dragãozinho.", href: "/habitos/mascote" },
+    ],
+  },
   {
     versao: "312",
     titulo: "Trilhas, desafios e mais pra comprar",

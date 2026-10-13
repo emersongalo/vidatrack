@@ -42,6 +42,10 @@ export default function ListaHabitosPage() {
           <Link href="/habitos/jardim" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
             🌳 Jardim
           </Link>
+          {/* Etapa 314 */}
+          <Link href="/habitos/relatorio" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
+            📅 Relatório
+          </Link>
           <Link href="/habitos/estatisticas" className="text-sm rounded-full bg-base-900/40 px-3 py-1.5 hover:bg-base-900/60 transition">
             📊 Estatísticas
           </Link>

@@ -5,13 +5,18 @@
 // missões e o pódio das conquistas. O mascote passeia pelos caminhos e é
 // só tocar num lugar pra entrar.
 // Etapa 311 — ilha maior (12×12) com os monumentos das conquistas.
+// Etapa 315 — feirinha, visitas dos mascotes da dupla, clima do humor,
+// toque no mascote (ele fala) e de madrugada todo mundo dorme.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Mascote, type Periodo } from "@/components/mascote/Mascote";
-import type { CorMascote, Slot } from "@/lib/mascote/mascote";
+import { climaDoHumor, Mascote, type Periodo } from "@/components/mascote/Mascote";
+import { fraseDoHumor, type CorMascote, type Humor, type Slot } from "@/lib/mascote/mascote";
+import { useDormindo } from "@/lib/mascote/useDormindo";
 import { MONUMENTOS_NA_ILHA, type EstadoMonumento } from "@/lib/mascote/ilha";
 import { temaIlha, type TemaIlha } from "@/lib/mascote/temasIlha";
 
-export type LugarMundo = "casa" | "garagem" | "jardim" | "juntos" | "lojinha" | "missoes" | "conquistas";
+export type LugarMundo = "casa" | "garagem" | "jardim" | "juntos" | "lojinha" | "missoes" | "conquistas" | "feira" | "pesca";
+
+export type VisitanteMundo = { chave: string; nome: string; cor: CorMascote; fase: number; equipados: Partial<Record<Slot, string>> };
 
 const N = 12;
 const MW = 16;
@@ -59,6 +64,8 @@ const LUGARES: Record<LugarMundo, [number, number, number, number]> = {
   missoes: [4, 5, 1, 1],
   conquistas: [5, 6, 1, 1],
   juntos: [6, 5, 2, 2],
+  feira: [8, 5, 1, 1],
+  pesca: [11, 3, 1, 1],
 };
 
 const NOMES: Record<LugarMundo, string> = {
@@ -69,6 +76,8 @@ const NOMES: Record<LugarMundo, string> = {
   lojinha: "Lojinha",
   missoes: "Missões",
   conquistas: "Conquistas",
+  feira: "Feirinha",
+  pesca: "Pescaria",
 };
 
 // caminhos de pedrinha
@@ -90,6 +99,9 @@ export function MundoIso({
   aoTocar,
   monumentos = {},
   tema = temaIlha(null),
+  humor = "feliz",
+  visitantes = [],
+  evento = null,
 }: {
   periodo: Periodo;
   mascote: { cor: CorMascote; fase: number; equipados: Partial<Record<Slot, string>>; nome: string } | null;
@@ -102,20 +114,58 @@ export function MundoIso({
   monumentos?: Record<string, EstadoMonumento>;
   /** Etapa 312 — cores e clima da ilha */
   tema?: TemaIlha;
+  /** Etapa 315 — humor do dia (fala e clima) e quem está visitando */
+  humor?: Humor;
+  visitantes?: VisitanteMundo[];
+  /** Etapa 316 — decoração do evento da estação */
+  evento?: "halloween" | "natal" | null;
 }) {
   const noite = periodo === "noite";
+  const dormindo = useDormindo();
+  const clima = climaDoHumor(humor);
+  const [pulo, setPulo] = useState(0);
+  const [fala, setFala] = useState<string | null>(null);
+  const falaT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tocarMascote = () => {
+    setPulo((p) => p + 1);
+    setFala(fraseDoHumor(dormindo ? "dormindo" : humor, Date.now()));
+    if (falaT.current) clearTimeout(falaT.current);
+    falaT.current = setTimeout(() => setFala(null), 3200);
+  };
+  // visitas: cada uma anda pelo caminho também
+  const chaveVisitas = visitantes.map((v) => v.chave).join("|");
+  const [posVis, setPosVis] = useState<Record<string, [number, number]>>({});
+  useEffect(() => {
+    if (!visitantes.length || dormindo) return;
+    const inicio: [number, number][] = [[9, 6], [6, 9], [9, 2], [1, 9], [9, 10]];
+    setPosVis((a) => Object.fromEntries(visitantes.map((v, k) => [v.chave, a[v.chave] ?? inicio[k % inicio.length]])));
+    const t = setInterval(() => {
+      setPosVis((a) => {
+        const r = { ...a };
+        for (const [k, [x, y]] of Object.entries(a)) {
+          if (Math.random() < 0.35) continue;
+          const viz = ([[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]] as [number, number][]).filter((p) => CAMINHO.has(`${p[0]},${p[1]}`));
+          if (viz.length) r[k] = viz[Math.floor(Math.random() * viz.length)];
+        }
+        return r;
+      });
+    }, 2300);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveVisitas, dormindo]);
   const livres = useMemo(() => [...CAMINHO].map((k) => k.split(",").map(Number) as [number, number]), []);
   const [pos, setPos] = useState<[number, number]>([3, 4]);
   const posRef = useRef(pos);
   posRef.current = pos;
   useEffect(() => {
+    if (dormindo) return;
     const t = setInterval(() => {
       const [a, b] = posRef.current;
       const viz = ([[a + 1, b], [a - 1, b], [a, b + 1], [a, b - 1]] as [number, number][]).filter((p) => CAMINHO.has(`${p[0]},${p[1]}`));
       if (viz.length && Math.random() < 0.75) setPos(viz[Math.floor(Math.random() * viz.length)]);
     }, 1900);
     return () => clearInterval(t);
-  }, [livres]);
+  }, [livres, dormindo]);
 
   const lugar = (l: LugarMundo, desenho: React.ReactNode, alturaRotulo: number) => {
     const [x, y, w, d] = LUGARES[l];
@@ -278,6 +328,77 @@ export function MundoIso({
       34
     )
   );
+  // Etapa 315 — feirinha (carrinho com toldo)
+  ents.push(
+    lugar(
+      "feira",
+      <g>
+        {bloco(8.15, 5.3, 0.7, 0.45, 10, "#C0874F", 3)}
+        {(() => {
+          const [r1x, r1y] = P(8.25, 5.75, 3);
+          const [r2x, r2y] = P(8.75, 5.75, 3);
+          return (
+            <g>
+              <circle cx={r1x} cy={r1y} r="3" fill="#374151" />
+              <circle cx={r2x} cy={r2y} r="3" fill="#374151" />
+            </g>
+          );
+        })()}
+        {bloco(8.17, 5.32, 0.05, 0.05, 14, "#7A4E2E", 13)}
+        {bloco(8.78, 5.32, 0.05, 0.05, 14, "#7A4E2E", 13)}
+        {Array.from({ length: 4 }, (_, i) => (
+          <polygon
+            key={i}
+            points={pts([P(8.1 + i * 0.2, 5.25, 29), P(8.3 + i * 0.2, 5.25, 29), P(8.3 + i * 0.2, 5.85, 25), P(8.1 + i * 0.2, 5.85, 25)])}
+            fill={i % 2 ? "#FFFFFF" : "#8B5CF6"}
+          />
+        ))}
+        {(() => {
+          const [cx, cy] = P(8.5, 5.5, 15);
+          return (
+            <text x={cx} y={cy} fontSize="7" textAnchor="middle">
+              🎁🧢
+            </text>
+          );
+        })()}
+      </g>,
+      50
+    )
+  );
+  // Etapa 316 — píer da pescaria
+  ents.push(
+    lugar(
+      "pesca",
+      <g>
+        {[11.15, 11.75, 12.35].map((x) => (
+          <g key={x}>
+            {bloco(x, 3.25, 0.08, 0.08, 12, "#5B3A1E", -8)}
+            {bloco(x, 3.67, 0.08, 0.08, 12, "#5B3A1E", -8)}
+          </g>
+        ))}
+        {bloco(11.05, 3.2, 1.55, 0.6, 2, "#B98B5E", 3)}
+        {Array.from({ length: 6 }, (_, i) => (
+          <polyline key={i} points={pts([P(11.05 + i * 0.26, 3.2, 5), P(11.05 + i * 0.26, 3.8, 5)])} stroke="#8B5E3C" strokeWidth="0.5" fill="none" />
+        ))}
+        {bloco(11.2, 3.3, 0.3, 0.25, 5, "#3B82F6", 5)}
+        {(() => {
+          const [ax, ay] = P(12.4, 3.5, 6);
+          const [bx, by] = P(13.1, 3.5, 0);
+          return (
+            <g>
+              <line x1={ax} y1={ay} x2={ax + 10} y2={ay - 22} stroke="#7A4E2E" strokeWidth="1.4" />
+              <path d={`M${ax + 10} ${ay - 22} Q${bx + 4} ${by - 20} ${bx} ${by - 2}`} stroke="#E5E7EB" strokeWidth="0.5" fill="none" />
+              <g className="vtm-onda">
+                <circle cx={bx} cy={by} r="2.2" fill="#EF4444" />
+                <circle cx={bx} cy={by - 1} r="1.1" fill="#FFFFFF" />
+              </g>
+            </g>
+          );
+        })()}
+      </g>,
+      30
+    )
+  );
   // jardim da dupla
   ents.push(
     lugar(
@@ -340,16 +461,60 @@ export function MundoIso({
 
   // mascote
   if (mascote) {
-    const [px, py] = P(pos[0] + 0.5, pos[1] + 0.5);
+    // de madrugada ele dorme na porta de casa
+    const p0: [number, number] = dormindo ? [2, 3] : pos;
+    const [px, py] = P(p0[0] + 0.5, p0[1] + 0.5);
     ents.push({
-      chave: pos[0] + pos[1] + 2.001,
+      chave: p0[0] + p0[1] + 2.001,
       el: (
-        <g key="mascote" style={{ transform: `translate(${px - 16}px, ${py - 28}px)`, transition: "transform 0.8s ease-in-out" }} pointerEvents="none">
-          <Mascote cor={mascote.cor} fase={Math.max(1, mascote.fase)} humor="feliz" equipados={{ ...mascote.equipados, fundo: undefined, amigo: undefined }} tamanho={32} volume={false} />
+        <g
+          key="mascote"
+          style={{ transform: `translate(${px - 16}px, ${py - 28}px)`, transition: "transform 0.8s ease-in-out", cursor: "pointer" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            tocarMascote();
+          }}
+        >
+          <g key={pulo} className={pulo ? "vtm-pulo" : ""}>
+            <Mascote
+              cor={mascote.cor}
+              fase={Math.max(1, mascote.fase)}
+              humor={dormindo ? "dormindo" : humor === "dormindo" ? "feliz" : humor}
+              equipados={{ ...mascote.equipados, fundo: undefined, amigo: undefined }}
+              tamanho={32}
+              volume={false}
+            />
+          </g>
+          {fala && (
+            <g pointerEvents="none">
+              <rect x={-30} y={-22} width={92} height={18} rx={9} fill="#0B1026" opacity="0.82" />
+              <text x={16} y={-10} textAnchor="middle" fontSize="6.4" fill="#fff" fontFamily="sans-serif">
+                {fala.length > 30 ? fala.slice(0, 29) + "…" : fala}
+              </text>
+            </g>
+          )}
         </g>
       ),
     });
   }
+  // Etapa 315 — mascotes da dupla/família visitando (de madrugada foram pra casa)
+  if (!dormindo)
+    visitantes.forEach((v, k) => {
+      const p0 = posVis[v.chave];
+      if (!p0) return;
+      const [px, py] = P(p0[0] + 0.5, p0[1] + 0.5);
+      ents.push({
+        chave: p0[0] + p0[1] + 2.0005 + k * 0.0001,
+        el: (
+          <g key={`vis-${v.chave}`} style={{ transform: `translate(${px - 14}px, ${py - 25}px)`, transition: "transform 0.9s ease-in-out" }} pointerEvents="none">
+            <Mascote cor={v.cor} fase={Math.max(1, v.fase)} humor="feliz" equipados={{ ...v.equipados, fundo: undefined, amigo: undefined }} tamanho={28} volume={false} />
+            <text x={14} y={31} textAnchor="middle" fontSize="6" fontWeight="700" fill="#fff" stroke="#000" strokeOpacity="0.35" strokeWidth="1.6" paintOrder="stroke" fontFamily="sans-serif">
+              {v.nome}
+            </text>
+          </g>
+        ),
+      });
+    });
   ents.sort((a, b) => a.chave - b.chave);
 
   return (
@@ -382,7 +547,7 @@ export function MundoIso({
       {/* arvorezinhas de enfeite */}
       {[
         [0.4, 0.4],
-        [11.5, 3.5],
+        [11.5, 2.4],
         [2.5, 11.5],
         [8.5, 10.5],
         [11.5, 8.5],
@@ -414,9 +579,72 @@ export function MundoIso({
         );
       })}
 
+      {/* Etapa 316 — decoração do evento */}
+      {evento === "halloween" &&
+        [
+          [0.5, 5.5],
+          [2.5, 8.5],
+          [8.5, 1.5],
+          [10.5, 5.5],
+          [6.5, 10.5],
+        ].map(([x, y], i) => {
+          const [cx, cy] = P(x, y);
+          return (
+            <g key={`ab${i}`}>
+              <ellipse cx={cx} cy={cy - 4} rx="6" ry="4.6" fill="#EA580C" />
+              <ellipse cx={cx} cy={cy - 4} rx="3" ry="4.6" fill="#F97316" />
+              <rect x={cx - 0.8} y={cy - 10.5} width="1.6" height="3" fill="#15803D" />
+              {noite && <circle cx={cx} cy={cy - 4} r="9" fill="#FDBA74" opacity="0.25" />}
+              <path d={`M${cx - 3} ${cy - 5} l1.2 -1.6 l1.2 1.6 Z M${cx + 0.6} ${cy - 5} l1.2 -1.6 l1.2 1.6 Z`} fill="#FDE047" />
+            </g>
+          );
+        })}
+      {evento === "natal" &&
+        [
+          [0.5, 5.5],
+          [2.5, 8.5],
+          [8.5, 1.5],
+          [10.5, 5.5],
+          [6.5, 10.5],
+        ].map(([x, y], i) => {
+          const [cx, cy] = P(x, y);
+          return (
+            <g key={`nt${i}`}>
+              <polygon points={`${cx - 8},${cy - 3} ${cx + 8},${cy - 3} ${cx},${cy - 18}`} fill="#15803D" />
+              <polygon points={`${cx - 6},${cy - 11} ${cx + 6},${cy - 11} ${cx},${cy - 24}`} fill="#16A34A" />
+              <path d={`M${cx} ${cy - 27} l1 2 l2 0.3 l-1.5 1.4 l0.4 2 l-1.9 -1 l-1.9 1 l0.4 -2 l-1.5 -1.4 l2 -0.3 Z`} fill="#FBBF24" />
+              {[
+                [-4, -7, "#EF4444"],
+                [3, -9, "#3B82F6"],
+                [-1, -15, "#FBBF24"],
+                [4, -17, "#EF4444"],
+              ].map(([dx, dy, c], k) => (
+                <circle key={k} cx={cx + (dx as number)} cy={cy + (dy as number)} r="1.2" fill={c as string} className="animate-cintilar" style={{ animationDelay: `${k * 0.4}s` }} />
+              ))}
+              <rect x={cx + 5} y={cy - 5} width="5" height="5" fill="#DC2626" />
+              <rect x={cx + 7} y={cy - 5} width="1" height="5" fill="#FDE047" />
+            </g>
+          );
+        })}
+
       {ents.map((e) => e.el)}
 
+      {evento === "halloween" &&
+        [
+          [60, 40],
+          [300, 60],
+          [200, 30],
+        ].map(([x, y], i) => (
+          <g key={`mc${i}`} className="vtm-voa" style={{ animationDuration: `${2 + i * 0.6}s` }} pointerEvents="none">
+            <path d={`M${x} ${y} q-5 -6 -11 -3 q3 1 2 4 q-3 -1 -5 1 q5 0 8 2 Z M${x} ${y} q5 -6 11 -3 q-3 1 -2 4 q3 -1 5 1 q-5 0 -8 2 Z`} fill="#1F2421" />
+          </g>
+        ))}
+      {evento === "natal" && !tema.particula && <Particulas tipo="neve" />}
+
       {tema.particula && <Particulas tipo={tema.particula} />}
+      {/* Etapa 315 — clima do humor: chuvinha quando ele está tristinho/doente */}
+      {clima === "chuva" && <Particulas tipo="chuva" />}
+      {(clima === "nuvens" || clima === "cinza" || clima === "chuva") && <SombrasNuvens escuras={clima !== "nuvens"} />}
       {(noite || periodo === "entardecer") && <rect width={LARG} height={ALT} fill={noite ? "#0B1026" : "#7C2D12"} opacity={noite ? 0.32 : 0.1} pointerEvents="none" />}
     </svg>
   );
@@ -708,7 +936,21 @@ function desenharMonumento(id: string, x: number, y: number, noite: boolean, cor
 }
 
 /** Etapa 312 — neve, folhas, pétalas ou brasas caindo sobre a ilha. */
-function Particulas({ tipo }: { tipo: NonNullable<TemaIlha["particula"]> }) {
+function Particulas({ tipo }: { tipo: NonNullable<TemaIlha["particula"]> | "chuva" }) {
+  if (tipo === "chuva") {
+    return (
+      <g pointerEvents="none" aria-hidden>
+        {Array.from({ length: 34 }, (_, i) => {
+          const x = ((i * 61) % LARG) + 3;
+          return (
+            <g key={i} className="vtm-cai" style={{ animationDuration: `${1.4 + (i % 4) * 0.2}s`, animationDelay: `${-((i * 0.37) % 2)}s` }}>
+              <line x1={x} y1={0} x2={x - 2} y2={7} stroke="#BFDBFE" strokeWidth="1" opacity="0.8" />
+            </g>
+          );
+        })}
+      </g>
+    );
+  }
   const cor = { neve: "#FFFFFF", folhas: "#E07A2E", petalas: "#F9A8D4", brasas: "#FDBA74" }[tipo];
   const sobe = tipo === "brasas";
   return (
@@ -727,6 +969,21 @@ function Particulas({ tipo }: { tipo: NonNullable<TemaIlha["particula"]> }) {
           </g>
         );
       })}
+    </g>
+  );
+}
+
+/** Etapa 315 — sombras de nuvem passando devagar sobre a ilha. */
+function SombrasNuvens({ escuras }: { escuras: boolean }) {
+  return (
+    <g pointerEvents="none" aria-hidden opacity={escuras ? 0.22 : 0.12}>
+      {[
+        [80, 120, 70],
+        [260, 170, 90],
+        [170, 230, 60],
+      ].map(([x, y, r], i) => (
+        <ellipse key={i} cx={x} cy={y} rx={r} ry={r * 0.35} fill="#0F172A" className="vtm-nuvem" style={{ animationDuration: `${14 + i * 4}s` }} />
+      ))}
     </g>
   );
 }

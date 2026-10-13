@@ -19,6 +19,8 @@ import { receitaAguardando, despesaAguardando, INICIO_CONFIRMACAO } from "@/lib/
 // rota precisa rodar de novo a cada chamada — sem isso aqui, o Vercel
 // pode devolver a mesma resposta guardada em cache pras próximas
 // chamadas, mesmo que o horário real já tenha mudado.
+import { semanaisApertados, textoApertados } from "@/lib/habitos/semanal";
+import { relatorioDoMes, mesAnterior, NOMES_MES } from "@/lib/habitos/relatorioMes";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -189,6 +191,14 @@ export async function GET(request: Request) {
   // Etapa 214 — dia 1 às 09:00: resumo do mês que acabou
   if (hoje.endsWith("-01") && horaAtual >= "09:00" && horaAtual <= "09:05") {
     enviados += await notificarResumoMensal(supabase, hoje);
+  }
+  // Etapa 314 — 18:00: hábitos "X vezes por semana" com a meta apertando
+  if (horaAtual >= "18:00" && horaAtual <= "18:05") {
+    enviados += await notificarSemanaisApertados(supabase, hoje);
+  }
+  // Etapa 314 — dia 1 às 09:10: relatório do mês dos hábitos
+  if (hoje.endsWith("-01") && horaAtual >= "09:10" && horaAtual <= "09:15") {
+    enviados += await notificarRelatorioHabitos(supabase, hoje);
   }
   // Domingo 19:00 — resumo da semana
   if (diaDaSemana(hoje) === 0 && horaAtual >= "19:00" && horaAtual <= "19:05") {
@@ -1122,6 +1132,87 @@ async function notificarLembreteLancar(supabase: ReturnType<typeof criarClienteA
       "/financas?gasto=1",
       hoje
     );
+  }
+  return enviados;
+}
+
+/**
+ * Etapa 314 — 18:00: "Caminhar: faltam 2 de 3 e restam 2 dias". Só pra
+ * hábitos "X vezes por semana" e pra quem deixou o aviso da noite ligado.
+ * (lembretes_enviados: tipo resumo_noite + hora "semanal" = 1 por dia)
+ */
+async function notificarSemanaisApertados(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+  const { data: perfis } = await supabase.from("perfis").select("id").eq("aviso_noite", true);
+  const ids = (perfis ?? []).map((p) => p.id as string);
+  if (!ids.length) return 0;
+  const { data: habitos } = await supabase
+    .from("habitos")
+    .select("id, nome, dono_id, frequencia, vezes_semana, meta_diaria, eh_negativo, arquivado, pausas, dias_semana")
+    .eq("frequencia", "semanal")
+    .eq("arquivado", false)
+    .in("dono_id", ids);
+  if (!habitos?.length) return 0;
+  const { data: checkins } = await supabase
+    .from("habito_checkins")
+    .select("habito_id, usuario_id, data, quantidade")
+    .in(
+      "habito_id",
+      habitos.map((h) => h.id)
+    )
+    .gte("data", inicioDaSemana(hoje))
+    .lte("data", hoje);
+  const porDono = new Map<string, any[]>();
+  for (const h of habitos) porDono.set(h.dono_id as string, [...(porDono.get(h.dono_id as string) ?? []), h]);
+  let enviados = 0;
+  for (const [dono, lista] of porDono) {
+    const meus = (checkins ?? []).filter((c) => c.usuario_id === dono);
+    const texto = textoApertados(semanaisApertados(lista, meus as any, hoje));
+    if (!texto) continue;
+    enviados += await notificarUsuariosDoItem(supabase, "resumo_noite", dono, dono, texto, "/habitos", hoje, undefined, "semanal");
+  }
+  return enviados;
+}
+
+/**
+ * Etapa 314 — dia 1: "Seu outubro nos hábitos: 78% (▲6) · melhor sequência…".
+ * Usa a mesma preferência do resumo semanal. (tipo resumo_mes + hora "habitos")
+ */
+async function notificarRelatorioHabitos(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string): Promise<number> {
+  const { data: perfis } = await supabase.from("perfis").select("id").eq("resumo_semanal", true);
+  const ids = (perfis ?? []).map((p) => p.id as string);
+  if (!ids.length) return 0;
+  const mes = mesAnterior(hoje.slice(0, 7));
+  const desde = `${mesAnterior(mes)}-01`;
+  const { data: habitos } = await supabase
+    .from("habitos")
+    .select("id, nome, dono_id, frequencia, dias_semana, vezes_semana, meta_diaria, eh_negativo, arquivado, pausas, criado_em")
+    .eq("arquivado", false)
+    .in("dono_id", ids);
+  if (!habitos?.length) return 0;
+  const { data: checkins } = await supabase
+    .from("habito_checkins")
+    .select("habito_id, usuario_id, data, quantidade")
+    .in(
+      "habito_id",
+      habitos.map((h) => h.id)
+    )
+    .gte("data", desde)
+    .lt("data", hoje);
+  let enviados = 0;
+  for (const dono of new Set(habitos.map((h) => h.dono_id as string))) {
+    const r = relatorioDoMes(
+      { habitos: habitos.filter((h) => h.dono_id === dono), habitoCheckins: (checkins ?? []).filter((c) => c.usuario_id === dono) },
+      mes,
+      hoje
+    );
+    if (!r.devidos || r.taxa === null) continue;
+    const dif = r.taxaAntes !== null ? r.taxa - r.taxaAntes : null;
+    const partes = [`${r.taxa}% cumprido${dif ? ` (${dif > 0 ? "▲" : "▼"}${Math.abs(dif)})` : ""}`];
+    if (r.melhorSequencia && r.melhorSequencia.dias >= 3) partes.push(`melhor sequência: ${r.melhorSequencia.dias} dias em ${r.melhorSequencia.nome}`);
+    if (r.diasPerfeitos > 0) partes.push(`${r.diasPerfeitos} ${r.diasPerfeitos === 1 ? "dia perfeito" : "dias perfeitos"}`);
+    const nome = NOMES_MES[Number(mes.slice(5, 7)) - 1];
+    const texto = `📅 Seu ${nome} nos hábitos: ${partes.join(" · ")}. Toque pra ver o relatório e as dicas.`;
+    enviados += await notificarUsuariosDoItem(supabase, "resumo_mes", dono, dono, texto, `/habitos/relatorio?mes=${mes}`, hoje, undefined, "habitos");
   }
   return enviados;
 }

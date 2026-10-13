@@ -51,9 +51,10 @@ describe("blocos do Hoje", () => {
     const l = lerLayoutHoje(["!diario", "lista", "xyz"]);
     expect(l[0]).toEqual({ id: "mascote", visivel: true }); // Etapa 300
     expect(l[1]).toEqual({ id: "missoes", visivel: true }); // Etapa 309
-    expect(l[2]).toEqual({ id: "diario", visivel: false });
+    expect(l[2]).toEqual({ id: "desafios", visivel: true }); // Etapa 314
+    expect(l[3]).toEqual({ id: "diario", visivel: false });
     expect(l).toHaveLength(BLOCOS_HOJE_PADRAO.length);
-    expect(salvarLayoutHoje(l).slice(0, 4)).toEqual(["mascote", "missoes", "!diario", "lista"]);
+    expect(salvarLayoutHoje(l).slice(0, 5)).toEqual(["mascote", "missoes", "desafios", "!diario", "lista"]);
     expect(fixarItemNoTopo([1, 2, 3], 2)).toEqual([3, 1, 2]);
     expect(moverItem([1, 2, 3], 0, 1)).toEqual([2, 1, 3]);
     expect(alternarVisivel([{ visivel: true }], 0)[0].visivel).toBe(false);

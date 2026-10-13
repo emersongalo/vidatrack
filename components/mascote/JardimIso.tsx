@@ -4,6 +4,7 @@
 // cada hábito compartilhado é um canteiro com a planta no estágio dela, os
 // mascotes de vocês passeiam pelo caminho de pedrinhas e quem já fez o
 // hábito hoje aparece com o regador. Frutos maduros aparecem na planta.
+import { useDormindo } from "@/lib/mascote/useDormindo";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Mascote, type Periodo } from "@/components/mascote/Mascote";
 import type { CorMascote, Humor, Slot } from "@/lib/mascote/mascote";
@@ -87,6 +88,8 @@ export function JardimIso({
     </g>
   );
   const noite = periodo === "noite";
+  // Etapa 315 — de madrugada eles dormem (param de andar)
+  const dormindo = useDormindo();
 
   // caminho livre pros mascotes
   const ocupado = useMemo(() => new Set(lugares.slice(0, plantas.length).map(([x, y]) => `${x},${y}`)), [lugares, plantas.length]);
@@ -107,7 +110,7 @@ export function JardimIso({
   const posRef = useRef(pos);
   posRef.current = pos;
   useEffect(() => {
-    if (!livres.length) return;
+    if (!livres.length || dormindo) return;
     const ok = new Set(livres.map(([a, b]) => `${a},${b}`));
     const t = setInterval(() => {
       setPos((atual) => {
@@ -123,7 +126,7 @@ export function JardimIso({
       });
     }, 2400 + Math.random() * 600);
     return () => clearInterval(t);
-  }, [livres]);
+  }, [livres, dormindo]);
   useEffect(() => {
     if (pos.length !== mascotes.length) setPos(mascotes.map((_, k) => livres[k % Math.max(1, livres.length)] ?? [0, 0]));
   }, [mascotes.length, pos.length, livres]);
@@ -173,8 +176,8 @@ export function JardimIso({
           <Mascote
             cor={m.cor}
             fase={m.ovo ? 0 : Math.max(1, m.fase)}
-            humor={m.regou ? "feliz" : "neutro"}
-            equipados={m.ovo ? {} : { ...m.equipados, mao: m.regou ? "regador" : m.equipados.mao, fundo: undefined, amigo: undefined }}
+            humor={dormindo ? "dormindo" : m.regou ? "feliz" : "neutro"}
+            equipados={m.ovo ? {} : { ...m.equipados, mao: m.regou && !dormindo ? "regador" : m.equipados.mao, fundo: undefined, amigo: undefined }}
             tamanho={tm}
             volume={false}
           />

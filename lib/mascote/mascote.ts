@@ -3,6 +3,7 @@
 // perfis.mascote (nome, cor, o que comprou e o que está vestindo).
 // As moedas vêm dos check-ins: cada hábito feito = 10 🪙.
 
+import { lerPesca, type Pesca } from "@/lib/mascote/pesca";
 import { lerCasa, type Casa } from "@/lib/mascote/casa";
 
 export type Slot = "chapeu" | "oculos" | "roupa" | "mao" | "amigo" | "fundo";
@@ -41,6 +42,12 @@ export type DadosMascote = {
   /** Etapa 312 — temas da ilha comprados e o que está em uso */
   temasIlha?: string[];
   temaIlha?: string;
+  /** Etapa 315 — o que foi comprado na feirinha (só o dia mais recente) */
+  feira?: Record<string, string[]>;
+  /** Etapa 316 — pescaria (iscas do dia, coleção e balde) */
+  pesca?: Pesca;
+  /** Etapa 316 — prêmios de evento já resgatados ("halloween-2026") */
+  eventos?: string[];
 };
 
 export type DesafioSalvo = {
@@ -70,7 +77,18 @@ export const CORES_MASCOTE: Record<CorMascote, { nome: string; corpo: string; so
   arcoiris: { nome: "Arco-íris", corpo: "url(#vtm-arcoiris)", sombra: "#9C8FD9", barriga: "#FFFFFF", preco: 900 },
 };
 
-export type Item = { id: string; slot: Slot; nome: string; preco: number; nivel: number; emoji: string };
+export type Item = {
+  id: string;
+  slot: Slot;
+  nome: string;
+  preco: number;
+  nivel: number;
+  emoji: string;
+  /** Etapa 316 — só aparece na loja durante esse evento */
+  evento?: "halloween" | "natal";
+  /** Etapa 316 — não é vendido: só como prêmio */
+  exclusivo?: boolean;
+};
 
 export const ITENS: Item[] = [
   // chapéus
@@ -89,6 +107,11 @@ export const ITENS: Item[] = [
   { id: "floral", slot: "chapeu", nome: "Coroa de flores", preco: 220, nivel: 2, emoji: "💐" },
   { id: "pirata", slot: "chapeu", nome: "Chapéu pirata", preco: 320, nivel: 3, emoji: "🏴‍☠️" },
   { id: "mago", slot: "chapeu", nome: "Chapéu de mago", preco: 420, nivel: 3, emoji: "🧙" },
+  // Etapa 313
+  { id: "orelhas", slot: "chapeu", nome: "Orelhinhas de gato", preco: 130, nivel: 1, emoji: "🐱" },
+  { id: "capacete", slot: "chapeu", nome: "Capacete de bike", preco: 160, nivel: 2, emoji: "🚴" },
+  { id: "sombrero", slot: "chapeu", nome: "Sombrero", preco: 280, nivel: 2, emoji: "🪅" },
+  { id: "viking", slot: "chapeu", nome: "Capacete viking", preco: 380, nivel: 3, emoji: "⚔️" },
   // óculos
   { id: "redondos", slot: "oculos", nome: "Óculos redondos", preco: 80, nivel: 1, emoji: "👓" },
   { id: "escuros", slot: "oculos", nome: "Óculos escuros", preco: 140, nivel: 2, emoji: "🕶️" },
@@ -97,6 +120,9 @@ export const ITENS: Item[] = [
   { id: "monoculo", slot: "oculos", nome: "Monóculo", preco: 180, nivel: 2, emoji: "🧐" },
   { id: "aviador", slot: "oculos", nome: "Óculos aviador", preco: 260, nivel: 3, emoji: "🛩️" },
   { id: "mergulho", slot: "oculos", nome: "Máscara de mergulho", preco: 300, nivel: 3, emoji: "🤿" },
+  // Etapa 313
+  { id: "nerd", slot: "oculos", nome: "Óculos nerd", preco: 110, nivel: 1, emoji: "🤓" },
+  { id: "neon", slot: "oculos", nome: "Visor neon", preco: 340, nivel: 3, emoji: "🥽" },
   // roupas
   { id: "gravata", slot: "roupa", nome: "Gravata borboleta", preco: 70, nivel: 1, emoji: "🎀" },
   { id: "cachecol", slot: "roupa", nome: "Cachecol", preco: 110, nivel: 1, emoji: "🧣" },
@@ -106,6 +132,10 @@ export const ITENS: Item[] = [
   { id: "lenco", slot: "roupa", nome: "Lencinho", preco: 60, nivel: 1, emoji: "🧣" },
   { id: "havaiano", slot: "roupa", nome: "Colar havaiano", preco: 150, nivel: 2, emoji: "🌺" },
   { id: "faixa", slot: "roupa", nome: "Faixa de campeão", preco: 380, nivel: 4, emoji: "🎗️" },
+  // Etapa 313
+  { id: "babador", slot: "roupa", nome: "Babador", preco: 40, nivel: 1, emoji: "🍼" },
+  { id: "gravataSocial", slot: "roupa", nome: "Gravata social", preco: 160, nivel: 2, emoji: "👔" },
+  { id: "ouro", slot: "roupa", nome: "Correntinha de ouro", preco: 520, nivel: 4, emoji: "📿" },
   // na mão
   { id: "cafe", slot: "mao", nome: "Cafezinho", preco: 50, nivel: 1, emoji: "☕" },
   { id: "livro", slot: "mao", nome: "Livro", preco: 90, nivel: 1, emoji: "📖" },
@@ -116,12 +146,31 @@ export const ITENS: Item[] = [
   { id: "regador", slot: "mao", nome: "Regador", preco: 120, nivel: 2, emoji: "🪴" },
   { id: "violao", slot: "mao", nome: "Violão", preco: 280, nivel: 3, emoji: "🎸" },
   { id: "varinha", slot: "mao", nome: "Varinha mágica", preco: 420, nivel: 4, emoji: "🪄" },
+  // Etapa 313
+  { id: "pirulito", slot: "mao", nome: "Pirulito", preco: 60, nivel: 1, emoji: "🍭" },
+  { id: "pipoca", slot: "mao", nome: "Pipoca", preco: 90, nivel: 1, emoji: "🍿" },
+  { id: "raquete", slot: "mao", nome: "Raquete", preco: 220, nivel: 2, emoji: "🎾" },
+  { id: "microfone", slot: "mao", nome: "Microfone", preco: 260, nivel: 3, emoji: "🎤" },
   // amigos (ficam do ladinho)
   { id: "passarinho", slot: "amigo", nome: "Passarinho", preco: 120, nivel: 1, emoji: "🐦" },
   { id: "borboleta", slot: "amigo", nome: "Borboleta", preco: 160, nivel: 2, emoji: "🦋" },
   { id: "patinho", slot: "amigo", nome: "Patinho", preco: 220, nivel: 2, emoji: "🐥" },
   { id: "caracol", slot: "amigo", nome: "Caracol", preco: 260, nivel: 3, emoji: "🐌" },
   { id: "estrelinha", slot: "amigo", nome: "Estrelinha", preco: 550, nivel: 4, emoji: "⭐" },
+  // Etapa 313
+  { id: "joaninha", slot: "amigo", nome: "Joaninha", preco: 130, nivel: 1, emoji: "🐞" },
+  { id: "abelha", slot: "amigo", nome: "Abelhinha", preco: 180, nivel: 2, emoji: "🐝" },
+  { id: "fantasma", slot: "amigo", nome: "Fantasminha", preco: 420, nivel: 4, emoji: "👻" },
+  { id: "dragao", slot: "amigo", nome: "Dragãozinho", preco: 900, nivel: 5, emoji: "🐉" },
+  // Etapa 316 — itens de evento
+  { id: "bruxa", slot: "chapeu", nome: "Chapéu de bruxa", preco: 180, nivel: 1, emoji: "🧙‍♀️", evento: "halloween" },
+  { id: "morcego", slot: "roupa", nome: "Gravata de morcego", preco: 120, nivel: 1, emoji: "🦇", evento: "halloween" },
+  { id: "vassoura", slot: "mao", nome: "Vassoura voadora", preco: 220, nivel: 2, emoji: "🧹", evento: "halloween" },
+  { id: "abobora", slot: "amigo", nome: "Abóbora-lanterna", preco: 400, nivel: 1, emoji: "🎃", evento: "halloween", exclusivo: true },
+  { id: "gorroNatal", slot: "chapeu", nome: "Gorro de Natal", preco: 160, nivel: 1, emoji: "🎅", evento: "natal" },
+  { id: "sinos", slot: "roupa", nome: "Colar de sininhos", preco: 140, nivel: 1, emoji: "🔔", evento: "natal" },
+  { id: "bengala", slot: "mao", nome: "Bengala doce", preco: 90, nivel: 1, emoji: "🍬", evento: "natal" },
+  { id: "rena", slot: "amigo", nome: "Renazinha", preco: 450, nivel: 1, emoji: "🦌", evento: "natal", exclusivo: true },
   // cenários
   { id: "quarto", slot: "fundo", nome: "Quartinho", preco: 100, nivel: 1, emoji: "🛋️" },
   { id: "jardim", slot: "fundo", nome: "Jardim", preco: 160, nivel: 2, emoji: "🌳" },
@@ -169,10 +218,15 @@ export function moedasDisponiveis(feitos: number, gastos: number, bonus = 0) {
 // Etapa 302 — "fome" e "doente" vêm do cuidado dos últimos dias (lib/mascote/vida.ts)
 export type Humor = "radiante" | "feliz" | "neutro" | "triste" | "dormindo" | "fome" | "doente";
 
+/** Etapa 315 — hora de dormir (vale pro palco, casa, jardim e mundo). */
+export function dormindoNaHora(hora: number) {
+  return hora >= 23 || hora < 6;
+}
+
 /** Humor pelo dia de hoje (feitos/total) e pela hora. */
 export function humorDoMascote(feitosHoje: number, totalHoje: number, hora: number): Humor {
-  if (totalHoje > 0 && feitosHoje >= totalHoje) return hora >= 23 || hora < 6 ? "dormindo" : "radiante";
-  if (hora >= 23 || hora < 6) return "dormindo";
+  if (totalHoje > 0 && feitosHoje >= totalHoje) return dormindoNaHora(hora) ? "dormindo" : "radiante";
+  if (dormindoNaHora(hora)) return "dormindo";
   if (totalHoje === 0) return "feliz";
   if (feitosHoje / totalHoje >= 0.5) return "feliz";
   if (feitosHoje === 0 && hora >= 20) return "triste";
@@ -261,6 +315,17 @@ export function lerMascote(bruto: unknown): DadosMascote | null {
   const temas = [...new Set((Array.isArray(b.temasIlha) ? b.temasIlha : []).filter((x: unknown) => typeof x === "string").map((x: string) => x.slice(0, 20)))].slice(0, 30) as string[];
   if (temas.length) m.temasIlha = temas;
   if (typeof b.temaIlha === "string" && temas.includes(b.temaIlha)) m.temaIlha = b.temaIlha;
+  // Etapa 315 — feirinha
+  const diaFeira = Object.keys(b.feira ?? {}).filter((d) => ehDia(d)).sort().pop();
+  if (diaFeira && Array.isArray(b.feira[diaFeira])) {
+    const l = b.feira[diaFeira].filter((x: unknown) => typeof x === "string" && ITENS.some((i) => i.id === x)).slice(0, 6);
+    if (l.length) m.feira = { [diaFeira]: l };
+  }
+  // Etapa 316 — pescaria e eventos
+  const pesca = lerPesca(b.pesca);
+  if (pesca) m.pesca = pesca;
+  const eventos = [...new Set((Array.isArray(b.eventos) ? b.eventos : []).filter((x: unknown) => typeof x === "string" && /^[a-z]+-\d{4}$/.test(x as string)))].slice(-20) as string[];
+  if (eventos.length) m.eventos = eventos;
   return m;
 }
 
@@ -292,6 +357,7 @@ export function comprar(
   const item = ITENS.find((i) => i.id === alvo.id);
   if (!item) return { ok: false, motivo: "Item não existe" };
   if (m.inventario.includes(item.id)) return { ok: true, mascote: m };
+  if (item.exclusivo) return { ok: false, motivo: "Só como prêmio de evento" };
   if (fase < item.nivel) return { ok: false, motivo: `Libera na fase ${FASES[item.nivel].nome}` };
   if (saldo < item.preco) return { ok: false, motivo: `Faltam ${item.preco - saldo} 🪙` };
   return {

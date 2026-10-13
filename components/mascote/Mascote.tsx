@@ -290,9 +290,10 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
                 <Oculos id={equipados.oculos} />
               </g>
             )}
-            {equipados.chapeu && (
+            {/* Etapa 315 — dormindo sem chapéu: touquinha de dormir */}
+            {(equipados.chapeu || (humor === "dormindo" && fase > 0)) && (
               <g transform={`translate(${(100 + desvio * 0.25).toFixed(2)} ${topo + 3}) scale(${k})`}>
-                <Chapeu id={equipados.chapeu} />
+                <Chapeu id={equipados.chapeu ?? "touca"} />
               </g>
             )}
             {equipados.mao && (
@@ -624,6 +625,78 @@ function Chapeu({ id }: { id: string }) {
           <ellipse cx="0" cy="-20" rx="30" ry="8" fill="none" stroke="#FBBF24" strokeWidth="2" />
         </g>
       );
+    // Etapa 313
+    case "viking":
+      return (
+        <g>
+          <path d="M-30 6 Q-30 -30 0 -30 Q30 -30 30 6 Z" fill="#9CA3AF" />
+          <rect x="-32" y="-2" width="64" height="9" rx="3" fill="#B45309" />
+          <path d="M-3 -30 L-3 6 M3 -30 L3 6" stroke="#6B7280" strokeWidth="2" />
+          <path d="M-28 -8 Q-52 -14 -48 -42 Q-40 -22 -26 -20 Z" fill="#F5F5F4" stroke="#D6D3D1" strokeWidth="1.2" />
+          <path d="M28 -8 Q52 -14 48 -42 Q40 -22 26 -20 Z" fill="#F5F5F4" stroke="#D6D3D1" strokeWidth="1.2" />
+        </g>
+      );
+    case "orelhas":
+      return (
+        <g>
+          <path d="M-30 -2 Q-34 -24 -34 -34 Q-22 -26 -12 -18 Z" fill="#1F2421" />
+          <path d="M30 -2 Q34 -24 34 -34 Q22 -26 12 -18 Z" fill="#1F2421" />
+          <path d="M-28 -6 Q-30 -20 -30 -26 Q-23 -21 -17 -16 Z" fill="#F9A8D4" />
+          <path d="M28 -6 Q30 -20 30 -26 Q23 -21 17 -16 Z" fill="#F9A8D4" />
+          <path d="M-30 -2 Q0 -26 30 -2" stroke="#1F2421" strokeWidth="4" fill="none" />
+        </g>
+      );
+    case "sombrero":
+      return (
+        <g>
+          <ellipse cx="0" cy="2" rx="54" ry="10" fill="#E8B04A" stroke="#B7791F" strokeWidth="1.5" />
+          <path d="M-20 0 Q-22 -36 0 -38 Q22 -36 20 0 Z" fill="#F0C060" stroke="#B7791F" strokeWidth="1.5" />
+          <path d="M-21 -6 Q0 -1 21 -6 L21 -1 Q0 4 -21 -1 Z" fill="#16A34A" />
+          {[-40, -24, 24, 40].map((x) => (
+            <circle key={x} cx={x} cy={6} r="2.2" fill="#DC2626" />
+          ))}
+        </g>
+      );
+    case "capacete":
+      return (
+        <g>
+          <path d="M-32 6 Q-32 -30 0 -32 Q32 -30 32 6 Z" fill="#22C55E" />
+          {[-14, 0, 14].map((x) => (
+            <path key={x} d={`M${x - 4} -28 Q${x} -12 ${x - 2} 2`} stroke="#15803D" strokeWidth="4" fill="none" strokeLinecap="round" />
+          ))}
+          <path d="M14 0 Q34 -2 40 6 Q28 8 14 6 Z" fill="#15803D" />
+        </g>
+      );
+    // Etapa 315 — touquinha de dormir (aparece sozinha de madrugada)
+    case "touca":
+      return (
+        <g>
+          <path d="M-30 6 Q-30 -20 -4 -26 Q22 -30 40 -8 Q44 0 38 4 Q30 -12 18 -14 Q26 -2 30 6 Z" fill="#6D8BD6" />
+          <rect x="-32" y="0" width="64" height="9" rx="4.5" fill="#E0E7FF" />
+          <circle cx="40" cy="6" r="6" fill="#E0E7FF" />
+          {[[-14, -10], [4, -16], [16, -4]].map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r="2" fill="#FDE68A" />
+          ))}
+        </g>
+      );
+    // Etapa 316 — eventos
+    case "bruxa":
+      return (
+        <g transform="rotate(-8)">
+          <ellipse cx="0" cy="4" rx="44" ry="8" fill="#312E81" />
+          <path d="M-24 4 Q-16 -30 4 -50 Q12 -58 22 -52 Q12 -44 14 -30 Q18 -10 24 4 Z" fill="#3730A3" />
+          <rect x="-24" y="-6" width="48" height="8" fill="#F97316" />
+          <rect x="-5" y="-7" width="10" height="10" rx="1" fill="none" stroke="#FBBF24" strokeWidth="2" />
+        </g>
+      );
+    case "gorroNatal":
+      return (
+        <g>
+          <path d="M-30 4 Q-28 -30 6 -34 Q34 -30 44 -6 L36 -2 Q28 -18 14 -20 Q24 -6 28 4 Z" fill="#DC2626" />
+          <rect x="-33" y="-2" width="66" height="11" rx="5.5" fill="#F8FAFC" />
+          <circle cx="42" cy="-2" r="7" fill="#F8FAFC" />
+        </g>
+      );
     default:
       return null;
   }
@@ -689,6 +762,23 @@ function Oculos({ id }: { id: string }) {
           <path d={estrela(-18, 0, 13)} />
           <path d={estrela(18, 0, 13)} />
           <path d="M-6 -2 L6 -2" stroke="#D97706" strokeWidth="2.5" />
+        </g>
+      );
+    // Etapa 313
+    case "nerd":
+      return (
+        <g fill="rgba(255,255,255,0.15)" stroke="#1F2421" strokeWidth="5">
+          <rect x="-31" y="-11" width="25" height="21" rx="4" />
+          <rect x="6" y="-11" width="25" height="21" rx="4" />
+          <path d="M-6 -3 L6 -3" fill="none" />
+          <path d="M-2 -6 L2 -6 L2 0 L-2 0 Z" fill="#FFFFFF" stroke="none" />
+        </g>
+      );
+    case "neon":
+      return (
+        <g>
+          <path d="M-34 -8 L34 -8 L30 8 L4 8 L0 2 L-4 8 L-30 8 Z" fill="#22D3EE" opacity="0.75" stroke="#A855F7" strokeWidth="2.5" strokeLinejoin="round" />
+          <path d="M-26 -3 L-10 -3" stroke="#fff" strokeWidth="2" opacity="0.7" strokeLinecap="round" />
         </g>
       );
     default:
@@ -766,6 +856,56 @@ function Roupa({ id }: { id: string }) {
           <path d="M-14 -8 L0 14 L14 -8" stroke="#3B82F6" strokeWidth="6" fill="none" strokeLinejoin="round" />
           <circle cx="0" cy="20" r="9" fill="#FBBF24" stroke="#D97706" strokeWidth="2" />
           <path d={estrela(0, 20, 5)} fill="#FFF7D6" />
+        </g>
+      );
+    // Etapa 313
+    case "ouro":
+      return (
+        <g>
+          <path d="M-30 -6 Q0 22 30 -6" stroke="#FBBF24" strokeWidth="4" fill="none" strokeDasharray="5 2" />
+          <circle cx="0" cy="12" r="7" fill="#FBBF24" stroke="#D97706" strokeWidth="1.5" />
+          <text x="0" y="15.5" textAnchor="middle" fontSize="9" fontWeight="800" fill="#92400E" fontFamily="sans-serif">
+            $
+          </text>
+        </g>
+      );
+    case "babador":
+      return (
+        <g>
+          <path d="M-22 -6 Q0 2 22 -6 Q22 22 0 26 Q-22 22 -22 -6 Z" fill="#FFFFFF" stroke="#BAE6FD" strokeWidth="2" />
+          <path d="M-8 10 Q0 16 8 10" stroke="#F472B6" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <circle cx="-6" cy="4" r="1.6" fill="#F472B6" />
+          <circle cx="6" cy="4" r="1.6" fill="#F472B6" />
+        </g>
+      );
+    case "gravataSocial":
+      return (
+        <g>
+          <path d="M-14 -6 L0 2 L14 -6" stroke="#F8FAFC" strokeWidth="6" fill="none" strokeLinejoin="round" />
+          <path d="M-5 0 L5 0 L3 6 L-3 6 Z" fill="#1E3A8A" />
+          <path d="M-3 6 L3 6 L7 34 L0 40 L-7 34 Z" fill="#1D4ED8" />
+          <path d="M-4 14 L5 20 M-5 24 L6 30" stroke="#93C5FD" strokeWidth="1.5" />
+        </g>
+      );
+    // Etapa 316 — eventos
+    case "morcego":
+      return (
+        <g>
+          <path d="M0 0 Q-6 -8 -14 -8 Q-12 -4 -16 -2 Q-20 -6 -26 -4 Q-20 2 -22 8 Q-12 4 -6 8 Q-4 4 0 4 Z" fill="#1F2421" />
+          <path d="M0 0 Q6 -8 14 -8 Q12 -4 16 -2 Q20 -6 26 -4 Q20 2 22 8 Q12 4 6 8 Q4 4 0 4 Z" fill="#1F2421" />
+          <circle cx="0" cy="2" r="4" fill="#7C3AED" />
+        </g>
+      );
+    case "sinos":
+      return (
+        <g>
+          <path d="M-30 -6 Q0 14 30 -6" stroke="#16A34A" strokeWidth="4" fill="none" />
+          {[-16, 0, 16].map((x) => (
+            <g key={x} transform={`translate(${x} ${x === 0 ? 10 : 5})`}>
+              <path d="M-5 4 Q-5 -6 0 -6 Q5 -6 5 4 Z" fill="#FBBF24" stroke="#D97706" strokeWidth="1" />
+              <circle cx="0" cy="5" r="1.6" fill="#B45309" />
+            </g>
+          ))}
         </g>
       );
     default:
@@ -862,6 +1002,63 @@ function Mao({ id }: { id: string }) {
           <path d="M-10 -14 q-8 0 -6 6 q2 4 6 3 M10 -14 q8 0 6 6 q-2 4 -6 3" stroke="#D97706" strokeWidth="2" fill="none" />
           <rect x="-3" y="1" width="6" height="6" fill="#D97706" />
           <rect x="-8" y="7" width="16" height="4" rx="1" fill="#92400E" />
+        </g>
+      );
+    // Etapa 313
+    case "pipoca":
+      return (
+        <g>
+          <path d="M-10 -8 L10 -8 L7 14 L-7 14 Z" fill="#FFFFFF" />
+          {[-6, 0, 6].map((x) => (
+            <path key={x} d={`M${x - 1.5} -8 L${x * 0.8 - 1} 14`} stroke="#EF4444" strokeWidth="3" />
+          ))}
+          {[[-7, -12], [-1, -15], [5, -12], [-4, -18], [3, -19], [8, -16]].map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r="4" fill={i % 2 ? "#FEF3C7" : "#FFFBEB"} stroke="#FDE68A" strokeWidth="0.6" />
+          ))}
+        </g>
+      );
+    case "pirulito":
+      return (
+        <g>
+          <rect x="-1.5" y="-6" width="3" height="22" rx="1.5" fill="#F8FAFC" />
+          <circle cx="0" cy="-16" r="12" fill="#F472B6" />
+          <path d="M0 -16 m-9 0 a9 9 0 1 1 9 9 a6 6 0 1 1 -6 -6 a3 3 0 1 1 3 3" stroke="#FFFFFF" strokeWidth="2.2" fill="none" />
+        </g>
+      );
+    case "raquete":
+      return (
+        <g transform="rotate(-25)">
+          <rect x="-2" y="0" width="4" height="18" rx="2" fill="#374151" />
+          <ellipse cx="0" cy="-14" rx="11" ry="14" fill="none" stroke="#EF4444" strokeWidth="3" />
+          <path d="M-8 -20 L8 -20 M-10 -14 L10 -14 M-8 -8 L8 -8 M-5 -26 L5 -26 M-4 -2 L4 -2 M0 -28 L0 0 M-6 -26 L-6 -3 M6 -26 L6 -3" stroke="#F8FAFC" strokeWidth="0.8" />
+          <circle cx="16" cy="-30" r="4" fill="#BEF264" />
+        </g>
+      );
+    case "microfone":
+      return (
+        <g transform="rotate(-15)">
+          <path d="M-3 0 L3 0 L2 18 L-2 18 Z" fill="#1F2421" />
+          <circle cx="0" cy="-6" r="8" fill="#9CA3AF" />
+          <path d="M-6 -10 L6 -2 M-6 -2 L6 -10 M-7 -6 L7 -6" stroke="#6B7280" strokeWidth="0.8" />
+          <rect x="-4" y="0" width="8" height="3" fill="#A855F7" />
+          <path d="M12 -16 q3 -3 0 -6 M16 -18 q4 -4 0 -8" stroke="#A855F7" strokeWidth="1.5" fill="none" className="vtm-vapor" />
+        </g>
+      );
+    // Etapa 316 — eventos
+    case "vassoura":
+      return (
+        <g transform="rotate(30)">
+          <rect x="-2" y="-34" width="4" height="40" rx="2" fill="#8B5A2B" />
+          <path d="M-9 6 L9 6 L12 26 L-12 26 Z" fill="#E8B04A" />
+          <path d="M-6 10 L-8 25 M0 10 L0 26 M6 10 L8 25" stroke="#B7791F" strokeWidth="1" />
+          <rect x="-9" y="4" width="18" height="4" fill="#7C2D12" />
+        </g>
+      );
+    case "bengala":
+      return (
+        <g>
+          <path d="M0 18 L0 -12 Q0 -24 10 -24 Q20 -24 20 -14" stroke="#F8FAFC" strokeWidth="6" fill="none" strokeLinecap="round" />
+          <path d="M0 18 L0 -12 Q0 -24 10 -24 Q20 -24 20 -14" stroke="#EF4444" strokeWidth="6" fill="none" strokeLinecap="round" strokeDasharray="4 4" />
         </g>
       );
     default:
@@ -1257,6 +1454,85 @@ function Amigo({ id }: { id: string }) {
             <circle cx="3" cy="0" r="1.3" fill="#1F2421" />
             <path d="M-2 3 Q0 5 2 3" stroke="#1F2421" strokeWidth="1" fill="none" />
           </g>
+        </g>
+      );
+    // Etapa 313
+    case "joaninha":
+      return (
+        <g className="vtm-gingar">
+          <ellipse cx="0" cy="-1" rx="10" ry="2" fill="#000" opacity="0.15" />
+          <path d="M-10 -8 A10 10 0 0 1 10 -8 L10 -6 L-10 -6 Z" fill="#EF4444" />
+          <path d="M0 -18 L0 -6" stroke="#1F2421" strokeWidth="1.4" />
+          {[[-5, -12], [5, -12], [-6, -8], [6, -8]].map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r="1.8" fill="#1F2421" />
+          ))}
+          <circle cx="10" cy="-9" r="4" fill="#1F2421" />
+          <circle cx="11.5" cy="-10" r="1" fill="#fff" />
+        </g>
+      );
+    case "abelha":
+      return (
+        <g className="vtm-voa" style={{ animationDuration: "1.6s" }}>
+          <g transform="translate(0 -50)">
+            <ellipse cx="-3" cy="-9" rx="6" ry="8" fill="#E0F2FE" opacity="0.85" className="vtm-asa" />
+            <ellipse cx="4" cy="-9" rx="6" ry="8" fill="#E0F2FE" opacity="0.85" className="vtm-asa" />
+            <ellipse cx="0" cy="0" rx="11" ry="8" fill="#FACC15" />
+            <path d="M-4 -7 L-4 7 M3 -7.5 L3 7.5" stroke="#1F2421" strokeWidth="3" />
+            <circle cx="8" cy="-2" r="1.6" fill="#1F2421" />
+            <path d="M-11 0 L-15 1 L-11 2 Z" fill="#1F2421" />
+          </g>
+        </g>
+      );
+    case "fantasma":
+      return (
+        <g className="vtm-voa" style={{ animationDuration: "3s" }}>
+          <g transform="translate(0 -52)" opacity="0.92">
+            <path d="M-12 12 L-12 -2 Q-12 -16 0 -16 Q12 -16 12 -2 L12 12 L8 8 L4 12 L0 8 L-4 12 L-8 8 Z" fill="#F8FAFC" />
+            <ellipse cx="-4" cy="-4" rx="2" ry="3" fill="#1F2421" />
+            <ellipse cx="4" cy="-4" rx="2" ry="3" fill="#1F2421" />
+            <ellipse cx="0" cy="3" rx="2.5" ry="2" fill="#1F2421" />
+          </g>
+        </g>
+      );
+    case "dragao":
+      return (
+        <g className="vtm-gingar">
+          <ellipse cx="0" cy="-1" rx="15" ry="3" fill="#000" opacity="0.15" />
+          <path d="M-14 -10 Q-26 -14 -24 -2 Q-18 -6 -12 -4 Z" fill="#16A34A" />
+          <ellipse cx="0" cy="-11" rx="13" ry="10" fill="#22C55E" />
+          <ellipse cx="2" cy="-7" rx="7" ry="5" fill="#BBF7D0" />
+          <path d="M-4 -20 Q-14 -36 -2 -32 Q2 -26 0 -20 Z" fill="#4ADE80" className="vtm-asa" />
+          <circle cx="9" cy="-24" r="7.5" fill="#22C55E" />
+          <path d="M5 -31 L4 -36 L8 -31 M11 -31 L12 -36 L14 -30" fill="#FBBF24" stroke="#FBBF24" strokeWidth="1" />
+          <circle cx="11.5" cy="-25" r="1.6" fill="#1F2421" />
+          <path d="M16 -22 q4 -1 6 -4" stroke="#F97316" strokeWidth="2" fill="none" className="vtm-vapor" />
+        </g>
+      );
+    // Etapa 316 — prêmios de evento
+    case "abobora":
+      return (
+        <g className="vtm-gingar">
+          <ellipse cx="0" cy="-1" rx="14" ry="3" fill="#000" opacity="0.15" />
+          <ellipse cx="-6" cy="-12" rx="8" ry="11" fill="#EA580C" />
+          <ellipse cx="6" cy="-12" rx="8" ry="11" fill="#EA580C" />
+          <ellipse cx="0" cy="-12" rx="8" ry="12" fill="#F97316" />
+          <path d="M0 -24 q2 -6 6 -7" stroke="#15803D" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M-8 -15 l3 -4 l3 4 Z M2 -15 l3 -4 l3 4 Z" fill="#FDE047" />
+          <path d="M-8 -8 Q0 -2 8 -8 L5 -6 L2 -8 L0 -5 L-2 -8 L-5 -6 Z" fill="#FDE047" />
+        </g>
+      );
+    case "rena":
+      return (
+        <g className="vtm-gingar">
+          <ellipse cx="0" cy="-1" rx="14" ry="3" fill="#000" opacity="0.15" />
+          <rect x="-8" y="-10" width="3" height="9" fill="#92400E" />
+          <rect x="5" y="-10" width="3" height="9" fill="#92400E" />
+          <ellipse cx="0" cy="-12" rx="11" ry="7" fill="#B45309" />
+          <circle cx="9" cy="-22" r="6" fill="#B45309" />
+          <path d="M6 -27 l-2 -7 l-3 2 M6 -27 l-1 -5 M12 -27 l2 -7 l3 2 M12 -27 l1 -5" stroke="#78350F" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+          <circle cx="15" cy="-21" r="2.6" fill="#EF4444" />
+          <circle cx="10" cy="-23" r="1.2" fill="#1F2421" />
+          <path d="M-6 -6 Q0 -2 6 -6" stroke="#16A34A" strokeWidth="2" fill="none" />
         </g>
       );
     default:

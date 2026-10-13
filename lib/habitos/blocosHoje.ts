@@ -2,15 +2,17 @@
 // em perfis.ordem_blocos_habitos; "!" na frente = escondido).
 // Etapa 285 — "contas" saiu: a aba Hábitos mostra só hábitos (finanças ficam em Finanças).
 // Etapa 300 — "mascote": o bichinho fica no topo da aba Hábitos.
-export type BlocoHojeId = "mascote" | "missoes" | "resumo" | "lista" | "jardim" | "pausados" | "diario" | "sugestoes";
+export type BlocoHojeId = "mascote" | "missoes" | "desafios" | "resumo" | "lista" | "jardim" | "pausados" | "diario" | "sugestoes";
 export type BlocoHoje = { id: BlocoHojeId; visivel: boolean };
 
-export const BLOCOS_HOJE_PADRAO: BlocoHojeId[] = ["mascote", "missoes", "resumo", "lista", "jardim", "pausados", "diario", "sugestoes"];
+export const BLOCOS_HOJE_PADRAO: BlocoHojeId[] = ["mascote", "missoes", "desafios", "resumo", "lista", "jardim", "pausados", "diario", "sugestoes"];
 
 export const NOMES_BLOCOS_HOJE: Record<BlocoHojeId, string> = {
   mascote: "🐣 Mascote",
   // Etapa 309
   missoes: "🎯 Missões do dia",
+  // Etapa 314
+  desafios: "🥇 Desafios em andamento",
   resumo: "🎯 Resumo do dia",
   lista: "✅ Hábitos",
   // Etapa 308
@@ -32,12 +34,18 @@ export function lerLayoutHoje(salvo: string[] | null | undefined): BlocoHoje[] {
   const faltando = BLOCOS_HOJE_PADRAO.filter((id) => !lidos.some((b) => b.id === id)).map((id) => ({ id, visivel: true }));
   // Etapa 300 — quem já tinha a tela organizada ganha o mascote no topo
   const novosNoTopo = faltando.filter((b) => b.id === "mascote");
-  const resto = faltando.filter((b) => b.id !== "mascote" && b.id !== "missoes");
+  const resto = faltando.filter((b) => b.id !== "mascote" && b.id !== "missoes" && b.id !== "desafios");
   const lista = [...novosNoTopo, ...lidos, ...resto];
   // Etapa 309 — missões novas entram logo depois do mascote
   if (faltando.some((b) => b.id === "missoes")) {
     const i = lista.findIndex((b) => b.id === "mascote");
     lista.splice(i + 1, 0, { id: "missoes", visivel: true });
+  }
+  // Etapa 314 — desafios logo depois das missões (ou do mascote)
+  if (faltando.some((b) => b.id === "desafios")) {
+    let i = lista.findIndex((b) => b.id === "missoes");
+    if (i < 0) i = lista.findIndex((b) => b.id === "mascote");
+    lista.splice(i + 1, 0, { id: "desafios", visivel: true });
   }
   return lista;
 }

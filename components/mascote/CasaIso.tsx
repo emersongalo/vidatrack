@@ -5,6 +5,7 @@
 // blocos com volume e o mascote andando sozinho pelos quadradinhos livres.
 // Tudo em SVG; à noite escurece e as luminárias acendem.
 // Etapa 308 — veículos, lazer e bichinhos; garagem.
+import { useDormindo } from "@/lib/mascote/useDormindo";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Mascote, type Periodo } from "@/components/mascote/Mascote";
 import { COMODOS, estilo, movel, ocupados, tamanhoNoChao, TAM, type Colocado, type Comodo, type ComodoId, type Movel } from "@/lib/mascote/casa";
@@ -42,7 +43,7 @@ function Bloco({ x, y, w, d, h, z = 0, cor, op }: { x: number; y: number; w: num
 }
 
 /** Desenho de cada móvel em coordenadas "locais" (u = comprimento, v = fundo); girar troca os eixos. */
-function DesenhoMovel({ it, mv, periodo }: { it: Colocado; mv: Movel; periodo: Periodo }) {
+function DesenhoMovel({ it, mv, periodo, semBicho = false }: { it: Colocado; mv: Movel; periodo: Periodo; semBicho?: boolean }) {
   const { x, y, r } = it;
   const B = (u: number, v: number, lu: number, lv: number, h: number, z: number, cor: string, op?: number) =>
     r ? <Bloco x={x + v} y={y + u} w={lv} d={lu} h={h} z={z} cor={cor} op={op} /> : <Bloco x={x + u} y={y + v} w={lu} d={lv} h={h} z={z} cor={cor} op={op} />;
@@ -636,13 +637,14 @@ function DesenhoMovel({ it, mv, periodo }: { it: Colocado; mv: Movel; periodo: P
           {B(0.05, 0.1, 0.9, 0.8, 18, 0, "#B45309")}
           <path d={`M${C(0.05, 0.9, 18)[0]} ${C(0.05, 0.9, 18)[1]} L${tx2} ${ty2} L${C(0.95, 0.1, 18)[0]} ${C(0.95, 0.1, 18)[1]}`} fill="#7C2D12" />
           {B(0.95, 0.38, 0.03, 0.3, 11, 0, "#3F1D0B")}
-          <g className="vtm-gingar">
+          {/* Etapa 313 — de dia o cachorro sai passeando (ver Bicho) */}
+          {!semBicho && <g className="vtm-gingar">
             <ellipse cx={cx2} cy={cy2} rx="7" ry="5" fill="#D6A26B" />
             <circle cx={cx2 + 6} cy={cy2 - 5} r="4.5" fill="#D6A26B" />
             <ellipse cx={cx2 + 4} cy={cy2 - 8} rx="1.8" ry="3" fill="#8B5A2B" />
             <circle cx={cx2 + 7.5} cy={cy2 - 5.5} r="0.9" fill="#111" />
             <path d={`M${cx2 - 7} ${cy2 - 2} q-3 -4 -1 -6`} stroke="#D6A26B" strokeWidth="1.8" fill="none" className="vtm-broto" />
-          </g>
+          </g>}
         </g>
       );
     }
@@ -651,18 +653,19 @@ function DesenhoMovel({ it, mv, periodo }: { it: Colocado; mv: Movel; periodo: P
       return (
         <g>
           {B(0.15, 0.15, 0.7, 0.7, 4, 0, "#F472B6")}
-          <g className="vtm-respira">
+          {!semBicho && <g className="vtm-respira">
             <ellipse cx={gx} cy={gy} rx="7" ry="4.5" fill="#F59E0B" />
             <circle cx={gx + 5} cy={gy - 3} r="3.6" fill="#F59E0B" />
             <path d={`M${gx + 3} ${gy - 5.5} l0.8 -3 l1.5 2.4 M${gx + 6.3} ${gy - 5.5} l0.8 -3 l1.2 2.6`} fill="#F59E0B" stroke="#F59E0B" strokeWidth="0.8" />
             <path d={`M${gx + 3.6} ${gy - 3} q0.8 0.6 1.6 0 M${gx + 5.8} ${gy - 3} q0.8 0.6 1.6 0`} stroke="#7C2D12" strokeWidth="0.6" fill="none" />
             <path d={`M${gx - 7} ${gy} q-3 -1 -2 -5`} stroke="#F59E0B" strokeWidth="1.8" fill="none" />
-          </g>
+          </g>}
         </g>
       );
     }
     case "coelho": {
       const [rx, ry] = C(0.5, 0.5, 4);
+      if (semBicho) return <g>{B(0.2, 0.2, 0.6, 0.6, 2, 0, "#E8C872")}</g>;
       return (
         <g className="vtm-voa" style={{ animationDuration: "1.2s" }}>
           <ellipse cx={rx} cy={ry} rx="5.5" ry="4.5" fill="#F8FAFC" />
@@ -749,6 +752,68 @@ function NaParede({ it, mv, periodo }: { it: Colocado; mv: Movel; periodo: Perio
 
 export type MascoteNaCasa = { cor: CorMascote; fase: number; humor: Humor; equipados: Partial<Record<Slot, string>> };
 
+// ---------- Etapa 313 — bichinhos que passeiam pela casa ----------
+export const BICHOS_ANDAM = ["cachorro", "gato", "coelho"] as const;
+
+function Bicho({ tipo }: { tipo: string }) {
+  switch (tipo) {
+    case "cachorro":
+      return (
+        <g className="vtm-gingar">
+          <ellipse cx="0" cy="0" rx="8" ry="2.4" fill="#000" opacity="0.15" />
+          <rect x="-6" y="-4" width="2.2" height="4" fill="#B98552" />
+          <rect x="3" y="-4" width="2.2" height="4" fill="#B98552" />
+          <ellipse cx="0" cy="-7" rx="8" ry="5" fill="#D6A26B" />
+          <circle cx="7" cy="-12" r="4.8" fill="#D6A26B" />
+          <ellipse cx="5" cy="-15.5" rx="1.9" ry="3.2" fill="#8B5A2B" />
+          <circle cx="9" cy="-12.5" r="0.9" fill="#111" />
+          <circle cx="11.6" cy="-11" r="1.1" fill="#3F1D0B" />
+          <path d="M-8 -9 q-3 -4 -1 -7" stroke="#D6A26B" strokeWidth="1.8" fill="none" className="vtm-broto" />
+        </g>
+      );
+    case "gato":
+      return (
+        <g className="vtm-gingar" style={{ animationDuration: "2.4s" }}>
+          <ellipse cx="0" cy="0" rx="7" ry="2.2" fill="#000" opacity="0.15" />
+          <rect x="-5" y="-4" width="2" height="4" fill="#D97706" />
+          <rect x="3" y="-4" width="2" height="4" fill="#D97706" />
+          <ellipse cx="0" cy="-6.5" rx="7" ry="4.2" fill="#F59E0B" />
+          <circle cx="6" cy="-10" r="3.8" fill="#F59E0B" />
+          <path d="M3.6 -12.5 l0.8 -3 l1.5 2.4 M7.2 -12.5 l0.8 -3 l1.2 2.6" fill="#F59E0B" stroke="#F59E0B" strokeWidth="0.8" />
+          <circle cx="7.6" cy="-10.2" r="0.8" fill="#111" />
+          <path d="M-7 -7 q-5 -2 -3 -9" stroke="#F59E0B" strokeWidth="1.8" fill="none" className="vtm-broto" />
+        </g>
+      );
+    default:
+      return (
+        <g className="vtm-voa" style={{ animationDuration: "0.9s" }}>
+          <ellipse cx="0" cy="0" rx="6" ry="2" fill="#000" opacity="0.15" />
+          <ellipse cx="0" cy="-5" rx="5.5" ry="4.5" fill="#F8FAFC" />
+          <circle cx="4" cy="-9" r="3.4" fill="#F8FAFC" />
+          <ellipse cx="3" cy="-15" rx="1.2" ry="4" fill="#F8FAFC" stroke="#F9A8D4" strokeWidth="0.6" />
+          <ellipse cx="5.2" cy="-15" rx="1.2" ry="4" fill="#F8FAFC" stroke="#F9A8D4" strokeWidth="0.6" />
+          <circle cx="5" cy="-9.5" r="0.8" fill="#111" />
+          <circle cx="-5" cy="-5" r="1.8" fill="#FFFFFF" />
+        </g>
+      );
+  }
+}
+
+/** Quadradinho livre mais perto de (x, y). */
+export function livreMaisPerto(livres: [number, number][], x: number, y: number, evitar: Set<string> = new Set()): [number, number] | null {
+  let melhor: [number, number] | null = null;
+  let dist = Infinity;
+  for (const p of livres) {
+    if (evitar.has(`${p[0]},${p[1]}`)) continue;
+    const d = Math.abs(p[0] - x) + Math.abs(p[1] - y);
+    if (d < dist) {
+      dist = d;
+      melhor = p;
+    }
+  }
+  return melhor;
+}
+
 export function CasaIso({
   comodoId,
   comodo,
@@ -778,6 +843,8 @@ export function CasaIso({
   const piso = estilo(comodo.piso) ?? estilo(externo ? "grama" : "madeira")!;
   const parede = estilo(comodo.parede) ?? estilo("creme")!;
   const noite = periodo === "noite";
+  // Etapa 315 — de madrugada ele vai dormir (na cama, se tiver uma no cômodo)
+  const dormindo = useDormindo();
 
   // o mascote passeia pelos quadradinhos livres
   const livres = useMemo(() => {
@@ -790,7 +857,7 @@ export function CasaIso({
   const posRef = useRef(pos);
   posRef.current = pos;
   useEffect(() => {
-    if (!livres.length) return;
+    if (!livres.length || dormindo) return;
     const chave = (p: [number, number]) => `${p[0]},${p[1]}`;
     const conjunto = new Set(livres.map(chave));
     if (!conjunto.has(chave(posRef.current))) setPos(livres[Math.floor(livres.length / 2)]);
@@ -800,7 +867,55 @@ export function CasaIso({
       if (viz.length && Math.random() < 0.7) setPos(viz[Math.floor(Math.random() * viz.length)]);
     }, 2600);
     return () => clearInterval(t);
-  }, [livres]);
+  }, [livres, dormindo]);
+
+  // Etapa 313 — bichinhos soltos de dia (à noite dormem na casinha/almofada)
+  const soltos = noite ? [] : comodo.itens.filter((it) => (BICHOS_ANDAM as readonly string[]).includes(it.m));
+  const chaveSoltos = soltos.map((it) => `${it.u}:${it.x},${it.y}`).join("|");
+  const [bichos, setBichos] = useState<Record<string, { p: [number, number]; esq: boolean }>>({});
+  const [carinho, setCarinho] = useState<{ u: string; n: number } | null>(null);
+  useEffect(() => {
+    if (!soltos.length || !livres.length) {
+      setBichos({});
+      return;
+    }
+    const k = (p: [number, number]) => `${p[0]},${p[1]}`;
+    const ok = new Set(livres.map(k));
+    // começa ao lado da casinha
+    setBichos((atual) => {
+      const r: Record<string, { p: [number, number]; esq: boolean }> = {};
+      const usados = new Set<string>([k(posRef.current)]);
+      for (const it of soltos) {
+        const ja = atual[it.u];
+        const p = ja && ok.has(k(ja.p)) ? ja.p : livreMaisPerto(livres, it.x, it.y, usados);
+        if (!p) continue;
+        usados.add(k(p));
+        r[it.u] = { p, esq: ja?.esq ?? false };
+      }
+      return r;
+    });
+    const t = setInterval(() => {
+      setBichos((atual) => {
+        const usados = new Set<string>([k(posRef.current), ...Object.values(atual).map((b) => k(b.p))]);
+        const r = { ...atual };
+        for (const [u, b] of Object.entries(atual)) {
+          if (Math.random() < 0.4) continue;
+          const [a, c] = b.p;
+          const viz = ([[a + 1, c], [a - 1, c], [a, c + 1], [a, c - 1]] as [number, number][]).filter((p) => ok.has(k(p)) && !usados.has(k(p)));
+          if (!viz.length) continue;
+          const novo = viz[Math.floor(Math.random() * viz.length)];
+          usados.delete(k(b.p));
+          usados.add(k(novo));
+          // anda pra esquerda na tela quando (dx - dy) < 0
+          r[u] = { p: novo, esq: novo[0] - a - (novo[1] - c) < 0 };
+        }
+        return r;
+      });
+    }, 2100);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveSoltos, livres]);
+  const idsSoltos = new Set(Object.keys(bichos));
 
   // ordem de desenho (o que está mais "na frente" por último)
   const itensChao = comodo.itens.filter((it) => movel(it.m)?.tipo === "chao");
@@ -815,20 +930,57 @@ export function CasaIso({
       chave: it.x + t.w + it.y + t.d + (it.x + it.y) * 0.001,
       el: (
         <g key={it.u} onClick={aoTocarItem ? () => aoTocarItem(it.u) : undefined} style={aoTocarItem ? { cursor: "pointer" } : undefined}>
-          <DesenhoMovel it={it} mv={mv} periodo={periodo} />
+          <DesenhoMovel it={it} mv={mv} periodo={periodo} semBicho={idsSoltos.has(it.u)} />
           {selecionado === it.u && <Marca it={it} mv={mv} />}
         </g>
       ),
     });
   }
-  if (mascote) {
+  for (const it of soltos) {
+    const b = bichos[it.u];
+    if (!b) continue;
+    const [bx, by] = P(b.p[0] + 0.5, b.p[1] + 0.5);
+    ents.push({
+      chave: b.p[0] + b.p[1] + 2.0003,
+      el: (
+        <g
+          key={`bicho-${it.u}`}
+          style={{ transform: `translate(${bx}px, ${by}px)`, transition: "transform 1s ease-in-out", cursor: "pointer" }}
+          onClick={() => setCarinho({ u: it.u, n: Date.now() })}
+        >
+          <g transform={b.esq ? "scale(-1 1)" : undefined}>
+            <Bicho tipo={it.m} />
+          </g>
+          {carinho?.u === it.u && (
+            <text key={carinho.n} x="0" y="-20" fontSize="10" textAnchor="middle" className="vtm-ganho">
+              ❤️
+            </text>
+          )}
+        </g>
+      ),
+    });
+  }
+  const cama = dormindo ? comodo.itens.find((it) => it.m === "cama" || it.m === "camacasal") : undefined;
+  if (mascote && cama) {
+    const D = cama.m === "cama" ? 1 : 2;
+    const [px, py] = cama.r ? P(cama.x + D / 2, cama.y + 0.95, 11) : P(cama.x + 0.95, cama.y + D / 2, 11);
+    const t = tamanhoNoChao(movel(cama.m)!, cama.r);
+    ents.push({
+      chave: cama.x + t.w + cama.y + t.d + (cama.x + cama.y) * 0.001 + 0.0001,
+      el: (
+        <g key="mascote" style={{ transform: `translate(${px - 20}px, ${py - 34}px)` }} onClick={aoTocarMascote}>
+          <Mascote cor={mascote.cor} fase={Math.max(1, mascote.fase)} humor="dormindo" equipados={{ ...mascote.equipados, fundo: undefined }} tamanho={40} volume={false} />
+        </g>
+      ),
+    });
+  } else if (mascote) {
     const [px, py] = P(pos[0] + 0.5, pos[1] + 0.5);
     ents.push({
       chave: pos[0] + pos[1] + 2.0005,
       el: (
         <g key="mascote" style={{ transform: `translate(${px - 24}px, ${py - 42}px)`, transition: "transform 0.9s ease-in-out" }} onClick={aoTocarMascote}>
           <g key={pulo} className={pulo ? "vtm-pulo" : ""}>
-            <Mascote cor={mascote.cor} fase={Math.max(1, mascote.fase)} humor={mascote.humor} equipados={{ ...mascote.equipados, fundo: undefined }} tamanho={48} volume={false} />
+            <Mascote cor={mascote.cor} fase={Math.max(1, mascote.fase)} humor={dormindo ? "dormindo" : mascote.humor} equipados={{ ...mascote.equipados, fundo: undefined }} tamanho={48} volume={false} />
           </g>
         </g>
       ),
