@@ -14,6 +14,8 @@ import { JuntosPainel } from "@/components/JuntosPainel";
 import { PalcoMascote } from "@/components/mascote/PalcoMascote";
 import { MissoesDoDia } from "@/components/mascote/MissoesDoDia";
 import { ProximosPainel } from "@/components/ProximosPainel";
+import { FluxoFinanceiro } from "@/components/inicio/FluxoFinanceiro";
+import { TarefasHoje } from "@/components/inicio/TarefasHoje";
 import { PainelCartoes } from "@/components/PainelCartoes";
 import { CaixaAssistente } from "@/components/CaixaAssistente";
 import { DiarioDoDia } from "@/components/DiarioDoDia";
@@ -124,6 +126,9 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
       </CartaoInicio>
     ),
     proximos: <ProximosPainel snapshot={snapshot} hoje={hoje} />,
+    // Etapa 317
+    fluxo: <FluxoFinanceiro snapshot={snapshot} hoje={hoje} />,
+    tarefasHoje: <TarefasHoje snapshot={snapshot} hoje={hoje} />,
     resumo: <PainelCartoes />,
     assistente: <CaixaAssistente />,
   };

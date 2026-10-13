@@ -23,7 +23,8 @@ export function ProximosPainel({ snapshot, hoje }: { snapshot: any; hoje: string
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <CalendarClock size={20} className="text-ink-400" /> Próximos dias
         </h2>
-        <Link href="/financas/calendario" className="text-base text-ink-400 hover:text-ink-100 transition">
+        {/* Etapa 317 — o calendário geral (hábitos, tarefas e dinheiro), não só o de Finanças */}
+        <Link href="/calendario" className="text-base text-ink-400 hover:text-ink-100 transition">
           Calendário ›
         </Link>
       </div>

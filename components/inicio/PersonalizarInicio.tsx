@@ -2,13 +2,18 @@
 
 // Etapa 235 — tela de montar o Início: escolher o modelo (hábitos,
 // finanças ou os dois), ligar/desligar cada bloco e mudar a ordem.
+// Etapa 317 — separado por área (Hábitos, Tarefas, Finanças, Geral) com
+// chavinha liga/desliga em cada bloco; a ordem fica numa lista à parte.
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Plus, X, EyeOff } from "lucide-react";
+import { ChevronDown, ChevronUp, X, EyeOff } from "lucide-react";
 import { BLOCOS, MODELOS, alternarBloco, modoDaLista, moverBloco, type AreaBloco, type IdBloco, type ModoInicio } from "@/lib/painel/blocos";
 
-const NOME_AREA: Record<AreaBloco, string> = { habitos: "Hábitos", financas: "Finanças", geral: "Geral" };
+const NOME_AREA: Record<AreaBloco, string> = { habitos: "Hábitos", tarefas: "Tarefas", financas: "Finanças", geral: "Geral" };
+const EMOJI_AREA: Record<AreaBloco, string> = { habitos: "✅", tarefas: "📝", financas: "💰", geral: "🧩" };
+const AREAS: AreaBloco[] = ["habitos", "tarefas", "financas", "geral"];
 const COR_AREA: Record<AreaBloco, string> = {
   habitos: "bg-habito/15 text-habito",
+  tarefas: "bg-nota/15 text-nota",
   financas: "bg-financa/15 text-financa",
   geral: "bg-base-700 text-ink-400",
 };
@@ -25,7 +30,7 @@ export function PersonalizarInicio({
   const [lista, setLista] = useState<IdBloco[]>(inicial);
   const [salvando, setSalvando] = useState(false);
   const modo = modoDaLista(lista);
-  const fora = BLOCOS.filter((b) => !lista.includes(b.id));
+  const [area, setArea] = useState<AreaBloco>("habitos");
 
   async function salvar() {
     setSalvando(true);
@@ -51,7 +56,7 @@ export function PersonalizarInicio({
 
         <div className="overflow-y-auto px-5 pb-4 flex-1">
           <p className="text-base text-ink-400 mb-2">O que você quer ver?</p>
-          <div className="grid grid-cols-3 gap-2 mb-6">
+          <div className="grid grid-cols-4 gap-2 mb-6">
             {(Object.keys(MODELOS) as ModoInicio[]).map((m) => (
               <button
                 key={m}
@@ -62,16 +67,63 @@ export function PersonalizarInicio({
                 }`}
               >
                 <span className="block text-2xl">{MODELOS[m].emoji}</span>
-                <span className="block text-sm font-semibold mt-1">{MODELOS[m].nome}</span>
+                <span className="block text-xs font-semibold mt-1 leading-tight">{MODELOS[m].nome}</span>
               </button>
             ))}
           </div>
 
-          <p className="text-base text-ink-400 mb-2">Na sua tela ({lista.length})</p>
+          {/* Etapa 317 — escolher por área */}
+          <p className="text-base text-ink-400 mb-2">Escolha o que aparece</p>
+          <div className="grid grid-cols-4 gap-1 p-1 rounded-2xl bg-base-800 border border-base-600 mb-3">
+            {AREAS.map((a) => {
+              const ligados = BLOCOS.filter((b) => b.area === a && lista.includes(b.id)).length;
+              return (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => setArea(a)}
+                  className={`rounded-xl py-2 text-center transition ${area === a ? "bg-base-600" : ""}`}
+                >
+                  <span className="block text-lg leading-none">{EMOJI_AREA[a]}</span>
+                  <span className={`block text-[11px] font-semibold mt-1 ${area === a ? "text-ink-100" : "text-ink-400"}`}>{NOME_AREA[a]}</span>
+                  <span className="block text-[10px] text-ink-500">{ligados} na tela</span>
+                </button>
+              );
+            })}
+          </div>
+          <ul className="space-y-2 mb-6">
+            {BLOCOS.filter((b) => b.area === area).map((b) => {
+              const ligado = lista.includes(b.id);
+              return (
+                <li key={b.id}>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={ligado}
+                    onClick={() => setLista(alternarBloco(lista, b.id))}
+                    className={`w-full flex items-center gap-3 text-left rounded-2xl px-3 py-2.5 border transition ${
+                      ligado ? "bg-base-800 border-habito/40" : "bg-base-800/50 border-dashed border-base-600"
+                    }`}
+                  >
+                    <span className={`text-2xl ${ligado ? "" : "grayscale opacity-60"}`}>{b.emoji}</span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-base font-medium">{b.nome}</span>
+                      <span className="block text-sm text-ink-400">{b.texto}</span>
+                    </span>
+                    <span className={`relative w-11 h-6 rounded-full shrink-0 transition ${ligado ? "bg-habito" : "bg-base-600"}`}>
+                      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${ligado ? "left-[22px]" : "left-0.5"}`} />
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="text-base text-ink-400 mb-2">Ordem na tela ({lista.length})</p>
           {lista.length === 0 ? (
-            <p className="text-sm text-ink-400 border border-dashed border-base-600 rounded-2xl p-4 mb-6">Nada escolhido — adicione blocos aqui embaixo.</p>
+            <p className="text-sm text-ink-400 border border-dashed border-base-600 rounded-2xl p-4 mb-6">Nada escolhido — ligue alguns blocos aqui em cima.</p>
           ) : (
-            <ul className="space-y-2 mb-6">
+            <ul className="space-y-2 mb-2">
               {lista.map((id, i) => {
                 const b = BLOCOS.find((x) => x.id === id)!;
                 return (
@@ -94,41 +146,6 @@ export function PersonalizarInicio({
                 );
               })}
             </ul>
-          )}
-
-          {fora.length > 0 && (
-            <>
-              <p className="text-base text-ink-400 mb-2">Adicionar</p>
-              {(["habitos", "financas", "geral"] as AreaBloco[]).map((area) => {
-                const blocos = fora.filter((b) => b.area === area);
-                if (!blocos.length) return null;
-                return (
-                  <div key={area} className="mb-4">
-                    <p className={`inline-block text-xs rounded-full px-2 py-0.5 mb-2 ${COR_AREA[area]}`}>{NOME_AREA[area]}</p>
-                    <ul className="space-y-2">
-                      {blocos.map((b) => (
-                        <li key={b.id}>
-                          <button
-                            type="button"
-                            onClick={() => setLista(alternarBloco(lista, b.id))}
-                            className="w-full flex items-center gap-3 text-left bg-base-800/60 border border-dashed border-base-600 rounded-2xl px-3 py-2.5 hover:border-ink-400 transition"
-                          >
-                            <span className="text-2xl">{b.emoji}</span>
-                            <span className="flex-1 min-w-0">
-                              <span className="block text-base font-medium">{b.nome}</span>
-                              <span className="block text-sm text-ink-400">{b.texto}</span>
-                            </span>
-                            <span className="w-9 h-9 rounded-xl bg-habito/15 text-habito flex items-center justify-center shrink-0">
-                              <Plus size={18} />
-                            </span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </>
           )}
         </div>
 

@@ -3,7 +3,8 @@
 // bloco. Fica salvo na conta (perfis.ordem_blocos_inicio) e vale em
 // qualquer aparelho; neste aparelho também fica uma cópia pra abrir na hora.
 
-export type AreaBloco = "habitos" | "financas" | "geral";
+// Etapa 317 — área "tarefas" separada
+export type AreaBloco = "habitos" | "tarefas" | "financas" | "geral";
 
 export type IdBloco =
   | "seuDia"
@@ -22,6 +23,8 @@ export type IdBloco =
   | "faturas"
   | "metasFinanceiras"
   | "proximos"
+  | "fluxo"
+  | "tarefasHoje"
   | "resumo"
   | "assistente";
 
@@ -35,6 +38,9 @@ export const BLOCOS: { id: IdBloco; nome: string; emoji: string; area: AreaBloco
   { id: "sequencias", nome: "Sequências", emoji: "🔥", area: "habitos", texto: "Seus hábitos com as maiores sequências" },
   { id: "semanaHabitos", nome: "Semana dos hábitos", emoji: "📊", area: "habitos", texto: "Quanto você fez em cada dia dos últimos 7" },
   { id: "humor", nome: "Como está seu dia?", emoji: "🙂", area: "habitos", texto: "Registrar o humor com um toque" },
+  // Etapa 317
+  { id: "tarefasHoje", nome: "Tarefas de hoje", emoji: "📝", area: "tarefas", texto: "As de hoje e as atrasadas, com a bolinha pra concluir ali mesmo" },
+  { id: "fluxo", nome: "Entradas e saídas", emoji: "💸", area: "financas", texto: "Tudo que vai entrar e sair de dinheiro, com Paguei e Recebi num toque" },
   { id: "saldo", nome: "Saldo", emoji: "💰", area: "financas", texto: "Saldo em contas e o que entrou e saiu no mês" },
   { id: "podeGastar", nome: "Quanto posso gastar hoje", emoji: "👛", area: "financas", texto: "Um número só, já descontando contas e faturas do mês" },
   { id: "lancarRapido", nome: "Lançar rápido", emoji: "⚡", area: "financas", texto: "Seus gastos mais repetidos, lançados em 2 toques" },
@@ -48,12 +54,14 @@ export const BLOCOS: { id: IdBloco; nome: string; emoji: string; area: AreaBloco
   { id: "assistente", nome: "Assistente", emoji: "🤖", area: "geral", texto: "Caixa pra perguntar ou lançar falando" },
 ];
 
-export type ModoInicio = "habitos" | "financas" | "ambos";
+export type ModoInicio = "habitos" | "tarefas" | "financas" | "ambos";
 
 export const MODELOS: Record<ModoInicio, { nome: string; emoji: string; blocos: IdBloco[] }> = {
-  ambos: { nome: "Os dois", emoji: "✨", blocos: ["seuDia", "juntos", "saldo", "proximos", "gastosSemana", "sequencias", "resumo"] },
+  ambos: { nome: "Tudo", emoji: "✨", blocos: ["seuDia", "juntos", "saldo", "proximos", "gastosSemana", "sequencias", "resumo"] },
   habitos: { nome: "Só hábitos", emoji: "✅", blocos: ["seuDia", "mascote", "missoes", "juntos", "sequencias", "semanaHabitos", "humor", "proximos"] },
-  financas: { nome: "Só finanças", emoji: "💰", blocos: ["saldo", "gastosSemana", "teto", "categorias", "faturas", "metasFinanceiras", "proximos"] },
+  financas: { nome: "Só finanças", emoji: "💰", blocos: ["saldo", "fluxo", "gastosSemana", "teto", "categorias", "faturas", "metasFinanceiras"] },
+  // Etapa 317
+  tarefas: { nome: "Só tarefas", emoji: "📝", blocos: ["tarefasHoje", "proximos", "humor"] },
 };
 
 export const CHAVE_INICIO = "vidatrack-inicio-blocos";
@@ -84,8 +92,10 @@ export function lerBlocosInicio(bruto: unknown): IdBloco[] {
 /** Qual modelo a lista atual parece (pra marcar o botão certo) */
 export function modoDaLista(lista: IdBloco[]): ModoInicio | null {
   const areas = new Set(lista.map((id) => BLOCOS.find((b) => b.id === id)!.area).filter((a) => a !== "geral"));
-  if (areas.size === 1) return areas.has("habitos") ? "habitos" : "financas";
-  if (areas.size === 2) return "ambos";
+  // "humor" é de hábitos, mas cabe no modelo "Só tarefas" também
+  if (areas.size === 2 && areas.has("tarefas") && areas.has("habitos") && lista.every((id) => id === "humor" || BLOCOS.find((b) => b.id === id)!.area !== "habitos")) return "tarefas";
+  if (areas.size === 1) return [...areas][0] as ModoInicio;
+  if (areas.size >= 2) return "ambos";
   return null;
 }
 

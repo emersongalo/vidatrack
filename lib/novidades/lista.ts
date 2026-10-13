@@ -1,13 +1,23 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "316";
+export const VERSAO_NOVIDADES = "317";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "317",
+    titulo: "Início do seu jeito",
+    itens: [
+      { emoji: "💸", titulo: "Entradas e saídas no Início", texto: "Tudo que vai entrar e sair de dinheiro (vencidos, agendados, contas fixas e faturas), quanto fica de saldo depois e os botões Paguei e Recebi ali mesmo. Ligue em Personalizar Início → Finanças." },
+      { emoji: "📝", titulo: "Tarefas de hoje no Início", texto: "As de hoje e as atrasadas, com a bolinha pra concluir sem sair da tela." },
+      { emoji: "🧩", titulo: "Personalizar separado por área", texto: "Hábitos, Tarefas, Finanças e Geral, cada bloco com sua chavinha liga/desliga, e a ordem numa lista à parte." },
+      { emoji: "🗓️", titulo: "Próximos dias → calendário geral", texto: "O \"Calendário\" do card Próximos dias agora abre o calendário com hábitos, tarefas e dinheiro juntos." },
+    ],
+  },
   {
     versao: "316",
     titulo: "Pescaria e eventos na ilha",
