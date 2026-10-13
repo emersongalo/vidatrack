@@ -6,7 +6,7 @@
 // chavinha liga/desliga em cada bloco; a ordem fica numa lista à parte.
 import { useState } from "react";
 import { ChevronDown, ChevronUp, X, EyeOff } from "lucide-react";
-import { BLOCOS, MODELOS, alternarBloco, modoDaLista, moverBloco, type AreaBloco, type IdBloco, type ModoInicio } from "@/lib/painel/blocos";
+import { BLOCOS, MODELOS, alternarBloco, moverBloco, type AreaBloco, type IdBloco } from "@/lib/painel/blocos";
 
 const NOME_AREA: Record<AreaBloco, string> = { habitos: "Hábitos", tarefas: "Tarefas", financas: "Finanças", geral: "Geral" };
 const EMOJI_AREA: Record<AreaBloco, string> = { habitos: "✅", tarefas: "📝", financas: "💰", geral: "🧩" };
@@ -29,8 +29,8 @@ export function PersonalizarInicio({
 }) {
   const [lista, setLista] = useState<IdBloco[]>(inicial);
   const [salvando, setSalvando] = useState(false);
-  const modo = modoDaLista(lista);
   const [area, setArea] = useState<AreaBloco>("habitos");
+  const [ordenar, setOrdenar] = useState(false);
 
   async function salvar() {
     setSalvando(true);
@@ -55,25 +55,9 @@ export function PersonalizarInicio({
         </div>
 
         <div className="overflow-y-auto px-5 pb-4 flex-1">
-          <p className="text-base text-ink-400 mb-2">O que você quer ver?</p>
-          <div className="grid grid-cols-4 gap-2 mb-6">
-            {(Object.keys(MODELOS) as ModoInicio[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setLista([...MODELOS[m].blocos])}
-                className={`rounded-2xl border px-2 py-3 text-center transition ${
-                  modo === m ? "border-habito bg-habito/10" : "border-base-600 bg-base-800 hover:border-ink-400"
-                }`}
-              >
-                <span className="block text-2xl">{MODELOS[m].emoji}</span>
-                <span className="block text-xs font-semibold mt-1 leading-tight">{MODELOS[m].nome}</span>
-              </button>
-            ))}
-          </div>
-
           {/* Etapa 317 — escolher por área */}
-          <p className="text-base text-ink-400 mb-2">Escolha o que aparece</p>
+          {/* Etapa 318 — sem os "modelos" repetidos: só as áreas com as chavinhas */}
+          <p className="text-base text-ink-400 mb-2">Escolha o que aparece no Início</p>
           <div className="grid grid-cols-4 gap-1 p-1 rounded-2xl bg-base-800 border border-base-600 mb-3">
             {AREAS.map((a) => {
               const ligados = BLOCOS.filter((b) => b.area === a && lista.includes(b.id)).length;
@@ -91,6 +75,27 @@ export function PersonalizarInicio({
               );
             })}
           </div>
+          {(() => {
+            const daArea = BLOCOS.filter((b) => b.area === area);
+            const ligados = daArea.filter((b) => lista.includes(b.id)).length;
+            const todos = ligados === daArea.length;
+            return (
+              <div className="flex items-center justify-between mb-2 px-1">
+                <span className="text-sm text-ink-400">
+                  {ligados} de {daArea.length} ligados
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setLista(todos ? lista.filter((id) => !daArea.some((b) => b.id === id)) : [...lista, ...daArea.map((b) => b.id).filter((id) => !lista.includes(id))])
+                  }
+                  className="text-sm font-semibold text-habito"
+                >
+                  {todos ? "Desligar todos" : "Ligar todos"}
+                </button>
+              </div>
+            );
+          })()}
           <ul className="space-y-2 mb-6">
             {BLOCOS.filter((b) => b.area === area).map((b) => {
               const ligado = lista.includes(b.id);
@@ -119,8 +124,16 @@ export function PersonalizarInicio({
             })}
           </ul>
 
-          <p className="text-base text-ink-400 mb-2">Ordem na tela ({lista.length})</p>
-          {lista.length === 0 ? (
+          <button
+            type="button"
+            onClick={() => setOrdenar(!ordenar)}
+            aria-expanded={ordenar}
+            className="w-full flex items-center justify-between rounded-2xl border border-base-600 bg-base-800 px-4 py-3 mb-2"
+          >
+            <span className="text-base font-medium">↕️ Mudar a ordem ({lista.length})</span>
+            <ChevronDown size={18} className={`text-ink-400 transition-transform ${ordenar ? "rotate-180" : ""}`} />
+          </button>
+          {!ordenar ? null : lista.length === 0 ? (
             <p className="text-sm text-ink-400 border border-dashed border-base-600 rounded-2xl p-4 mb-6">Nada escolhido — ligue alguns blocos aqui em cima.</p>
           ) : (
             <ul className="space-y-2 mb-2">
