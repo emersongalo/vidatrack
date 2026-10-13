@@ -228,9 +228,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-x-2 mt-8">
-        <Link href="/doacao" className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1">
-          💛 Apoiar o projeto
-        </Link>
         <Link href="/ajuda" className="text-xs text-ink-400 hover:text-ink-100 transition px-3 py-2.5 -m-1">
           Ajuda
         </Link>

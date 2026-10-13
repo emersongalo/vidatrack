@@ -3,12 +3,16 @@ import Image from "next/image";
 import { entrarComoDemonstracao } from "./actions";
 import { AoRolar } from "@/components/AoRolar";
 import { DemoJuntos } from "@/components/DemoJuntos";
+import { DemoMascote } from "@/components/DemoMascote";
+import { DemoMundo } from "@/components/DemoMundo";
 import { RedirecionarAppInstalado } from "@/components/RedirecionarAppInstalado";
 
+// Etapa 319 — apresentação nova: os hábitos viram um jogo (mascote,
+// ilha, casa, missões, conquistas). Sem falar em "gratuito" nem "apoiar".
 export const metadata = {
-  title: "VidaTrack — Hábitos e finanças, num único lugar",
+  title: "VidaTrack — Seus hábitos viram um jogo",
   description:
-    "VidaTrack é um app gratuito que junta hábitos e finanças pessoais num só lugar, sem assinatura. Entre na demonstração ao vivo, sem cadastro.",
+    "Cada hábito feito alimenta seu mascote, dá moedas e faz sua ilha crescer. Hábitos, tarefas e finanças num só app. Entre na demonstração ao vivo, sem cadastro.",
 };
 
 function BotaoDemonstracao({ className = "" }: { className?: string }) {
@@ -24,13 +28,15 @@ function BotaoDemonstracao({ className = "" }: { className?: string }) {
   );
 }
 
-function Print({ src, alt }: { src: string; alt: string }) {
+function Print({ src, alt, altura = 2155 }: { src: string; alt: string; altura?: number }) {
   return (
     <div className="rounded-xl2 overflow-hidden border border-base-700 shadow-2xl shadow-black/40">
-      <Image src={src} alt={alt} width={968} height={2155} className="w-full h-auto" />
+      <Image src={src} alt={alt} width={968} height={altura} className="w-full h-auto" />
     </div>
   );
 }
+
+const NOVO = 1940; // altura dos prints novos (Etapa 319)
 
 export default function ApresentacaoPage() {
   return (
@@ -50,16 +56,19 @@ export default function ApresentacaoPage() {
 
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-6 pt-6 pb-8 text-center">
+        <p className="inline-flex items-center gap-2 text-sm text-habito bg-habito/10 border border-habito/30 rounded-full px-4 py-1.5 mb-6">
+          🐣 Hábitos que viram jogo
+        </p>
         <h1 className="font-display text-4xl sm:text-6xl font-semibold leading-[1.05] mb-6">
-          Hábitos e finanças,
+          Cada hábito feito
           <br />
-          sem virar mais um app
+          faz seu mundo
           <br />
-          que você abandona.
+          <span className="text-habito">crescer.</span>
         </h1>
         <p className="text-ink-400 max-w-md mx-auto mb-10 leading-relaxed text-lg">
-          Gratuito. Sem anúncio. Sem assinatura. Entra agora e mexe
-          numa conta de exemplo, sem criar nada.
+          Seu mascote se alimenta dos seus hábitos, você ganha moedas, monta a casa dele e vê sua ilha ganhar vida. E
+          tarefas e dinheiro ficam no mesmo app.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
@@ -78,14 +87,122 @@ export default function ApresentacaoPage() {
       <section className="max-w-3xl mx-auto px-6 pb-24">
         <div className="relative flex items-center justify-center py-6">
           <div className="hidden sm:block absolute left-1/2 -translate-x-[190px] -rotate-6 w-[220px] opacity-60 blur-[0.5px]">
-            <Print src="/apresentacao/financas.jpg" alt="Resumo de Finanças com saldo e previsão do mês" />
+            <Print src="/apresentacao/mundo.jpg" altura={NOVO} alt="O Mundo: uma ilha com casa, jardim, lojinha, missões e conquistas" />
           </div>
           <div className="hidden sm:block absolute left-1/2 translate-x-[30px] rotate-6 w-[220px] opacity-60 blur-[0.5px]">
-            <Print src="/apresentacao/habitos.jpg" alt="Lista de hábitos com sequência e recorde" />
+            <Print src="/apresentacao/inicio-fluxo.jpg" altura={NOVO} alt="Início com o dia e as entradas e saídas de dinheiro" />
           </div>
           <div className="relative w-[260px] sm:w-[280px] z-10">
-            <Print src="/apresentacao/inicio.jpg" alt="Tela inicial do VidaTrack" />
+            <Print src="/apresentacao/mascote.jpg" altura={NOVO} alt="O mascote que cresce com seus hábitos" />
           </div>
+        </div>
+      </section>
+
+      {/* Etapa 319 — O MASCOTE */}
+      <section id="mascote" className="border-t border-base-700">
+        <div className="max-w-5xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
+          <AoRolar>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="w-3 h-3 rounded-full bg-habito shrink-0" />
+              <span className="text-xs uppercase tracking-widest text-habito font-medium">Seu mascote</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4 max-w-lg">Um bichinho que depende de você (no bom sentido)</h2>
+            <p className="text-ink-400 leading-relaxed max-w-lg mb-8 text-lg">
+              Ele nasce de um ovinho e cresce a cada hábito feito: filhote, pequeno, crescido, campeão… até lendário. Fez
+              o dia todo? Ele fica radiante. Sumiu? Ele sente fome — mas nunca morre.
+            </p>
+            <ul className="space-y-3 text-base">
+              {[
+                ["🪙", "10 moedas por hábito feito, pra gastar na lojinha"],
+                ["🧢", "Mais de 60 roupas, óculos, amigos e cenários pra montar o look"],
+                ["🍎", "Barriga e saúde: comidinha, remédio e frutas colhidas do jardim"],
+                ["😴", "De madrugada ele dorme de touquinha — na cama, se tiver uma"],
+                ["↔️", "Arrasta pro lado e ele gira; toca e ele pula"],
+              ].map(([emoji, texto]) => (
+                <li key={texto} className="flex gap-3 items-start">
+                  <span className="text-xl shrink-0">{emoji}</span>
+                  <span className="text-ink-400">{texto}</span>
+                </li>
+              ))}
+            </ul>
+          </AoRolar>
+          <AoRolar atraso={150}>
+            <DemoMascote />
+            <p className="text-center text-sm text-ink-400 mt-3">Ao vivo — toque nele.</p>
+          </AoRolar>
+        </div>
+      </section>
+
+      {/* Etapa 319 — O MUNDO */}
+      <section id="mundo" className="border-t border-base-700">
+        <div className="max-w-5xl mx-auto px-6 py-20">
+          <AoRolar>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="w-3 h-3 rounded-full bg-habito shrink-0" />
+              <span className="text-xs uppercase tracking-widest text-habito font-medium">O Mundo</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4 max-w-xl">Uma ilha inteira construída com constância</h2>
+            <p className="text-ink-400 leading-relaxed max-w-xl mb-10 text-lg">
+              Casa, jardim, garagem, lojinha, pescaria… e cada conquista que você resgata vira um monumento na ilha:
+              fogueira, moinho, fonte, vulcão, navio pirata, castelo.
+            </p>
+          </AoRolar>
+          <AoRolar atraso={100}>
+            <DemoMundo />
+            <p className="text-center text-sm text-ink-400 mt-3">Também é ao vivo: o céu é o da sua hora agora.</p>
+          </AoRolar>
+          <AoRolar>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-12">
+              {[
+                ["🏠", "Casa pra montar", "Quarto, sala, cozinha, quintal, garagem e área de lazer, com móveis, carros e bichinhos que passeiam."],
+                ["🌳", "Jardim que é regado", "Cada hábito é uma planta: fez, ela é regada na hora; constância faz crescer e dar frutos."],
+                ["🎣", "Pescaria", "Cada hábito vale uma isca. 14 achados pra colecionar, de bota velha a peixe dourado."],
+                ["🎃", "Eventos da estação", "Halloween e Natal mudam a ilha e trazem itens e prêmios que só saem no evento."],
+              ].map(([emoji, titulo, texto]) => (
+                <div key={titulo} className="bg-base-800 border border-base-700 rounded-2xl p-4">
+                  <p className="text-2xl">{emoji}</p>
+                  <p className="font-medium mt-2 mb-1">{titulo}</p>
+                  <p className="text-sm text-ink-400">{texto}</p>
+                </div>
+              ))}
+            </div>
+          </AoRolar>
+        </div>
+      </section>
+
+      {/* Etapa 319 — MISSÕES, DESAFIOS E CONQUISTAS */}
+      <section id="missoes" className="border-t border-base-700">
+        <div className="max-w-5xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
+          <AoRolar>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="w-3 h-3 rounded-full bg-financa shrink-0" />
+              <span className="text-xs uppercase tracking-widest text-financa font-medium">Sempre um motivo pra voltar</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4 max-w-lg">Missões, desafios e medalhas</h2>
+            <p className="text-ink-400 leading-relaxed max-w-lg mb-8 text-lg">
+              Todo dia saem 3 missões pensadas nos seus hábitos. Fechou a semana? Abre o baú. E quando quiser subir o nível,
+              é só começar um desafio.
+            </p>
+            <ul className="space-y-3 text-base">
+              {[
+                ["🎯", "3 missões por dia e o baú da semana com prêmio surpresa"],
+                ["🥇", "Desafios de 7, 21 e 30 dias com medalha de bronze, prata e ouro"],
+                ["🏆", "20 conquistas de longo prazo — cada uma vira monumento na ilha"],
+                ["🧭", "Trilhas com hábitos prontos: corpo, mente, estudo, casa, dinheiro e largar um vício"],
+                ["📅", "Relatório do mês: dia mais forte, hábito destaque e dicas de ajuste"],
+              ].map(([emoji, texto]) => (
+                <li key={texto} className="flex gap-3 items-start">
+                  <span className="text-xl shrink-0">{emoji}</span>
+                  <span className="text-ink-400">{texto}</span>
+                </li>
+              ))}
+            </ul>
+          </AoRolar>
+          <AoRolar atraso={150}>
+            <div className="max-w-[300px] mx-auto">
+              <Print src="/apresentacao/inicio-mascote.jpg" altura={NOVO} alt="Início com tarefas, hábitos do dia e o mascote" />
+            </div>
+          </AoRolar>
         </div>
       </section>
 
@@ -95,7 +212,7 @@ export default function ApresentacaoPage() {
           <AoRolar>
           <div className="flex items-center gap-3 mb-4">
             <span className="w-3 h-3 rounded-full bg-habito shrink-0" />
-            <span className="text-xs uppercase tracking-widest text-habito font-medium">Módulo Hábitos</span>
+            <span className="text-xs uppercase tracking-widest text-habito font-medium">E o básico, muito bem feito</span>
           </div>
           <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4 max-w-lg">
             Constância visível, dia após dia
@@ -169,8 +286,8 @@ export default function ApresentacaoPage() {
               Façam juntos. Vejam crescer.
             </h2>
             <p className="text-ink-400 leading-relaxed max-w-lg mb-8 text-lg">
-              Compartilhe um hábito com quem você ama. Cada dia que os dois fazem, a plantinha de vocês cresce — de
-              semente até árvore. Se ninguém fizer, ela murcha um pouco (e volta quando vocês retomam).
+              Compartilhe um hábito com quem você ama — em dupla ou com a família toda (até 6 pessoas). Os mascotes de vocês
+              cuidam juntos do jardim: cada dia que vocês fazem, a planta cresce, de semente até árvore com frutos.
             </p>
             <ul className="space-y-3 text-base">
               {[
@@ -200,16 +317,31 @@ export default function ApresentacaoPage() {
           <AoRolar>
           <div className="flex items-center gap-3 mb-4">
             <span className="w-3 h-3 rounded-full bg-financa shrink-0" />
-            <span className="text-xs uppercase tracking-widest text-financa font-medium">Módulo Finanças</span>
+            <span className="text-xs uppercase tracking-widest text-financa font-medium">Tarefas e finanças</span>
           </div>
           <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4 max-w-lg">
-            Cada real, com clareza
+            O resto da vida, no mesmo app
           </h2>
           <p className="text-ink-400 leading-relaxed max-w-lg mb-14 text-lg">
             Lança receitas e despesas, separa investimento do saldo do
             dia a dia, e deixa o app apontar sozinho onde o dinheiro
             está indo.
           </p>
+          </AoRolar>
+
+          <AoRolar>
+          <div className="grid sm:grid-cols-2 gap-6 mb-6 max-w-2xl mx-auto">
+            <div>
+              <Print src="/apresentacao/inicio-fluxo.jpg" altura={NOVO} alt="Entradas e saídas com botões Paguei e Recebi" />
+              <p className="font-medium mt-4 mb-1">Entradas e saídas, com Paguei e Recebi</p>
+              <p className="text-sm text-ink-400">Tudo que vai entrar e sair, e quanto sobra depois — confirmando num toque.</p>
+            </div>
+            <div>
+              <Print src="/apresentacao/tarefas.jpg" altura={NOVO} alt="Lista de tarefas com atrasadas e próximos dias" />
+              <p className="font-medium mt-4 mb-1">Tarefas que não fogem</p>
+              <p className="text-sm text-ink-400">Atrasadas, hoje e próximos dias, com repetição, lembrete e subtarefas.</p>
+            </div>
+          </div>
           </AoRolar>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -291,7 +423,7 @@ export default function ApresentacaoPage() {
             Claro ou escuro, do seu jeito
           </h2>
           <p className="text-ink-400 leading-relaxed max-w-md mx-auto mb-14 text-lg text-center">
-            Troca o tema com um toque. E o Início é montado por você: só hábitos, só finanças ou os dois.
+            Troca o tema com um toque. E o Início é montado por você: hábitos, tarefas, finanças — liga só o que usa.
           </p>
           </AoRolar>
           <div className="grid grid-cols-2 gap-4 sm:gap-8 max-w-xl mx-auto">
@@ -315,9 +447,9 @@ export default function ApresentacaoPage() {
             <div className="space-y-3">
               {[
                 {
-                  pergunta: "O VidaTrack é pago?",
+                  pergunta: "Como funciona o mascote?",
                   resposta:
-                    "Não, e não vai ser. Gratuito pra sempre, sem anúncio, sem versão \"premium\" escondendo recurso.",
+                    "Ele cresce com o total de hábitos que você faz e cada hábito vale 10 moedas. Com elas você compra roupas, comidinhas, móveis, cômodos e até carros. Se você some uns dias ele fica com fome e dodói — mas nunca morre: é só voltar.",
                 },
                 {
                   pergunta: "Funciona sem internet?",
@@ -337,7 +469,7 @@ export default function ApresentacaoPage() {
                 {
                   pergunta: "Dá pra usar com outra pessoa?",
                   resposta:
-                    "Sim. Você compartilha contas e hábitos com quem quiser — cada um entra com a própria conta. Nos hábitos em dupla, vocês recebem aviso quando o outro faz, se cutucam e cuidam juntos de uma plantinha.",
+                    "Sim. Você compartilha contas e hábitos com quem quiser (até 6 pessoas por hábito) — cada um entra com a própria conta. Vocês recebem aviso quando o outro faz, se cutucam, cuidam juntos do jardim e os mascotes visitam a ilha um do outro.",
                 },
               ].map((item) => (
                 <details key={item.pergunta} className="group bg-base-800 border border-base-700 rounded-xl2 px-5 py-4">
@@ -361,7 +493,7 @@ export default function ApresentacaoPage() {
             Só entrar e mexer
           </h2>
           <p className="text-ink-400 leading-relaxed mb-10 max-w-md mx-auto">
-            A demonstração já vem com hábitos e lançamentos de exemplo.
+            A demonstração já vem com mascote, ilha, hábitos e lançamentos de exemplo.
             Não precisa criar nada, não precisa digitar senha — clica e
             já está dentro.
           </p>
@@ -377,6 +509,8 @@ export default function ApresentacaoPage() {
             <div>
               <p className="text-xs uppercase tracking-widest text-ink-400/70 mb-3">Produto</p>
               <div className="flex flex-col gap-2 text-sm text-ink-400">
+                <Link href="#mascote" className="hover:text-ink-100 transition">Mascote</Link>
+                <Link href="#mundo" className="hover:text-ink-100 transition">Mundo</Link>
                 <Link href="#hábitos" className="hover:text-ink-100 transition">Hábitos</Link>
                 <Link href="#juntos" className="hover:text-ink-100 transition">Juntos</Link>
                 <Link href="#finanças" className="hover:text-ink-100 transition">Finanças</Link>
@@ -394,12 +528,11 @@ export default function ApresentacaoPage() {
               <p className="text-xs uppercase tracking-widest text-ink-400/70 mb-3">Legal</p>
               <div className="flex flex-col gap-2 text-sm text-ink-400">
                 <Link href="/privacidade" className="hover:text-ink-100 transition">Privacidade</Link>
-                <Link href="/doacao" className="hover:text-ink-100 transition">Apoiar o projeto</Link>
               </div>
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-ink-400 pt-6 border-t border-base-700">
-            <span>VidaTrack — gratuito, sem anúncio.</span>
+            <span>VidaTrack — hábitos que viram jogo, com tarefas e finanças no mesmo lugar.</span>
           </div>
         </div>
       </footer>

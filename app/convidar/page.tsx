@@ -30,7 +30,7 @@ export default function ConvidarPage() {
   }, []);
 
   const link = codigo ? `${SITE}/apresentacao?ref=${codigo}` : "";
-  const mensagem = `Tô usando o VidaTrack pra organizar hábitos, tarefas e dinheiro num app só — e é grátis. Experimenta: ${link}`;
+  const mensagem = `Tô usando o VidaTrack pra organizar hábitos, tarefas e dinheiro num app só — cada hábito feito faz meu mascote crescer 🐣. Experimenta: ${link}`;
 
   async function compartilhar() {
     setAviso(null);
@@ -58,7 +58,7 @@ export default function ConvidarPage() {
       <div className="mt-4 mb-6 rounded-xl2 p-6 bg-gradient-to-br from-habito/20 to-financa/20 border border-base-600 text-center">
         <p className="text-4xl mb-2">🎁</p>
         <h1 className="text-3xl font-display font-bold mb-1">Convide seus amigos</h1>
-        <p className="text-sm text-ink-400">Ajude o VidaTrack a crescer — ele continua de graça e fica melhor com mais gente usando.</p>
+        <p className="text-sm text-ink-400">Chame quem você quer ver crescendo junto — dá pra dividir hábitos e cuidar do jardim em dupla.</p>
       </div>
 
       {/* Etapa 276 — recompensa */}
