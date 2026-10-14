@@ -31,7 +31,7 @@ export function BarraInferiorApp() {
   const pathname = usePathname() ?? "";
   const [menu, setMenu] = useState(false);
   const [gasto, setGasto] = useState(false);
-  // Etapa 281/283 — "+" abre um cartão com gasto, tarefa, hábito e "mais"
+  // Etapa 281/283/321 — "+" abre um cartão com gasto, receita, tarefa, hábito (e "Mais" embaixo)
   const [leque, setLeque] = useState(false);
   const indiceAtivo = ITENS.findIndex((it) => it !== null && areaAtiva(pathname, it.href));
   const itemAtivo = indiceAtivo >= 0 ? ITENS[indiceAtivo] : null;
@@ -106,10 +106,11 @@ export function BarraInferiorApp() {
               <div className="grid grid-cols-4 gap-1">
                 {[
                   { rotulo: "Gasto", Icone: TrendingDown, classe: "bg-red-400/15 text-red-400", acao: () => setGasto(true) },
+                  // Etapa 321 — receita no atalho; "Mais" desceu pra linha de baixo
+                  { rotulo: "Receita", Icone: TrendingUp, classe: "bg-habito/15 text-habito", href: "/financas/nova?tipo=receita" },
                   { rotulo: "Tarefa", Icone: CheckSquare, classe: "bg-nota/15 text-nota", href: "/tarefas/nova" },
                   { rotulo: "Hábito", Icone: Repeat, classe: "bg-habito/15 text-habito", href: "/habitos/novo" },
-                  { rotulo: "Mais", Icone: Plus, classe: "bg-base-700 text-ink-100", acao: () => setMenu(true) },
-                ].map((b, n) => {
+                ].map((b: { rotulo: string; Icone: typeof Plus; classe: string; href?: string; acao?: () => void }, n) => {
                   const conteudo = (
                     <>
                       <span className={`w-12 h-12 rounded-2xl ${b.classe} flex items-center justify-center`}>
@@ -156,6 +157,17 @@ export function BarraInferiorApp() {
                 >
                   <CalendarDays size={15} /> Calendário
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    vibrar(10);
+                    setLeque(false);
+                    setMenu(true);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm text-ink-400 hover:text-ink-100 hover:bg-base-700 transition"
+                >
+                  <Plus size={15} /> Mais
+                </button>
               </div>
             </div>
           </div>
