@@ -25,9 +25,10 @@ export default function DoacaoPage() {
         <p className="text-3xl mb-3">💛</p>
         <h1 className="text-3xl font-display font-bold mb-2">Apoie o VidaTrack</h1>
         <p className="text-ink-400 text-sm mb-8">
-          O app é e sempre vai ser gratuito. Se ele te ajuda no dia a dia
-          e você quiser contribuir com os custos de manter tudo no ar,
-          fica aqui um Pix — sem nenhuma obrigação.
+          Manter o VidaTrack rodando tem custo: servidor, banco de dados,
+          notificações e as publicações nas lojas. Se o app te ajuda no dia
+          a dia e você quiser ajudar a manter tudo no ar, fica aqui um Pix
+          de qualquer valor — sem nenhuma obrigação.
         </p>
       </div>
 

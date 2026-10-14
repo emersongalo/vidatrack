@@ -8,7 +8,7 @@ import { DemoMundo } from "@/components/DemoMundo";
 import { RedirecionarAppInstalado } from "@/components/RedirecionarAppInstalado";
 
 // Etapa 319 — apresentação nova: os hábitos viram um jogo (mascote,
-// ilha, casa, missões, conquistas). Sem falar em "gratuito" nem "apoiar".
+// ilha, casa, missões, conquistas). Sem falar em "gratuito".
 export const metadata = {
   title: "VidaTrack — Seus hábitos viram um jogo",
   description:
@@ -528,6 +528,7 @@ export default function ApresentacaoPage() {
               <p className="text-xs uppercase tracking-widest text-ink-400/70 mb-3">Legal</p>
               <div className="flex flex-col gap-2 text-sm text-ink-400">
                 <Link href="/privacidade" className="hover:text-ink-100 transition">Privacidade</Link>
+                <Link href="/doacao" className="hover:text-ink-100 transition">Apoiar o projeto</Link>
               </div>
             </div>
           </div>
