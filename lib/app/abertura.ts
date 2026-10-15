@@ -5,6 +5,8 @@
 // 1 vez por sessão; quem pede "reduzir animações" no celular não vê.
 // Etapa 297 — no app da tela de início, a apresentação nunca aparece:
 // o logo cobre a tela e já vai pro app.
+// Etapa 322 — o logo some sozinho em ~3,6s mesmo se o JavaScript travar
+// ou o React recriar a página (antes podia ficar parado na tela).
 
 const L1 = Math.hypot(42 - 25, 69 - 51).toFixed(2); // verde → creme
 const L2 = Math.hypot(74 - 42, 31 - 69).toFixed(2); // creme → laranja
@@ -18,7 +20,9 @@ const CORES = ["#9FD3B0", "#EED29A", "#E9875B"];
 export const CSS_ABERTURA = `
 #vt-abertura{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:radial-gradient(60% 45% at 20% 75%,rgba(31,58,43,.85),transparent 70%),radial-gradient(55% 45% at 85% 20%,rgba(58,37,30,.8),transparent 70%),#0F1013;
-  transition:opacity .45s ease,transform .45s ease}
+  transition:opacity .45s ease,transform .45s ease;animation:vtA-fim .45s ease 3.2s forwards}
+/* Etapa 322 — trava de segurança: some sozinho mesmo se o script não rodar */
+@keyframes vtA-fim{to{opacity:0;visibility:hidden;pointer-events:none}}
 html[data-abertura="saindo"] #vt-abertura{opacity:0;transform:scale(1.04);pointer-events:none}
 html[data-abertura="vista"] #vt-abertura{display:none}
 #vt-abertura svg{width:min(52vw,210px);height:auto;overflow:visible}

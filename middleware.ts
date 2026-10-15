@@ -78,6 +78,17 @@ async function middlewareBase(request: NextRequest) {
     return response;
   }
 
+  // Etapa 322 — a página inicial "/" decide aqui mesmo, antes de montar
+  // qualquer tela: quem não entrou vai pra apresentação, quem já entrou
+  // vai pro painel. (Antes a "/" chegava a abrir o layout com o logo.)
+  if (request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = user ? "/dashboard" : "/apresentacao";
+    const redir = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((c) => redir.cookies.set(c));
+    return redir;
+  }
+
   const rotaPublica =
     request.nextUrl.pathname === "/" ||
     ROTAS_PUBLICAS.some((rota) => request.nextUrl.pathname.startsWith(rota));
