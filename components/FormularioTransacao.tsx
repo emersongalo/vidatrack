@@ -82,7 +82,12 @@ export function FormularioTransacao({
   const [textoParcelas, setTextoParcelas] = useState("2");
   const numParcelas = Math.max(2, Math.min(48, parseInt(textoParcelas, 10) || 2));
   const [modoParcela, setModoParcela] = useState<"total" | "parcela">("total");
-  const [valorDigitado, setValorDigitado] = useState(valoresIniciais?.valor ? String(valoresIniciais.valor) : "");
+  // Etapa 336 — guarda o valor JÁ formatado ("1.300,00"). Antes guardava o que
+  // o campo tinha no meio da digitação ("130,000" → lia 130,000 = R$ 130 e
+  // virava 13) e a frase das parcelas mostrava 5× de R$ 13,00 em vez de 130.
+  const [valorDigitado, setValorDigitado] = useState(
+    valoresIniciais?.valor ? formatarValorDigitado(Number(valoresIniciais.valor).toFixed(2).replace(".", "")) : ""
+  );
   const [duracaoRecorrencia, setDuracaoRecorrencia] = useState<"sempre" | "ate_data">("sempre");
   const ehEdicao = !!valoresIniciais;
   const recorrenciaExistente = valoresIniciais?.recorrencia ?? null;
@@ -226,7 +231,7 @@ export function FormularioTransacao({
         onSubmit={aoSubmeter}
         onInput={(e) => {
           const alvo = e.target as HTMLInputElement;
-          if (alvo.name === "valor") setValorDigitado(alvo.value);
+          if (alvo.name === "valor") setValorDigitado(formatarValorDigitado(alvo.value));
         }}
       >
         {/* Etapa 223 — topo colorido (verde receita / vermelho despesa) com o valor em destaque */}

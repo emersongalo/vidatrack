@@ -269,6 +269,73 @@ export async function removerConvite(conviteId: string, caminhoRetorno: string) 
   revalidatePath(caminhoRetorno);
 }
 
+/**
+ * Etapa 337 — o dono troca a permissão de quem já tem acesso
+ * ("Pode ver" ⇄ "Pode editar") sem precisar remover e convidar de novo.
+ * A tabela não deixa ninguém dar UPDATE (de propósito), então: confere
+ * com a sessão da pessoa que ela é a dona e só aí altera pelo admin.
+ */
+export async function alterarPermissaoCompartilhamento(
+  compartilhamentoId: string,
+  novaPermissao: string
+): Promise<{ ok: boolean; erro?: string }> {
+  const permissao = novaPermissao === "edicao" ? "edicao" : "leitura";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, erro: "Entre de novo na sua conta" };
+  const { data: c } = await supabase
+    .from("compartilhamentos")
+    .select("id, tipo_item, usuario_convidado_id")
+    .eq("id", compartilhamentoId)
+    .eq("dono_id", user.id)
+    .maybeSingle();
+  if (!c) return { ok: false, erro: "Só quem compartilhou pode mudar a permissão" };
+  try {
+    const admin = criarClienteAdmin("permissao_compartilhamento", `Dono mudou a permissão do compartilhamento (${c.tipo_item})`);
+    const { error } = await admin.from("compartilhamentos").update({ permissao }).eq("id", compartilhamentoId).eq("dono_id", user.id);
+    if (error) return { ok: false, erro: error.message };
+    if (c.usuario_convidado_id) {
+      try {
+        await avisarUsuario(
+          admin,
+          c.usuario_convidado_id as string,
+          permissao === "edicao" ? "✏️ Agora você pode editar" : "👀 Agora é só pra ver",
+          `${await meuNome(supabase, user)} mudou seu acesso a ${ROTULO_TIPO[c.tipo_item as string] ?? "um item"}: ${
+            permissao === "edicao" ? "agora você pode editar." : "agora você só pode ver."
+          }`,
+          c.tipo_item === "financa" ? "/financas" : c.tipo_item === "tarefa" ? "/tarefas" : "/habitos"
+        );
+      } catch {
+        /* o aviso é um extra */
+      }
+    }
+    return { ok: true };
+  } catch (e: any) {
+    return { ok: false, erro: e?.message ?? "Não deu pra mudar a permissão" };
+  }
+}
+
+/** Etapa 337 — convite ainda não respondido: o dono também pode mudar a permissão. */
+export async function alterarPermissaoConvite(conviteId: string, novaPermissao: string): Promise<{ ok: boolean; erro?: string }> {
+  const permissao = novaPermissao === "edicao" ? "edicao" : "leitura";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, erro: "Entre de novo na sua conta" };
+  const { data, error } = await supabase
+    .from("convites_compartilhamento")
+    .update({ permissao })
+    .eq("id", conviteId)
+    .eq("dono_id", user.id)
+    .select("id");
+  if (error) return { ok: false, erro: error.message };
+  if (!data?.length) return { ok: false, erro: "Convite não encontrado" };
+  return { ok: true };
+}
+
 /** Etapa 273 — o dono manda de novo um convite que foi recusado. */
 export async function reenviarConvite(conviteId: string): Promise<{ ok: boolean; erro?: string }> {
   const supabase = createClient();

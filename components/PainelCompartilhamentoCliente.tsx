@@ -9,6 +9,8 @@ import {
   descompartilharHabito,
   removerConvite,
   reenviarConvite,
+  alterarPermissaoCompartilhamento,
+  alterarPermissaoConvite,
   type TipoItem,
 } from "@/lib/compartilhamento/actions";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
@@ -48,12 +50,47 @@ export function PainelCompartilhamentoCliente({
   const [conhecidas, setConhecidas] = useState<Conhecida[]>([]);
   const [permissao, setPermissao] = useState("leitura");
   const [enviando, setEnviando] = useState<string | null>(null);
+  // Etapa 337 — quem sou eu (só o dono troca a permissão) e qual linha está salvando
+  const [eu, setEu] = useState<string | null>(null);
+  const [mudando, setMudando] = useState<string | null>(null);
+
+  async function trocarPermissao(tipo: "compartilhamento" | "convite", id: string, nova: string) {
+    setErro(null);
+    setAviso(null);
+    setMudando(id);
+    const r = tipo === "compartilhamento" ? await alterarPermissaoCompartilhamento(id, nova) : await alterarPermissaoConvite(id, nova);
+    setMudando(null);
+    if (!r.ok) setErro(r.erro ?? "Não deu pra mudar a permissão");
+    else setAviso(nova === "edicao" ? "Pronto! Agora a pessoa pode editar." : "Pronto! Agora a pessoa só pode ver.");
+    buscar();
+  }
+
+  function SeletorPermissao({ tipo, id, atual }: { tipo: "compartilhamento" | "convite"; id: string; atual: string }) {
+    return (
+      <div className="inline-flex bg-base-900 border border-base-600 rounded-full p-0.5 mt-1" role="group" aria-label="Permissão">
+        {(["leitura", "edicao"] as const).map((p) => (
+          <button
+            key={p}
+            type="button"
+            disabled={mudando === id}
+            onClick={() => p !== atual && trocarPermissao(tipo, id, p)}
+            className={`text-[11px] rounded-full px-2.5 py-1 transition ${
+              p === atual ? "bg-ink-100 text-base-900 font-semibold" : "text-ink-400 hover:text-ink-100"
+            } disabled:opacity-60`}
+          >
+            {p === "leitura" ? "👀 Pode ver" : "✏️ Pode editar"}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   const buscarConhecidas = useCallback(async () => {
     const supabase = createClient();
     const { data: sessao } = await supabase.auth.getSession();
     const eu = sessao.session?.user.id;
     if (!eu) return;
+    setEu(eu);
     const { data } = await supabase.from("compartilhamentos").select("email_convidado, usuario_convidado_id, dono_id");
     const mapa = new Map<string, Conhecida>();
     for (const c of data ?? []) {
@@ -96,14 +133,14 @@ export function PainelCompartilhamentoCliente({
     const supabase = createClient();
     supabase
       .from("compartilhamentos")
-      .select("id, email_convidado, usuario_convidado_id, permissao")
+      .select("id, email_convidado, usuario_convidado_id, permissao, dono_id")
       .eq("tipo_item", tipoItem)
       .eq("item_id", itemId)
       .order("criado_em", { ascending: true })
       .then(({ data }) => setCompartilhamentos(data ?? []));
     supabase
       .from("convites_compartilhamento")
-      .select("id, email_convidado, usuario_convidado_id, permissao, status, criado_em")
+      .select("id, email_convidado, usuario_convidado_id, permissao, status, criado_em, dono_id")
       .eq("tipo_item", tipoItem)
       .eq("item_id", itemId)
       .order("criado_em", { ascending: true })
@@ -154,13 +191,14 @@ export function PainelCompartilhamentoCliente({
               <div className="min-w-0">
                 <p className="text-sm truncate">{c.email_convidado}</p>
                 <p className="text-xs">
-                  <span className="text-ink-400">{RÓTULOS_PERMISSAO[c.permissao]} · </span>
+                  {!(eu && c.dono_id === eu && c.status !== "recusado") && <span className="text-ink-400">{RÓTULOS_PERMISSAO[c.permissao]} · </span>}
                   {c.status === "recusado" ? (
                     <span className="text-red-400">recusou o convite</span>
                   ) : (
                     <span className="text-financa">⏳ aguardando resposta</span>
                   )}
                 </p>
+                {eu && c.dono_id === eu && c.status !== "recusado" && <SeletorPermissao tipo="convite" id={c.id} atual={c.permissao} />}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {c.status === "recusado" && (
@@ -186,12 +224,15 @@ export function PainelCompartilhamentoCliente({
         compartilhamentos.length > 0 && (
           <ul className="space-y-2 mb-4">
             {compartilhamentos.map((c) => (
-              <li key={c.id} className="flex items-center justify-between bg-base-800 border border-base-600 rounded-lg px-3 py-2">
+              <li key={c.id} className="flex items-center justify-between gap-2 bg-base-800 border border-base-600 rounded-lg px-3 py-2">
                 <div className="min-w-0">
                   <p className="text-sm truncate">{c.email_convidado}</p>
                   <p className="text-xs text-ink-400">
-                    {RÓTULOS_PERMISSAO[c.permissao]} · <span className="text-habito">✓ aceitou</span>
+                    {!(eu && c.dono_id === eu) && <>{RÓTULOS_PERMISSAO[c.permissao]} · </>}
+                    <span className="text-habito">✓ aceitou</span>
                   </p>
+                  {/* Etapa 337 — o dono troca entre ver e editar a qualquer hora */}
+                  {eu && c.dono_id === eu && <SeletorPermissao tipo="compartilhamento" id={c.id} atual={c.permissao} />}
                 </div>
                 {/* Etapa 303 — hábito: descompartilha avisando a pessoa (ela fica com uma cópia e o histórico dela) */}
                 <BotaoComConfirmacao
