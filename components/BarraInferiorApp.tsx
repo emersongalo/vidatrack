@@ -58,7 +58,7 @@ export function BarraInferiorApp() {
           {itemAtivo && (
             <span
               aria-hidden
-              className={`absolute top-1.5 bottom-1.5 left-0 w-[20%] px-2 transition-transform duration-300 ease-[cubic-bezier(.2,.8,.2,1)] pointer-events-none`}
+              className={`absolute top-1.5 bottom-1.5 left-0 w-[20%] px-2 transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] pointer-events-none`}
               style={{ transform: `translateX(${indiceAtivo * 100}%)` }}
             >
               <span className={`block w-full h-full rounded-2xl transition-colors duration-300 ${COR_PILULA[itemAtivo.href] ?? "bg-ink-100/10"}`} />

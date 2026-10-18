@@ -48,6 +48,8 @@ export type DadosMascote = {
   pesca?: Pesca;
   /** Etapa 316 — prêmios de evento já resgatados ("halloween-2026") */
   eventos?: string[];
+  /** Etapa 326 — último dia em que abriu o baú da ilha */
+  bauIlha?: string;
 };
 
 export type DesafioSalvo = {
@@ -162,6 +164,16 @@ export const ITENS: Item[] = [
   { id: "abelha", slot: "amigo", nome: "Abelhinha", preco: 180, nivel: 2, emoji: "🐝" },
   { id: "fantasma", slot: "amigo", nome: "Fantasminha", preco: 420, nivel: 4, emoji: "👻" },
   { id: "dragao", slot: "amigo", nome: "Dragãozinho", preco: 900, nivel: 5, emoji: "🐉" },
+  // Etapa 331 — novidades
+  { id: "cowboy", slot: "chapeu", nome: "Chapéu de cowboy", preco: 240, nivel: 2, emoji: "🤠" },
+  { id: "tiara", slot: "chapeu", nome: "Tiara de brilhantes", preco: 340, nivel: 3, emoji: "💎" },
+  { id: "coelho", slot: "chapeu", nome: "Orelhas de coelho", preco: 130, nivel: 1, emoji: "🐰" },
+  { id: "cracha", slot: "roupa", nome: "Crachá VidaTrack", preco: 90, nivel: 1, emoji: "🪪" },
+  { id: "camera", slot: "mao", nome: "Câmera", preco: 240, nivel: 2, emoji: "📷" },
+  { id: "pincel", slot: "mao", nome: "Pincel", preco: 150, nivel: 2, emoji: "🖌️" },
+  { id: "cofrinho", slot: "mao", nome: "Cofrinho", preco: 300, nivel: 3, emoji: "🐷" },
+  { id: "gatinho", slot: "amigo", nome: "Gatinho", preco: 320, nivel: 3, emoji: "🐈" },
+  { id: "coelhinho", slot: "amigo", nome: "Coelhinho", preco: 280, nivel: 2, emoji: "🐇" },
   // Etapa 316 — itens de evento
   { id: "bruxa", slot: "chapeu", nome: "Chapéu de bruxa", preco: 180, nivel: 1, emoji: "🧙‍♀️", evento: "halloween" },
   { id: "morcego", slot: "roupa", nome: "Gravata de morcego", preco: 120, nivel: 1, emoji: "🦇", evento: "halloween" },
@@ -326,6 +338,8 @@ export function lerMascote(bruto: unknown): DadosMascote | null {
   if (pesca) m.pesca = pesca;
   const eventos = [...new Set((Array.isArray(b.eventos) ? b.eventos : []).filter((x: unknown) => typeof x === "string" && /^[a-z]+-\d{4}$/.test(x as string)))].slice(-20) as string[];
   if (eventos.length) m.eventos = eventos;
+  // Etapa 326 — baú da ilha
+  if (ehDia(b.bauIlha)) m.bauIlha = b.bauIlha;
   return m;
 }
 

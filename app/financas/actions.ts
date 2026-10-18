@@ -489,6 +489,9 @@ export async function criarTransacaoSilenciosa(dadosFormulario: {
   return { sucesso: !error, erro: error?.message };
 }
 
+const MSG_SEM_PERMISSAO_EDITAR =
+  "Não deu pra salvar: essa conta foi compartilhada com você só pra ver (leitura). Quem é dono da conta pode editar, ou mudar o compartilhamento pra \"edição\".";
+
 export async function atualizarTransacao(transacaoId: string, formData: FormData) {
   const supabase = createClient();
   const {
@@ -503,7 +506,7 @@ export async function atualizarTransacao(transacaoId: string, formData: FormData
   }
   const d = resultado.data;
 
-  const { error } = await supabase
+  const { data: atualizadas, error } = await supabase
     .from("financa_transacoes")
     .update({
       conta_id: d.contaId,
@@ -515,10 +518,16 @@ export async function atualizarTransacao(transacaoId: string, formData: FormData
       // só mexe nas etiquetas se o formulário as enviou (Etapa 218)
       ...(formData.get("etiquetasPresente") ? { etiquetas: etiquetasDoFormulario(formData) } : {}),
     })
-    .eq("id", transacaoId);
+    .eq("id", transacaoId)
+    .select("id");
 
   if (error) {
     redirect(`/financas/${transacaoId}/editar?erro=${encodeURIComponent(error.message)}`);
+  }
+  // Etapa 333 — conta compartilhada só pra leitura: o banco não deixa
+  // mudar e não dá erro (0 linhas). Antes parecia que salvou e nada mudava.
+  if (!atualizadas || atualizadas.length === 0) {
+    redirect(`/financas/${transacaoId}/editar?erro=${encodeURIComponent(MSG_SEM_PERMISSAO_EDITAR)}`);
   }
 
   // Etapa 210 — parcela: aplicar valor/conta/categoria às próximas

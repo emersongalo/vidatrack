@@ -107,6 +107,21 @@ export default function MundoPage() {
         )}
       </div>
 
+      {/* Etapa 323 — protótipo da ilha em RPG */}
+      <Link
+        href="/habitos/mundo/ilha"
+        className="flex items-center gap-3 rounded-2xl border border-habito/50 bg-gradient-to-r from-habito/15 to-financa/15 px-4 py-3 mb-3 active:scale-[0.98] transition"
+      >
+        <span className="text-2xl">🕹️</span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-semibold">
+            Andar pela ilha <span className="ml-1 rounded-full bg-financa text-base-900 text-[10px] font-bold px-1.5 py-0.5 align-middle">NOVO</span>
+          </span>
+          <span className="block text-[11px] text-ink-400">Controle seu mascote, entre nos lugares e converse com o pessoal</span>
+        </span>
+        <span className="text-ink-400">›</span>
+      </Link>
+
       <ZoomPan className="rounded-3xl border border-base-600/70 mb-2">
         <div style={{ background: tema.particula === "brasas" ? "linear-gradient(180deg, #431407, #7C2D12)" : CEU[periodo] }}>
         <MundoIso

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, Landmark, Receipt, MoreHorizontal, Repeat, Tags, Target,
-  BarChart3, PiggyBank, Grid3x3, Bot,
+  BarChart3, PiggyBank, Grid3x3, Bot, CreditCard,
 } from "lucide-react";
 import { BotaoNovoLancamento } from "@/components/BotaoNovoLancamento";
 import { BotaoAssistenteFlutuante } from "@/components/BotaoAssistenteFlutuante";
@@ -22,6 +22,7 @@ const GRUPOS_DESKTOP = [
       { href: "/financas", rotulo: "Início", Icone: Home },
       { href: "/financas/extrato", rotulo: "Extrato", Icone: Receipt },
       { href: "/financas/contas", rotulo: "Contas", Icone: Landmark },
+      { href: "/financas/cartoes", rotulo: "Cartões", Icone: CreditCard },
       { href: "/financas/recorrentes", rotulo: "Recorrentes", Icone: Repeat },
     ],
   },

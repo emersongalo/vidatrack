@@ -16,6 +16,7 @@ import { LinkVoltar } from "@/components/LinkVoltar";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { Esqueleto, EsqueletoFinancas } from "@/components/Esqueleto";
 import { HeroFinancas } from "@/components/HeroFinancas";
+import { SaldoPorConta } from "@/components/SaldoPorConta";
 import { ListaContasComSaldo } from "@/components/ListaContasComSaldo";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { classeFundoSuave, hexDaCor } from "@/lib/agenda/estilo";
@@ -389,6 +390,9 @@ export default function FinancasPage() {
             aoMesProximo={() => { setDirecaoMes("avancar"); setMesSelecionado(mesProximoISO); setMostrarTodosLancamentos(false); }}
             aoHoje={() => { setDirecaoMes(mesSelecionado > mesAtualISO ? "voltar" : "avancar"); setMesSelecionado(mesAtualISO); setMostrarTodosLancamentos(false); }}
           />
+
+          {/* Etapa 330 — saldo de cada conta (2 contas ou mais) */}
+          <SaldoPorConta contas={contas as any[]} />
 
           {/* Etapa 268 — "essa receita caiu?" */}
           {snapshot && <ConfirmarReceitas snapshot={snapshot} />}

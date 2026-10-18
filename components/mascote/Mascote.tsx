@@ -2,7 +2,7 @@
 
 // Etapa 298 — o mascote, todo em SVG (sem imagens). Cresce por fase, muda
 // de humor com o dia e veste o que a pessoa comprou na lojinha.
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { CORES_MASCOTE, type CorMascote, type Humor, type Slot } from "@/lib/mascote/mascote";
 
 type Props = {
@@ -96,6 +96,11 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
   const comVolume = (volume ?? tamanho >= 110) && !fraco;
   // o sol "anda": sombra no chão vai pro lado oposto
   const sombraX = per === "manha" ? 8 : per === "entardecer" ? -10 : per === "noite" ? 0 : 3;
+  // Etapa 331 — trejeitos: de vez em quando ele acena, pula, olha pros
+  // lados ou solta coraçõezinhos/notinhas (e reage quando você toca)
+  const podeTrejeito = animado && fase > 0 && tamanho >= 110 && humor !== "dormindo" && humor !== "doente" && !costas;
+  const [trejeito, reagir] = useTrejeito(podeTrejeito);
+  const tj = podeTrejeito ? trejeito : null;
 
   return (
     <svg
@@ -103,7 +108,10 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
       width={tamanho}
       height={tamanho}
       className={`vtm${anim} ${className}`}
-      onClick={aoTocar}
+      onClick={() => {
+        if (podeTrejeito) reagir(Math.random() < 0.5 ? "coracao" : "pular");
+        aoTocar?.();
+      }}
       role="img"
       aria-label="Seu mascote"
     >
@@ -165,8 +173,29 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
           <feComposite in="esp" in2="SourceAlpha" operator="in" result="esp2" />
           <feComposite in="iluminado" in2="esp2" operator="arithmetic" k1="0" k2="1" k3="0.55" k4="0" />
         </filter>
+        {/* Etapa 329 — olho de verdade (íris com brilho) e pelinho */}
+        <radialGradient id={`vtm-iris-${uid}`} cx="45%" cy="60%" r="60%">
+          <stop offset="0%" stopColor="#E2A660" />
+          <stop offset="55%" stopColor="#8A5626" />
+          <stop offset="100%" stopColor="#3A2210" />
+        </radialGradient>
+        <pattern id={`vtm-pelo-${uid}`} width="7" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)">
+          <path d="M1 5 q1 -3 2 -4" stroke="#FFFFFF" strokeOpacity="0.32" strokeWidth="0.7" fill="none" strokeLinecap="round" />
+          <path d="M4.5 6 q0.8 -2.6 1.8 -3.6" stroke="#000000" strokeOpacity="0.14" strokeWidth="0.7" fill="none" strokeLinecap="round" />
+        </pattern>
+        {/* Etapa 327 — corpo com mais profundidade e cor mais viva */}
+        <radialGradient id={`vtm-pele-${uid}`} cx="36%" cy="30%" r="80%">
+          <stop offset="0%" stopColor={misturarCor(c.corpo, "#FFFFFF", 0.35)} />
+          <stop offset="45%" stopColor={c.corpo} />
+          <stop offset="100%" stopColor={misturarCor(c.corpo, c.sombra, 0.75)} />
+        </radialGradient>
+        <linearGradient id={`vtm-barriga-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="60%" stopColor={c.barriga} />
+          <stop offset="100%" stopColor={misturarCor(c.barriga, c.sombra, 0.3)} />
+        </linearGradient>
         <radialGradient id={`vtm-brilho-${uid}`}>
-          <stop offset="0%" stopColor={c.sombra} stopOpacity="0.35" />
+          <stop offset="0%" stopColor={c.sombra} stopOpacity="0.22" />
           <stop offset="100%" stopColor={c.sombra} stopOpacity="0" />
         </radialGradient>
       </defs>
@@ -190,6 +219,7 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
 
       {fase >= 5 && <Aura cy={cy} r={r} />}
 
+      <g key={tj?.n ?? 0} className={tj?.tipo === "pular" ? "vtm-pulinho" : undefined}>
       <g className={fase === 0 ? "vtm-ovo" : "vtm-respira"}>
       <g filter={comVolume ? `url(#vtm-luz-${uid})` : undefined}>
       <g transform={`translate(100 0) scale(${larg.toFixed(3)} 1) translate(-100 0)`}>
@@ -203,11 +233,26 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
                 <path d="M-38 -14 Q-60 30 -48 62 L-30 62 Q-40 30 -26 -10 Z" fill="#B91C1C" opacity="0.6" />
               </g>
             )}
+            {/* Etapa 329 — rabinho fofo (balança) */}
+            {!costas && fase >= 2 && (
+              <g transform={`translate(${100 + r * 0.82} ${cy + r * 0.5})`}>
+                <g>
+                  {animado && <animateTransform attributeName="transform" type="rotate" values="-8;10;-8" dur="1.8s" repeatCount="indefinite" />}
+                  <path d={`M0 0 Q${r * 0.42} ${-r * 0.05} ${r * 0.5} ${-r * 0.42} Q${r * 0.62} ${-r * 0.7} ${r * 0.38} ${-r * 0.72} Q${r * 0.28} ${-r * 0.42} ${-r * 0.05} ${-r * 0.22} Z`} fill={cor === "arcoiris" ? corpo : `url(#vtm-pele-${uid})`} stroke={misturarCor(c.sombra, "#10131A", 0.35)} strokeWidth="1.6" strokeLinejoin="round" />
+                  <path d={`M${r * 0.44} ${-r * 0.5} Q${r * 0.52} ${-r * 0.66} ${r * 0.4} ${-r * 0.68}`} stroke="#FFFFFF" strokeOpacity="0.55" strokeWidth={Math.max(1, r * 0.05)} fill="none" strokeLinecap="round" />
+                </g>
+              </g>
+            )}
             {/* pés */}
             {[-1, 1].map((l) => (
               <g key={l}>
                 <ellipse cx={100 + l * r * 0.45} cy={cy + r * 0.88} rx={r * 0.3} ry={r * 0.15} fill={c.sombra} />
-                <ellipse cx={100 + l * r * 0.45} cy={cy + r * 0.88} rx={r * 0.3} ry={r * 0.15} fill={`url(#vtm-membro-${uid})`} />
+                <ellipse cx={100 + l * r * 0.45} cy={cy + r * 0.88} rx={r * 0.3} ry={r * 0.15} fill={`url(#vtm-membro-${uid})`} stroke={misturarCor(c.sombra, "#10131A", 0.35)} strokeWidth="1.6" />
+                {/* Etapa 329 — dedinhos */}
+                {!costas && fase >= 2 &&
+                  [-1, 0, 1].map((d) => (
+                    <path key={d} d={`M${100 + l * r * 0.45 + d * r * 0.1} ${cy + r * 0.93} v${-r * 0.06}`} stroke={misturarCor(c.sombra, "#10131A", 0.45)} strokeWidth={Math.max(0.8, r * 0.025)} strokeLinecap="round" opacity="0.7" />
+                  ))}
               </g>
             ))}
             {/* orelhas (a partir de Crescido) */}
@@ -216,19 +261,21 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
                 <path d={`M${100 - r * 0.62} ${topo + r * 0.42} L${100 - r * 0.78} ${topo - r * 0.22} L${100 - r * 0.22} ${topo + r * 0.12} Z`} fill={corpo} stroke={c.sombra} strokeWidth="2" strokeLinejoin="round" />
                 <path d={`M${100 + r * 0.62} ${topo + r * 0.42} L${100 + r * 0.78} ${topo - r * 0.22} L${100 + r * 0.22} ${topo + r * 0.12} Z`} fill={corpo} stroke={c.sombra} strokeWidth="2" strokeLinejoin="round" />
                 {/* dentro da orelha */}
-                <path d={`M${100 - r * 0.58} ${topo + r * 0.3} L${100 - r * 0.7} ${topo - r * 0.08} L${100 - r * 0.34} ${topo + r * 0.14} Z`} fill={c.barriga} opacity="0.7" />
-                <path d={`M${100 + r * 0.58} ${topo + r * 0.3} L${100 + r * 0.7} ${topo - r * 0.08} L${100 + r * 0.34} ${topo + r * 0.14} Z`} fill={c.barriga} opacity="0.7" />
+                <path d={`M${100 - r * 0.58} ${topo + r * 0.3} L${100 - r * 0.7} ${topo - r * 0.08} L${100 - r * 0.34} ${topo + r * 0.14} Z`} fill="#F6A6C1" opacity="0.75" />
+                <path d={`M${100 + r * 0.58} ${topo + r * 0.3} L${100 + r * 0.7} ${topo - r * 0.08} L${100 + r * 0.34} ${topo + r * 0.14} Z`} fill="#F6A6C1" opacity="0.75" />
               </>
             )}
             {/* braços */}
             {[-1, 1].map((l) => (
-              <g key={l} transform={`rotate(${-l * 25} ${100 + l * r * 0.95} ${cy + r * 0.15})`}>
+              <g key={`${l}-${l === -1 && tj?.tipo === "acenar" ? tj.n : 0}`} className={l === -1 && tj?.tipo === "acenar" ? "vtm-aceno" : undefined}>
+              <g transform={`rotate(${-l * 25} ${100 + l * r * 0.95} ${cy + r * 0.15})`}>
                 <ellipse cx={100 + l * r * 0.95} cy={cy + r * 0.15} rx={r * 0.17} ry={r * 0.28} fill={c.sombra} />
-                <ellipse cx={100 + l * r * 0.95} cy={cy + r * 0.15} rx={r * 0.17} ry={r * 0.28} fill={`url(#vtm-membro-${uid})`} />
+                <ellipse cx={100 + l * r * 0.95} cy={cy + r * 0.15} rx={r * 0.17} ry={r * 0.28} fill={`url(#vtm-membro-${uid})`} stroke={misturarCor(c.sombra, "#10131A", 0.35)} strokeWidth="1.6" />
+              </g>
               </g>
             ))}
             {/* corpo */}
-            <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill={corpo} />
+            <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill={cor === "arcoiris" ? corpo : `url(#vtm-pele-${uid})`} />
             {humor === "doente" && <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill="#9CA3AF" opacity="0.28" />}
             {costas ? (
               <g clipPath={`url(#vtm-corpo-${uid})`}>
@@ -237,7 +284,22 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
               </g>
             ) : (
               <g clipPath={`url(#vtm-corpo-${uid})`}>
-                <ellipse cx={100 + desvio} cy={cy + r * 0.32} rx={r * 0.6} ry={r * 0.48} fill={c.barriga} opacity="0.85" />
+                <ellipse cx={100 + desvio} cy={cy + r * 0.34} rx={r * 0.58} ry={r * 0.46} fill={`url(#vtm-barriga-${uid})`} opacity="0.92" />
+              </g>
+            )}
+            {/* Etapa 329 — pelinho (só nos tamanhos maiores, onde dá pra ver) */}
+            {tamanho >= 90 && (
+              <g clipPath={`url(#vtm-corpo-${uid})`}>
+                <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill={`url(#vtm-pelo-${uid})`} opacity="0.55" />
+              </g>
+            )}
+            {/* topetinho e bochechas fofas */}
+            {!costas && fase >= 2 && (
+              <g fill={cor === "arcoiris" ? corpo : misturarCor(c.corpo, "#FFFFFF", 0.12)} stroke={misturarCor(c.sombra, "#10131A", 0.35)} strokeWidth="1.4" strokeLinejoin="round">
+                <path d={`M${100 - r * 0.2} ${topo + r * 0.06} Q${100 - r * 0.12} ${topo - r * 0.22} ${100 - r * 0.02} ${topo + r * 0.02} Q${100 + r * 0.06} ${topo - r * 0.26} ${100 + r * 0.16} ${topo + r * 0.05}`} />
+                {[-1, 1].map((l) => (
+                  <path key={l} d={`M${100 + l * r * 0.93} ${cy - r * 0.02} l${l * r * 0.13} ${r * 0.06} l${-l * r * 0.08} ${r * 0.05} l${l * r * 0.12} ${r * 0.07} l${-l * r * 0.16} ${r * 0.06}`} />
+                ))}
               </g>
             )}
             {/* Etapa 304 — volume do corpo: sombreado redondo, oclusão, contorno de luz e brilho */}
@@ -254,6 +316,8 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
               transform={`rotate(-25 ${100 - r * 0.36} ${cy - r * 0.52})`}
               filter={comVolume ? `url(#vtm-borra-${uid})` : undefined}
             />
+            {/* Etapa 327 — contorno: o bichinho "descola" do fundo escuro */}
+            <ellipse cx="100" cy={cy} rx={r} ry={r * 0.95} fill="none" stroke={misturarCor(c.sombra, "#10131A", 0.35)} strokeWidth={Math.max(2, r * 0.06)} opacity="0.85" />
             {/* brotinho na cabeça (Pequeno e Campeão) */}
             {(fase === 2 || fase === 4) && !equipados.chapeu && (
               <g transform={`translate(100 ${topo + 2}) scale(${k})`}>
@@ -267,7 +331,9 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
             {!costas && (
               <g clipPath={`url(#vtm-corpo-${uid})`}>
                 <g transform={`translate(${desvio.toFixed(2)} 0)`}>
-                  <Rosto humor={humor} cy={olhoY} r={r} olho={`url(#vtm-olho-${uid})`} />
+                  <g key={tj?.tipo === "olhar" ? tj.n : 0} className={tj?.tipo === "olhar" ? "vtm-olhar" : undefined}>
+                  <Rosto humor={humor} cy={olhoY} r={r} olho={`url(#vtm-olho-${uid})`} iris={tamanho >= 48 ? `url(#vtm-iris-${uid})` : undefined} contorno={misturarCor(c.sombra, "#10131A", 0.5)} />
+                  </g>
                 </g>
               </g>
             )}
@@ -306,6 +372,28 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
       </g>
       </g>
       </g>
+      </g>
+
+      {/* Etapa 331 — coraçõezinhos / notinhas subindo */}
+      {(tj?.tipo === "coracao" || tj?.tipo === "nota") && (
+        <g key={`fx${tj.n}`} pointerEvents="none">
+          {[
+            [100 - r * 0.5, topo - 4, 0],
+            [100 + r * 0.55, topo - 10, 0.25],
+            [100 + r * 0.05, topo - 20, 0.5],
+          ].map(([x, y, d], i) => (
+            <g key={i} className="vtm-sobe" style={{ animationDelay: `${d}s` }}>
+              {tj.tipo === "coracao" ? (
+                <path d={`M${x} ${y + 4} c-6 -4 -8 -9 -4 -11 c2 -1 4 0 4 2 c0 -2 2 -3 4 -2 c4 2 2 7 -4 11 Z`} fill={["#F472B6", "#EF4444", "#FB7185"][i]} />
+              ) : (
+                <text x={x} y={y} fontSize="13" fontWeight="700" fill={["#A78BFA", "#60A5FA", "#F472B6"][i]} fontFamily="sans-serif" textAnchor="middle">
+                  {i === 1 ? "♫" : "♪"}
+                </text>
+              )}
+            </g>
+          ))}
+        </g>
+      )}
 
       {/* Etapa 301 — amiguinho do ladinho */}
       {equipados.amigo && fase > 0 && (
@@ -356,6 +444,65 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
   );
 }
 
+type Trejeito = "acenar" | "pular" | "coracao" | "nota" | "olhar";
+const TREJEITOS: Trejeito[] = ["acenar", "pular", "coracao", "nota", "olhar"];
+
+/** Etapa 331 — sorteia um trejeito a cada 6–13 s (e deixa disparar no toque) */
+function useTrejeito(ativo: boolean): [{ tipo: Trejeito; n: number } | null, (t: Trejeito) => void] {
+  const [atual, setAtual] = useState<{ tipo: Trejeito; n: number } | null>(null);
+  const fim = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const disparar = useCallback((tipo: Trejeito) => {
+    if (fim.current) clearTimeout(fim.current);
+    setAtual({ tipo, n: Date.now() });
+    fim.current = setTimeout(() => setAtual(null), 2000);
+  }, []);
+  useEffect(() => {
+    if (!ativo) return;
+    let vivo = true;
+    let id: ReturnType<typeof setTimeout>;
+    const agenda = () => {
+      id = setTimeout(() => {
+        if (!vivo) return;
+        if (typeof document === "undefined" || !document.hidden) disparar(TREJEITOS[Math.floor(Math.random() * TREJEITOS.length)]);
+        agenda();
+      }, 6000 + Math.random() * 7000);
+    };
+    agenda();
+    return () => {
+      vivo = false;
+      clearTimeout(id);
+    };
+  }, [ativo, disparar]);
+  useEffect(() => () => { if (fim.current) clearTimeout(fim.current); }, []);
+  return [atual, disparar];
+}
+
+/** Etapa 329 — olho "de verdade": contorno, íris com degradê, pupila, pálpebra e reflexos */
+function OlhoReal({ x, y, er, iris, pidao = false }: { x: number; y: number; er: number; iris: string; pidao?: boolean }) {
+  const rx = er * 1.12;
+  const ry = er * 1.32;
+  return (
+    <g className="vtm-piscar">
+      <ellipse cx={x} cy={y} rx={rx} ry={ry} fill="#1A1412" />
+      <ellipse cx={x} cy={y + er * 0.08} rx={rx * 0.82} ry={ry * 0.82} fill={iris} />
+      <ellipse cx={x} cy={y + er * 0.12} rx={rx * (pidao ? 0.58 : 0.45)} ry={ry * (pidao ? 0.6 : 0.5)} fill="#0B0806" />
+      {/* sombra da pálpebra */}
+      <path d={`M${x - rx} ${y - ry * 0.15} Q${x} ${y - ry * 1.15} ${x + rx} ${y - ry * 0.15} Q${x} ${y - ry * 0.7} ${x - rx} ${y - ry * 0.15} Z`} fill="#000" opacity="0.28" />
+      <ellipse cx={x + er * 0.38} cy={y - er * 0.42} rx={er * 0.36} ry={er * 0.32} fill="#fff" />
+      <circle cx={x - er * 0.36} cy={y + er * 0.52} r={er * 0.15} fill="#fff" opacity="0.85" />
+      {pidao && <circle cx={x + er * 0.1} cy={y + er * 0.2} r={er * 0.12} fill="#fff" opacity="0.7" />}
+    </g>
+  );
+}
+
+/** Etapa 327 — mistura duas cores hex (t = 0 → a, 1 → b) */
+function misturarCor(a: string, b: string, t: number) {
+  if (!a.startsWith("#") || !b.startsWith("#")) return a;
+  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  return "#" + pa.map((v, i) => Math.round(v + (pb[i] - v) * t).toString(16).padStart(2, "0")).join("");
+}
+
 function estrela(x: number, y: number, t: number) {
   const p: string[] = [];
   for (let i = 0; i < 10; i++) {
@@ -366,15 +513,15 @@ function estrela(x: number, y: number, t: number) {
   return `M${p.join(" L")} Z`;
 }
 
-function Rosto({ humor, cy, r, olho = OLHO }: { humor: Humor; cy: number; r: number; olho?: string }) {
+function Rosto({ humor, cy, r, olho = OLHO, iris, contorno = "#2A2230" }: { humor: Humor; cy: number; r: number; olho?: string; iris?: string; contorno?: string }) {
   const dx = r * 0.36;
   const er = r * 0.13;
   const bocaY = cy + r * 0.32;
   return (
     <g>
       {/* bochechas */}
-      <ellipse cx={100 - r * 0.58} cy={cy + r * 0.2} rx={r * 0.14} ry={r * 0.08} fill="#F472B6" opacity="0.45" />
-      <ellipse cx={100 + r * 0.58} cy={cy + r * 0.2} rx={r * 0.14} ry={r * 0.08} fill="#F472B6" opacity="0.45" />
+      <ellipse cx={100 - r * 0.56} cy={cy + r * 0.22} rx={r * 0.15} ry={r * 0.09} fill="#F472B6" opacity="0.6" />
+      <ellipse cx={100 + r * 0.56} cy={cy + r * 0.22} rx={r * 0.15} ry={r * 0.09} fill="#F472B6" opacity="0.6" />
       {humor === "dormindo" ? (
         <>
           <path d={`M${100 - dx - er} ${cy} Q${100 - dx} ${cy + er} ${100 - dx + er} ${cy}`} stroke={OLHO} strokeWidth="2.5" fill="none" strokeLinecap="round" />
@@ -391,12 +538,15 @@ function Rosto({ humor, cy, r, olho = OLHO }: { humor: Humor; cy: number; r: num
       ) : humor === "fome" ? (
         <>
           {/* olhão pidão */}
+          {iris && [-1, 1].map((l) => <OlhoReal key={l} x={100 + l * dx} y={cy} er={er * 1.15} iris={iris} pidao />)}
+          {!iris && (<>
           <circle cx={100 - dx} cy={cy} r={er * 1.25} fill={olho} />
           <circle cx={100 - dx + er * 0.4} cy={cy - er * 0.45} r={er * 0.5} fill="#fff" />
           <circle cx={100 - dx - er * 0.45} cy={cy + er * 0.4} r={er * 0.22} fill="#fff" />
           <circle cx={100 + dx} cy={cy} r={er * 1.25} fill={olho} />
           <circle cx={100 + dx + er * 0.4} cy={cy - er * 0.45} r={er * 0.5} fill="#fff" />
           <circle cx={100 + dx - er * 0.45} cy={cy + er * 0.4} r={er * 0.22} fill="#fff" />
+          </>)}
         </>
       ) : humor === "radiante" ? (
         <>
@@ -405,11 +555,23 @@ function Rosto({ humor, cy, r, olho = OLHO }: { humor: Humor; cy: number; r: num
         </>
       ) : humor === "feliz" ? (
         <>
-          <path d={`M${100 - dx - er} ${cy + er * 0.4} Q${100 - dx} ${cy - er * 1.4} ${100 - dx + er} ${cy + er * 0.4}`} stroke={OLHO} strokeWidth="3" fill="none" strokeLinecap="round" />
-          <path d={`M${100 + dx - er} ${cy + er * 0.4} Q${100 + dx} ${cy - er * 1.4} ${100 + dx + er} ${cy + er * 0.4}`} stroke={OLHO} strokeWidth="3" fill="none" strokeLinecap="round" />
+          {/* Etapa 329 — olho com íris, pupila e reflexo */}
+          {[-1, 1].map((l) =>
+            iris ? (
+              <OlhoReal key={l} x={100 + l * dx} y={cy} er={er} iris={iris} />
+            ) : (
+              <g key={l} className="vtm-piscar">
+                <ellipse cx={100 + l * dx} cy={cy} rx={er * 1.12} ry={er * 1.3} fill={olho} />
+                <circle cx={100 + l * dx + er * 0.38} cy={cy - er * 0.48} r={er * 0.42} fill="#fff" />
+              </g>
+            )
+          )}
         </>
       ) : (
         <>
+          {iris ? (
+            [-1, 1].map((l) => <OlhoReal key={l} x={100 + l * dx} y={cy} er={er * 0.95} iris={iris} />)
+          ) : (<>
           <g className="vtm-piscar">
             <circle cx={100 - dx} cy={cy} r={er * 1.08} fill={olho} />
             <circle cx={100 - dx + er * 0.38} cy={cy - er * 0.38} r={er * 0.38} fill="#fff" />
@@ -420,6 +582,7 @@ function Rosto({ humor, cy, r, olho = OLHO }: { humor: Humor; cy: number; r: num
             <circle cx={100 + dx + er * 0.38} cy={cy - er * 0.38} r={er * 0.38} fill="#fff" />
             <circle cx={100 + dx - er * 0.4} cy={cy + er * 0.42} r={er * 0.16} fill="#fff" opacity="0.8" />
           </g>
+          </>)}
           {humor === "triste" && (
             <>
               <path d={`M${100 - dx - er} ${cy - er * 1.7} L${100 - dx + er} ${cy - er * 2.2}`} stroke={OLHO} strokeWidth="2" strokeLinecap="round" />
@@ -429,11 +592,28 @@ function Rosto({ humor, cy, r, olho = OLHO }: { humor: Humor; cy: number; r: num
           )}
         </>
       )}
+      {/* Etapa 329 — narizinho e bigodinhos */}
+      {iris && humor !== "dormindo" && (
+        <>
+          <path d={`M${100 - r * 0.05} ${cy + r * 0.15} Q100 ${cy + r * 0.13} ${100 + r * 0.05} ${cy + r * 0.15} Q100 ${cy + r * 0.24} ${100 - r * 0.05} ${cy + r * 0.15} Z`} fill="#6B3344" />
+          <ellipse cx={100 - r * 0.015} cy={cy + r * 0.155} rx={r * 0.018} ry={r * 0.01} fill="#fff" opacity="0.6" />
+          {[-1, 1].map((l) => (
+            <g key={l} stroke={contorno} strokeOpacity="0.38" strokeWidth={Math.max(0.6, r * 0.018)} strokeLinecap="round" fill="none">
+              <path d={`M${100 + l * r * 0.42} ${cy + r * 0.22} q${l * r * 0.16} ${-r * 0.04} ${l * r * 0.3} ${-r * 0.02}`} />
+              <path d={`M${100 + l * r * 0.42} ${cy + r * 0.28} q${l * r * 0.16} ${r * 0.01} ${l * r * 0.3} ${r * 0.05}`} />
+            </g>
+          ))}
+        </>
+      )}
       {/* boca */}
       {humor === "radiante" ? (
         <path d={`M${100 - r * 0.18} ${bocaY - 2} Q100 ${bocaY + r * 0.26} ${100 + r * 0.18} ${bocaY - 2} Z`} fill="#7A2E3B" />
       ) : humor === "feliz" ? (
-        <path d={`M${100 - r * 0.16} ${bocaY} Q100 ${bocaY + r * 0.18} ${100 + r * 0.16} ${bocaY}`} stroke={OLHO} strokeWidth="2.6" fill="none" strokeLinecap="round" />
+        <>
+          {/* sorriso aberto com linguinha */}
+          <path d={`M${100 - r * 0.15} ${bocaY - 1} Q100 ${bocaY + r * 0.24} ${100 + r * 0.15} ${bocaY - 1} Z`} fill="#7A2E3B" />
+          <path d={`M${100 - r * 0.08} ${bocaY + r * 0.1} Q100 ${bocaY + r * 0.02} ${100 + r * 0.08} ${bocaY + r * 0.1} Q100 ${bocaY + r * 0.18} ${100 - r * 0.08} ${bocaY + r * 0.1} Z`} fill="#F48FB1" />
+        </>
       ) : humor === "triste" ? (
         <path d={`M${100 - r * 0.12} ${bocaY + 4} Q100 ${bocaY - r * 0.08} ${100 + r * 0.12} ${bocaY + 4}`} stroke={OLHO} strokeWidth="2.4" fill="none" strokeLinecap="round" />
       ) : humor === "dormindo" ? (
@@ -491,6 +671,43 @@ function Aura({ cy, r }: { cy: number; r: number }) {
 
 function Chapeu({ id }: { id: string }) {
   switch (id) {
+    // Etapa 331 — novidades da lojinha
+    case "cowboy":
+      return (
+        <g>
+          <path d="M-24 2 Q-27 -24 -12 -30 Q0 -23 12 -30 Q27 -24 24 2 Z" fill="#B45309" />
+          <path d="M-4 -26 Q0 -20 4 -26" stroke="#92400E" strokeWidth="1.5" fill="none" />
+          <path d="M-24 -5 Q0 1 24 -5 L24 2 Q0 7 -24 2 Z" fill="#451A03" />
+          <circle cx="15" cy="-1.5" r="2.6" fill="#FBBF24" />
+          <path d="M-48 -6 Q-44 8 0 9 Q44 8 48 -6 Q40 4 24 1 Q0 6 -24 1 Q-40 4 -48 -6 Z" fill="#92400E" />
+          <path d="M-40 1 Q0 10 40 1" stroke="#78350F" strokeWidth="1" fill="none" opacity="0.6" />
+          <path d="M-18 -22 Q-20 -10 -19 -2" stroke="#FFFFFF" strokeOpacity="0.25" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        </g>
+      );
+    case "tiara":
+      return (
+        <g>
+          <path d="M-30 6 Q0 -6 30 6" stroke="#CBD5E1" strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d="M-22 1 L-16 -11 L-8 -3 L0 -19 L8 -3 L16 -11 L22 1 Q0 -5 -22 1 Z" fill="#EEF2FF" stroke="#A5B4FC" strokeWidth="1.2" strokeLinejoin="round" />
+          <circle cx="0" cy="-10" r="3.6" fill="#EC4899" />
+          <circle cx="-1" cy="-11" r="1.1" fill="#FFFFFF" opacity="0.8" />
+          <circle cx="-14" cy="-4" r="2" fill="#38BDF8" />
+          <circle cx="14" cy="-4" r="2" fill="#38BDF8" />
+          <path d={estrela(13, -19, 4)} fill="#FDE68A" className="vtm-brilha" />
+        </g>
+      );
+    case "coelho":
+      return (
+        <g>
+          {[-1, 1].map((l) => (
+            <g key={l} transform={`rotate(${l * 12} ${l * 14} 0)`}>
+              <ellipse cx={l * 14} cy={-24} rx="8" ry="23" fill="#F8FAFC" stroke="#CBD5E1" strokeWidth="1.5" />
+              <ellipse cx={l * 14} cy={-22} rx="3.8" ry="16" fill="#F9A8D4" />
+            </g>
+          ))}
+          <path d="M-27 6 Q0 -8 27 6" stroke="#F472B6" strokeWidth="4.5" fill="none" strokeLinecap="round" />
+        </g>
+      );
     case "bone":
       return (
         <g>
@@ -788,6 +1005,18 @@ function Oculos({ id }: { id: string }) {
 
 function Roupa({ id }: { id: string }) {
   switch (id) {
+    case "cracha":
+      return (
+        <g>
+          <path d="M-24 -18 L-4 10 M24 -18 L4 10" stroke="#2563EB" strokeWidth="3" strokeLinecap="round" />
+          <rect x="-11" y="9" width="22" height="22" rx="3" fill="#FFFFFF" stroke="#94A3B8" strokeWidth="1" />
+          <rect x="-11" y="9" width="22" height="7" rx="3" fill="#D9A24C" />
+          <rect x="-4" y="6.5" width="8" height="4" rx="1" fill="#64748B" />
+          <text x="0" y="14.6" textAnchor="middle" fontSize="5" fontWeight="800" fill="#FFFFFF" fontFamily="sans-serif">VT</text>
+          <circle cx="0" cy="21.5" r="3.6" fill="#CBD5E1" />
+          <rect x="-7" y="26.5" width="14" height="2" rx="1" fill="#94A3B8" />
+        </g>
+      );
     case "gravata":
       return (
         <g>
@@ -915,6 +1144,46 @@ function Roupa({ id }: { id: string }) {
 
 function Mao({ id }: { id: string }) {
   switch (id) {
+    case "camera":
+      return (
+        <g transform="rotate(-8)">
+          <rect x="-8" y="-14" width="10" height="5" rx="1.5" fill="#4B5563" />
+          <rect x="-14" y="-10" width="28" height="18" rx="3" fill="#374151" />
+          <path d="M-14 -5 h28" stroke="#1F2937" strokeWidth="0.8" />
+          <circle cx="0" cy="-1" r="7" fill="#111827" stroke="#9CA3AF" strokeWidth="2" />
+          <circle cx="-2" cy="-3" r="2" fill="#60A5FA" opacity="0.85" />
+          <rect x="8" y="-8" width="4" height="2.6" rx="1" fill="#FDE68A" />
+        </g>
+      );
+    case "pincel":
+      return (
+        <g>
+          <g transform="rotate(-28)">
+            <rect x="-2" y="-6" width="4" height="26" rx="2" fill="#B45309" />
+            <rect x="-2.6" y="-12" width="5.2" height="7" fill="#D1D5DB" />
+            <path d="M-2.6 -12 Q-3.2 -22 0 -27 Q3.2 -22 2.6 -12 Z" fill="#8B5CF6" />
+          </g>
+          <path d="M14 -24 q2 3 0 4 q-2 -1 0 -4 Z" fill="#8B5CF6" className="vtm-lagrima" />
+        </g>
+      );
+    case "cofrinho":
+      return (
+        <g>
+          <circle cx="-1" cy="-21" r="4" fill="#FBBF24" stroke="#D97706" strokeWidth="1" className="vtm-voa" />
+          <rect x="-9" y="5" width="4" height="5" rx="1" fill="#F472B6" />
+          <rect x="4" y="5" width="4" height="5" rx="1" fill="#F472B6" />
+          <ellipse cx="0" cy="-2" rx="15" ry="11" fill="#F9A8D4" />
+          <circle cx="11" cy="-4" r="6.5" fill="#F9A8D4" />
+          <ellipse cx="16" cy="-3" rx="3" ry="2.4" fill="#F472B6" />
+          <circle cx="15.2" cy="-3.2" r="0.6" fill="#9D174D" />
+          <circle cx="16.8" cy="-3.2" r="0.6" fill="#9D174D" />
+          <circle cx="10.5" cy="-7" r="1.2" fill="#1F2421" />
+          <path d="M6 -10 l1.5 -5 l3.5 3.5 Z" fill="#F472B6" />
+          <rect x="-6" y="-13.2" width="9" height="2" rx="1" fill="#9D174D" />
+          <path d="M-15 -3 q-4 -1 -3 -4" stroke="#F472B6" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <ellipse cx="-6" cy="-6" rx="4" ry="2.4" fill="#FFFFFF" opacity="0.4" />
+        </g>
+      );
     case "cafe":
       return (
         <g>
@@ -1392,6 +1661,49 @@ function Fundo({ id, periodo, clima, uid }: { id: string; periodo: Periodo; clim
 /** Etapa 301 — amiguinhos que ficam do lado (origem no chão). */
 function Amigo({ id }: { id: string }) {
   switch (id) {
+    case "gatinho":
+      return (
+        <g className="vtm-gingar">
+          <ellipse cx="0" cy="-1" rx="13" ry="2.5" fill="#000" opacity="0.15" />
+          <path d="M9 -6 Q22 -9 17 -24" stroke="#F59E0B" strokeWidth="4" fill="none" strokeLinecap="round" />
+          <ellipse cx="2" cy="-9" rx="11" ry="8" fill="#FBBF24" />
+          <path d="M-1 -15 q2 3 0 6 M5 -16 q2 3 0 6" stroke="#D97706" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+          <ellipse cx="-4" cy="-1.8" rx="3" ry="1.8" fill="#FDE68A" />
+          <ellipse cx="6" cy="-1.8" rx="3" ry="1.8" fill="#FDE68A" />
+          <path d="M-13 -24 L-12 -33 L-6 -28 Z M-4 -28 L1 -33 L1 -23 Z" fill="#FBBF24" />
+          <path d="M-11.5 -26 L-11.2 -30.5 L-8.4 -28 Z M-2.5 -28 L-0.2 -30.5 L-0.4 -26 Z" fill="#F9A8D4" />
+          <circle cx="-6" cy="-21" r="8" fill="#FBBF24" />
+          <path d="M-9 -27 q1 2 0 3 M-5 -28 q1 2 0 3" stroke="#D97706" strokeWidth="1.2" fill="none" />
+          <ellipse cx="-9" cy="-21.5" rx="1.3" ry="1.7" fill="#1F2421" />
+          <ellipse cx="-3.5" cy="-21.5" rx="1.3" ry="1.7" fill="#1F2421" />
+          <circle cx="-9.4" cy="-22.2" r="0.45" fill="#fff" />
+          <circle cx="-3.9" cy="-22.2" r="0.45" fill="#fff" />
+          <path d="M-7.6 -18.6 l1.3 1.1 l1.3 -1.1 Z" fill="#F472B6" />
+          <path d="M-12 -18 l-6 -1 M-12 -17 l-6 1 M-1 -18 l6 -1 M-1 -17 l6 1" stroke="#92400E" strokeWidth="0.5" opacity="0.6" />
+        </g>
+      );
+    case "coelhinho":
+      return (
+        <g className="vtm-gingar" style={{ animationDuration: "1.4s" }}>
+          <ellipse cx="0" cy="-1" rx="12" ry="2.5" fill="#000" opacity="0.15" />
+          <circle cx="9" cy="-8" r="3.6" fill="#FFFFFF" stroke="#E2E8F0" />
+          <ellipse cx="1" cy="-9" rx="10" ry="8.5" fill="#F8FAFC" stroke="#E2E8F0" />
+          <g transform="rotate(-10 -7 -28)">
+            <ellipse cx="-7" cy="-31" rx="2.8" ry="8.5" fill="#F8FAFC" stroke="#E2E8F0" />
+            <ellipse cx="-7" cy="-30.5" rx="1.3" ry="6" fill="#F9A8D4" />
+          </g>
+          <g transform="rotate(14 -1 -28)">
+            <ellipse cx="-1" cy="-31" rx="2.8" ry="8.5" fill="#F8FAFC" stroke="#E2E8F0" />
+            <ellipse cx="-1" cy="-30.5" rx="1.3" ry="6" fill="#F9A8D4" />
+          </g>
+          <circle cx="-4" cy="-20" r="7" fill="#F8FAFC" stroke="#E2E8F0" />
+          <circle cx="-7" cy="-21" r="1.3" fill="#1F2421" />
+          <circle cx="-1.6" cy="-21" r="1.3" fill="#1F2421" />
+          <ellipse cx="-4.3" cy="-17.6" rx="1.2" ry="0.9" fill="#F472B6" />
+          <circle cx="-9" cy="-17.5" r="1.5" fill="#FBCFE8" opacity="0.8" />
+          <circle cx="0.4" cy="-17.5" r="1.5" fill="#FBCFE8" opacity="0.8" />
+        </g>
+      );
     case "passarinho":
       return (
         <g className="vtm-voa">

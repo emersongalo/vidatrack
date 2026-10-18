@@ -460,24 +460,28 @@ function ExtratoConteudo() {
         </div>
       )}
 
-      <div className="flex gap-2 mb-2">
+      {/* Etapa 335 — tipo num seletor de uma linha só (não quebra "Receitas"
+          em duas linhas) e a conta embaixo, com a largura toda */}
+      <div className="grid grid-cols-3 gap-1 bg-base-800 border border-base-600 rounded-full p-1 mb-2">
         {(["todos", "receita", "despesa"] as const).map((opcao) => (
           <button
             key={opcao}
             onClick={() => setTipo(opcao)}
-            className={`flex-1 min-w-0 text-base rounded-full px-2 py-2 border transition ${
-              tipo === opcao ? "bg-ink-100 text-base-900 border-ink-100" : "border-base-600 text-ink-400 hover:text-ink-100"
+            className={`min-w-0 whitespace-nowrap truncate text-[0.8125rem] rounded-full px-1 py-2 transition ${
+              tipo === opcao ? "bg-ink-100 text-base-900 font-medium" : "text-ink-400 hover:text-ink-100"
             }`}
           >
             {opcao === "todos" ? "Todos" : opcao === "receita" ? "Receitas" : "Despesas"}
           </button>
         ))}
-        {contas.length > 1 && (
+      </div>
+      {contas.length > 1 && (
+        <div className="relative mb-2">
           <select
             value={contaFiltro ?? ""}
             onChange={(e) => setContaFiltro(e.target.value || null)}
             aria-label="Filtrar por conta"
-            className="w-28 shrink-0 bg-base-800 border border-base-600 rounded-full px-2 text-sm text-ink-100 outline-none"
+            className="w-full appearance-none bg-base-800 border border-base-600 rounded-full pl-4 pr-10 py-2.5 text-sm text-ink-100 outline-none truncate"
           >
             <option value="">Todas as contas</option>
             {contas.map((c: any) => (
@@ -486,8 +490,9 @@ function ExtratoConteudo() {
               </option>
             ))}
           </select>
-        )}
-      </div>
+          <span aria-hidden className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ink-400 text-xs">▼</span>
+        </div>
+      )}
       </div>
 
       {(categoriaFiltro || contaFiltro || etiquetaFiltro) && (

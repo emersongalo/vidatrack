@@ -4,6 +4,7 @@ import "./globals.css";
 import { RegistradorPWA } from "@/components/RegistradorPWA";
 import { RecuperadorDeSegundoPlano } from "@/components/RecuperadorDeSegundoPlano";
 import { RegistradorPushNativo } from "@/components/RegistradorPushNativo";
+import { LimpadorNotificacoes } from "@/components/LimpadorNotificacoes";
 import { GerenciadorSincronizacaoOffline } from "@/components/GerenciadorSincronizacaoOffline";
 import { BaixadorOfflineAutomatico } from "@/components/BaixadorOfflineAutomatico";
 import { AnalyticsAnonimo } from "@/components/AnalyticsAnonimo";
@@ -109,6 +110,8 @@ export default function RootLayout({
         <RegistradorPWA />
         <RecuperadorDeSegundoPlano />
         <RegistradorPushNativo />
+        {/* Etapa 328 — some com o lembrete do que já foi feito */}
+        <LimpadorNotificacoes />
         <GerenciadorSincronizacaoOffline />
         <BaixadorOfflineAutomatico />
         <AnalyticsAnonimo />

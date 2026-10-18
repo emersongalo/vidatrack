@@ -1,13 +1,46 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "317";
+export const VERSAO_NOVIDADES = "334";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "334",
+    titulo: "App mais suave",
+    itens: [
+      { emoji: "🫧", titulo: "Transições macias", texto: "As telas entram com um leve desfoque e os blocos aparecem em cascata. As abas deslizam até onde você tocou e os botões dão uma afundadinha no toque." },
+    ],
+  },
+  {
+    versao: "331",
+    titulo: "Mundo mais cheio e mascote com trejeitos",
+    itens: [
+      { emoji: "🏦", titulo: "Aba Cartões e saldo por conta", texto: "Quem tem cartão ganha a aba Cartões (fatura, limite, parcelamentos). Com 2 ou mais contas, o saldo de cada uma aparece separado. E o número de parcelas agora dá pra digitar livre (ex: 18x).", href: "/financas/cartoes" },
+      { emoji: "🗼", titulo: "Mais coisas no Mundo", texto: "Farol com luz girando de noite, balão no céu, patinhos nadando, uma baleia soltando água, varal, poço, piquenique, banquinho e caixa de correio.", href: "/habitos/mundo" },
+      { emoji: "👋", titulo: "Mascote com trejeitos", texto: "De vez em quando ele acena, dá pulinhos, olha pros lados e solta coraçõezinhos ou notinhas — e reage quando você toca nele. Na lojinha: chapéu de cowboy, tiara, orelhas de coelho, crachá, câmera, pincel, cofrinho, gatinho e coelhinho.", href: "/habitos/mascote" },
+    ],
+  },
+  {
+    versao: "329",
+    titulo: "Mascote mais real e mundo mais vivo",
+    itens: [
+      { emoji: "😺", titulo: "Seu mascote ganhou detalhes", texto: "Olhos com íris e brilho, narizinho, bigodinhos, pelinho, topetinho, dedinhos e um rabinho que balança.", href: "/habitos/mascote" },
+      { emoji: "⛵", titulo: "O Mundo está vivo", texto: "Barquinho navegando, peixe pulando, passarinhos, moinho girando, fumaça na chaminé, árvores, flores, cogumelos e lampiões que acendem de noite (com vaga-lumes!).", href: "/habitos/mundo" },
+    ],
+  },
+  {
+    versao: "326",
+    titulo: "Ilha pra andar e mascote mais bonito",
+    itens: [
+      { emoji: "🕹️", titulo: "Ande pela ilha", texto: "Uma ilha estilo RPG: controle seu mascote, entre na casa, na lojinha e no Salão das Conquistas e converse com a Dona Flora, o Seu Zé e a Lia.", href: "/habitos/mundo/ilha" },
+      { emoji: "✨", titulo: "Mascote caprichado", texto: "Olhões brilhantes, sorriso com linguinha, cores mais vivas e contorno — ele aparece melhor em qualquer fundo.", href: "/habitos/mascote" },
+      { emoji: "🎁", titulo: "Baú da ilha e música", texto: "Na praça da ilha tem um baú que abre 1 vez por dia depois de um hábito (até 15 moedas). E dá pra ligar a música e os sons no 🔇." },
+    ],
+  },
   {
     versao: "317",
     titulo: "Início do seu jeito",

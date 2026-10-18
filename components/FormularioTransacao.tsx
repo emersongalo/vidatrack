@@ -38,7 +38,10 @@ export function FormularioTransacao({
   valoresIniciais,
   tipoInicial,
   idTransacaoEditada,
+  contaInicial,
 }: {
+  /** Etapa 330 — já vem com a conta escolhida (ex.: "Lançar" na aba Cartões) */
+  contaInicial?: string;
   /** Etapa 210 — pra excluir parcelas a partir da tela de edição */
   idTransacaoEditada?: string;
   contas: Conta[];
@@ -74,7 +77,10 @@ export function FormularioTransacao({
   useEffect(() => () => definirCorBarraStatus(null), []);
   // Etapa 210 — compra parcelada
   const [parcelado, setParcelado] = useState(false);
-  const [numParcelas, setNumParcelas] = useState(2);
+  // Etapa 330 — o campo guarda o que a pessoa digita (dá pra apagar o "2"
+  // e escrever "18"); o número de parcelas de verdade sai dele.
+  const [textoParcelas, setTextoParcelas] = useState("2");
+  const numParcelas = Math.max(2, Math.min(48, parseInt(textoParcelas, 10) || 2));
   const [modoParcela, setModoParcela] = useState<"total" | "parcela">("total");
   const [valorDigitado, setValorDigitado] = useState(valoresIniciais?.valor ? String(valoresIniciais.valor) : "");
   const [duracaoRecorrencia, setDuracaoRecorrencia] = useState<"sempre" | "ate_data">("sempre");
@@ -291,7 +297,7 @@ export function FormularioTransacao({
             id="contaId"
             name="contaId"
             required
-            defaultValue={valoresIniciais?.contaId}
+            defaultValue={valoresIniciais?.contaId ?? contaInicial}
             className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-base text-ink-100 focus:border-ink-100 outline-none transition"
           >
             {contas.map((conta) => (
@@ -524,13 +530,17 @@ export function FormularioTransacao({
                 <div className="mt-3 space-y-2.5">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-ink-400">Em</span>
+                    <input type="hidden" name="numParcelas" value={numParcelas} />
                     <input
-                      name="numParcelas"
-                      type="number"
-                      min={2}
-                      max={48}
-                      value={numParcelas}
-                      onChange={(e) => setNumParcelas(Math.max(2, Math.min(48, Number(e.target.value) || 2)))}
+                      aria-label="Número de parcelas"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={2}
+                      value={textoParcelas}
+                      onChange={(e) => setTextoParcelas(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                      onFocus={(e) => e.target.select()}
+                      onBlur={() => setTextoParcelas(String(numParcelas))}
                       className="w-16 bg-base-900 border border-base-600 rounded-lg px-2 py-1.5 text-sm text-ink-100 font-mono outline-none focus:border-ink-100"
                     />
                     <span className="text-xs text-ink-400">vezes</span>

@@ -73,17 +73,19 @@ export async function GET(request: Request) {
     if (!habitoDevidoNoDia(h, hoje)) continue;
 
     const meta = Number(h.meta_diaria ?? 1) || 1;
-    let feitoHoje = 0;
+    // Etapa 328 — confere o que CADA pessoa já fez hoje (hábito em dupla:
+    // quem já fez não recebe; o dono não é mais o único conferido)
+    const feitoPor = new Map<string, number>();
     if (!h.eh_negativo) {
       const { data: checkins } = await supabase
         .from("habito_checkins")
-        .select("quantidade")
+        .select("quantidade, usuario_id")
         .eq("habito_id", h.id)
-        .eq("usuario_id", h.dono_id)
         .eq("data", hoje);
-      feitoHoje = (checkins ?? []).reduce((s, c) => s + Number(c.quantidade ?? 1), 0);
-      if (feitoHoje >= meta) continue; // já completou hoje — não incomoda
+      for (const c of checkins ?? []) feitoPor.set(c.usuario_id as string, (feitoPor.get(c.usuario_id as string) ?? 0) + Number(c.quantidade ?? 1));
+      if ((feitoPor.get(h.dono_id) ?? 0) >= meta && !(await temCompartilhamento(supabase, "habito", h.id))) continue; // já completou hoje — não incomoda
     }
+    const feitoHoje = feitoPor.get(h.dono_id) ?? 0;
 
     const unidade = ((h.unidade as string | null) ?? "").trim();
     const ehContador = meta > 1 && !h.eh_negativo;
@@ -100,14 +102,15 @@ export async function GET(request: Request) {
       hoje,
       // Etapa 195 — app novo mostra com botões "✓ Feito" / "Lembrar em 30 min"
       { habitoId: h.id, titulo, corpo, data: hoje },
-      horario
+      horario,
+      (usuarioId) => !h.eh_negativo && (feitoPor.get(usuarioId) ?? 0) >= meta
     );
   }
 
   // --- Tarefas com lembrete ---
   const { data: tarefas } = await supabase
     .from("tarefas")
-    .select("id, titulo, dono_id, repetir, dias_semana, data, horario_lembrete, dia_mes, mes, intervalo_dias")
+    .select("id, titulo, dono_id, repetir, dias_semana, data, horario_lembrete, dia_mes, mes, intervalo_dias, concluida")
     .eq("arquivada", false)
     .not("horario_lembrete", "is", null);
 
@@ -117,6 +120,13 @@ export async function GET(request: Request) {
 
     const apareceHoje = tarefaApareceNoDia(t, hoje);
     if (!apareceHoje) continue;
+    // Etapa 328 — tarefa já concluída (antes do horário) não avisa mais
+    if (t.repetir === "nenhuma") {
+      if (t.concluida) continue;
+    } else {
+      const { data: feita } = await supabase.from("tarefa_conclusoes").select("tarefa_id").eq("tarefa_id", t.id).eq("data", hoje).limit(1);
+      if ((feita ?? []).length) continue;
+    }
 
     enviados += await notificarUsuariosDoItem(
       supabase,
@@ -241,6 +251,12 @@ export async function GET(request: Request) {
   );
 }
 
+/** Etapa 328 — o item é dividido com alguém? (aí cada um é conferido separado) */
+async function temCompartilhamento(supabase: ReturnType<typeof criarClienteAdmin>, tipoItem: string, itemId: string) {
+  const { data } = await supabase.from("compartilhamentos").select("item_id").eq("tipo_item", tipoItem).eq("item_id", itemId).not("usuario_convidado_id", "is", null).limit(1);
+  return (data ?? []).length > 0;
+}
+
 async function notificarUsuariosDoItem(
   supabase: ReturnType<typeof criarClienteAdmin>,
   tipoItem: string,
@@ -251,7 +267,9 @@ async function notificarUsuariosDoItem(
   hoje: string,
   lembreteHabito?: { habitoId: string; titulo: string; corpo: string; data: string },
   /** Etapa 216 — "já avisei" por horário (hábito com vários lembretes no dia) */
-  hora = ""
+  hora = "",
+  /** Etapa 328 — pula quem já fez (ex.: hábito em dupla) */
+  jaFez?: (usuarioId: string) => boolean
 ): Promise<number> {
   // Dono + convidados com acesso (só se aplica a hábito/tarefa/nota —
   // contas a pagar notificam só o dono, ver notificarContasAPagar)
@@ -269,6 +287,7 @@ async function notificarUsuariosDoItem(
   let enviados = 0;
 
   for (const usuarioId of idsUsuarios) {
+    if (jaFez?.(usuarioId)) continue;
     const { data: jaEnviado } = await supabase
       .from("lembretes_enviados")
       .select("id")

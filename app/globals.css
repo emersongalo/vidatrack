@@ -581,3 +581,77 @@ html[data-fonte="maior"] { font-size: 125%; }
 @keyframes vtm-brasa { from { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } to { transform: translate(8px, -260px); opacity: 0; } }
 .vtm-brasa { animation: vtm-brasa 7s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .vtm-cai, .vtm-brasa { animation: none !important; display: none; } }
+
+/* Etapa 331 · trejeitos do mascote (aceno, pulinho, olhar, coraçõezinhos) */
+.vtm :is(.vtm-pulinho, .vtm-aceno, .vtm-sobe, .vtm-olhar) { transform-box: fill-box; }
+@keyframes vtm-pulinho { 0%, 100% { transform: translateY(0) scale(1, 1); } 15% { transform: translateY(0) scale(1.07, 0.92); } 40% { transform: translateY(-18px) scale(0.96, 1.05); } 60% { transform: translateY(0) scale(1.05, 0.94); } 75% { transform: translateY(-5px) scale(1, 1); } }
+.vtm-pulinho { transform-origin: 50% 100%; animation: vtm-pulinho 1s ease-out 1; }
+@keyframes vtm-aceno { 0%, 100% { transform: rotate(0deg); } 20%, 60% { transform: rotate(140deg); } 40%, 80% { transform: rotate(108deg); } }
+.vtm-aceno { transform-origin: 50% 12%; animation: vtm-aceno 1.7s ease-in-out 1; }
+@keyframes vtm-sobe { 0% { transform: translateY(0) scale(0.4); opacity: 0; } 20% { transform: translateY(-6px) scale(1); opacity: 1; } 100% { transform: translateY(-36px) scale(1.1); opacity: 0; } }
+.vtm-sobe { transform-origin: 50% 50%; animation: vtm-sobe 1.5s ease-out 1 both; }
+@keyframes vtm-olhar { 0%, 100% { transform: translateX(0); } 25%, 40% { transform: translateX(-5px); } 60%, 80% { transform: translateX(5px); } }
+.vtm-olhar { animation: vtm-olhar 1.8s ease-in-out 1; }
+@media (prefers-reduced-motion: reduce) { .vtm-pulinho, .vtm-aceno, .vtm-sobe, .vtm-olhar { animation: none; } .vtm-sobe { opacity: 0; } }
+
+/* Etapa 334 · suavização geral (sem mudar o visual) -------------------
+   1) troca de tela com leve desfoque + zoom (como apps modernos)
+   2) os blocos da tela entram em cascata
+   3) toque com "afundadinha" em botões e cartões
+   4) curvas de animação mais macias */
+:root { --vt-suave: cubic-bezier(.22, 1, .36, 1); }
+@keyframes entrar-tela {
+  from { opacity: 0; transform: translateY(8px) scale(.988); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes vt-entrar-direita {
+  from { opacity: 0; transform: translateX(26px) scale(.99); filter: blur(3px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes vt-entrar-esquerda {
+  from { opacity: 0; transform: translateX(-26px) scale(.99); filter: blur(3px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.entrada-tela { animation: entrar-tela 340ms var(--vt-suave); }
+.entrada-avancar { animation: vt-entrar-direita 320ms var(--vt-suave); }
+.entrada-voltar { animation: vt-entrar-esquerda 320ms var(--vt-suave); }
+
+@keyframes vt-cascata { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+:is(.entrada-tela, .entrada-avancar, .entrada-voltar) > main > :not(.fixed):not(.sticky):not(.absolute):not([class*="translate"]):not(script) {
+  animation: vt-cascata 460ms var(--vt-suave) backwards;
+}
+:is(.entrada-tela, .entrada-avancar, .entrada-voltar) > main > :nth-child(2) { animation-delay: 40ms; }
+:is(.entrada-tela, .entrada-avancar, .entrada-voltar) > main > :nth-child(3) { animation-delay: 80ms; }
+:is(.entrada-tela, .entrada-avancar, .entrada-voltar) > main > :nth-child(4) { animation-delay: 120ms; }
+:is(.entrada-tela, .entrada-avancar, .entrada-voltar) > main > :nth-child(5) { animation-delay: 160ms; }
+:is(.entrada-tela, .entrada-avancar, .entrada-voltar) > main > :nth-child(6) { animation-delay: 200ms; }
+:is(.entrada-tela, .entrada-avancar, .entrada-voltar) > main > :nth-child(n+7) { animation-delay: 240ms; }
+
+/* toque: só onde o elemento não tem transform próprio (:where = peso zero) */
+:where(button, [role="button"], a, summary, label) {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 200ms;
+  transition-timing-function: var(--vt-suave);
+}
+:where(button, [role="button"]):not(:disabled):active { transform: scale(.96); }
+:where(a[class*="rounded-2xl"], a[class*="rounded-3xl"], a[class*="rounded-xl"]):active { transform: scale(.985); }
+
+/* aba ativa que desliza (AbasArea) */
+.vt-aba-pilula { transition: transform 420ms var(--vt-suave), width 420ms var(--vt-suave); }
+
+/* folhas, avisos e janelinhas com curva mais macia */
+.animate-surgir { animation: surgir 320ms var(--vt-suave); }
+.animate-folha { animation: folha 360ms var(--vt-suave); }
+.animate-fundo { animation: fundo 260ms ease-out; }
+.animate-descer { animation: descer 380ms var(--vt-suave); }
+.animate-entrar { animation: entrar 420ms var(--vt-suave) backwards; }
+
+/* troca de tema (claro/escuro) sem "piscar" */
+body { transition: background-color 300ms ease, color 300ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .entrada-tela, .entrada-avancar, .entrada-voltar,
+  :is(.entrada-tela, .entrada-avancar, .entrada-voltar) > main > * { animation: none !important; }
+  :where(button, [role="button"], a):active { transform: none; }
+  .vt-aba-pilula { transition: none; }
+}
