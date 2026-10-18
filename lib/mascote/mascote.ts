@@ -48,8 +48,6 @@ export type DadosMascote = {
   pesca?: Pesca;
   /** Etapa 316 — prêmios de evento já resgatados ("halloween-2026") */
   eventos?: string[];
-  /** Etapa 326 — último dia em que abriu o baú da ilha */
-  bauIlha?: string;
 };
 
 export type DesafioSalvo = {
@@ -338,8 +336,6 @@ export function lerMascote(bruto: unknown): DadosMascote | null {
   if (pesca) m.pesca = pesca;
   const eventos = [...new Set((Array.isArray(b.eventos) ? b.eventos : []).filter((x: unknown) => typeof x === "string" && /^[a-z]+-\d{4}$/.test(x as string)))].slice(-20) as string[];
   if (eventos.length) m.eventos = eventos;
-  // Etapa 326 — baú da ilha
-  if (ehDia(b.bauIlha)) m.bauIlha = b.bauIlha;
   return m;
 }
 

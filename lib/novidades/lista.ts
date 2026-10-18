@@ -34,11 +34,9 @@ export const NOVIDADES: GrupoNovidades[] = [
   },
   {
     versao: "326",
-    titulo: "Ilha pra andar e mascote mais bonito",
+    titulo: "Mascote mais bonito",
     itens: [
-      { emoji: "🕹️", titulo: "Ande pela ilha", texto: "Uma ilha estilo RPG: controle seu mascote, entre na casa, na lojinha e no Salão das Conquistas e converse com a Dona Flora, o Seu Zé e a Lia.", href: "/habitos/mundo/ilha" },
       { emoji: "✨", titulo: "Mascote caprichado", texto: "Olhões brilhantes, sorriso com linguinha, cores mais vivas e contorno — ele aparece melhor em qualquer fundo.", href: "/habitos/mascote" },
-      { emoji: "🎁", titulo: "Baú da ilha e música", texto: "Na praça da ilha tem um baú que abre 1 vez por dia depois de um hábito (até 15 moedas). E dá pra ligar a música e os sons no 🔇." },
     ],
   },
   {
