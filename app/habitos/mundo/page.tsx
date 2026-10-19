@@ -108,8 +108,10 @@ export default function MundoPage() {
       </div>
 
       <ZoomPan className="rounded-3xl border border-base-600/70 mb-2">
+        {(vista) => (
         <div style={{ background: tema.particula === "brasas" ? "linear-gradient(180deg, #431407, #7C2D12)" : CEU[periodo] }}>
         <MundoIso
+          vista={vista}
           periodo={periodo}
           mascote={mascote ? { cor: mascote.cor, fase: fase.nivel, equipados: mascote.equipados, nome: mascote.nome } : null}
           garagem={garagem}
@@ -123,6 +125,7 @@ export default function MundoPage() {
           evento={evento?.id ?? null}
         />
         </div>
+        )}
       </ZoomPan>
       <p className="text-xs text-ink-400 mb-4 text-center">
         🏝️ {feitasConq} de {info.conquistas.length} monumentos na ilha

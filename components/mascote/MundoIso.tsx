@@ -399,7 +399,7 @@ function FachoFarol() {
   const dir = Math.sin((a * Math.PI) / 180) >= 0 ? 1 : -1;
   const comp = 30 + alcance * 90;
   return (
-    <g pointerEvents="none" style={{ mixBlendMode: "screen" }}>
+    <g pointerEvents="none">
       <defs>
         <linearGradient id="vtm-facho" x1={dir > 0 ? "0" : "1"} x2={dir > 0 ? "1" : "0"} y1="0" y2="0">
           <stop offset="0%" stopColor="#FEF3C7" stopOpacity="0.75" />
@@ -600,6 +600,7 @@ export function MundoIso({
   humor = "feliz",
   visitantes = [],
   evento = null,
+  vista,
 }: {
   periodo: Periodo;
   mascote: { cor: CorMascote; fase: number; equipados: Partial<Record<Slot, string>>; nome: string } | null;
@@ -617,6 +618,9 @@ export function MundoIso({
   visitantes?: VisitanteMundo[];
   /** Etapa 316 — decoração do evento da estação */
   evento?: "halloween" | "natal" | null;
+  /** Etapa 338 — zoom pelo viewBox (o desenho continua do tamanho da tela,
+   *  em vez de virar uma imagem gigante que o celular não dá conta) */
+  vista?: { s: number; x: number; y: number; w: number } | null;
 }) {
   const noite = periodo === "noite";
   const dormindo = useDormindo();
@@ -1023,7 +1027,16 @@ export function MundoIso({
   ents.sort((a, b) => a.chave - b.chave);
 
   return (
-    <svg viewBox={`0 0 ${LARG} ${ALT}`} className="w-full h-auto select-none" role="img" aria-label="Mapa do seu mundo">
+    <svg
+      viewBox={
+        vista && vista.s > 1.001 && vista.w > 0
+          ? `${((-vista.x / vista.s) * LARG) / vista.w} ${((-vista.y / vista.s) * LARG) / vista.w} ${LARG / vista.s} ${ALT / vista.s}`
+          : `0 0 ${LARG} ${ALT}`
+      }
+      className="w-full h-auto select-none"
+      role="img"
+      aria-label="Mapa do seu mundo"
+    >
       {/* água em volta */}
       <polygon points={pts([P(-1.5, -1.5), P(N + 1.5, -1.5), P(N + 1.5, N + 1.5), P(-1.5, N + 1.5)])} fill={noite ? tema.aguaNoite : tema.agua} opacity="0.85" />
       <g className="vtm-onda" opacity="0.5">

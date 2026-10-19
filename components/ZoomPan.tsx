@@ -6,9 +6,40 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { limitarZoom, zoomNoPonto, type Vista } from "@/lib/app/zoom";
 
-export function ZoomPan({ children, max = 3.5, className = "" }: { children: ReactNode; max?: number; className?: string }) {
+/**
+ * Etapa 338 — com `children` em forma de função, o zoom é "de verdade":
+ * a vista final vai pro desenho (ex: viewBox do SVG) e só DURANTE o gesto
+ * usa transform (rápido). Antes o mapa inteiro era ampliado por CSS e
+ * virava uma imagem enorme (até 3,5× a tela) — o celular não dava conta
+ * e o Mundo "quebrava" (pedaços pretos/sumindo).
+ */
+type Filhos = ReactNode | ((vista: Vista & { w: number }) => ReactNode);
+
+export function ZoomPan({ children, max = 3.5, className = "" }: { children: Filhos; max?: number; className?: string }) {
   const caixa = useRef<HTMLDivElement>(null);
   const [v, setV] = useState<Vista>({ s: 1, x: 0, y: 0 });
+  const modoDesenho = typeof children === "function";
+  // vista que o desenho já está mostrando (só muda quando o gesto termina)
+  const [vFixa, setVFixa] = useState<Vista>({ s: 1, x: 0, y: 0 });
+  const [largura, setLargura] = useState(0);
+  const tempoFixar = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fixarDepois = useCallback((ms: number) => {
+    if (tempoFixar.current) clearTimeout(tempoFixar.current);
+    tempoFixar.current = setTimeout(() => {
+      setSuave(false);
+      setVFixa(vRef.current);
+    }, ms);
+  }, []);
+  useEffect(() => {
+    const el = caixa.current;
+    if (!el) return;
+    const medir = () => setLargura(el.getBoundingClientRect().width);
+    medir();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(medir) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, []);
+  useEffect(() => () => { if (tempoFixar.current) clearTimeout(tempoFixar.current); }, []);
   const vRef = useRef(v);
   vRef.current = v;
   const dedos = useRef(new Map<number, { x: number; y: number }>());
@@ -25,9 +56,14 @@ export function ZoomPan({ children, max = 3.5, className = "" }: { children: Rea
     (nv: Vista, animar = false) => {
       const { w, h } = tam();
       setSuave(animar);
-      setV(limitarZoom(nv, w, h, max));
+      const lim = limitarZoom(nv, w, h, max);
+      vRef.current = lim;
+      setV(lim);
+      // botões/duplo toque: anima e fixa no fim; rodinha: fixa quando parar
+      if (animar) fixarDepois(270);
+      else if (!dedos.current.size) fixarDepois(180);
     },
-    [max]
+    [max, fixarDepois]
   );
   const zoomEm = useCallback(
     (fator: number, px?: number, py?: number, animar = true) => {
@@ -98,7 +134,10 @@ export function ZoomPan({ children, max = 3.5, className = "" }: { children: Rea
     if (dedos.current.size === 1) {
       const [p] = [...dedos.current.values()];
       arraste.current = { x: p.x, y: p.y, v: vRef.current };
-    } else if (!dedos.current.size) arraste.current = null;
+    } else if (!dedos.current.size) {
+      arraste.current = null;
+      fixarDepois(0);
+    }
   }
 
   const zoom = v.s > 1.01;
@@ -126,15 +165,37 @@ export function ZoomPan({ children, max = 3.5, className = "" }: { children: Rea
         style={{ touchAction: zoom ? "none" : "pan-y" }}
         className={zoom ? "cursor-grab active:cursor-grabbing" : ""}
       >
-        <div
-          style={{
-            transform: `translate(${v.x}px, ${v.y}px) scale(${v.s})`,
-            transformOrigin: "0 0",
-            transition: suave ? "transform 0.25s ease-out" : undefined,
-          }}
-        >
-          {children}
-        </div>
+        {modoDesenho ? (
+          (() => {
+            // transform só pra diferença entre o gesto e o que já está desenhado
+            const a = v.s / vFixa.s;
+            const bx = v.x - vFixa.x * a;
+            const by = v.y - vFixa.y * a;
+            const mexendo = Math.abs(a - 1) > 0.001 || Math.abs(bx) > 0.5 || Math.abs(by) > 0.5;
+            return (
+              <div
+                style={{
+                  transform: mexendo ? `translate(${bx}px, ${by}px) scale(${a})` : undefined,
+                  transformOrigin: "0 0",
+                  transition: suave ? "transform 0.25s ease-out" : undefined,
+                  willChange: mexendo ? "transform" : undefined,
+                }}
+              >
+                {(children as (vista: Vista & { w: number }) => ReactNode)({ ...vFixa, w: largura })}
+              </div>
+            );
+          })()
+        ) : (
+          <div
+            style={{
+              transform: `translate(${v.x}px, ${v.y}px) scale(${v.s})`,
+              transformOrigin: "0 0",
+              transition: suave ? "transform 0.25s ease-out" : undefined,
+            }}
+          >
+            {children as ReactNode}
+          </div>
+        )}
       </div>
       <div className="absolute right-2 bottom-2 flex flex-col gap-1.5">
         <BotaoZoom rotulo="Aproximar" onClick={() => zoomEm(1.6)} desativado={v.s >= max - 0.01}>
