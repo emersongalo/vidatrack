@@ -655,3 +655,61 @@ body { transition: background-color 300ms ease, color 300ms ease; }
   :where(button, [role="button"], a):active { transform: none; }
   .vt-aba-pilula { transition: none; }
 }
+
+/* Etapa 340 · acabamento (mesmo estilo, mais capricho) -----------------
+   Tudo com :where (peso zero): qualquer classe do próprio componente
+   (shadow-*, bg-gradient-*, etc.) continua mandando. */
+
+/* 1) cartões: luz fininha em cima, profundidade suave embaixo */
+:where([class~="bg-base-800"][class~="border"]:is([class~="rounded-2xl"], [class~="rounded-3xl"])) {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.028), rgb(255 255 255 / 0) 42%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.045),
+    0 1px 2px rgb(0 0 0 / 0.22),
+    0 10px 28px -16px rgb(0 0 0 / 0.55);
+}
+[data-theme="light"] :where([class~="bg-base-800"][class~="border"]:is([class~="rounded-2xl"], [class~="rounded-3xl"])) {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.7), rgb(255 255 255 / 0) 50%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 1px 2px rgb(20 20 30 / 0.05),
+    0 8px 22px -14px rgb(20 20 30 / 0.16);
+}
+
+/* 2) títulos um pouco mais "fechados" e números alinhados */
+:where(h1, h2, .font-display) { letter-spacing: -0.012em; }
+:where(.font-mono, .tabular-nums) { font-variant-numeric: tabular-nums; }
+
+/* 3) campos: anel de foco macio na cor do texto, transição suave */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) {
+  transition: border-color 200ms var(--vt-suave, ease), box-shadow 200ms var(--vt-suave, ease), background-color 200ms ease;
+}
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea):focus {
+  box-shadow: 0 0 0 3px rgb(var(--c-ink-100) / 0.09);
+}
+:where(input, textarea)::placeholder { color: rgb(var(--c-ink-400) / 0.75); }
+
+/* 4) divisórias de listas mais discretas */
+:where([class*="divide-base-600"]) > :not([hidden]) ~ :not([hidden]) { border-color: rgb(var(--c-base-600) / 0.7); }
+
+/* 5) seleção de texto e barra de rolagem (computador) no tom do app */
+::selection { background: rgb(var(--c-habito) / 0.35); color: inherit; }
+@media (hover: hover) and (pointer: fine) {
+  * { scrollbar-width: thin; scrollbar-color: rgb(var(--c-base-600)) transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgb(var(--c-base-600)); border-radius: 9999px; border: 3px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: rgb(var(--c-ink-400) / 0.6); }
+  /* cartões clicáveis sobem 1px no mouse */
+  :where(a[class~="bg-base-800"][class~="border"]):hover { transform: translateY(-1px); }
+}
+
+/* 6) topo das áreas: brilho que acompanha a borda */
+.topo-area-brilho::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(120% 80% at 0% 0%, rgb(255 255 255 / 0.07), transparent 55%);
+}
+[data-theme="light"] .topo-area-brilho::after { background: radial-gradient(120% 80% at 0% 0%, rgb(255 255 255 / 0.6), transparent 55%); }

@@ -417,9 +417,17 @@ export function Mascote({ cor, fase, humor, equipados = {}, tamanho = 160, comFu
               <rect x={-r * 0.06} y={-r * 0.24} width={r * 0.12} height={r * 0.1} rx="1.5" fill="#F87171" />
             </g>
           )}
-          <g transform={`translate(${100 + desvio + r * 0.12} ${cy + r * 0.34}) rotate(28)`}>
-            <rect x="0" y="-1.6" width={r * 0.42} height="3.2" rx="1.6" fill="#F8FAFC" stroke="#CBD5E1" strokeWidth="0.6" />
-            <circle cx={r * 0.42} cy="0" r="2.6" fill="#EF4444" />
+          {/* Etapa 339 — curativo em X na bochecha (o termômetro na boca parecia cigarro) */}
+          <g transform={`translate(${100 + desvio + r * 0.52} ${cy + r * 0.12})`}>
+            {[-35, 35].map((ang) => (
+              <g key={ang} transform={`rotate(${ang})`}>
+                <rect x={-r * 0.2} y={-r * 0.055} width={r * 0.4} height={r * 0.11} rx={r * 0.05} fill="#F5C9A0" stroke="#D9A070" strokeWidth="0.6" />
+                <rect x={-r * 0.06} y={-r * 0.05} width={r * 0.12} height={r * 0.1} rx={r * 0.02} fill="#E8B48A" />
+                {[-0.13, 0.13].map((dx) => (
+                  <circle key={dx} cx={r * dx} cy="0" r={Math.max(0.4, r * 0.012)} fill="#C08050" opacity="0.6" />
+                ))}
+              </g>
+            ))}
           </g>
           <path d={`M${100 - r * 0.78} ${cy - r * 0.42} q-3 6 0 8 q3 -2 0 -8 Z`} fill="#BAE6FD" className="vtm-lagrima" />
         </g>

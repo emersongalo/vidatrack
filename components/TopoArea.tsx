@@ -45,7 +45,7 @@ export function TopoArea({
 
   return (
     <section
-      className={`relative overflow-hidden rounded-3xl border ${e.borda} p-5 mb-4 animate-surgir`}
+      className={`topo-area-brilho relative overflow-hidden rounded-3xl border ${e.borda} p-5 mb-4 animate-surgir shadow-sm shadow-black/10`}
       style={{ background: `linear-gradient(135deg, ${e.cor}, transparent 75%)` }}
     >
       <span aria-hidden className="pointer-events-none absolute -right-2 -top-2 text-7xl opacity-25 animate-boiar select-none">
@@ -59,7 +59,7 @@ export function TopoArea({
               {nome ? `, ${nome}` : ""} {emojiDaHora(hora)}
             </p>
           )}
-          <h1 className="text-3xl font-display font-bold leading-tight">{titulo}</h1>
+          <h1 className="text-3xl font-display font-bold leading-tight tracking-tight">{titulo}</h1>
           {subtitulo && <div className="text-sm text-ink-400 mt-0.5">{subtitulo}</div>}
         </div>
         {acoes && <div className="relative flex items-center gap-2 shrink-0">{acoes}</div>}
