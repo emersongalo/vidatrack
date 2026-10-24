@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hojeISO, calcularStreak, MARCOS_CONQUISTA } from "@/lib/habitos/streak";
-import { normalizarHorarios } from "@/lib/habitos/horariosLembrete";
+import { camposHabito } from "@/lib/habitos/camposHabito";
 import { convidarAoCriar } from "@/lib/compartilhamento/actions";
 
 export async function criarHabito(formData: FormData) {
@@ -19,49 +19,29 @@ export async function criarHabito(formData: FormData) {
     .select("id", { count: "exact", head: true })
     .eq("dono_id", user!.id);
 
-  const nome = String(formData.get("nome") ?? "").trim();
-  const cor = String(formData.get("cor") ?? "habito");
-  const icone = String(formData.get("icone") ?? "Droplet");
-  const frequencia = String(formData.get("frequencia") ?? "diaria");
-  const diasSemana = formData.getAll("diasSemana").map(Number);
-  const vezesSemana = Math.max(1, Math.min(7, Math.round(Number(formData.get("vezesSemana")) || 3)));
-  const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
-  // Etapa 216 — vários horários (o primeiro continua em horario_lembrete)
-  const horariosEnviados = formData.getAll("horariosLembrete").map(String);
-  const horarios = normalizarHorarios(horariosEnviados.length ? horariosEnviados : [String(formData.get("horarioLembrete") ?? "")]);
-  const horarioLembreteRaw = horarios[0] ?? "";
-  const metaDiaria = Math.max(1, Number(formData.get("metaDiaria") ?? "1") || 1);
-  const unidade = String(formData.get("unidade") ?? "").trim() || null;
-  const ehNegativo = formData.get("ehNegativo") === "true";
-  // Etapa 249 — economia por dia (hábito de parar) e "fazer logo depois de"
-  const economiaBruta = String(formData.get("economiaDia") ?? "").replace(/\./g, "").replace(",", ".").trim();
-  const economiaDia = ehNegativo && Number(economiaBruta) > 0 ? Math.round(Number(economiaBruta) * 100) / 100 : null;
-  const depoisDeBruto = String(formData.get("depoisDe") ?? "");
-  const depoisDe = !ehNegativo && /^[0-9a-f-]{36}$/i.test(depoisDeBruto) ? depoisDeBruto : null;
+  // Etapa 350 — mesma leitura que o app usa offline
+  const campos = camposHabito(formData);
+  const nome = campos.nome;
+  // Etapa 350 — id criado no aparelho (sem internet): repetir o envio não duplica
+  const idCliente = String(formData.get("idCliente") ?? "");
+  const idValido = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idCliente) ? idCliente : null;
 
   if (!nome) {
     redirect(`/habitos/novo?erro=${encodeURIComponent("Dê um nome para o hábito")}`);
   }
 
   const { data: criado, error } = await supabase.from("habitos").insert({
+    ...(idValido ? { id: idValido } : {}),
     dono_id: user!.id,
-    nome,
-    cor,
-    icone,
-    frequencia,
-    dias_semana: frequencia === "dias_semana" ? diasSemana : [],
-    vezes_semana: frequencia === "semanal" ? vezesSemana : null,
-    categoria_id: categoriaIdRaw || null,
-    horario_lembrete: horarioLembreteRaw || null,
-    horarios_lembrete: horarios.length ? horarios : null,
-    meta_diaria: metaDiaria,
-    unidade,
-    eh_negativo: ehNegativo,
-    economia_dia: economiaDia,
-    depois_de: depoisDe,
+    ...campos,
     ordem: count ?? 0,
   }).select("id").single();
 
+  if (error?.code === "23505" && idValido) {
+    // já tinha chegado (reenvio da fila)
+    revalidatePath("/habitos");
+    redirect("/habitos");
+  }
   if (error) {
     redirect(`/habitos/novo?erro=${encodeURIComponent(error.message)}`);
   }
@@ -124,25 +104,8 @@ export async function criarHabitoSilencioso(dados: {
 export async function atualizarHabito(habitoId: string, formData: FormData) {
   const supabase = createClient();
 
-  const nome = String(formData.get("nome") ?? "").trim();
-  const cor = String(formData.get("cor") ?? "habito");
-  const icone = String(formData.get("icone") ?? "Droplet");
-  const frequencia = String(formData.get("frequencia") ?? "diaria");
-  const diasSemana = formData.getAll("diasSemana").map(Number);
-  const vezesSemana = Math.max(1, Math.min(7, Math.round(Number(formData.get("vezesSemana")) || 3)));
-  const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
-  // Etapa 216 — vários horários (o primeiro continua em horario_lembrete)
-  const horariosEnviados = formData.getAll("horariosLembrete").map(String);
-  const horarios = normalizarHorarios(horariosEnviados.length ? horariosEnviados : [String(formData.get("horarioLembrete") ?? "")]);
-  const horarioLembreteRaw = horarios[0] ?? "";
-  const metaDiaria = Math.max(1, Number(formData.get("metaDiaria") ?? "1") || 1);
-  const unidade = String(formData.get("unidade") ?? "").trim() || null;
-  const ehNegativo = formData.get("ehNegativo") === "true";
-  // Etapa 249 — economia por dia (hábito de parar) e "fazer logo depois de"
-  const economiaBruta = String(formData.get("economiaDia") ?? "").replace(/\./g, "").replace(",", ".").trim();
-  const economiaDia = ehNegativo && Number(economiaBruta) > 0 ? Math.round(Number(economiaBruta) * 100) / 100 : null;
-  const depoisDeBruto = String(formData.get("depoisDe") ?? "");
-  const depoisDe = !ehNegativo && /^[0-9a-f-]{36}$/i.test(depoisDeBruto) ? depoisDeBruto : null;
+  const campos = camposHabito(formData, habitoId);
+  const nome = campos.nome;
 
   if (!nome) {
     redirect(`/habitos/${habitoId}/editar?erro=${encodeURIComponent("Dê um nome para o hábito")}`);
@@ -150,22 +113,7 @@ export async function atualizarHabito(habitoId: string, formData: FormData) {
 
   const { error } = await supabase
     .from("habitos")
-    .update({
-      nome,
-      cor,
-      icone,
-      frequencia,
-      dias_semana: frequencia === "dias_semana" ? diasSemana : [],
-      vezes_semana: frequencia === "semanal" ? vezesSemana : null,
-      categoria_id: categoriaIdRaw || null,
-      horario_lembrete: horarioLembreteRaw || null,
-      horarios_lembrete: horarios.length ? horarios : null,
-      meta_diaria: metaDiaria,
-      unidade,
-      eh_negativo: ehNegativo,
-      economia_dia: economiaDia,
-      depois_de: depoisDe === habitoId ? null : depoisDe,
-    })
+    .update(campos)
     .eq("id", habitoId);
 
   if (error) {

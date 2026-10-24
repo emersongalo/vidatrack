@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ImportadorExtrato } from "@/components/ImportadorExtrato";
+import { AvisoPrecisaInternet } from "@/components/AvisoPrecisaInternet";
 
 export default async function ImportarExtratoPage() {
   const supabase = createClient();
@@ -12,6 +13,7 @@ export default async function ImportarExtratoPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
+      <AvisoPrecisaInternet texto="Importar extrato precisa de internet (o arquivo é lido no servidor)." />
       <Link href="/financas/mais" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Mais
       </Link>

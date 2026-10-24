@@ -6,67 +6,25 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hojeISO } from "@/lib/habitos/streak";
 import { convidarAoCriar } from "@/lib/compartilhamento/actions";
+import { camposRepeticao, camposFinanca } from "@/lib/tarefas/camposTarefa";
 
-// Etapa 193 — lê os campos de repetição/prioridade do formulário e
-// devolve já no formato das colunas. Compartilhado por criar e editar
-// pra não ter duas regras diferentes de "o que salvar".
-const REPETICOES_VALIDAS = ["nenhuma", "diaria", "dias_semana", "mensal", "anual", "intervalo"];
-
-function camposRepeticao(formData: FormData) {
-  const repetirRaw = String(formData.get("repetir") ?? "nenhuma");
-  const repetir = REPETICOES_VALIDAS.includes(repetirRaw) ? repetirRaw : "nenhuma";
-  const diasSemana = formData.getAll("diasSemana").map(Number);
-  const dataRaw = String(formData.get("data") ?? "");
-  const limitar = (v: number, min: number, max: number) => (Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : null);
-  const diaMes = limitar(Number(formData.get("diaMes")), 1, 31);
-  const mes = limitar(Number(formData.get("mes")), 1, 12);
-  const intervaloDias = limitar(Number(formData.get("intervaloDias")), 1, 365);
-  const prioridade = limitar(Number(formData.get("prioridade") ?? 0), 0, 3) ?? 0;
-
-  return {
-    repetir,
-    dias_semana: repetir === "dias_semana" ? diasSemana : [],
-    // "data" = dia da tarefa única, ou o dia de início do "a cada N dias"
-    data: repetir === "nenhuma" || repetir === "intervalo" ? dataRaw || hojeISO() : null,
-    dia_mes: repetir === "mensal" || repetir === "anual" ? diaMes : null,
-    mes: repetir === "anual" ? mes : null,
-    intervalo_dias: repetir === "intervalo" ? intervaloDias : null,
-    prioridade,
-  };
-}
-
-// Etapa 194 — tarefa ligada a finanças. Ao concluir, o banco (trigger
-// lancar_transacao_da_tarefa) cria o lançamento sozinho; desmarcar remove.
-function camposFinanca(formData: FormData): { erro?: string; campos: Record<string, unknown> } {
-  const vazio = { financa_tipo: null, financa_valor: null, financa_conta_id: null, financa_categoria_id: null };
-  if (formData.get("financaVinculado") !== "on") return { campos: vazio };
-  const tipo = formData.get("financaTipo") === "receita" ? "receita" : "despesa";
-  const valor = Number(String(formData.get("financaValor") ?? "").replace(/\./g, "").replace(",", "."));
-  const contaId = String(formData.get("financaContaId") ?? "");
-  const categoriaId = String(formData.get("financaCategoriaId") ?? "");
-  if (!valor || valor <= 0) return { erro: "Informe o valor que será lançado ao concluir a tarefa", campos: vazio };
-  if (!contaId) return { erro: "Escolha a conta do lançamento", campos: vazio };
-  return {
-    campos: {
-      financa_tipo: tipo,
-      financa_valor: Math.round(valor * 100) / 100,
-      financa_conta_id: contaId,
-      financa_categoria_id: categoriaId || null,
-    },
-  };
-}
-
-export async function criarTarefa(formData: FormData) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
+// Etapa 350 — camposRepeticao / camposFinanca agora moram em
+// lib/tarefas/camposTarefa.ts (o app usa a mesma regra offline).
+/**
+ * Etapa 343 — o "salvar tarefa" em si, sem redirecionar: usado pelo
+ * formulário (com internet) e pela fila offline (quando a internet volta).
+ */
+async function inserirTarefa(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  formData: FormData,
+  /** Etapa 346 — id criado no aparelho (repetir o envio não duplica) */
+  idDoAparelho?: string
+): Promise<{ id?: string; erro?: string }> {
   const { count } = await supabase
     .from("tarefas")
     .select("id", { count: "exact", head: true })
-    .eq("dono_id", user!.id);
+    .eq("dono_id", userId);
 
   const titulo = String(formData.get("titulo") ?? "").trim();
   const icone = String(formData.get("icone") ?? "NotebookPen");
@@ -75,11 +33,9 @@ export async function criarTarefa(formData: FormData) {
   const subtarefasTexto = formData.getAll("subtarefaTexto").map((t) => String(t).trim()).filter(Boolean);
   const observacoes = String(formData.get("observacoes") ?? "").trim();
 
-  if (!titulo) {
-    redirect(`/tarefas/nova?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
-  }
+  if (!titulo) return { erro: "Dê um título para a tarefa" };
   const financa = camposFinanca(formData);
-  if (financa.erro) redirect(`/tarefas/nova?erro=${encodeURIComponent(financa.erro)}`);
+  if (financa.erro) return { erro: financa.erro };
 
   const subtarefas = subtarefasTexto.map((texto) => ({
     id: randomUUID(),
@@ -88,7 +44,8 @@ export async function criarTarefa(formData: FormData) {
   }));
 
   const { data: criada, error } = await supabase.from("tarefas").insert({
-    dono_id: user!.id,
+    ...(idDoAparelho && /^[0-9a-f-]{36}$/i.test(idDoAparelho) ? { id: idDoAparelho } : {}),
+    dono_id: userId,
     titulo,
     icone,
     categoria_id: categoriaIdRaw || null,
@@ -100,22 +57,52 @@ export async function criarTarefa(formData: FormData) {
     ...financa.campos,
   }).select("id").single();
 
-  if (error) {
-    redirect(`/tarefas/nova?erro=${encodeURIComponent(error.message)}`);
+  if (error?.code === "23505" && idDoAparelho) return { id: idDoAparelho }; // já tinha subido
+  if (error) return { erro: error.message };
+  return { id: criada?.id as string | undefined };
+}
+
+export async function criarTarefa(formData: FormData) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const r = await inserirTarefa(supabase, user!.id, formData);
+  if (r.erro) {
+    redirect(`/tarefas/nova?erro=${encodeURIComponent(r.erro)}`);
   }
 
   // Etapa 303 — "Compartilhar com…" escolhido no formulário
-  if (criada?.id) {
-    const erroConvite = await convidarAoCriar("tarefa", criada.id as string, formData);
+  if (r.id) {
+    const erroConvite = await convidarAoCriar("tarefa", r.id, formData);
     if (erroConvite) {
       revalidatePath("/tarefas");
-      redirect(`/tarefas/${criada.id}?erro=${encodeURIComponent(`Tarefa criada, mas o convite não saiu: ${erroConvite}`)}`);
+      redirect(`/tarefas/${r.id}?erro=${encodeURIComponent(`Tarefa criada, mas o convite não saiu: ${erroConvite}`)}`);
     }
   }
 
   revalidatePath("/habitos");
   revalidatePath("/tarefas");
   redirect("/tarefas");
+}
+
+/** Etapa 343 — tarefa criada sem internet chega aqui quando a conexão volta. */
+export async function criarTarefaSilenciosa(entradas: [string, string][], id?: string): Promise<{ sucesso: boolean; erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { sucesso: false, erro: "Sessão expirada" };
+  const formData = new FormData();
+  for (const [k, v] of Array.isArray(entradas) ? entradas : []) {
+    if (typeof k === "string" && typeof v === "string" && k !== "compartilharCom" && k !== "compartilharEmail") formData.append(k, v);
+  }
+  const r = await inserirTarefa(supabase, user.id, formData, id);
+  if (r.erro) return { sucesso: false, erro: r.erro };
+  revalidatePath("/tarefas");
+  return { sucesso: true };
 }
 
 export async function atualizarTarefa(tarefaId: string, formData: FormData) {

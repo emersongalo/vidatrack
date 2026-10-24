@@ -15,12 +15,15 @@ import { PRIORIDADES } from "@/lib/agenda/recorrencia";
 import { AdiarTarefa } from "@/components/AdiarTarefa";
 import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
+import { adicionarNaFila } from "@/lib/offline/fila";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
 import { FaixaDupla } from "@/components/FaixaDupla";
 import { TimerHabito } from "@/components/TimerHabito";
 import { ehUnidadeDeMinuto, lerTimer } from "@/lib/habitos/timerHabito";
 import { ToqueDuplo } from "@/components/ToqueDuplo";
 import { avisarDupla } from "@/lib/habitos/avisarDupla";
 import type { InfoDupla } from "@/lib/habitos/dupla";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 // Etapa 230 — vibraçãozinha ao marcar (no celular)
 const LIMITE_NOTA = 1000;
@@ -201,7 +204,7 @@ export function ItemLinhaAgenda({
     d.setDate(d.getDate() + 1);
     const amanha = d.toLocaleDateString("sv-SE");
     vibrar(10);
-    const { error } = await createClient().from("tarefas").update({ data: amanha }).eq("id", item.id);
+    const { error } = await gravar({ tabela: "tarefas", op: "update", id: item.id, valores: { data: amanha } });
     if (!error) {
       atualizarSnapshotEmTodasAsTelas();
       aoConcluirMutacao?.();
@@ -229,7 +232,14 @@ export function ItemLinhaAgenda({
       aoClicarOffline();
       return;
     }
+    // Etapa 345 — se a internet cair no meio, guarda no aparelho em vez de "não salvou"
+    const guardarNoAparelho = () => {
+      if (aoClicarOffline) aoClicarOffline();
+      else if (item.tipo === "habito") adicionarNaFila({ tipo: "checkin_habito", habitoId: item.id, data: dataISO });
+      else adicionarNaFila({ tipo: "conclusao_tarefa", tarefaId: item.id, data: dataISO });
+    };
     iniciarTransicao(async () => {
+     try {
       if (item.tipo === "habito") {
         const feitoAntes = item.feito;
         const resultado = await alternarCheckin(item.id, dataISO);
@@ -249,12 +259,20 @@ export function ItemLinhaAgenda({
         await alternarConclusaoTarefa(item.id, dataISO);
       }
       aoConcluirMutacao?.();
+     } catch {
+      guardarNoAparelho();
+     }
     });
   }
 
   function salvarNota() {
     iniciarTransicao(async () => {
-      await salvarObservacaoCheckin(item.id, dataISO, textoNota);
+      // Etapa 350 — sem internet: a nota fica guardada e sobe depois
+      await chamarOuGuardar(() => salvarObservacaoCheckin(item.id, dataISO, textoNota), {
+        acao: "salvarObservacaoCheckin",
+        args: [item.id, dataISO, textoNota],
+        rotulo: "Nota do hábito",
+      }).catch(() => {});
       setMostrarNota(false);
       setTextoNota("");
     });
@@ -283,7 +301,15 @@ export function ItemLinhaAgenda({
     }
     const completou = !!item.meta && item.meta.atual < item.meta.alvo && item.meta.atual + delta >= item.meta.alvo;
     iniciarTransicao(async () => {
-      const r = await ajustarQuantidadeHabito(item.id, dataISO, delta);
+      let r: Awaited<ReturnType<typeof ajustarQuantidadeHabito>>;
+      try {
+        r = await ajustarQuantidadeHabito(item.id, dataISO, delta);
+      } catch {
+        // Etapa 345 — caiu a internet no meio: guarda no aparelho
+        if (aoAjustarOffline) aoAjustarOffline(delta);
+        else adicionarNaFila({ tipo: "ajuste_habito", habitoId: item.id, data: dataISO, delta });
+        return;
+      }
       setErroSalvar(r?.erro ? "Não salvou — tente de novo" : null);
       aoConcluirMutacao?.();
       if (r?.erro) return;

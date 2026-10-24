@@ -12,6 +12,7 @@ import {
   salvarLayoutBlocos,
   type BlocoFinancas,
 } from "@/lib/financas/blocos";
+import { gravarOrdemBlocosFinancas, semInternet } from "@/lib/local/criarRapido";
 
 // Etapa 222 — além de subir/descer: fixar no topo e esconder o bloco.
 export function ReordenarBlocosFinancas({ layoutInicial }: { layoutInicial: BlocoFinancas[] }) {
@@ -21,7 +22,10 @@ export function ReordenarBlocosFinancas({ layoutInicial }: { layoutInicial: Bloc
   function aplicar(novo: BlocoFinancas[]) {
     setLayout(novo);
     iniciarTransicao(async () => {
-      await salvarOrdemBlocosFinancas(salvarLayoutBlocos(novo));
+      // Etapa 353 — sem internet: fica no aparelho e sobe depois
+      const ordem = salvarLayoutBlocos(novo);
+      if (semInternet()) await gravarOrdemBlocosFinancas(ordem);
+      else await salvarOrdemBlocosFinancas(ordem);
       atualizarSnapshotEmTodasAsTelas();
     });
   }

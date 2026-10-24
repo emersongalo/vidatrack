@@ -18,6 +18,7 @@ import { EVENTO_SNAPSHOT, atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/
 import { alternarCheckin } from "@/app/habitos/actions";
 import { alternarConclusaoTarefa } from "@/app/habitos/tarefas/actions";
 import { vibrar } from "@/lib/app/vibrar";
+import { checkinHabitoComFila, concluirTarefaComFila } from "@/lib/local/acaoOffline"; // Etapa 353
 
 type Item = {
   chave: string; // "habito-<id>-HH:MM" ou "tarefa-<id>"
@@ -148,8 +149,8 @@ export function AlarmeAlertaTela() {
     if (!alerta || salvando) return;
     setSalvando(true);
     try {
-      if (alerta.tipo === "habito") await alternarCheckin(alerta.id, hojeLocal());
-      else await alternarConclusaoTarefa(alerta.id, hojeLocal());
+      if (alerta.tipo === "habito") await checkinHabitoComFila(alerta.id, hojeLocal(), () => alternarCheckin(alerta.id, hojeLocal()));
+      else await concluirTarefaComFila(alerta.id, hojeLocal(), () => alternarConclusaoTarefa(alerta.id, hojeLocal()));
       vibrar([15, 40, 25]);
       atualizarSnapshotEmTodasAsTelas();
       setAlerta(null);

@@ -11,6 +11,7 @@ import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { resumoDoDia } from "@/lib/painel/seuDia";
 import { faseDoMascote, humorDoMascote, lerMascote, moedasDisponiveis, type DadosMascote, type Humor } from "@/lib/mascote/mascote";
 import { calcularVida, type Vida } from "@/lib/mascote/vida";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 /** Hábitos feitos desde sempre; sem o número do servidor, conta o que tem no retrato. */
 export function feitosDesdeSempre(snapshot: any): number {
@@ -51,7 +52,7 @@ export function useMascote(snapshot: any, hoje: string) {
     try {
       const id = snapshot?.perfil?.id;
       if (!id) throw new Error("sem perfil");
-      const { error } = await createClient().from("perfis").update({ mascote: novo }).eq("id", id);
+      const { error } = await gravar({ tabela: "perfis", op: "update", id: id, valores: { mascote: novo } });
       if (error) throw error;
       void atualizarSnapshotEmTodasAsTelas();
       setSalvando(false);

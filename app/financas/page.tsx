@@ -43,6 +43,8 @@ import {
   salvarLayoutBlocos,
   type BlocoFinancas,
 } from "@/lib/financas/blocos";
+import { gravarOrdemBlocosFinancas, semInternet } from "@/lib/local/criarRapido";
+import { garantirRecorrentesNoAparelho } from "@/lib/local/recorrentesMes";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -67,10 +69,16 @@ export default function FinancasPage() {
   const [erroLayout, setErroLayout] = useState<string | null>(null);
 
   useEffect(() => {
+    // Etapa 355 — sem internet: o aparelho gera as contas fixas do mês
+    // (o servidor confere antes de gravar, então não duplica)
+    if (semInternet()) {
+      if (snapshot) garantirRecorrentesNoAparelho(new Date().toLocaleDateString("sv-SE"));
+      return;
+    }
     garantirLancamentosRecorrentes().catch(() => {
       // Sem internet, sem problema — tenta de novo na próxima visita.
     });
-  }, []);
+  }, [!!snapshot]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!navigator.onLine) return;
@@ -229,7 +237,9 @@ export default function FinancasPage() {
     setSalvandoLayout(true);
     setErroLayout(null);
     try {
-      await salvarOrdemBlocosFinancas(salvarLayoutBlocos(layoutEditado));
+      // Etapa 353 — sem internet: fica no aparelho e sobe depois
+      if (semInternet()) await gravarOrdemBlocosFinancas(salvarLayoutBlocos(layoutEditado));
+      else await salvarOrdemBlocosFinancas(salvarLayoutBlocos(layoutEditado));
       await atualizarSnapshotEmTodasAsTelas();
       setEditandoLayout(false);
     } catch {

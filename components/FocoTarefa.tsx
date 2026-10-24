@@ -12,6 +12,7 @@ import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
 import { chuvaDeConfete } from "@/lib/app/festa";
 import { vibrar } from "@/lib/app/vibrar";
+import { concluirTarefaComFila } from "@/lib/local/acaoOffline"; // Etapa 353
 
 const CHAVE = "vt-foco-tarefa";
 const OPCOES = [15, 25, 45];
@@ -160,7 +161,7 @@ export function FocoTarefa({
     atualizar(null);
     try {
       // tarefa única já concluída: não desmarca sem querer
-      if (!(tarefa.repetir === "nenhuma" && tarefa.concluida)) await alternarConclusaoTarefa(tarefa.id, hojeISO());
+      if (!(tarefa.repetir === "nenhuma" && tarefa.concluida)) await concluirTarefaComFila(tarefa.id, hojeISO(), () => alternarConclusaoTarefa(tarefa.id, hojeISO()));
       void atualizarSnapshotEmTodasAsTelas();
     } catch {
       /* fica na fila da próxima sincronização da tela */

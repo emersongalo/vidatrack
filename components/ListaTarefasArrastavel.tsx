@@ -6,6 +6,7 @@ import { reordenarTarefas } from "@/app/habitos/tarefas/actions";
 import { IconeHabito } from "@/components/IconeHabito";
 import { descreverRepeticao, tarefaAtrasada, PRIORIDADES } from "@/lib/agenda/recorrencia";
 import { hojeISO } from "@/lib/habitos/streak";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
 
 type Tarefa = {
   id: string;
@@ -26,7 +27,15 @@ export function ListaTarefasArrastavel({ tarefas }: { tarefas: Tarefa[] }) {
   return (
     <ListaArrastavel
       itens={tarefas}
-      aoReordenar={reordenarTarefas}
+      // Etapa 353 — sem internet também
+      aoReordenar={(ids: string[]) =>
+        chamarOuGuardar(() => reordenarTarefas(ids), {
+          acao: "reordenarTarefas",
+          args: [ids],
+          patches: [{ colecao: "tarefas", op: "ordenar", ids }],
+          rotulo: "Ordem das tarefas",
+        }).then(() => {})
+      }
       renderItem={(tarefa, arrastando) => {
         const subtarefas = tarefa.subtarefas ?? [];
         return (

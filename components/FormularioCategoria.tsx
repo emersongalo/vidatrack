@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { criarCategoria } from "@/app/financas/actions";
+import { useRouter } from "next/navigation";
+import { enviarSemInternet } from "@/lib/local/acaoOffline";
+import { pedidoAtualizarCategoria, pedidoCriarCategoria } from "@/lib/local/financasCadastros";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CORES_DISPONIVEIS, classeFundoSuave } from "@/lib/agenda/estilo";
 import { SeletorIcone } from "@/components/SeletorIcone";
@@ -15,7 +18,10 @@ export function FormularioCategoria({
   voltarHref = "/financas/categorias",
   erro,
   valoresIniciais,
+  idEdicao,
 }: {
+  /** Etapa 352 — editando esta categoria (sem internet: salva no aparelho) */
+  idEdicao?: string;
   action?: (formData: FormData) => void;
   titulo?: string;
   textoBotao?: string;
@@ -33,6 +39,8 @@ export function FormularioCategoria({
   const [icone, setIcone] = useState(valoresIniciais?.icone || "🛒");
   const [cor, setCor] = useState(valoresIniciais?.cor ?? "financa");
   const [nome, setNome] = useState(valoresIniciais?.nome ?? "");
+  const router = useRouter();
+  const [erroOffline, setErroOffline] = useState<string | null>(null);
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-form">
@@ -60,7 +68,22 @@ export function FormularioCategoria({
         </p>
       )}
 
-      <form action={action}>
+      {erroOffline && (
+        <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">{erroOffline}</p>
+      )}
+
+      {/* Etapa 352 — sem internet: cria/edita no aparelho e sobe depois */}
+      <form
+        action={action}
+        onSubmit={(e) =>
+          enviarSemInternet(
+            e,
+            (fd) => (idEdicao ? pedidoAtualizarCategoria(idEdicao, fd) : pedidoCriarCategoria(fd)),
+            () => router.push(voltarHref),
+            setErroOffline
+          )
+        }
+      >
         <div className="form-colunas">
         <div className="form-coluna">
         <div>

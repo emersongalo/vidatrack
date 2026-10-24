@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChatAssistente } from "@/components/ChatAssistente";
+import { AvisoPrecisaInternet } from "@/components/AvisoPrecisaInternet";
 
 // Etapa 219 — a tela tem altura fixa (a da tela do celular menos a barra
 // de baixo): só a conversa rola por dentro, o título e o campo de digitar
@@ -8,6 +9,7 @@ import { ChatAssistente } from "@/components/ChatAssistente";
 export default function AssistentePage() {
   return (
     <main className="h-[calc(100dvh-6rem)] lg:h-[100dvh] overflow-hidden px-6 pt-6 md:px-12 md:pt-12 pagina-curta flex flex-col">
+      <AvisoPrecisaInternet texto="O assistente usa inteligência artificial no servidor — precisa de internet. O resto do app funciona sem conexão." />
       <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition mb-2 shrink-0">
         ← Finanças
       </Link>

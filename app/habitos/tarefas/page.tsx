@@ -23,8 +23,10 @@ import { ComemoracaoDia } from "@/components/ComemoracaoDia";
 import { TopoArea } from "@/components/TopoArea";
 import { createClient } from "@/lib/supabase/client";
 import { comDesfazer } from "@/lib/app/desfazer";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 type Modo = "data" | "categoria" | "organizar";
+import { criarTarefaRapidaLocal, semInternet } from "@/lib/local/criarRapido";
 const CHAVE_MODO = "vidatrack-tarefas-modo";
 const COR_SEM = "#8A8F98";
 
@@ -109,15 +111,17 @@ export default function TarefasPage() {
         900
       );
     }
+    // Etapa 345 — sem internet OU a internet caiu no meio: guarda no
+    // aparelho e sobe depois (a marcação nunca se perde)
+    if (!navigator.onLine || String(t.id).startsWith("offline-")) {
+      adicionarNaFila({ tipo: "conclusao_tarefa", tarefaId: t.id, data: hoje });
+      return;
+    }
     try {
-      if (!navigator.onLine) {
-        adicionarNaFila({ tipo: "conclusao_tarefa", tarefaId: t.id, data: hoje });
-        return;
-      }
       await alternarConclusaoTarefa(t.id, hoje);
       await atualizarSnapshotEmTodasAsTelas();
     } catch {
-      setLocal((l) => ({ ...l, [t.id]: feitaAgora }));
+      adicionarNaFila({ tipo: "conclusao_tarefa", tarefaId: t.id, data: hoje });
     }
   }
 
@@ -127,13 +131,13 @@ export default function TarefasPage() {
     const amanha = somarDias(hoje, 1);
     vibrar(10);
     const supabase = createClient();
-    const { error } = await supabase.from("tarefas").update({ data: amanha }).eq("id", t.id);
+    const { error } = await gravar({ tabela: "tarefas", op: "update", id: t.id, valores: { data: amanha } });
     if (error) return;
     await atualizarSnapshotEmTodasAsTelas();
     comDesfazer({
       texto: `"${t.titulo}" foi pra amanhã`,
       desfazer: async () => {
-        await createClient().from("tarefas").update({ data: antes }).eq("id", t.id);
+        await gravar({ tabela: "tarefas", op: "update", id: t.id, valores: { data: antes } });
       },
       aoTerminar: () => void atualizarSnapshotEmTodasAsTelas(),
     });
@@ -145,10 +149,15 @@ export default function TarefasPage() {
     setSalvando(true);
     setErro(null);
     try {
-      const r = await criarTarefaRapida({
+      const dadosRapida = {
         titulo,
         categoriaId: filtro !== "todas" && filtro !== "sem" ? filtro : null,
         data: quando === "hoje" ? hoje : somarDias(hoje, 1),
+      };
+      // Etapa 353 — sem internet: a tarefa nasce no aparelho
+      const r = semInternet() ? criarTarefaRapidaLocal(dadosRapida) : await criarTarefaRapida(dadosRapida).catch((e) => {
+        if (/fetch|network|load failed/i.test(String(e?.message ?? e))) return criarTarefaRapidaLocal(dadosRapida);
+        throw e;
       });
       if (r.erro) setErro(r.erro);
       else {

@@ -23,6 +23,15 @@ const config: CapacitorConfig = {
   server: {
     url: "https://www.vidatrack.online",
     cleartext: false,
+    // Etapa 342 — sem internet (ou servidor fora do ar), em vez da tela
+    // "Página da Web não disponível" do Android abre a tela offline do
+    // VidaTrack, que vem DENTRO do app (public/offline-app.html).
+    // O hostname igual ao do site faz essa tela abrir no MESMO endereço
+    // do app — assim ela enxerga os dados guardados no aparelho e a fila
+    // de sincronização (não muda nada no login nem nos cookies).
+    hostname: "www.vidatrack.online",
+    androidScheme: "https",
+    errorPath: "offline-app.html",
   },
   plugins: {
     PushNotifications: {

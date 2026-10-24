@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { vibrar } from "@/lib/app/vibrar";
 import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 /**
  * Etapa 209 — lançamento agendado (data no futuro): "✓ Paguei" marca
@@ -52,7 +53,7 @@ export function BotaoPaguei({
     setErro(false);
     const anterior = pagoEm;
     setPagoEm(novo);
-    const { error } = await createClient().from("financa_transacoes").update({ pago_em: novo }).eq("id", transacao.id);
+    const { error } = await gravar({ tabela: "financa_transacoes", op: "update", id: transacao.id, valores: { pago_em: novo } });
     setSalvando(false);
     if (error) {
       setPagoEm(anterior);

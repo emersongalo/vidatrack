@@ -479,7 +479,7 @@ function CartaoEvento({
   const ini = hhmm(e.hora_inicio);
   const fim = hhmm(e.hora_fim);
   const participantes = e.evento_participantes ?? [];
-  const souConvidado = e.dono_id !== eu;
+  const souConvidado = e.dono_id !== eu && !e.pendente;
   const minha = participantes.find((p) => p.usuario_id === eu)?.resposta;
   const pessoas = [e.dono_id, ...participantes.map((p) => p.usuario_id)];
   return (
@@ -519,6 +519,7 @@ function CartaoEvento({
             </span>
           )}
           {souConvidado && <span>de {nomeDe(e.dono_id)}</span>}
+          {e.pendente && <span className="text-financa">⏳ vai sincronizar</span>}
         </div>
         {participantes.length > 0 && (
           <div className="flex items-center gap-1 mt-1.5">

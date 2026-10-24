@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AvisoPrecisaInternet } from "@/components/AvisoPrecisaInternet";
 
 // Etapa 215 — mais períodos + backup completo
 // Etapa 253 — planilha em .xlsx (acentos certos no Google Planilhas do celular); .csv fica como opção
@@ -12,6 +13,7 @@ const PERIODOS = [
 export default function ExportarPage() {
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
+      <AvisoPrecisaInternet texto="Exportar a planilha precisa de internet." />
       <Link href="/financas" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Finanças
       </Link>

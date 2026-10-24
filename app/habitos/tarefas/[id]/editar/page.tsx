@@ -41,6 +41,7 @@ function EditarTarefaConteudo() {
   return (
     <FormularioTarefa
       action={atualizarTarefa.bind(null, tarefa.id)}
+      idEdicao={tarefa.id}
       categorias={categorias as any}
       contasFinancas={((snapshot?.financas.contas ?? []) as any[]).filter((c) => c.dono_id === undefined || c.dono_id === snapshot?.perfil.id)}
       categoriasFinancas={((snapshot?.financas.categorias ?? []) as any[]).filter((c) => c.dono_id === snapshot?.perfil.id)}

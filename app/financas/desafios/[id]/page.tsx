@@ -4,23 +4,24 @@ import { useState, useTransition } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { completarQuadrado, excluirDesafio } from "../actions";
+import { useRouter } from "next/navigation";
+import { chamarOuGuardar, enfileirarAcao } from "@/lib/local/acaoOffline";
+import { pedidoCompletarQuadrado, pedidoExcluirDesafio } from "@/lib/local/financasCadastros";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { Trash2 } from "lucide-react";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { CarregandoTela } from "@/components/Esqueleto";
 
-// Etapa 132 — a leitura (progresso, grid) já funciona offline, lendo
-// do retrato. Marcar um quadrado continua exigindo internet de
-// propósito: essa ação lança uma transação de verdade na sua conta
-// ao mesmo tempo que atualiza o progresso, e prefiro fazer essa
-// sincronização com cuidado numa etapa própria do que arriscar
-// duplicar ou perder um valor de dinheiro de verdade.
+// Etapa 132 — a leitura (progresso, grid) funciona offline, lendo do retrato.
+// Etapa 352 — marcar um quadrado também: o lançamento nasce no aparelho com
+// o id definitivo (o servidor usa o mesmo), então não duplica nem se perde.
 export default function DesafioDetalhePage() {
   const params = useParams<{ id: string }>();
   const { snapshot, recarregar } = useSnapshotOffline();
   const [, iniciarTransicao] = useTransition();
-  const [avisoOffline, setAvisoOffline] = useState(false);
+  const [avisoOffline, setAvisoOffline] = useState<string | false>(false);
+  const router = useRouter();
 
   if (snapshot === undefined) return <CarregandoTela linhas={3} />;
 
@@ -47,8 +48,13 @@ export default function DesafioDetalhePage() {
 
   function marcarQuadrado(quadradoId: string) {
     if (!navigator.onLine) {
-      setAvisoOffline(true);
-      setTimeout(() => setAvisoOffline(false), 3000);
+      const pedido = pedidoCompletarQuadrado(desafio.id, quadradoId);
+      if (typeof pedido === "string") {
+        setAvisoOffline(pedido);
+        setTimeout(() => setAvisoOffline(false), 3000);
+        return;
+      }
+      enfileirarAcao(pedido);
       return;
     }
     iniciarTransicao(async () => {
@@ -64,7 +70,13 @@ export default function DesafioDetalhePage() {
           ← Desafios
         </Link>
         <BotaoComConfirmacao
-          acao={excluirDesafio.bind(null, desafio.id)}
+          acao={() =>
+            chamarOuGuardar(() => excluirDesafio(desafio.id), pedidoExcluirDesafio(desafio.id))
+              .then((r) => {
+                if (r === "fila") router.push("/financas/desafios");
+              })
+              .catch(() => {})
+          }
           textoBotao={<Trash2 size={14} strokeWidth={2} />}
           textoConfirmacao={`Excluir "${desafio.nome}"? O dinheiro já guardado não volta pra conta sozinho.`}
           classeBotao="text-ink-400 hover:text-red-400 transition"
@@ -88,8 +100,7 @@ export default function DesafioDetalhePage() {
       <p className="text-sm text-ink-400 mb-3">Clica num quadrado pra marcar (isso já tira o valor da conta)</p>
       {avisoOffline && (
         <p className="mb-3 text-xs bg-red-400/10 text-red-400 border border-red-400/30 rounded-lg px-3 py-2">
-          Sem internet agora — marcar um quadrado precisa estar online, porque isso lança uma transação de
-          verdade na sua conta.
+          {avisoOffline}
         </p>
       )}
       <div className="grid grid-cols-5 sm:grid-cols-7 gap-2">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Moon, BarChart3, Sun, Wallet, HeartHandshake, Receipt } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 type Chave = "resumo_manha" | "aviso_noite" | "resumo_semanal" | "lembrete_lancar" | "avisos_dupla" | "avisos_movimentacoes";
 
@@ -78,11 +79,10 @@ export function PreferenciasAvisos() {
     setValores({ ...valores, [chave]: novo });
     setErro(null);
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Etapa 353 — sessão guardada no aparelho (funciona sem internet)
+    const user = (await supabase.auth.getSession()).data.session?.user;
     if (!user) return;
-    const { error } = await supabase.from("perfis").update({ [chave]: novo }).eq("id", user.id);
+    const { error } = await gravar({ tabela: "perfis", op: "update", id: user.id, valores: { [chave]: novo } });
     if (error) {
       setValores((v) => (v ? { ...v, [chave]: !novo } : v));
       setErro("Não consegui salvar agora. Tente de novo.");
@@ -96,11 +96,10 @@ export function PreferenciasAvisos() {
     setErro(null);
     setSalvoHorario(false);
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Etapa 353 — sessão guardada no aparelho (funciona sem internet)
+    const user = (await supabase.auth.getSession()).data.session?.user;
     if (!user) return;
-    const { error } = await supabase.from("perfis").update({ horario_contas: novo }).eq("id", user.id);
+    const { error } = await gravar({ tabela: "perfis", op: "update", id: user.id, valores: { horario_contas: novo } });
     if (error) {
       setHorarioContas(anterior);
       setErro("Não consegui salvar o horário. Tente de novo.");

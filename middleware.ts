@@ -113,5 +113,6 @@ async function middlewareBase(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // Etapa 342 — .html (tela offline) e o sw.js não passam pelo login
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|html)$).*)"],
 };

@@ -5,6 +5,8 @@
 // cartão (sai do saldo do banco e zera a fatura).
 import { useState } from "react";
 import { criarTransferencia } from "@/app/financas/actions";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
+import { pedidoTransferencia } from "@/lib/local/financasEspeciais";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { SeloBanco } from "@/components/SeloBanco";
 import { ValorMonetario } from "@/components/ValorMonetario";
@@ -44,9 +46,21 @@ export function PagarFatura({
     f.set("valor", valor);
     f.set("data", data);
     f.set("descricao", `Pagamento fatura ${cartao.nome}`);
-    const r = await criarTransferencia(f);
+    // Etapa 351 — sem internet: paga no aparelho e sobe depois
+    const pedido = pedidoTransferencia(f);
+    if (typeof pedido === "string") {
+      setSalvando(false);
+      return setErro(pedido);
+    }
+    let r: { erro?: string } | "fila";
+    try {
+      r = await chamarOuGuardar(() => criarTransferencia(f), pedido);
+    } catch {
+      setSalvando(false);
+      return setErro("Não deu pra pagar agora. Tente de novo.");
+    }
     setSalvando(false);
-    if (r?.erro) return setErro(r.erro);
+    if (r !== "fila" && r?.erro) return setErro(r.erro);
     setFeito(true);
     await atualizarSnapshotEmTodasAsTelas();
     setTimeout(() => setAberto(false), 1200);

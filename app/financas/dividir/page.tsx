@@ -2,12 +2,14 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { criarDivisao } from "../divisoes/actions";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { formatarMoeda } from "@/lib/financas/formatacao";
+import { criarDivisaoLocal } from "@/lib/local/divisoes";
+import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 
 // Etapa 129 — dinheiro entre pessoas diferentes merece vir sempre
 // fresco do servidor, então busca direto (não entra no retrato).
@@ -24,14 +26,29 @@ function DividirConteudo() {
   const erro = searchParams.get("erro");
   const [transacoes, setTransacoes] = useState<any[] | null>(null);
 
+  const router = useRouter();
+  const [erroOffline, setErroOffline] = useState<string | null>(null);
   useEffect(() => {
+    // Etapa 354 — sem internet: as despesas vêm do que está no aparelho
+    const doAparelho = () => {
+      const snap = lerSnapshotOffline();
+      const contas = new Map(((snap?.financas.contas ?? []) as any[]).map((c) => [c.id, c.nome]));
+      setTransacoes(
+        ((snap?.financas.transacoes ?? []) as any[])
+          .filter((t) => t.tipo === "despesa" && !t.transferencia_grupo)
+          .sort((a, b) => String(b.data).localeCompare(String(a.data)))
+          .slice(0, 30)
+          .map((t) => ({ ...t, financa_contas: { nome: contas.get(t.conta_id) } }))
+      );
+    };
+    if (navigator.onLine === false) return doAparelho();
     createClient()
       .from("financa_transacoes")
       .select("id, descricao, valor, data, financa_contas(nome)")
       .eq("tipo", "despesa")
       .order("data", { ascending: false })
       .limit(30)
-      .then(({ data }) => setTransacoes(data ?? []));
+      .then(({ data, error }) => (error ? doAparelho() : setTransacoes(data ?? [])));
   }, []);
 
   return (
@@ -44,9 +61,9 @@ function DividirConteudo() {
         Escolhe um lançamento já existente e quanto a outra pessoa deve te pagar dessa despesa.
       </p>
 
-      {erro && (
+      {(erroOffline || erro) && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(erro)}
+          {erroOffline ?? decodeURIComponent(erro!)}
         </p>
       )}
 
@@ -55,7 +72,16 @@ function DividirConteudo() {
           {transacoes === null ? "Carregando..." : "Nenhuma despesa lançada ainda pra dividir."}
         </p>
       ) : (
-        <form action={criarDivisao}>
+        <form
+          action={criarDivisao}
+          onSubmit={(e) => {
+            if (navigator.onLine !== false) return;
+            e.preventDefault();
+            const msg = criarDivisaoLocal(new FormData(e.currentTarget));
+            if (msg) return setErroOffline(msg);
+            router.push("/financas/divisoes");
+          }}
+        >
           <div className="form-colunas">
           <div className="lg:col-span-2">
             <label className="block text-xs text-ink-400 mb-1.5">Qual despesa</label>

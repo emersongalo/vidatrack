@@ -1,3 +1,6 @@
+import type { Patch } from "@/lib/offline/patches";
+import type { ArgSerializado, NomeAcaoOffline } from "@/lib/offline/acoesOffline";
+
 export type AcaoPendente =
   | { tipo: "checkin_habito"; habitoId: string; data: string }
   | { tipo: "ajuste_habito"; habitoId: string; data: string; delta: number }
@@ -5,9 +8,31 @@ export type AcaoPendente =
   | {
       id: string;
       tipo: "criar_transacao";
-      dados: { tipo: "receita" | "despesa"; valor: string; contaId: string; categoriaId: string; descricao: string; data: string };
+      dados: { tipo: "receita" | "despesa"; valor: string; contaId: string; categoriaId: string; descricao: string; data: string; etiquetas?: string[] | null };
     }
-  | { id: string; tipo: "criar_habito"; dados: { nome: string; icone: string; cor: string } };
+  /** Etapa 344 — editar / apagar lançamento feito no aparelho */
+  | {
+      id: string;
+      tipo: "editar_transacao";
+      transacaoId: string;
+      dados: { tipo: "receita" | "despesa"; valor: string; contaId: string; categoriaId: string; descricao: string; data: string; etiquetas?: string[] | null };
+    }
+  | { id: string; tipo: "apagar_transacao"; transacaoId: string }
+  | { id: string; tipo: "criar_habito"; dados: { nome: string; icone: string; cor: string } }
+  /** Etapa 343 — tarefa criada sem internet (campos do formulário) */
+  | { id: string; tipo: "criar_tarefa"; entradas: [string, string][] }
+  /** Etapa 343 — compromisso da Agenda criado sem internet */
+  | { id: string; tipo: "criar_evento"; dados: Record<string, unknown>; convidados: string[] }
+  /** Etapa 347 — Agenda "estilo Monee": editar / apagar sem esperar a internet */
+  | { id: string; tipo: "editar_evento"; eventoId: string; dados: Record<string, unknown>; convidados: string[] }
+  | { id: string; tipo: "apagar_evento"; eventoId: string; soODia?: string | null }
+  /**
+   * Etapa 350 — qualquer outra ação do app feita sem internet: o nome da
+   * ação, os argumentos e o que muda no retrato do aparelho.
+   * `provisorios` = ids que só existem no aparelho até subir (o servidor
+   * vai criar com outro id): não dá pra editar esses itens antes.
+   */
+  | { id: string; tipo: "generica"; acao: NomeAcaoOffline; args: ArgSerializado[]; patches: Patch[]; rotulo?: string; provisorios?: string[] };
 
 const CHAVE_FILA = "vidatrack-fila-offline";
 /** Etapa 276 — avisa as telas sempre que a fila muda (selo "N esperando internet") */

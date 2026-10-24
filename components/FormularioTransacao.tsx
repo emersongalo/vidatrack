@@ -4,11 +4,14 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { criarTransacao, criarCategoriaRapida, removerParcelasDaqui } from "@/app/financas/actions";
+import { enfileirarAcao, chamarOuGuardar, ehErroDeRede } from "@/lib/local/acaoOffline";
+import { pedidoCategoriaRapida } from "@/lib/local/financasCadastros";
+import { pedidoAtualizarTransacao, pedidoCriarTransacao, pedidoRemoverParcelasDaqui } from "@/lib/local/financasEspeciais";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { SeletorIcone } from "@/components/SeletorIcone";
 import { ehEmoji } from "@/lib/geral/emojis";
 import { IconeCategoria } from "@/components/IconeCategoria";
-import { adicionarNaFila } from "@/lib/offline/fila";
+import { lancarLocal, editarLocal, valorParaNumero, type DadosLancamento } from "@/lib/local/financas";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { lerSnapshotOffline } from "@/lib/offline/snapshot";
@@ -172,11 +175,23 @@ export function FormularioTransacao({
       return;
     }
     iniciarCriacaoCategoria(async () => {
-      const resultado = await criarCategoriaRapida({
-        nome: nomeNovaCategoria.trim(),
-        tipo,
-        icone: iconeNovaCategoria,
-      });
+      // Etapa 352 — sem internet: a categoria nasce no aparelho (já com o
+      // id definitivo) e dá pra usar no lançamento na mesma hora
+      const dadosCat = { nome: nomeNovaCategoria.trim(), tipo, icone: iconeNovaCategoria };
+      const offline = pedidoCategoriaRapida(dadosCat);
+      let resultado: Awaited<ReturnType<typeof criarCategoriaRapida>>;
+      if (typeof offline !== "string" && !navigator.onLine) {
+        enfileirarAcao(offline.pedido);
+        resultado = offline.categoria;
+      } else {
+        try {
+          resultado = await criarCategoriaRapida(dadosCat);
+        } catch (e) {
+          if (typeof offline === "string" || !ehErroDeRede(e)) throw e;
+          enfileirarAcao(offline.pedido);
+          resultado = offline.categoria;
+        }
+      }
       if ("erro" in resultado) {
         setErroCategoria(resultado.erro);
         return;
@@ -198,30 +213,42 @@ export function FormularioTransacao({
   const [diaMesRecorrencia, setDiaMesRecorrencia] = useState(diaDaData(valoresIniciais?.data ?? hoje));
   const [diaMesEditado, setDiaMesEditado] = useState(false);
 
+  const [erroLocal, setErroLocal] = useState<string | null>(null);
+
   function aoSubmeter(e: React.FormEvent<HTMLFormElement>) {
     vibrar(20); // Etapa 248 — confirma o toque em "Salvar"
-    // Só intercepta a criação (não a edição) quando não tem internet —
-    // se estiver online, deixa o <form action> normal cuidar de tudo,
-    // sem mudar em nada o comportamento que já existia.
-    if (navigator.onLine || ehEdicao) return;
-
-    e.preventDefault();
     const dados = new FormData(e.currentTarget);
-
-    adicionarNaFila({
-      id: crypto.randomUUID(),
-      tipo: "criar_transacao",
-      dados: {
-        tipo: (dados.get("tipo") === "receita" ? "receita" : "despesa") as "receita" | "despesa",
-        valor: String(dados.get("valor") ?? ""),
-        contaId: String(dados.get("contaId") ?? ""),
-        categoriaId: String(dados.get("categoriaId") ?? ""),
-        descricao: String(dados.get("descricao") ?? ""),
-        data: String(dados.get("data") ?? hoje),
-      },
-    });
-
-    router.push("/financas?offline=1");
+    // Etapa 344 — estilo Monee: lançamento simples é salvo NO CELULAR na hora
+    // (com ou sem internet) e sobe pro banco em seguida. Parcelado, conta
+    // fixa e edição de parcela/recorrência continuam indo direto pro servidor.
+    const especial =
+      dados.get("parcelado") === "on" || dados.get("recorrente") === "on" || !!recorrenciaExistente || !!valoresIniciais?.parcela;
+    if (especial) {
+      if (!navigator.onLine) {
+        // Etapa 351 — parcelado / conta fixa / editar parcela também sem internet
+        e.preventDefault();
+        const pedido = ehEdicao && idTransacaoEditada ? pedidoAtualizarTransacao(idTransacaoEditada, dados) : pedidoCriarTransacao(dados);
+        if (typeof pedido === "string") return setErroLocal(pedido);
+        enfileirarAcao(pedido);
+        router.push(voltarHref || "/financas");
+      }
+      return;
+    }
+    e.preventDefault();
+    const lanc: DadosLancamento = {
+      tipo: dados.get("tipo") === "receita" ? "receita" : "despesa",
+      valor: String(dados.get("valor") ?? ""),
+      contaId: String(dados.get("contaId") ?? ""),
+      categoriaId: String(dados.get("categoriaId") ?? ""),
+      descricao: String(dados.get("descricao") ?? "").trim(),
+      data: String(dados.get("data") || hoje),
+      etiquetas: dados.get("etiquetasPresente") || dados.getAll("etiquetas").length ? dados.getAll("etiquetas").map(String).filter(Boolean) : undefined,
+    };
+    if (!(valorParaNumero(lanc.valor) > 0)) return setErroLocal("Informe um valor");
+    if (!lanc.contaId) return setErroLocal("Escolha a conta");
+    if (ehEdicao && idTransacaoEditada) editarLocal(idTransacaoEditada, lanc);
+    else lancarLocal(lanc);
+    router.push(voltarHref || "/financas");
   }
 
   return (
@@ -287,6 +314,9 @@ export function FormularioTransacao({
         </div>
 
         <div className="relative -mt-6 bg-base-900 rounded-t-3xl px-6 pt-7 pb-6 md:px-12">
+      {erroLocal && (
+        <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">{erroLocal}</p>
+      )}
       {erro && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
           {decodeURIComponent(erro)}
@@ -712,7 +742,10 @@ export function FormularioTransacao({
       {valoresIniciais?.parcela && (
         <div className="mt-6 flex justify-center">
           <BotaoComConfirmacao
-            acao={removerParcelasDaqui.bind(null, idTransacaoEditada ?? "")}
+            acao={() =>
+              // Etapa 351 — sem internet também
+              chamarOuGuardar(() => removerParcelasDaqui(idTransacaoEditada ?? ""), pedidoRemoverParcelasDaqui(idTransacaoEditada ?? "")).then(() => {})
+            }
             textoBotao={
               valoresIniciais.parcela.numero < valoresIniciais.parcela.total
                 ? `Excluir esta e as próximas parcelas (${valoresIniciais.parcela.numero} a ${valoresIniciais.parcela.total})`

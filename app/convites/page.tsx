@@ -4,10 +4,12 @@
 import Link from "next/link";
 import { ConvitesPendentes } from "@/components/ConvitesPendentes";
 import { EstadoVazio } from "@/components/EstadoVazio";
+import { AvisoPrecisaInternet } from "@/components/AvisoPrecisaInternet";
 
 export default function ConvitesPage() {
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
+      <AvisoPrecisaInternet texto="Responder convites precisa de internet." />
       <Link href="/dashboard" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Início
       </Link>

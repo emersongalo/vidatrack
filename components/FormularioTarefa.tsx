@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { adicionarNaFila, lerFila, salvarFilaCompleta, type AcaoPendente } from "@/lib/offline/fila";
+import { enfileirarAcao } from "@/lib/local/acaoOffline";
+import { camposEdicaoTarefa } from "@/lib/tarefas/camposTarefa";
+import { aplicarPatches } from "@/lib/offline/patches";
+import { lerSnapshotOffline, salvarSnapshotOffline } from "@/lib/offline/snapshot";
+import { EVENTO_SNAPSHOT } from "@/lib/offline/useSnapshot";
+import { sincronizarAgora, novoUuid } from "@/lib/local/financas";
 import { criarTarefa } from "@/app/habitos/tarefas/actions";
 import { EscolherCompartilhar } from "@/components/EscolherCompartilhar";
 import { SeletorIcone } from "@/components/SeletorIcone";
@@ -59,7 +67,10 @@ export function FormularioTarefa({
   contasFinancas = [],
   categoriasFinancas = [],
   comCompartilhar = false,
+  idEdicao,
 }: {
+  /** Etapa 350 — editando esta tarefa (sem internet: salva no aparelho e sobe depois) */
+  idEdicao?: string;
   /** Etapa 303 — mostra "Compartilhar com…" (só ao criar) */
   comCompartilhar?: boolean;
   /** Etapa 194 — pra vincular a tarefa a um lançamento */
@@ -92,6 +103,111 @@ export function FormularioTarefa({
     financaCategoriaId?: string | null;
   };
 }) {
+  const router = useRouter();
+  const [erroOffline, setErroOffline] = useState<string | null>(null);
+
+  // Etapa 343 — sem internet: tarefa NOVA vai pra fila (e já aparece na
+  // lista); quando a conexão volta, o app manda pro servidor sozinho.
+  function aoEnviar(e: React.FormEvent<HTMLFormElement>) {
+    if (typeof navigator === "undefined") return;
+    const semRede = !navigator.onLine;
+    if (action !== criarTarefa) {
+      if (!semRede) return; // editar com internet: servidor, como sempre
+      e.preventDefault();
+      if (!idEdicao) {
+        setErroOffline("Sem internet: editar precisa de conexão.");
+        return;
+      }
+      // Etapa 350 — editar sem internet
+      const fd = new FormData(e.currentTarget);
+      const r = camposEdicaoTarefa(fd);
+      if (r.erro || !r.campos) {
+        setErroOffline(r.erro ?? "Confira os campos");
+        return;
+      }
+      const patches = [{ colecao: "tarefas" as const, op: "mesclar" as const, id: idEdicao, valores: r.campos }];
+      const fila = lerFila();
+      const criar = fila.find((a) => a.tipo === "criar_tarefa" && a.id === idEdicao);
+      if (criar) {
+        // ainda nem subiu: só troca o que está na fila
+        const entradas: [string, string][] = [];
+        fd.forEach((v, k) => {
+          if (typeof v === "string") entradas.push([k, v]);
+        });
+        salvarFilaCompleta(fila.map((a) => (a === criar ? ({ ...criar, entradas } as AcaoPendente) : a)));
+        const snap = lerSnapshotOffline();
+        if (snap) {
+          salvarSnapshotOffline(aplicarPatches(snap as any, patches));
+          window.dispatchEvent(new Event(EVENTO_SNAPSHOT));
+        }
+      } else {
+        enfileirarAcao({ acao: "atualizarTarefa", args: [idEdicao, fd], patches, rotulo: `Editar "${r.campos.titulo}"` });
+      }
+      router.push(voltarHref);
+      return;
+    }
+    const dados = new FormData(e.currentTarget);
+    // Etapa 346 — estilo Monee: tarefa nova nasce no celular (com ou sem
+    // internet). Só "compartilhar com…" ainda passa direto pelo servidor.
+    const compartilha = !!(String(dados.get("compartilharUsuario") ?? "") || String(dados.get("compartilharEmail") ?? ""));
+    if (compartilha) {
+      if (!semRede) return;
+      e.preventDefault();
+      setErroOffline("Sem internet: crie sem compartilhar e compartilhe depois, quando a conexão voltar.");
+      return;
+    }
+    e.preventDefault();
+    const entradas: [string, string][] = [];
+    dados.forEach((v, k) => {
+      if (typeof v === "string") entradas.push([k, v]);
+    });
+    const titulo = String(dados.get("titulo") ?? "").trim();
+    if (!titulo) {
+      setErroOffline("Dê um título para a tarefa");
+      return;
+    }
+    const idFila = novoUuid();
+    adicionarNaFila({ id: idFila, tipo: "criar_tarefa", entradas });
+    sincronizarAgora();
+    // aparece na lista na hora (com id provisório)
+    try {
+      const snap = lerSnapshotOffline();
+      if (snap) {
+        const rep = String(dados.get("repetir") ?? "nenhuma");
+        const num = (k: string) => (dados.get(k) ? Number(dados.get(k)) : null);
+        salvarSnapshotOffline({
+          ...snap,
+          tarefas: [
+            ...snap.tarefas,
+            {
+              id: idFila,
+              titulo,
+              icone: String(dados.get("icone") ?? "NotebookPen"),
+              categoria_id: String(dados.get("categoriaId") ?? "") || null,
+              repetir: rep,
+              dias_semana: rep === "dias_semana" ? dados.getAll("diasSemana").map(Number) : [],
+              data: rep === "nenhuma" || rep === "intervalo" ? String(dados.get("data") || hoje) : null,
+              dia_mes: rep === "mensal" || rep === "anual" ? num("diaMes") : null,
+              mes: rep === "anual" ? num("mes") : null,
+              intervalo_dias: rep === "intervalo" ? num("intervaloDias") : null,
+              prioridade: num("prioridade") ?? 0,
+              horario_lembrete: String(dados.get("horarioLembrete") ?? "") || null,
+              subtarefas: [],
+              concluida: false,
+              arquivada: false,
+              ordem: 9999,
+              dono_id: snap.perfil.id,
+            },
+          ],
+        });
+        window.dispatchEvent(new Event(EVENTO_SNAPSHOT));
+      }
+    } catch {
+      /* a fila já guardou — a lista atualiza quando sincronizar */
+    }
+    router.push("/tarefas");
+  }
+
   const diaHoje = Number(hoje.slice(8, 10));
   const mesHoje = Number(hoje.slice(5, 7));
   const intervaloInicial = valoresIniciais?.intervaloDias ?? 7;
@@ -142,7 +258,10 @@ export function FormularioTarefa({
         </p>
       )}
 
-      <form action={action}>
+      {erroOffline && (
+        <p className="mb-4 text-sm text-financa bg-financa/10 border border-financa/30 rounded-lg px-3 py-2">📴 {erroOffline}</p>
+      )}
+      <form action={action} onSubmit={aoEnviar}>
         {/* Etapa 193 — no desktop o formulário vira 2 colunas: o "o quê"
             (título, ícone, prioridade...) à esquerda e o "quando"
             (repetição, lembrete) à direita. No celular continua uma

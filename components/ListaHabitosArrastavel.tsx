@@ -8,6 +8,7 @@ import { classeCor, classeFundoSuave } from "@/lib/agenda/estilo";
 import { IconeHabito } from "@/components/IconeHabito";
 import { arquivarHabito, reordenarHabitos, restaurarHabito } from "@/app/habitos/actions";
 import { comDesfazer } from "@/lib/app/desfazer";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 
 const RÓTULOS_FREQUENCIA: Record<string, string> = {
@@ -33,7 +34,15 @@ export function ListaHabitosArrastavel({ habitos, aoMudar }: { habitos: Habito[]
   return (
     <ListaArrastavel
       itens={habitos}
-      aoReordenar={reordenarHabitos}
+      // Etapa 353 — sem internet também
+      aoReordenar={(ids: string[]) =>
+        chamarOuGuardar(() => reordenarHabitos(ids), {
+          acao: "reordenarHabitos",
+          args: [ids],
+          patches: [{ colecao: "habitos", op: "ordenar", ids }],
+          rotulo: "Ordem dos hábitos",
+        }).then(() => {})
+      }
       classeLista="bg-base-800 border border-base-600 rounded-3xl overflow-hidden divide-y divide-base-600"
       renderItem={(habito, arrastando) => (
         // Etapa 227 — linha no estilo da lista de Contas: ícone redondo, nome e
@@ -99,12 +108,25 @@ export function ListaHabitosArrastavel({ habitos, aoMudar }: { habitos: Habito[]
                   type="button"
                   onClick={async () => {
                     fecharMenu();
-                    await arquivarHabito(habito.id);
+                    // Etapa 350 — sem internet: arquiva no aparelho e sobe depois
+                    const copia = { ...(habito as any) };
+                    await chamarOuGuardar(() => arquivarHabito(habito.id), {
+                      acao: "arquivarHabito",
+                      args: [habito.id],
+                      patches: [{ colecao: "habitos", op: "remover", id: habito.id }],
+                      rotulo: `Arquivar "${habito.nome}"`,
+                    });
                     aoMudar?.();
                     void atualizarSnapshotEmTodasAsTelas();
                     comDesfazer({
                       texto: `"${habito.nome}" arquivado`,
-                      desfazer: () => restaurarHabito(habito.id),
+                      desfazer: () =>
+                        chamarOuGuardar(() => restaurarHabito(habito.id), {
+                          acao: "restaurarHabito",
+                          args: [habito.id],
+                          patches: [{ colecao: "habitos", op: "upsert", id: habito.id, valores: copia }],
+                          rotulo: `Desarquivar "${habito.nome}"`,
+                        }),
                       aoTerminar: () => {
                         aoMudar?.();
                         void atualizarSnapshotEmTodasAsTelas();

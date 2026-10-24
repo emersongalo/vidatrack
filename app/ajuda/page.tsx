@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { gravar } from "@/lib/local/gravar";
+import { novoUuid } from "@/lib/local/acaoOffline";
 
 // Etapa 218 — perguntas frequentes + fale conosco
 const PERGUNTAS: { p: string; r: string }[] = [
@@ -28,15 +30,18 @@ export default function AjudaPage() {
     e.preventDefault();
     if (!texto.trim()) return;
     setEstado("enviando");
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const { error } = await supabase.from("mensagens_suporte").insert({
-      usuario_id: user?.id,
-      assunto,
-      texto: texto.trim().slice(0, 2000),
-      pagina: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 200) : null,
+    // Etapa 354 — sem internet: a mensagem fica guardada e é enviada depois
+    const user = (await createClient().auth.getSession()).data.session?.user;
+    const { error } = await gravar({
+      tabela: "mensagens_suporte",
+      op: "insert",
+      valores: {
+        id: novoUuid(),
+        usuario_id: user?.id,
+        assunto,
+        texto: texto.trim().slice(0, 2000),
+        pagina: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 200) : null,
+      },
     });
     if (error) return setEstado("erro");
     setTexto("");

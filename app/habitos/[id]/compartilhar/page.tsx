@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PainelCompartilhamentoCliente } from "@/components/PainelCompartilhamentoCliente";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
+import { AvisoPrecisaInternet } from "@/components/AvisoPrecisaInternet";
 
 // Etapa 132
 export default function CompartilharHabitoPage() {
@@ -24,6 +25,7 @@ function CompartilharHabitoConteudo() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
+      <AvisoPrecisaInternet texto="Compartilhar precisa de internet — a outra pessoa recebe o convite na hora." />
       <Link href="/habitos/lista" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Hábitos
       </Link>

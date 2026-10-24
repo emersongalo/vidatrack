@@ -1,13 +1,52 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "341";
+export const VERSAO_NOVIDADES = "355";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "355",
+    titulo: "Sem internet, sem limite",
+    itens: [
+      { emoji: "📔", titulo: "Do dia a dia, tudo offline", texto: "Diário, \"Paguei\", confirmar receitas, adiar e revisar tarefas, pausar hábito, escudo, mascote, metas e rotina — salvam no celular e sobem sozinhos." },
+      { emoji: "🗓️", titulo: "Planejador e divisões offline", texto: "Crie e mova blocos de tempo, marque divisões como pagas e guarde em investimento mesmo sem sinal." },
+      { emoji: "🔁", titulo: "Contas fixas do mês", texto: "Sem internet, as contas fixas do mês já aparecem \"a pagar\" — sem duplicar quando a conexão volta.", href: "/financas" },
+      { emoji: "📴", titulo: "Aviso claro", texto: "Telas que precisam mesmo de internet (assistente, importar, convites) avisam logo no topo." },
+    ],
+  },
+  {
+    versao: "352",
+    titulo: "Agora quase tudo funciona sem internet",
+    itens: [
+      { emoji: "✏️", titulo: "Editar e arquivar sem sinal", texto: "Hábitos e tarefas: criar com todas as opções, editar, arquivar, checklist e notas — tudo no celular, sobe sozinho depois." },
+      { emoji: "💳", titulo: "Parcelado, conta fixa e fatura offline", texto: "Compra parcelada, repetir todo mês, editar parcela, transferência e pagar fatura funcionam sem internet.", href: "/financas" },
+      { emoji: "🏦", titulo: "Contas, categorias, metas e desafios", texto: "Criar e editar contas e cartões, categorias, metas, envelopes, desafios e contas fixas — também sem internet." },
+    ],
+  },
+  {
+    versao: "349",
+    titulo: "Tudo salvo no celular primeiro",
+    itens: [
+      { emoji: "⚡", titulo: "Lançamentos instantâneos", texto: "Gastos e receitas aparecem na hora, com ou sem internet, e vão pro banco logo em seguida. Dá pra editar e apagar mesmo antes de sincronizar.", href: "/financas" },
+      { emoji: "✅", titulo: "Tarefas e hábitos sem esperar", texto: "Criar tarefa, concluir e marcar hábito não travam mais se a rede oscilar — fica salvo no aparelho e sobe sozinho.", href: "/tarefas" },
+      { emoji: "🗓️", titulo: "Agenda offline completa", texto: "Criar, editar e apagar compromissos funciona sem internet. O ⏳ mostra o que ainda vai sincronizar.", href: "/tarefas/agenda" },
+      { emoji: "📴", titulo: "Abre tudo sem internet", texto: "Todas as telas ficam guardadas no celular — extrato, cartões, metas, estatísticas, detalhes de cada hábito, tarefa e lançamento. Sem sinal, o app abre e mostra tudo." },
+      { emoji: "🔄", titulo: "Dados em dia sem abrir o app", texto: "O celular atualiza seus dados sozinho de tempos em tempos e a cada notificação. Ficou dias sem abrir e está sem internet? O app mostra os dados de poucas horas atrás." },
+    ],
+  },
+  {
+    versao: "342",
+    titulo: "Funciona sem internet",
+    itens: [
+      { emoji: "📴", titulo: "VidaTrack offline", texto: "Sem sinal ou com o servidor fora do ar, o app abre a tela offline: marque hábitos, conclua tarefas, veja a agenda de hoje e amanhã e lance gastos. Tudo vai pro app sozinho quando a internet voltar." },
+      { emoji: "⚡", titulo: "Telas guardadas no aparelho", texto: "Início, Hábitos, Tarefas, Finanças e Agenda ficam salvas no celular pra abrir mesmo sem conexão." },
+      { emoji: "📝", titulo: "Criar sem internet", texto: "Tarefas novas, compromissos da Agenda e lançamentos podem ser criados offline — aparecem na hora com ⏳ e sobem sozinhos quando a conexão volta." },
+    ],
+  },
   {
     versao: "341",
     titulo: "Agenda chegou!",

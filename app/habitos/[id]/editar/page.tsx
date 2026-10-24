@@ -56,6 +56,7 @@ function EditarHabitoConteudo() {
 
       <FormularioHabito
         action={atualizarHabito.bind(null, habito.id)}
+        offline={{ modo: "editar", id: habito.id }}
         categorias={categorias as any}
         outrosHabitos={(snapshot?.habitos ?? []).filter((h: any) => h.id !== habito.id && !h.eh_negativo).map((h: any) => ({ id: h.id, nome: h.nome }))}
         textoBotao="Salvar alterações"

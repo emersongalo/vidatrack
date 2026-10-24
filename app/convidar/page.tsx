@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Share2, Copy, MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { AvisoPrecisaInternet } from "@/components/AvisoPrecisaInternet";
 
 // Etapa 218 — convidar amigos com um link pessoal
 const SITE = "https://www.vidatrack.online";
@@ -52,6 +53,7 @@ export default function ConvidarPage() {
 
   return (
     <main className="min-h-screen p-6 md:p-12 pagina-curta">
+      <AvisoPrecisaInternet texto="Convidar precisa de internet." />
       <Link href="/perfil" className="text-ink-400 text-base hover:text-ink-100 transition">
         ← Perfil
       </Link>

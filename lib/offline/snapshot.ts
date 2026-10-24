@@ -1,3 +1,5 @@
+import { aplicarPatches } from "@/lib/offline/patches";
+
 const CHAVE_SNAPSHOT = "vidatrack-snapshot-offline";
 
 // Sobe esse número toda vez que o FORMATO do snapshot mudar (campo
@@ -187,7 +189,10 @@ export function hidratarSnapshot(): Promise<SnapshotOffline | null> {
   hidratando = (async () => {
     let lido: SnapshotOffline | null = null;
     try {
-      lido = normalizar(await lerDoBanco());
+      // Etapa 349 — o retrato pode ter sido gravado "por trás" (Service
+      // Worker, sem o app aberto): reaplica o que ainda está na fila
+      // (não duplica: cada item só entra se ainda não estiver lá).
+      lido = normalizar(aplicarPendentes(await lerDoBanco()));
     } catch {
       lido = null;
     }
@@ -209,8 +214,89 @@ export function hidratarSnapshot(): Promise<SnapshotOffline | null> {
   return hidratando;
 }
 
-export function salvarSnapshotOffline(dados: Omit<SnapshotOffline, "versao">) {
+/**
+ * Etapa 344 — o que foi feito no aparelho e ainda não subiu continua
+ * aparecendo mesmo quando chega um retrato novo do servidor (senão o
+ * lançamento "sumia" por alguns segundos e voltava).
+ */
+function aplicarPendentes(dados: any) {
+  let fila: any[] = [];
+  try {
+    fila = JSON.parse(localStorage.getItem("vidatrack-fila-offline") ?? "[]");
+  } catch {
+    return dados;
+  }
+  if (!fila.length || !dados?.financas) return dados;
+  if (!Array.isArray(dados.tarefas)) dados = { ...dados, tarefas: [] };
+  const num = (v: any) => {
+    const t = String(v ?? "").replace(/[^\d,.-]/g, "");
+    const n = t.includes(",") ? Number(t.replace(/\./g, "").replace(",", ".")) : Number(t);
+    return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
+  };
+  let lista: any[] = [...(dados.financas.transacoes ?? [])];
+  for (const a of fila) {
+    if (a?.tipo === "criar_transacao" && a.id && !lista.some((t) => t.id === a.id)) {
+      lista.unshift({
+        id: a.id,
+        dono_id: dados.perfil?.id,
+        conta_id: a.dados?.contaId,
+        categoria_id: a.dados?.categoriaId || null,
+        tipo: a.dados?.tipo,
+        valor: num(a.dados?.valor),
+        descricao: a.dados?.descricao || null,
+        data: a.dados?.data,
+        etiquetas: a.dados?.etiquetas ?? null,
+        pendente_sync: true,
+      });
+    } else if (a?.tipo === "editar_transacao") {
+      lista = lista.map((t) =>
+        t.id === a.transacaoId
+          ? { ...t, conta_id: a.dados.contaId, categoria_id: a.dados.categoriaId || null, tipo: a.dados.tipo, valor: num(a.dados.valor), descricao: a.dados.descricao || null, data: a.dados.data, pendente_sync: true }
+          : t
+      );
+    } else if (a?.tipo === "apagar_transacao") {
+      lista = lista.filter((t) => t.id !== a.transacaoId);
+    }
+  }
+  // Etapa 346 — tarefas criadas no aparelho que ainda não subiram
+  let tarefas: any[] = [...(dados.tarefas ?? [])];
+  for (const a of fila) {
+    if (a?.tipo !== "criar_tarefa" || !a.id || tarefas.some((t) => t.id === a.id)) continue;
+    const campo = (k: string) => (a.entradas ?? []).find((e: [string, string]) => e[0] === k)?.[1] ?? "";
+    const todos = (k: string) => (a.entradas ?? []).filter((e: [string, string]) => e[0] === k).map((e: [string, string]) => e[1]);
+    const rep = campo("repetir") || "nenhuma";
+    tarefas.push({
+      id: a.id,
+      titulo: campo("titulo"),
+      icone: campo("icone") || "NotebookPen",
+      categoria_id: campo("categoriaId") || null,
+      repetir: rep,
+      dias_semana: rep === "dias_semana" ? todos("diasSemana").map(Number) : [],
+      data: rep === "nenhuma" || rep === "intervalo" ? campo("data") || null : null,
+      dia_mes: rep === "mensal" || rep === "anual" ? Number(campo("diaMes")) || null : null,
+      mes: rep === "anual" ? Number(campo("mes")) || null : null,
+      intervalo_dias: rep === "intervalo" ? Number(campo("intervaloDias")) || null : null,
+      prioridade: Number(campo("prioridade")) || 0,
+      horario_lembrete: campo("horarioLembrete") || null,
+      subtarefas: [],
+      concluida: false,
+      arquivada: false,
+      ordem: 9999,
+      dono_id: dados.perfil?.id,
+      pendente_sync: true,
+    });
+  }
+  let saida: any = { ...dados, tarefas, financas: { ...dados.financas, transacoes: lista } };
+  // Etapa 350 — ações genéricas (editar/apagar hábito, conta, meta…)
+  for (const a of fila) {
+    if (a?.tipo === "generica") saida = aplicarPatches(saida, a.patches);
+  }
+  return saida;
+}
+
+export function salvarSnapshotOffline(dadosServidor: Omit<SnapshotOffline, "versao">) {
   if (typeof window === "undefined") return;
+  const dados = aplicarPendentes(dadosServidor);
   const completo = { ...dados, versao: VERSAO_SNAPSHOT };
   cache = normalizar(completo);
   gravarNoBanco(completo)
@@ -245,7 +331,63 @@ export function snapshotHidratado(): boolean {
   return cache !== undefined;
 }
 
+/**
+ * Etapa 349 — chegou um retrato mais novo por trás (Service Worker no
+ * iPhone/navegador, ou o próprio Android com o app fechado): usa ele se
+ * for mais recente que o que está na tela.
+ */
+export async function usarRetratoDoFundo(dados: any): Promise<boolean> {
+  if (typeof window === "undefined" || !dados || typeof dados !== "object") return false;
+  await hidratarSnapshot();
+  const atual = cache?.baixadoEm ?? "";
+  if (!dados.baixadoEm || (atual && String(dados.baixadoEm) <= atual)) return false;
+  salvarSnapshotOffline(dados);
+  try {
+    window.dispatchEvent(new Event("vidatrack-snapshot-atualizado"));
+  } catch {}
+  return true;
+}
+
+/** relê do IndexedDB (o Service Worker gravou um retrato novo lá) */
+async function recarregarDoBanco() {
+  try {
+    const novo = normalizar(aplicarPendentes(await lerDoBanco()));
+    if (novo && (!cache || novo.baixadoEm > cache.baixadoEm)) {
+      cache = novo;
+      window.dispatchEvent(new Event("vidatrack-snapshot-atualizado"));
+    }
+  } catch {}
+}
+
+/** Android: pega o retrato que o celular baixou sozinho (app 1.3.1+) */
+async function importarRetratoNativo() {
+  try {
+    if (!(window as any).Capacitor?.isNativePlatform?.()) return;
+    const { registerPlugin } = await import("@capacitor/core");
+    const plugin = registerPlugin<{ ler: () => Promise<{ json?: string | null }>; apagar: () => Promise<void> }>("RetratoFundo");
+    const { json } = await plugin.ler();
+    if (!json) return;
+    let dados: any = null;
+    try {
+      dados = JSON.parse(json);
+    } catch {}
+    await usarRetratoDoFundo(dados);
+    await plugin.apagar();
+  } catch {
+    // app antigo (sem o plugin): segue normal
+  }
+}
+
 // Começa a carregar assim que qualquer tela importar este arquivo
 if (typeof window !== "undefined") {
-  hidratarSnapshot();
+  hidratarSnapshot().then(() => importarRetratoNativo());
+  // voltou pro app (estava em segundo plano): pode ter retrato novo
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") void importarRetratoNativo();
+  });
+  try {
+    navigator.serviceWorker?.addEventListener("message", (ev: MessageEvent) => {
+      if (ev.data?.tipo === "retrato-atualizado") void recarregarDoBanco();
+    });
+  } catch {}
 }

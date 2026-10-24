@@ -14,6 +14,7 @@ import { formatarMoeda } from "@/lib/financas/formatacao";
 import { useValoresOcultos } from "@/lib/preferencias/useValoresOcultos";
 import { comDesfazer } from "@/lib/app/desfazer";
 import { vibrar } from "@/lib/app/vibrar";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 const CHAVE_PERIODO = "vt-fluxo-periodo";
 const PERIODOS: { id: PeriodoFluxo; nome: string }[] = [
@@ -86,16 +87,13 @@ export function FluxoFinanceiro({ snapshot, hoje }: { snapshot: any; hoje: strin
   async function confirmar(item: ItemFluxo, el: HTMLElement | null) {
     if (!item.transacaoId) return;
     setErro(null);
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      setErro("Sem internet agora — tente de novo quando conectar.");
-      return;
-    }
+    // Etapa 353 — sem internet também: fica no aparelho e sobe depois
     const receita = item.tipo === "receita";
     carimbar(el, receita ? "✓ RECEBIDO" : "✓ PAGO");
     vibrar([15, 40, 25]);
     setFeitos((s) => new Set(s).add(item.chave));
     const id = item.transacaoId;
-    const { error } = await createClient().from("financa_transacoes").update({ pago_em: hoje }).eq("id", id);
+    const { error } = await gravar({ tabela: "financa_transacoes", op: "update", id: id, valores: { pago_em: hoje } });
     if (error) {
       setFeitos((s) => {
         const n = new Set(s);
@@ -109,7 +107,7 @@ export function FluxoFinanceiro({ snapshot, hoje }: { snapshot: any; hoje: strin
     comDesfazer({
       texto: `${item.descricao}: ${receita ? "recebido" : "pago"} ✓`,
       desfazer: async () => {
-        await createClient().from("financa_transacoes").update({ pago_em: null }).eq("id", id);
+        await gravar({ tabela: "financa_transacoes", op: "update", id: id, valores: { pago_em: null } });
         setFeitos((s) => {
           const n = new Set(s);
           n.delete(item.chave);

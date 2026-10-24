@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useSnapshotOffline, atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
 import { progressoMeta, type MetaLonga } from "@/lib/habitos/metasLongas";
+import { gravar } from "@/lib/local/gravar";
+import { novoUuid } from "@/lib/local/acaoOffline"; // Etapa 353 — sem internet: guarda e sobe depois
 
 // Etapa 218 — metas de longo prazo: "Ler 12 livros no ano", "Correr 500 km"
 const STATUS = {
@@ -49,9 +51,12 @@ export default function MetasLongasPage() {
     if (!nome || !(alvo > 0)) return setErro("Dê um nome e um alvo maior que zero.");
     setCriando(true);
     const ok = await executar(() =>
-      createClient()
-        .from("metas_longas")
-        .insert({
+      gravar({
+        tabela: "metas_longas",
+        op: "insert",
+        valores: {
+          // Etapa 353 — id do aparelho: dá pra criar sem internet
+          id: novoUuid(),
           dono_id: snapshot?.perfil.id,
           nome,
           emoji: String(f.get("emoji") ?? "").trim() || null,
@@ -60,15 +65,17 @@ export default function MetasLongasPage() {
           data_inicio: String(f.get("inicio")) || hoje,
           data_fim: String(f.get("fim")),
           habito_id: String(f.get("habito") ?? "") || null,
-        })
+          progresso: 0,
+        },
+      })
     );
     setCriando(false);
     if (ok) (ev.target as HTMLFormElement).reset();
   }
 
   const somar = (m: MetaLonga, delta: number) =>
-    executar(() => createClient().from("metas_longas").update({ progresso: Math.max(0, Number(m.progresso) + delta) }).eq("id", m.id));
-  const arquivar = (m: MetaLonga) => executar(() => createClient().from("metas_longas").update({ arquivada: true }).eq("id", m.id));
+    executar(() => gravar({ tabela: "metas_longas", op: "update", id: m.id, valores: { progresso: Math.max(0, Number(m.progresso) + delta) } }));
+  const arquivar = (m: MetaLonga) => executar(() => gravar({ tabela: "metas_longas", op: "update", id: m.id, valores: { arquivada: true } }));
 
   const fimAno = `${hoje.slice(0, 4)}-12-31`;
   const campo = "w-full bg-base-900 border border-base-600 rounded-lg px-3 py-2 text-sm text-ink-100 outline-none focus:border-ink-100";

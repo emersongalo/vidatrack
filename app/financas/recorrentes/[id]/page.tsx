@@ -14,6 +14,7 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { hojeISO } from "@/lib/habitos/streak";
 import { atualizarRecorrencia } from "../actions";
+import { pedidoAtualizarRecorrencia } from "@/lib/local/financasCadastros";
 
 const campo =
   "w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition";
@@ -114,6 +115,7 @@ function Conteudo() {
         </p>
         <FormularioAcao
           acao={atualizarRecorrencia.bind(null, r.id)}
+          offline={(fd) => pedidoAtualizarRecorrencia(r.id, fd)}
           aoSucesso={recarregar}
           mensagemSucesso="Recorrência atualizada!"
           limparAoSalvar={false}

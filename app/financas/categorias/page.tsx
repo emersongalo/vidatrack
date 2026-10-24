@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { removerCategoria } from "../actions";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
+import { pedidoRemoverCategoria } from "@/lib/local/financasCadastros";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { classeFundoSuave } from "@/lib/agenda/estilo";
 import { IconeCategoria } from "@/components/IconeCategoria";
@@ -53,7 +55,8 @@ export default function CategoriasPage() {
                     <Pencil size={15} strokeWidth={2} /> Editar
                   </ItemMenuAcoes>
                   <BotaoComConfirmacao
-                    acao={removerCategoria.bind(null, cat.id)}
+                    // Etapa 352 — sem internet também
+                    acao={() => chamarOuGuardar(() => removerCategoria(cat.id), pedidoRemoverCategoria(cat.id, cat.nome)).then(() => {})}
                     textoBotao={
                       <span className="flex items-center gap-2.5">
                         <Trash2 size={15} strokeWidth={2} /> Remover

@@ -39,6 +39,7 @@ function EditarCategoriaConteudo() {
   return (
     <FormularioCategoria
       action={atualizarCategoria.bind(null, categoria.id)}
+      idEdicao={categoria.id}
       titulo="Editar categoria"
       textoBotao="Salvar alterações"
       erro={searchParams.get("erro") ?? undefined}

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FormularioAcao } from "@/components/FormularioAcao";
 import { useState } from "react";
 import { criarMeta, adicionarProgressoMeta, arquivarMeta, excluirMetaDefinitivamente, retirarDaMeta, editarMeta } from "./actions";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
+import { pedidoCriarMeta, pedidoEditarMeta, pedidoMovimentarMeta, pedidoTirarMeta } from "@/lib/local/financasCadastros";
 import { planoDaMeta, ritmoDaMeta, quandoChega, sugestaoSemanal } from "@/lib/financas/metas";
 import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
@@ -50,7 +52,7 @@ export default function MetasPage() {
 
       <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
         <h2 className="text-lg font-semibold mb-3">Nova meta</h2>
-        <FormularioAcao acao={criarMeta} aoSucesso={recarregar} mensagemSucesso="Meta criada!" className="space-y-3">
+        <FormularioAcao acao={criarMeta} offline={pedidoCriarMeta} aoSucesso={recarregar} mensagemSucesso="Meta criada!" className="space-y-3">
           <input
             name="nome"
             type="text"
@@ -170,6 +172,7 @@ function CartaoMeta({ meta, aoMudar }: { meta: any; aoMudar: () => void }) {
       {editando ? (
         <FormularioAcao
           acao={editarMeta.bind(null, meta.id)}
+          offline={(fd) => pedidoEditarMeta(meta.id, fd)}
           aoSucesso={() => {
             setEditando(false);
             aoMudar();
@@ -212,6 +215,7 @@ function CartaoMeta({ meta, aoMudar }: { meta: any; aoMudar: () => void }) {
           <FormularioAcao
             key={modo}
             acao={(modo === "guardar" ? adicionarProgressoMeta : retirarDaMeta).bind(null, meta.id)}
+            offline={(fd) => pedidoMovimentarMeta(meta.id, fd, modo === "guardar" ? "adicionar" : "retirar")}
             aoSucesso={aoMudar}
             className="flex gap-2 mb-3"
           >
@@ -237,14 +241,14 @@ function CartaoMeta({ meta, aoMudar }: { meta: any; aoMudar: () => void }) {
           <Pencil size={14} strokeWidth={2} />
         </button>
         <BotaoComConfirmacao
-          acao={arquivarMeta.bind(null, meta.id)}
+          acao={() => chamarOuGuardar(() => arquivarMeta(meta.id), pedidoTirarMeta(meta.id, "arquivar")).then(() => {})}
           textoBotao={<Archive size={14} strokeWidth={2} />}
           textoConfirmacao={`Arquivar "${meta.nome}"?`}
           classeBotao="text-ink-400 hover:text-ink-100 transition"
           aoConcluir={aoMudar}
         />
         <BotaoComConfirmacao
-          acao={excluirMetaDefinitivamente.bind(null, meta.id)}
+          acao={() => chamarOuGuardar(() => excluirMetaDefinitivamente(meta.id), pedidoTirarMeta(meta.id, "excluir")).then(() => {})}
           textoBotao={<Trash2 size={14} strokeWidth={2} />}
           textoConfirmacao={`Excluir "${meta.nome}" de vez?`}
           classeBotao="text-ink-400 hover:text-red-400 transition"

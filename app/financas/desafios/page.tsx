@@ -1,9 +1,11 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { criarDesafio } from "./actions";
+import { enfileirarAcao, semInternet } from "@/lib/local/acaoOffline";
+import { pedidoCriarDesafio } from "@/lib/local/financasCadastros";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import { formatarMoeda } from "@/lib/financas/formatacao";
@@ -24,7 +26,10 @@ export default function DesafiosPage() {
 }
 
 function DesafiosConteudo() {
-  const erro = useSearchParams().get("erro");
+  const erroUrl = useSearchParams().get("erro");
+  const [erroOffline, setErroOffline] = useState<string | null>(null);
+  const erro = erroOffline ?? erroUrl;
+  const router = useRouter();
   const { snapshot } = useSnapshotOffline();
   const desafios = snapshot?.financas.desafios ?? [];
   const contas = (snapshot?.financas.contas ?? []).filter((c: any) => c.tipo !== "investimento");
@@ -80,7 +85,19 @@ function DesafiosConteudo() {
               {decodeURIComponent(erro)}
             </p>
           )}
-          <form action={criarDesafio} className="space-y-3">
+          {/* Etapa 352 — sem internet: o desafio nasce no aparelho e sobe depois */}
+          <form
+            action={criarDesafio}
+            onSubmit={(e) => {
+              if (!semInternet()) return;
+              e.preventDefault();
+              const r = pedidoCriarDesafio(new FormData(e.currentTarget));
+              if (typeof r === "string") return setErroOffline(r);
+              enfileirarAcao(r.pedido);
+              router.push(`/financas/desafios/${r.id}`);
+            }}
+            className="space-y-3"
+          >
             <input
               name="nome"
               type="text"

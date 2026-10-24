@@ -3,26 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { camposDesafio } from "@/lib/financas/desafiosQuadrados";
 
-function gerarQuadrados(quantidade: number, tipoProgressao: string, valorTotal: number) {
-  const valorBase =
-    tipoProgressao === "fixo" ? valorTotal / quantidade : valorTotal / ((quantidade * (quantidade + 1)) / 2);
-
-  const quadrados = [];
-  for (let i = 1; i <= quantidade; i++) {
-    const valorBruto = tipoProgressao === "crescente" ? valorBase * i : valorBase;
-    quadrados.push({ numero: i, valor: Math.round(valorBruto * 100) / 100 });
-  }
-
-  // Arredondar cada quadrado individualmente acumula uma diferença
-  // pequena no total — o último quadrado absorve essa sobra, pra
-  // bater exatamente no valor que a pessoa disse que queria guardar.
-  const somaAtual = quadrados.reduce((soma, q) => soma + q.valor, 0);
-  const diferenca = Math.round((valorTotal - somaAtual) * 100) / 100;
-  quadrados[quadrados.length - 1].valor = Math.round((quadrados[quadrados.length - 1].valor + diferenca) * 100) / 100;
-
-  return quadrados;
-}
+// Etapa 352 — gerarQuadrados/camposDesafio moram em lib/financas/desafiosQuadrados.ts
+const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function criarDesafio(formData: FormData) {
   const supabase = createClient();
@@ -31,27 +15,22 @@ export async function criarDesafio(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const nome = String(formData.get("nome") ?? "").trim();
-  const valorTotal = Number(String(formData.get("valorTotal") ?? "").replace(/\./g, "").replace(",", "."));
-  const prazoQuantidade = Number(formData.get("prazoQuantidade") ?? "0");
-  const tipoProgressao = String(formData.get("tipoProgressao") ?? "fixo");
-  const contaOrigemId = String(formData.get("contaOrigemId") ?? "");
-
-  if (!nome || !valorTotal || valorTotal <= 0 || !prazoQuantidade || prazoQuantidade < 2 || !contaOrigemId) {
-    redirect(`/financas/desafios?erro=${encodeURIComponent("Preenche todos os campos certinho")}`);
+  const c = camposDesafio(formData);
+  if ("erro" in c) {
+    redirect(`/financas/desafios?erro=${encodeURIComponent(c.erro ?? "Preenche todos os campos certinho")}`);
   }
-
-  // A pessoa diz quanto quer guardar e em quanto tempo — o app
-  // calcula sozinho quanto cada quadrado vale, pra somar certinho
-  // nesse total dentro desse prazo.
-  const quadrados = gerarQuadrados(prazoQuantidade, tipoProgressao, valorTotal);
-  const valorAlvo = quadrados.reduce((soma, q) => soma + q.valor, 0);
-  const valorBase = quadrados[0].valor;
+  const { nome, prazoQuantidade, tipoProgressao, contaOrigemId, quadrados, valorAlvo, valorBase } = c as Exclude<typeof c, { erro: string }>;
+  // Etapa 352 — ids criados no aparelho (sem internet): reenviar não duplica
+  const idCliente = String(formData.get("idCliente") ?? "");
+  const idDesafio = RE_UUID.test(idCliente) ? idCliente : null;
+  const idsQuadrados = formData.getAll("idQuadrado").map(String);
+  const usarIdsQuadrados = idsQuadrados.length === quadrados.length && idsQuadrados.every((x) => RE_UUID.test(x));
 
   const { data: desafio, error } = await supabase
     .from("desafios_financeiros")
     .insert({
-      dono_id: user.id,
+      ...(idDesafio ? { id: idDesafio } : {}),
+      dono_id: user!.id,
       nome,
       quantidade_quadrados: prazoQuantidade,
       tipo_progressao: tipoProgressao,
@@ -62,12 +41,16 @@ export async function criarDesafio(formData: FormData) {
     .select("id")
     .single();
 
+  if (error?.code === "23505" && idDesafio) {
+    revalidatePath("/financas/desafios");
+    redirect(`/financas/desafios/${idDesafio}`);
+  }
   if (error || !desafio) {
     redirect(`/financas/desafios?erro=${encodeURIComponent(error?.message ?? "Não consegui criar o desafio")}`);
   }
 
   await supabase.from("desafio_quadrados").insert(
-    quadrados.map((q) => ({ desafio_id: desafio!.id, numero: q.numero, valor: q.valor }))
+    quadrados.map((q, i) => ({ ...(usarIdsQuadrados ? { id: idsQuadrados[i] } : {}), desafio_id: desafio!.id, numero: q.numero, valor: q.valor }))
   );
 
   revalidatePath("/financas/desafios");
@@ -80,7 +63,7 @@ export async function criarDesafio(formData: FormData) {
  * "Guardar em investimento" já faz) e soma no total guardado do
  * desafio, que entra na conta do patrimônio líquido pra não sumir.
  */
-export async function completarQuadrado(desafioId: string, quadradoId: string) {
+export async function completarQuadrado(desafioId: string, quadradoId: string, idTransacao?: string) {
   "use server";
   const supabase = createClient();
   const {
@@ -105,7 +88,9 @@ export async function completarQuadrado(desafioId: string, quadradoId: string) {
   if (!desafio || !desafio.conta_origem_id) return;
 
   await supabase.from("financa_transacoes").insert({
-    dono_id: user.id,
+    // Etapa 352 — id criado no aparelho (marcado sem internet)
+    ...(idTransacao && RE_UUID.test(idTransacao) ? { id: idTransacao } : {}),
+    dono_id: user!.id,
     conta_id: desafio.conta_origem_id,
     tipo: "despesa",
     valor: quadrado.valor,

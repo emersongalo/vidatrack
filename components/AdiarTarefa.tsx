@@ -6,6 +6,7 @@ import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
 
 import { opcoesAdiar } from "@/lib/agenda/adiar";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 export function AdiarTarefa({ tarefaId, aoAdiar }: { tarefaId: string; aoAdiar?: () => void }) {
   const [aberto, setAberto] = useState(false);
@@ -13,7 +14,7 @@ export function AdiarTarefa({ tarefaId, aoAdiar }: { tarefaId: string; aoAdiar?:
 
   async function adiar(data: string) {
     setEstado("salvando");
-    const { error } = await createClient().from("tarefas").update({ data }).eq("id", tarefaId);
+    const { error } = await gravar({ tabela: "tarefas", op: "update", id: tarefaId, valores: { data } });
     if (error) return setEstado("erro");
     setEstado("parado");
     setAberto(false);

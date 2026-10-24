@@ -7,6 +7,7 @@ import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { pausasComEscudo, type OfertaEscudo } from "@/lib/habitos/escudo";
 import { explodirEm, textoFlutuante } from "@/lib/app/festa";
 import { vibrar } from "@/lib/app/vibrar";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 export function CartaoEscudo({
   habito,
@@ -24,10 +25,7 @@ export function CartaoEscudo({
 
   async function usar() {
     setEstado("salvando");
-    const { error } = await createClient()
-      .from("habitos")
-      .update({ pausas: pausasComEscudo(habito, oferta.dia) })
-      .eq("id", habito.id);
+    const { error } = await gravar({ tabela: "habitos", op: "update", id: habito.id, valores: { pausas: pausasComEscudo(habito, oferta.dia) } });
     if (error) {
       setEstado("erro");
       return;

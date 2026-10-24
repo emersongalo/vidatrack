@@ -13,6 +13,7 @@ import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { aguardandoConfirmacao, somarDiasISO } from "@/lib/financas/confirmacao";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { vibrar } from "@/lib/app/vibrar";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 function ddmm(iso: string) {
   return `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
@@ -46,7 +47,7 @@ export function ConfirmarReceitas({ snapshot, noInicio = false }: { snapshot: an
     setErro(null);
     setFeitas((f) => ({ ...f, [id]: resultado }));
     setAdiando(null);
-    const { error } = await createClient().from("financa_transacoes").update(mudanca).eq("id", id);
+    const { error } = await gravar({ tabela: "financa_transacoes", op: "update", id: id, valores: mudanca });
     if (error) {
       setFeitas((f) => {
         const n = { ...f };

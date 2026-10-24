@@ -8,6 +8,7 @@ import { gastoDoMes, situacaoTeto } from "@/lib/financas/teto";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 // Etapa 220 — teto de gastos do mês
 export function TetoMensal({ snapshot, hojeISO }: { snapshot: SnapshotOffline; hojeISO: string }) {
@@ -18,7 +19,7 @@ export function TetoMensal({ snapshot, hojeISO }: { snapshot: SnapshotOffline; h
 
   async function salvar(valor: number | null) {
     setErro(null);
-    const { error } = await createClient().from("perfis").update({ teto_mensal: valor }).eq("id", snapshot.perfil.id);
+    const { error } = await gravar({ tabela: "perfis", op: "update", id: snapshot.perfil.id, valores: { teto_mensal: valor } });
     if (error) return setErro("Não consegui salvar. Verifique a internet.");
     setEditando(false);
     atualizarSnapshotEmTodasAsTelas();

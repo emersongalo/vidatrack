@@ -41,6 +41,7 @@ import {
   type BlocoHoje,
   type BlocoHojeId,
 } from "@/lib/habitos/blocosHoje";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 /**
  * Etapa 132 — antes essa tela guardava um cache separado "por dia
@@ -214,10 +215,7 @@ function HojeConteudo() {
     if (!layoutEditado || !snapshot) return setEditandoLayout(false);
     setSalvandoLayout(true);
     setErroLayout(null);
-    const { error } = await createClient()
-      .from("perfis")
-      .update({ ordem_blocos_habitos: salvarLayoutHoje(layoutEditado) })
-      .eq("id", snapshot.perfil.id);
+    const { error } = await gravar({ tabela: "perfis", op: "update", id: snapshot.perfil.id, valores: { ordem_blocos_habitos: salvarLayoutHoje(layoutEditado) } });
     if (error) setErroLayout("Não consegui salvar. Verifique a internet.");
     else {
       await atualizarSnapshotEmTodasAsTelas();

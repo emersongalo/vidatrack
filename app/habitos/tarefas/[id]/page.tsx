@@ -5,6 +5,8 @@ import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { IconeHabito } from "@/components/IconeHabito";
 import { arquivarTarefa, alternarConclusaoTarefaUnica, restaurarTarefa } from "../actions";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
+import { useRouter } from "next/navigation";
 import { comDesfazer } from "@/lib/app/desfazer";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { CheckboxSubtarefa } from "@/components/CheckboxSubtarefa";
@@ -28,6 +30,7 @@ function DetalheTarefaConteudo() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const { snapshot, recarregar } = useSnapshotOffline();
+  const router = useRouter();
   const [, iniciarTransicao] = useTransition();
   // Precisa vir antes de qualquer "return" condicional (regra dos hooks
   // do React) — por isso o valor de partida é um objeto vazio, não os
@@ -64,8 +67,14 @@ function DetalheTarefaConteudo() {
 
   function alternarConcluida() {
     iniciarTransicao(async () => {
-      await alternarConclusaoTarefaUnica(tarefa.id);
-      recarregar();
+      // Etapa 350 — sem internet: marca no aparelho e sobe depois
+      const r = await chamarOuGuardar(() => alternarConclusaoTarefaUnica(tarefa.id), {
+        acao: "alternarConclusaoTarefaUnica",
+        args: [tarefa.id],
+        patches: [{ colecao: "tarefas", op: "mesclar", id: tarefa.id, valores: { concluida: !tarefa.concluida } }],
+        rotulo: `Concluir "${tarefa.titulo}"`,
+      });
+      if (r !== "fila") recarregar();
     });
   }
 
@@ -83,12 +92,30 @@ function DetalheTarefaConteudo() {
           <button
             type="button"
             onClick={() => {
+              // Etapa 350 — sem internet também: arquiva no aparelho e sobe depois
+              const copia = { ...(tarefa as any) };
               comDesfazer({
                 texto: "Tarefa arquivada",
-                desfazer: () => restaurarTarefa(tarefa.id),
+                desfazer: () =>
+                  chamarOuGuardar(() => restaurarTarefa(tarefa.id), {
+                    acao: "restaurarTarefa",
+                    args: [tarefa.id],
+                    patches: [{ colecao: "tarefas", op: "upsert", id: tarefa.id, valores: copia }],
+                    rotulo: `Desarquivar "${tarefa.titulo}"`,
+                  }),
                 aoTerminar: () => void atualizarSnapshotEmTodasAsTelas(),
               });
-              void arquivarTarefa(tarefa.id).finally(() => void atualizarSnapshotEmTodasAsTelas());
+              void chamarOuGuardar(() => arquivarTarefa(tarefa.id), {
+                acao: "arquivarTarefa",
+                args: [tarefa.id],
+                patches: [{ colecao: "tarefas", op: "remover", id: tarefa.id }],
+                rotulo: `Arquivar "${tarefa.titulo}"`,
+              })
+                .then((r) => {
+                  if (r === "fila") router.push("/tarefas");
+                })
+                .catch(() => {})
+                .finally(() => void atualizarSnapshotEmTodasAsTelas());
             }}
             className="text-ink-400 text-sm hover:text-red-400 transition"
           >

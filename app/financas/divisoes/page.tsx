@@ -7,6 +7,9 @@ import { marcarDivisaoComoPaga, excluirDivisao } from "./actions";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { Check, Trash2, Plus } from "lucide-react";
+import { gravar } from "@/lib/local/gravar";
+import { lerCacheLista, salvarCacheLista, sobreporEscritas } from "@/lib/local/cacheLista";
+import { pendentesDivisao } from "@/lib/local/divisoes";
 
 // Etapa 129 — dinheiro entre pessoas diferentes merece vir sempre
 // fresco do servidor, então busca direto (não entra no retrato).
@@ -16,10 +19,18 @@ export default function DivisoesPage() {
   const [, iniciarTransicao] = useTransition();
 
   const buscar = useCallback(async () => {
+    // Etapa 354 — mostra a última cópia (com o que está na fila por cima) e
+    // atualiza do banco quando tem internet
+    const mostrar = (a: any[], b: any[]) => {
+      setDevemPraMim([...pendentesDivisao(), ...sobreporEscritas(a, "divisoes_despesa")]);
+      setEuDevo(sobreporEscritas(b, "divisoes_despesa"));
+    };
+    const cache = lerCacheLista<{ a: any[]; b: any[] }>("divisoes");
+    if (cache) mostrar(cache.a, cache.b);
+    else if (navigator.onLine === false) mostrar([], []);
+    if (navigator.onLine === false) return;
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = (await supabase.auth.getSession()).data.session?.user;
     if (!user) return;
 
     const [{ data: a }, { data: b }] = await Promise.all([
@@ -34,8 +45,9 @@ export default function DivisoesPage() {
         .eq("participante_id", user.id)
         .order("criado_em", { ascending: false }),
     ]);
-    setDevemPraMim(a ?? []);
-    setEuDevo(b ?? []);
+    if (!a || !b) return; // falhou: fica com a cópia
+    salvarCacheLista("divisoes", { a, b });
+    mostrar(a, b);
   }, []);
 
   useEffect(() => {
@@ -44,7 +56,9 @@ export default function DivisoesPage() {
 
   function marcarPago(id: string) {
     iniciarTransicao(async () => {
-      await marcarDivisaoComoPaga(id);
+      // Etapa 354 — sem internet também
+      if (navigator.onLine === false) await gravar({ tabela: "divisoes_despesa", op: "update", id, valores: { pago: true } });
+      else await marcarDivisaoComoPaga(id);
       buscar();
     });
   }
@@ -99,7 +113,10 @@ export default function DivisoesPage() {
               </button>
             )}
             <BotaoComConfirmacao
-              acao={excluirDivisao.bind(null, d.id)}
+              acao={async () => {
+                if (navigator.onLine === false) await gravar({ tabela: "divisoes_despesa", op: "delete", id: d.id });
+                else await excluirDivisao(d.id);
+              }}
               textoBotao={<Trash2 size={14} strokeWidth={2} />}
               textoConfirmacao="Excluir essa divisão?"
               classeBotao="text-ink-400 hover:text-red-400 transition"

@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { criarCategoriaProdutividade } from "../actions";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
+import { gravar } from "@/lib/local/gravar";
+import { novoUuid } from "@/lib/local/acaoOffline";
+import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 
 export default function NovaCategoriaPage({
   searchParams,
@@ -12,6 +16,8 @@ export default function NovaCategoriaPage({
   searchParams: { erro?: string };
 }) {
   const [cor, setCor] = useState("habito");
+  const [erroOffline, setErroOffline] = useState<string | null>(null);
+  const router = useRouter();
 
   return (
     <main className="pagina-form px-6 md:px-12 pt-2">
@@ -20,13 +26,27 @@ export default function NovaCategoriaPage({
       </Link>
       <h1 className="text-3xl font-display font-bold mt-4 mb-6">Nova categoria</h1>
 
-      {searchParams.erro && (
+      {(erroOffline || searchParams.erro) && (
         <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-          {decodeURIComponent(searchParams.erro)}
+          {erroOffline ?? decodeURIComponent(searchParams.erro!)}
         </p>
       )}
 
-      <form action={criarCategoriaProdutividade}>
+      {/* Etapa 354 — sem internet: a categoria nasce no aparelho */}
+      <form
+        action={criarCategoriaProdutividade}
+        onSubmit={async (e) => {
+          if (navigator.onLine !== false) return;
+          e.preventDefault();
+          const f = new FormData(e.currentTarget);
+          const nome = String(f.get("nome") ?? "").trim();
+          if (!nome) return setErroOffline("Dê um nome para a categoria");
+          const snap = lerSnapshotOffline();
+          const id = novoUuid();
+          await gravar({ tabela: "categorias_produtividade", op: "insert", valores: { id, dono_id: snap?.perfil.id, nome, cor: String(f.get("cor") ?? "habito") } });
+          router.push("/habitos/categorias");
+        }}
+      >
         <div className="form-colunas">
         <div>
           <label htmlFor="nome" className="block text-sm text-ink-400 mb-1">

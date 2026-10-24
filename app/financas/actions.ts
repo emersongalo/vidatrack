@@ -5,7 +5,7 @@ import { normalizarEtiquetas } from "@/lib/financas/etiquetas";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import { createClient } from "@/lib/supabase/server";
-import { dividirParcelas, somarMesesISO } from "@/lib/financas/parcelas";
+import { linhasTransacao, etiquetasDoFormulario, dadosTransacaoDoFormulario, type LinhasTransacao } from "@/lib/financas/linhasTransacao";
 import {
   esquemaTransacao,
   esquemaConta,
@@ -13,6 +13,7 @@ import {
   primeiroErro,
 } from "@/lib/validacao/financas";
 import { lerLimite } from "@/lib/financas/limite";
+import { camposConta, camposCategoria, idDoAparelho } from "@/lib/financas/camposCadastros";
 import { dataAtualNoFuso } from "@/lib/tempo/fuso";
 import { avisarMovimentacao } from "@/lib/financas/avisoMovimentacao";
 
@@ -62,32 +63,20 @@ export async function criarConta(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const resultado = esquemaConta.safeParse({
-    nome: formData.get("nome"),
-    tipo: formData.get("tipo"),
-    banco: formData.get("banco"),
-    saldoInicial: formData.get("saldoInicial"),
-    diaFechamento: formData.get("diaFechamento"),
-    diaVencimento: formData.get("diaVencimento"),
-  });
-
-  if (!resultado.success) {
-    redirect(`/financas/contas?erro=${encodeURIComponent(primeiroErro(resultado))}`);
+  // Etapa 352 — mesma leitura do app offline + id criado no aparelho
+  const r = camposConta(formData);
+  if ("erro" in r) {
+    redirect(`/financas/contas?erro=${encodeURIComponent(r.erro)}`);
   }
+  const id = idDoAparelho(formData);
 
   const { error } = await supabase.from("financa_contas").insert({
+    ...(id ? { id } : {}),
     dono_id: user!.id,
-    nome: resultado.data.nome,
-    tipo: resultado.data.tipo,
-    banco: resultado.data.banco,
-    saldo_inicial: resultado.data.saldoInicial,
-    dia_fechamento: resultado.data.diaFechamento,
-    dia_vencimento: resultado.data.diaVencimento,
-    // Etapa 230 — limite do cartão
-    limite: resultado.data.tipo === "cartao" ? lerLimite(formData.get("limite")) : null,
+    ...(r as { campos: Record<string, unknown> }).campos,
   });
 
-  if (error) {
+  if (error && !(error.code === "23505" && id)) {
     redirect(`/financas/contas?erro=${encodeURIComponent(error.message)}`);
   }
 
@@ -106,30 +95,14 @@ export async function arquivarConta(contaId: string) {
 export async function atualizarConta(contaId: string, formData: FormData) {
   const supabase = createClient();
 
-  const resultado = esquemaConta.safeParse({
-    nome: formData.get("nome"),
-    tipo: formData.get("tipo"),
-    banco: formData.get("banco"),
-    saldoInicial: formData.get("saldoInicial"),
-    diaFechamento: formData.get("diaFechamento"),
-    diaVencimento: formData.get("diaVencimento"),
-  });
-
-  if (!resultado.success) {
-    redirect(`/financas/contas/${contaId}/editar?erro=${encodeURIComponent(primeiroErro(resultado))}`);
+  const r = camposConta(formData);
+  if ("erro" in r) {
+    redirect(`/financas/contas/${contaId}/editar?erro=${encodeURIComponent(r.erro)}`);
   }
 
   const { error } = await supabase
     .from("financa_contas")
-    .update({
-      nome: resultado.data.nome,
-      tipo: resultado.data.tipo,
-      banco: resultado.data.banco,
-      saldo_inicial: resultado.data.saldoInicial,
-      dia_fechamento: resultado.data.diaFechamento,
-      dia_vencimento: resultado.data.diaVencimento,
-      limite: resultado.data.tipo === "cartao" ? lerLimite(formData.get("limite")) : null,
-    })
+    .update((r as { campos: Record<string, unknown> }).campos)
     .eq("id", contaId);
 
   if (error) {
@@ -170,6 +143,8 @@ export async function criarCategoriaRapida(dados: {
   nome: string;
   tipo: "receita" | "despesa";
   icone: string;
+  /** Etapa 352 — id criado no aparelho (sem internet) */
+  id?: string;
 }): Promise<{ id: string; nome: string; icone: string; tipo: string } | { erro: string }> {
   "use server";
   const supabase = createClient();
@@ -192,6 +167,7 @@ export async function criarCategoriaRapida(dados: {
   const { data: nova, error } = await supabase
     .from("financa_categorias")
     .insert({
+      ...(dados.id && RE_UUID.test(dados.id) ? { id: dados.id } : {}),
       dono_id: user.id,
       nome: resultado.data.nome,
       tipo: resultado.data.tipo,
@@ -200,6 +176,10 @@ export async function criarCategoriaRapida(dados: {
     })
     .select("id, nome, icone, tipo")
     .single();
+
+  if (error?.code === "23505" && dados.id) {
+    return { id: dados.id, nome: resultado.data.nome, icone: resultado.data.icone, tipo: resultado.data.tipo };
+  }
 
   if (error || !nova) {
     return { erro: error?.message ?? "Não deu pra criar a categoria." };
@@ -228,28 +208,20 @@ export async function criarCategoria(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const resultado = esquemaCategoria.safeParse({
-    nome: formData.get("nome"),
-    tipo: formData.get("tipo"),
-    metaMensal: formData.get("metaMensal"),
-    icone: formData.get("icone"),
-    cor: formData.get("cor"),
-  });
-
-  if (!resultado.success) {
-    redirect(`/financas/categorias/nova?erro=${encodeURIComponent(primeiroErro(resultado))}`);
+  // Etapa 352 — mesma leitura do app offline + id criado no aparelho
+  const r = camposCategoria(formData);
+  if ("erro" in r) {
+    redirect(`/financas/categorias/nova?erro=${encodeURIComponent(r.erro)}`);
   }
+  const id = idDoAparelho(formData);
 
   const { error } = await supabase.from("financa_categorias").insert({
+    ...(id ? { id } : {}),
     dono_id: user!.id,
-    nome: resultado.data.nome,
-    tipo: resultado.data.tipo,
-    meta_mensal: resultado.data.metaMensal,
-    icone: resultado.data.icone,
-    cor: resultado.data.cor,
+    ...(r as { campos: Record<string, unknown> }).campos,
   });
 
-  if (error) {
+  if (error && !(error.code === "23505" && id)) {
     redirect(`/financas/categorias/nova?erro=${encodeURIComponent(error.message)}`);
   }
 
@@ -260,27 +232,14 @@ export async function criarCategoria(formData: FormData) {
 export async function atualizarCategoria(categoriaId: string, formData: FormData) {
   const supabase = createClient();
 
-  const resultado = esquemaCategoria.safeParse({
-    nome: formData.get("nome"),
-    tipo: formData.get("tipo"),
-    metaMensal: formData.get("metaMensal"),
-    icone: formData.get("icone"),
-    cor: formData.get("cor"),
-  });
-
-  if (!resultado.success) {
-    redirect(`/financas/categorias/${categoriaId}/editar?erro=${encodeURIComponent(primeiroErro(resultado))}`);
+  const r = camposCategoria(formData);
+  if ("erro" in r) {
+    redirect(`/financas/categorias/${categoriaId}/editar?erro=${encodeURIComponent(r.erro)}`);
   }
 
   const { error } = await supabase
     .from("financa_categorias")
-    .update({
-      nome: resultado.data.nome,
-      tipo: resultado.data.tipo,
-      meta_mensal: resultado.data.metaMensal,
-      icone: resultado.data.icone,
-      cor: resultado.data.cor,
-    })
+    .update((r as { campos: Record<string, unknown> }).campos)
     .eq("id", categoriaId);
 
   if (error) {
@@ -289,6 +248,28 @@ export async function atualizarCategoria(categoriaId: string, formData: FormData
 
   revalidatePath("/financas/categorias");
   redirect("/financas/categorias");
+}
+
+/**
+ * Etapa 352 — ajuste do envelope da categoria (acumular sobra / sobra já
+ * enviada pra meta). Antes era só direto pelo Supabase do aparelho; agora
+ * também dá pra fazer sem internet (a fila chama esta ação depois).
+ */
+export async function ajustarEnvelope(categoriaId: string, valores: Record<string, unknown>): Promise<{ erro?: string }> {
+  const supabase = createClient();
+  const permitidos: Record<string, unknown> = {};
+  for (const k of ["envelope_desde", "sobra_enviada_mes"]) {
+    if (k in (valores ?? {})) {
+      const v = (valores as any)[k];
+      if (v === null || (typeof v === "string" && /^\d{4}-\d{2}(-\d{2})?$/.test(v))) permitidos[k] = v;
+    }
+  }
+  if (!Object.keys(permitidos).length) return {};
+  const { data, error } = await supabase.from("financa_categorias").update(permitidos).eq("id", categoriaId).select("id");
+  if (error) return { erro: error.message };
+  if (!data?.length) return { erro: "Não deu pra salvar esse envelope (categoria de outra pessoa?)" };
+  revalidatePath("/financas/envelopes");
+  return {};
 }
 
 export async function removerCategoria(categoriaId: string) {
@@ -301,25 +282,8 @@ export async function removerCategoria(categoriaId: string) {
   revalidatePath("/financas");
 }
 
-// Etapa 218 — etiquetas livres (chegam como vários campos "etiquetas")
-function etiquetasDoFormulario(formData: FormData): string[] | null {
-  const lista = normalizarEtiquetas(formData.getAll("etiquetas").map(String));
-  return lista.length ? lista : null;
-}
-
-function dadosTransacaoDoFormulario(formData: FormData) {
-  return {
-    tipo: formData.get("tipo"),
-    valor: formData.get("valor"),
-    contaId: formData.get("contaId"),
-    categoriaId: formData.get("categoriaId"),
-    descricao: formData.get("descricao"),
-    data: formData.get("data") || new Date().toLocaleDateString("sv-SE"),
-    recorrente: formData.get("recorrente"),
-    diaMes: formData.get("diaMes"),
-    dataFimRecorrencia: formData.get("dataFimRecorrencia"),
-  };
-}
+// Etapa 351 — etiquetasDoFormulario / dadosTransacaoDoFormulario moram em
+// lib/financas/linhasTransacao.ts (o app usa a mesma regra sem internet).
 
 export async function criarTransacao(formData: FormData) {
   const supabase = createClient();
@@ -328,106 +292,46 @@ export async function criarTransacao(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const resultado = esquemaTransacao.safeParse(dadosTransacaoDoFormulario(formData));
+  // Etapa 351 — mesma montagem que o app usa offline (lib/financas/linhasTransacao)
+  const montado = linhasTransacao(formData, user!.id, randomUUID);
+  if ("erro" in montado) {
+    redirect(`/financas/nova?erro=${encodeURIComponent(montado.erro)}`);
+  }
+  const { linhas, recorrencia, parcelado, resumo } = montado as LinhasTransacao;
 
-  if (!resultado.success) {
-    redirect(`/financas/nova?erro=${encodeURIComponent(primeiroErro(resultado))}`);
+  // Etapa 205/351 — a recorrência vem antes (o lançamento aponta pra ela)
+  if (recorrencia) {
+    const { error: erroRec } = await supabase.from("financa_recorrencias").insert(recorrencia);
+    if (erroRec && erroRec.code !== "23505") {
+      // sem a recorrência, o lançamento sai sozinho (como antes, quando ela falhava)
+      delete (linhas[0] as any).recorrencia_id;
+    }
   }
 
-  // Etapa 210 — compra parcelada: cria uma parcela por mês, a partir da data escolhida
-  if (formData.get("parcelado") === "on") {
-    const d = resultado.data;
-    const valores = dividirParcelas(d.valor, Number(formData.get("numParcelas")), formData.get("modoParcela") === "parcela" ? "parcela" : "total");
-    const n = valores.length;
-    const grupo = randomUUID();
-    const nomeBase = d.descricao || "Compra parcelada";
-    const linhas = Array.from({ length: n }, (_, i) => ({
-      dono_id: user!.id,
-      conta_id: d.contaId,
-      categoria_id: d.categoriaId,
-      tipo: d.tipo,
-      valor: valores[i],
-      descricao: `${nomeBase} (${i + 1}/${n})`,
-      etiquetas: etiquetasDoFormulario(formData),
-      data: somarMesesISO(d.data, i),
-      parcela_grupo: grupo,
-      parcela_numero: i + 1,
-      parcela_total: n,
-    }));
-    const { error: erroParcelas } = await supabase.from("financa_transacoes").insert(linhas);
-    if (erroParcelas) redirect(`/financas/nova?erro=${encodeURIComponent(erroParcelas.message)}`);
-    // Etapa 277 — conta compartilhada: avisa quem participa
-    await avisarMovimentacao(user!.id, d.contaId, {
-      acao: "lancou",
-      tipo: d.tipo,
-      valor: valores.reduce((s, v) => s + v, 0),
-      descricao: nomeBase,
-      categoriaId: d.categoriaId,
-      data: d.data,
-      parcelas: n,
-      hoje: dataAtualNoFuso(),
-    });
+  // Etapa 210 — compra parcelada: uma linha por mês, a partir da data escolhida
+  const { error } = await supabase.from("financa_transacoes").insert(linhas);
+  if (error?.code === "23505") {
+    // já tinha chegado (reenvio da fila sem internet): nada a fazer
     revalidatePath("/financas");
     redirect("/financas");
   }
-
-  const { data: transacaoCriada, error } = await supabase
-    .from("financa_transacoes")
-    .insert({
-      dono_id: user!.id,
-      conta_id: resultado.data.contaId,
-      categoria_id: resultado.data.categoriaId,
-      tipo: resultado.data.tipo,
-      valor: resultado.data.valor,
-      descricao: resultado.data.descricao,
-      data: resultado.data.data,
-      etiquetas: etiquetasDoFormulario(formData),
-    })
-    .select("id")
-    .single();
-
   if (error) {
+    // não deixa uma recorrência "solta" sem o lançamento
+    if (recorrencia) await supabase.from("financa_recorrencias").delete().eq("id", recorrencia.id as string);
     redirect(`/financas/nova?erro=${encodeURIComponent(error.message)}`);
   }
 
   // Etapa 277 — conta compartilhada: avisa quem participa
-  await avisarMovimentacao(user!.id, resultado.data.contaId, {
+  await avisarMovimentacao(user!.id, resumo.contaId, {
     acao: "lancou",
-    tipo: resultado.data.tipo,
-    valor: Number(resultado.data.valor),
-    descricao: resultado.data.descricao,
-    categoriaId: resultado.data.categoriaId,
-    data: resultado.data.data,
+    tipo: resumo.tipo as any,
+    valor: resumo.valor,
+    descricao: resumo.descricao,
+    categoriaId: resumo.categoriaId,
+    data: resumo.data,
+    ...(parcelado ? { parcelas: resumo.parcelas } : {}),
     hoje: dataAtualNoFuso(),
   });
-
-  // "Repetir todo mês" marcado: além do lançamento de hoje, já deixa
-  // configurada a recorrência pros próximos meses (a mesma tabela que
-  // a tela /financas/recorrentes usa).
-  // Etapa 205 — a recorrência COMEÇA na data do lançamento ("para
-  // sempre" = daquela data em diante, nunca pra trás), e esse primeiro
-  // lançamento fica ligado a ela — assim o gerador automático não cria
-  // de novo o mesmo mês (nem um mês anterior).
-  if (resultado.data.recorrente && resultado.data.diaMes) {
-    const { data: recorrencia } = await supabase
-      .from("financa_recorrencias")
-      .insert({
-        dono_id: user!.id,
-        conta_id: resultado.data.contaId,
-        categoria_id: resultado.data.categoriaId,
-        tipo: resultado.data.tipo,
-        valor: resultado.data.valor,
-        descricao: resultado.data.descricao,
-        dia_mes: resultado.data.diaMes,
-        data_fim: resultado.data.dataFimRecorrencia,
-        data_inicio: resultado.data.data,
-      })
-      .select("id")
-      .single();
-    if (recorrencia && transacaoCriada) {
-      await supabase.from("financa_transacoes").update({ recorrencia_id: recorrencia.id }).eq("id", transacaoCriada.id);
-    }
-  }
 
   revalidatePath("/financas");
   redirect("/financas");
@@ -439,6 +343,8 @@ export async function criarTransacao(formData: FormData) {
  * simples, que é o caso de uso real de "lancei algo rápido sem
  * internet".
  */
+const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function criarTransacaoSilenciosa(dadosFormulario: {
   tipo: string;
   valor: string;
@@ -446,7 +352,10 @@ export async function criarTransacaoSilenciosa(dadosFormulario: {
   categoriaId: string;
   descricao: string;
   data: string;
-}): Promise<{ sucesso: boolean; erro?: string }> {
+  /** Etapa 344 — id criado no aparelho (estilo Monee): repetir o envio não duplica */
+  id?: string;
+  etiquetas?: string[] | null;
+}): Promise<{ sucesso: boolean; erro?: string; definitivo?: boolean }> {
   const supabase = createClient();
   const {
     data: { user },
@@ -460,9 +369,12 @@ export async function criarTransacaoSilenciosa(dadosFormulario: {
     dataFimRecorrencia: null,
   });
 
-  if (!resultado.success) return { sucesso: false, erro: primeiroErro(resultado) };
+  if (!resultado.success) return { sucesso: false, erro: primeiroErro(resultado), definitivo: true };
 
-  const { error } = await supabase.from("financa_transacoes").insert({
+  const idDoAparelho = dadosFormulario.id && RE_UUID.test(dadosFormulario.id) ? dadosFormulario.id : undefined;
+  const etiquetas = Array.isArray(dadosFormulario.etiquetas) ? normalizarEtiquetas(dadosFormulario.etiquetas.map(String)) : [];
+  const { error: erroInsert } = await supabase.from("financa_transacoes").insert({
+    ...(idDoAparelho ? { id: idDoAparelho } : {}),
     dono_id: user.id,
     conta_id: resultado.data.contaId,
     categoria_id: resultado.data.categoriaId,
@@ -470,7 +382,27 @@ export async function criarTransacaoSilenciosa(dadosFormulario: {
     valor: resultado.data.valor,
     descricao: resultado.data.descricao,
     data: resultado.data.data,
+    ...(etiquetas.length ? { etiquetas } : {}),
   });
+  // já tinha subido (o envio anterior chegou mas a resposta se perdeu, ou
+  // foi editado no aparelho logo depois): só garante os dados mais novos
+  if (erroInsert?.code === "23505" && idDoAparelho) {
+    await supabase
+      .from("financa_transacoes")
+      .update({
+        conta_id: resultado.data.contaId,
+        categoria_id: resultado.data.categoriaId,
+        tipo: resultado.data.tipo,
+        valor: resultado.data.valor,
+        descricao: resultado.data.descricao,
+        data: resultado.data.data,
+        ...(etiquetas.length ? { etiquetas } : {}),
+      })
+      .eq("id", idDoAparelho);
+    return { sucesso: true };
+  }
+  const error = erroInsert;
+  if (error && /row-level security|permission/i.test(error.message)) return { sucesso: false, erro: MSG_SEM_PERMISSAO_EDITAR, definitivo: true };
 
   // Etapa 277 — conta compartilhada: avisa quem participa
   if (!error) {
@@ -487,6 +419,52 @@ export async function criarTransacaoSilenciosa(dadosFormulario: {
 
   revalidatePath("/financas");
   return { sucesso: !error, erro: error?.message };
+}
+
+/** Etapa 344 — edição feita no aparelho chegando no servidor (lançamento simples) */
+export async function atualizarTransacaoSilenciosa(
+  transacaoId: string,
+  dadosFormulario: { tipo: string; valor: string; contaId: string; categoriaId: string; descricao: string; data: string; etiquetas?: string[] | null }
+): Promise<{ sucesso: boolean; erro?: string; definitivo?: boolean }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { sucesso: false, erro: "Sessão expirada" };
+  const resultado = esquemaTransacao.safeParse({ ...dadosFormulario, recorrente: null, diaMes: null, dataFimRecorrencia: null });
+  if (!resultado.success) return { sucesso: false, erro: primeiroErro(resultado), definitivo: true };
+  const d = resultado.data;
+  const { data, error } = await supabase
+    .from("financa_transacoes")
+    .update({
+      conta_id: d.contaId,
+      categoria_id: d.categoriaId,
+      tipo: d.tipo,
+      valor: d.valor,
+      descricao: d.descricao,
+      data: d.data,
+      ...(dadosFormulario.etiquetas !== undefined ? { etiquetas: normalizarEtiquetas((dadosFormulario.etiquetas ?? []).map(String)) } : {}),
+    })
+    .eq("id", transacaoId)
+    .select("id");
+  if (error) return { sucesso: false, erro: error.message };
+  // não achou: ou foi apagado, ou a conta é "só ver" — não adianta tentar de novo
+  if (!data?.length) return { sucesso: false, erro: MSG_SEM_PERMISSAO_EDITAR, definitivo: true };
+  revalidatePath("/financas");
+  return { sucesso: true };
+}
+
+/** Etapa 344 — exclusão feita no aparelho chegando no servidor */
+export async function removerTransacaoSilenciosa(transacaoId: string): Promise<{ sucesso: boolean; erro?: string; definitivo?: boolean }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { sucesso: false, erro: "Sessão expirada" };
+  const { error } = await supabase.from("financa_transacoes").delete().eq("id", transacaoId);
+  if (error) return { sucesso: false, erro: error.message };
+  revalidatePath("/financas");
+  return { sucesso: true };
 }
 
 const MSG_SEM_PERMISSAO_EDITAR =
@@ -643,9 +621,17 @@ export async function criarTransferencia(formData: FormData): Promise<{ erro?: s
 
   const { data: contas } = await supabase.from("financa_contas").select("id, nome").in("id", [origem, destino]);
   const nome = (id: string) => contas?.find((c) => c.id === id)?.nome ?? "conta";
-  const grupo = randomUUID();
+  // Etapa 351 — ids podem vir do aparelho (feito sem internet): reenviar não duplica
+  const uuid = (k: string) => {
+    const v = String(formData.get(k) ?? "");
+    return RE_UUID.test(v) ? v : null;
+  };
+  const grupo = uuid("grupoCliente") ?? randomUUID();
+  const idOrigem = uuid("idOrigemCliente");
+  const idDestino = uuid("idDestinoCliente");
   const { error } = await supabase.from("financa_transacoes").insert([
     {
+      ...(idOrigem && idDestino ? { id: idOrigem } : {}),
       dono_id: user.id,
       conta_id: origem,
       tipo: "despesa",
@@ -655,6 +641,7 @@ export async function criarTransferencia(formData: FormData): Promise<{ erro?: s
       transferencia_grupo: grupo,
     },
     {
+      ...(idOrigem && idDestino ? { id: idDestino } : {}),
       dono_id: user.id,
       conta_id: destino,
       tipo: "receita",
@@ -664,6 +651,7 @@ export async function criarTransferencia(formData: FormData): Promise<{ erro?: s
       transferencia_grupo: grupo,
     },
   ]);
+  if (error?.code === "23505" && idOrigem) return {}; // já tinha chegado
   if (error) return { erro: error.message };
   revalidatePath("/financas");
   return {};
@@ -743,7 +731,11 @@ export async function transferirParaInvestimento(formData: FormData) {
     .eq("tipo", "despesa")
     .maybeSingle();
 
+  // Etapa 354 — ids criados no aparelho (feito sem internet): reenviar não duplica
+  const idSaida = RE_UUID.test(String(formData.get("idOrigemCliente") ?? "")) ? String(formData.get("idOrigemCliente")) : null;
+  const idEntrada = RE_UUID.test(String(formData.get("idDestinoCliente") ?? "")) ? String(formData.get("idDestinoCliente")) : null;
   const { error: erroDespesa } = await supabase.from("financa_transacoes").insert({
+    ...(idSaida && idEntrada ? { id: idSaida } : {}),
     dono_id: user!.id,
     conta_id: contaOrigemId,
     categoria_id: categoriaInvestimento?.id ?? null,
@@ -753,11 +745,16 @@ export async function transferirParaInvestimento(formData: FormData) {
     data,
   });
 
+  if (erroDespesa?.code === "23505" && idSaida) {
+    revalidatePath("/financas");
+    redirect("/financas?investido=1"); // já tinha chegado
+  }
   if (erroDespesa) {
     redirect(`/financas/investir?erro=${encodeURIComponent(erroDespesa.message)}`);
   }
 
   const { error: erroReceita } = await supabase.from("financa_transacoes").insert({
+    ...(idSaida && idEntrada ? { id: idEntrada } : {}),
     dono_id: user!.id,
     conta_id: contaInvestimentoId,
     categoria_id: null,

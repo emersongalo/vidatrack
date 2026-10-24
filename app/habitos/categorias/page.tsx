@@ -6,6 +6,8 @@ import { classeCor } from "@/lib/agenda/estilo";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { EstadoVazio } from "@/components/EstadoVazio";
+import { gravar } from "@/lib/local/gravar";
+import type { Patch } from "@/lib/offline/patches";
 
 // Etapa 127
 export default function CategoriasProdutividadePage() {
@@ -33,7 +35,16 @@ export default function CategoriasProdutividadePage() {
               <span className={`w-3 h-3 rounded-full shrink-0 ${classeCor(cat.cor)}`} />
               <span className="flex-1 text-sm">{cat.nome}</span>
               <BotaoComConfirmacao
-                acao={removerCategoriaProdutividade.bind(null, cat.id)}
+                // Etapa 354 — sem internet também (hábitos/tarefas da categoria ficam sem categoria, igual ao banco)
+                acao={async () => {
+                  if (navigator.onLine !== false) return removerCategoriaProdutividade(cat.id);
+                  const patches: Patch[] = [{ colecao: "categoriasProdutividade", op: "remover", id: cat.id }];
+                  for (const h of (snapshot?.habitos ?? []) as any[])
+                    if (h.categoria_id === cat.id) patches.push({ colecao: "habitos", op: "mesclar", id: h.id, valores: { categoria_id: null } });
+                  for (const t of (snapshot?.tarefas ?? []) as any[])
+                    if (t.categoria_id === cat.id) patches.push({ colecao: "tarefas", op: "mesclar", id: t.id, valores: { categoria_id: null } });
+                  await gravar({ tabela: "categorias_produtividade", op: "delete", id: cat.id }, { patches });
+                }}
                 textoBotao="Remover"
                 textoConfirmacao="Remove de hábitos/tarefas vinculados:"
                 aoConcluir={recarregar}

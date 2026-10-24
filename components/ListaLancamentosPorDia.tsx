@@ -16,6 +16,9 @@ import { MenuAcoes, ItemMenuAcoes } from "@/components/MenuAcoes";
 import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
 import { ValorMonetario } from "@/components/ValorMonetario";
 import { removerTransacao } from "@/app/financas/actions";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
+import { pedidoRemoverTransacao } from "@/lib/local/financasEspeciais";
+import { apagarLocal, ehLancamentoSimples } from "@/lib/local/financas";
 import { agruparPorDia, ordenarComoBanco, rotuloDoDia, type GrupoDia } from "@/lib/financas/agruparPorDia";
 
 export function ListaLancamentosPorDia({
@@ -43,7 +46,10 @@ export function ListaLancamentosPorDia({
     setEscondidos((l) => [...l, t.id]);
     comDesfazer({
       texto: t.recorrencia_id ? "Lançamento deste mês excluído" : "Lançamento excluído",
-      executarDepois: () => removerTransacao(t.id),
+      // Etapa 344 — lançamento simples some do celular na hora e a exclusão sobe pela fila
+      // Etapa 351 — os especiais (parcela, conta fixa, transferência) também sem internet
+      executarDepois: () =>
+        ehLancamentoSimples(t) ? apagarLocal(t.id) : chamarOuGuardar(() => removerTransacao(t.id), pedidoRemoverTransacao(t)),
       aoDesfazer: () => setEscondidos((l) => l.filter((x) => x !== t.id)),
       aoTerminar: () => recarregar?.(),
     });

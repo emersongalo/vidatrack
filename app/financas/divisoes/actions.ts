@@ -33,7 +33,11 @@ export async function criarDivisao(formData: FormData) {
     .limit(1)
     .maybeSingle();
 
+  // Etapa 354 — id criado no aparelho (sem internet): reenviar não duplica
+  const idCliente = String(formData.get("idCliente") ?? "");
+  const id = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idCliente) ? idCliente : null;
   const { error } = await supabase.from("divisoes_despesa").insert({
+    ...(id ? { id } : {}),
     transacao_id: transacaoId,
     dono_id: user.id,
     participante_id: compartilhamentoExistente?.usuario_convidado_id ?? null,
@@ -41,7 +45,7 @@ export async function criarDivisao(formData: FormData) {
     valor,
   });
 
-  if (error) {
+  if (error && !(error.code === "23505" && id)) {
     redirect(`/financas/dividir?erro=${encodeURIComponent(error.message)}`);
   }
 

@@ -12,6 +12,7 @@ import {
 } from "@/lib/planejador/tempo";
 import { moverOuRedimensionarBloco } from "@/app/habitos/planejador/actions";
 import { hexDaCor } from "@/lib/agenda/estilo";
+import { gravar } from "@/lib/local/gravar";
 
 export type Bloco = {
   id: string;
@@ -64,7 +65,8 @@ export function BlocoTempo({ bloco, aoAbrir, aoMudar }: { bloco: Bloco; aoAbrir:
     arrastandoRef.current = null;
     if (!estado.mexeu) return; // foi só um clique: o onClick abre
     ignorarClique.current = true;
-    await moverOuRedimensionarBloco(bloco.id, minutosParaHora(inicioMin), minutosParaHora(fimMin));
+    // Etapa 354 — sem internet também
+    await gravar({ tabela: "blocos_tempo", op: "update", id: bloco.id, valores: { hora_inicio: minutosParaHora(inicioMin), hora_fim: minutosParaHora(fimMin) } });
     aoMudar();
   }
 

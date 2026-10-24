@@ -18,6 +18,7 @@ import { GastosRapidos } from "@/components/GastosRapidos";
 import { FolhaLancamento } from "@/components/BotaoNovoLancamento";
 import { CarregandoTela } from "@/components/Esqueleto";
 import { CabecalhoPagina } from "@/components/CabecalhoPagina";
+import { ajusteHabitoComFila, checkinHabitoComFila, concluirTarefaComFila } from "@/lib/local/acaoOffline"; // Etapa 353
 
 export default function ModoRapidoPage() {
   const { snapshot } = useSnapshotOffline();
@@ -62,9 +63,12 @@ export default function ModoRapidoPage() {
     }
     setExtra((e) => ({ ...e, [h.id]: (e[h.id] ?? 0) + delta }));
     try {
-      const r: any = numerico ? await ajustarQuantidadeHabito(h.id, hoje, delta) : await alternarCheckin(h.id, hoje);
+      const r: any = numerico
+        ? await ajusteHabitoComFila(h.id, hoje, delta, () => ajustarQuantidadeHabito(h.id, hoje, delta))
+        : await checkinHabitoComFila(h.id, hoje, () => alternarCheckin(h.id, hoje));
       if (r?.erro) throw new Error(r.erro);
-      void atualizarSnapshotEmTodasAsTelas().then(() => setExtra((e) => ({ ...e, [h.id]: 0 })));
+      // guardado no aparelho: mantém a marcação na tela até sincronizar
+      if (r !== "fila") void atualizarSnapshotEmTodasAsTelas().then(() => setExtra((e) => ({ ...e, [h.id]: 0 })));
     } catch {
       setExtra((e) => ({ ...e, [h.id]: (e[h.id] ?? 0) - delta }));
       setErro("Não salvou — confira a internet e tente de novo.");
@@ -76,7 +80,7 @@ export default function ModoRapidoPage() {
     if (!feitaAntes) vibrar(12);
     setTarefasTrocadas((m) => ({ ...m, [id]: !feitaAntes }));
     try {
-      await alternarConclusaoTarefa(id, hoje);
+      await concluirTarefaComFila(id, hoje, () => alternarConclusaoTarefa(id, hoje));
       void atualizarSnapshotEmTodasAsTelas().then(() =>
         setTarefasTrocadas((m) => {
           const n = { ...m };

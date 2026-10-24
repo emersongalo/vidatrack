@@ -1,7 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { enviarSemInternet } from "@/lib/local/acaoOffline";
+import { pedidoAtualizarConta } from "@/lib/local/financasCadastros";
 import Link from "next/link";
 import { atualizarConta } from "@/app/financas/actions";
 import { BANCOS } from "@/lib/financas/bancos";
@@ -24,6 +26,8 @@ function EditarContaConteudo() {
   const searchParams = useSearchParams();
   const erro = searchParams.get("erro");
   const { snapshot } = useSnapshotOffline();
+  const router = useRouter();
+  const [erroOffline, setErroOffline] = useState<string | null>(null);
 
   if (snapshot === undefined) return <CarregandoTela comTopo={false} linhas={5} />;
 
@@ -56,7 +60,15 @@ function EditarContaConteudo() {
         </p>
       )}
 
-      <form action={atualizarConta.bind(null, conta.id)}>
+      {erroOffline && (
+        <p className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">{erroOffline}</p>
+      )}
+
+      {/* Etapa 352 — sem internet: salva no aparelho e sobe depois */}
+      <form
+        action={atualizarConta.bind(null, conta.id)}
+        onSubmit={(e) => enviarSemInternet(e, (fd) => pedidoAtualizarConta(conta.id, fd), () => router.push("/financas/contas"), setErroOffline)}
+      >
         <div className="form-colunas">
         <div className="form-coluna">
         <input

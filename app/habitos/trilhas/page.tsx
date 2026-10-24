@@ -19,6 +19,7 @@ import {
   pegarMedalha,
   recomecarDesafio,
   TRILHAS,
+  modeloPorId,
   type Duracao,
   type EstadoDesafio,
 } from "@/lib/habitos/trilhas";
@@ -30,6 +31,7 @@ import { CarregandoTela } from "@/components/Esqueleto";
 import { CabecalhoPagina } from "@/components/CabecalhoPagina";
 import { vibrar } from "@/lib/app/vibrar";
 import { chuvaDeConfete, textoFlutuante } from "@/lib/app/festa";
+import { criarHabitoLocal, semInternet } from "@/lib/local/criarRapido";
 
 export default function TrilhasPage() {
   const { snapshot } = useSnapshotOffline();
@@ -73,7 +75,18 @@ export default function TrilhasPage() {
       return;
     }
     setCriando(modeloId);
-    const r = await criarHabitoDoModelo(modeloId);
+    // Etapa 353 — sem internet: o hábito do modelo nasce no aparelho
+    const modelo = modeloPorId(modeloId);
+    const r = semInternet()
+      ? await criarHabitoLocal({
+          nome: modelo?.nome,
+          cor: modelo?.cor,
+          icone: modelo?.icone,
+          meta_diaria: modelo?.meta ?? 1,
+          unidade: modelo?.unidade ?? null,
+          eh_negativo: !!modelo?.negativo,
+        }).then((x) => ({ ok: !!x.id, id: x.id, erro: x.erro }))
+      : await criarHabitoDoModelo(modeloId);
     if (!r.ok || !r.id) {
       setCriando(null);
       setErro(r.erro ?? "Não deu pra criar agora");

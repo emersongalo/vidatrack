@@ -7,9 +7,7 @@
 import { useMemo, useState } from "react";
 import { Check, Zap, X } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
-import { criarTransacaoSilenciosa } from "@/app/financas/actions";
-import { adicionarNaFila } from "@/lib/offline/fila";
-import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
+import { lancarLocal } from "@/lib/local/financas";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { gastosRapidos, valorParaFormulario } from "@/lib/financas/hoje";
 import { vibrar } from "@/lib/app/vibrar";
@@ -56,16 +54,11 @@ export function GastosRapidos({ snapshot, hojeISO, noInicio = false }: { snapsho
       data: hojeISO,
     };
     try {
-      if (!navigator.onLine) {
-        adicionarNaFila({ id: crypto.randomUUID(), tipo: "criar_transacao", dados });
-      } else {
-        const r = await criarTransacaoSilenciosa(dados);
-        if (!r.sucesso) throw new Error(r.erro);
-      }
+      // Etapa 344 — salva no celular na hora; sobe pro banco sozinho
+      lancarLocal(dados);
       vibrar([15, 40, 25]);
       setFeito(`${atual.descricao} · ${formatarMoeda(n)} lançado${navigator.onLine ? "" : " (vai sincronizar)"}`);
       setEscolhido(null);
-      atualizarSnapshotEmTodasAsTelas();
       setTimeout(() => setFeito(null), 3500);
     } catch {
       setErro("Não salvou — tente de novo");

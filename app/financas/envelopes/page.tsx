@@ -10,6 +10,8 @@ import { hojeISO } from "@/lib/habitos/streak";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { alteracaoAposEnviarSobra, calcularEnvelopes, type Envelope } from "@/lib/financas/envelopes";
 import { adicionarProgressoMeta } from "@/app/financas/metas/actions";
+import { chamarOuGuardar, enfileirarAcao, semInternet } from "@/lib/local/acaoOffline";
+import { pedidoMovimentarMeta } from "@/lib/local/financasCadastros";
 
 export default function EnvelopesPage() {
   const { snapshot } = useSnapshotOffline();
@@ -27,7 +29,24 @@ export default function EnvelopesPage() {
   const ehMinha = (id: string) => categorias.find((c) => c.id === id)?.dono_id === meuId;
 
   async function alterarCategoria(id: string, valores: Record<string, unknown>) {
-    const { error } = await createClient().from("financa_categorias").update(valores).eq("id", id);
+    // Etapa 352 — sem internet: ajusta no aparelho e sobe depois
+    const guardar = () => {
+      enfileirarAcao({
+        acao: "ajustarEnvelope",
+        args: [id, valores],
+        patches: [{ colecao: "financas.categorias", op: "mesclar", id, valores }],
+        rotulo: "Envelope",
+      });
+      return true;
+    };
+    if (semInternet()) return guardar();
+    let error: { message: string } | null = null;
+    try {
+      ({ error } = await createClient().from("financa_categorias").update(valores).eq("id", id));
+    } catch {
+      return guardar();
+    }
+    if (error && /fetch|network|load failed/i.test(error.message)) return guardar();
     if (error) {
       setErro("Não consegui salvar. Verifique a internet.");
       return false;
@@ -48,8 +67,9 @@ export default function EnvelopesPage() {
     setOcupado(env.categoriaId);
     const fd = new FormData();
     fd.set("valorAdicionar", env.sobraParaMeta.toFixed(2).replace(".", ","));
-    const r = await adicionarProgressoMeta(metaId, fd);
-    if (r?.erro) setErro(r.erro);
+    const pedido = pedidoMovimentarMeta(metaId, fd, "adicionar");
+    const r = typeof pedido === "string" ? { erro: pedido } : await chamarOuGuardar(() => adicionarProgressoMeta(metaId, fd), pedido);
+    if (r !== "fila" && r?.erro) setErro(r.erro);
     else await alterarCategoria(env.categoriaId, alteracaoAposEnviarSobra(env, hoje));
     setOcupado(null);
     setEnviando(null);

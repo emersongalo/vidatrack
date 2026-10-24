@@ -7,6 +7,10 @@ import { Trash2, X } from "lucide-react";
 import { CORES_DISPONIVEIS, hexDaCor } from "@/lib/agenda/estilo";
 import { criarBloco, atualizarBloco, removerBloco } from "@/app/habitos/planejador/actions";
 import { horaParaMinutosDoDia, minutosParaHora } from "@/lib/planejador/tempo";
+import { gravar } from "@/lib/local/gravar";
+import { novoUuid } from "@/lib/local/acaoOffline";
+import { lerSnapshotOffline } from "@/lib/offline/snapshot";
+import { createClient } from "@/lib/supabase/client";
 
 export type RascunhoBloco = { id?: string; titulo: string; inicio: string; fim: string; cor: string };
 
@@ -41,11 +45,13 @@ export function EditorBloco({
     setSalvando(true);
     setErro(null);
     try {
-      if (novo) await criarBloco({ data: dataISO, horaInicio: inicio, horaFim: fim, titulo: titulo.trim() || "Bloco", cor });
-      else {
-        const r = await atualizarBloco(rascunho.id!, { titulo, horaInicio: inicio, horaFim: fim, cor });
-        if (r.erro) throw new Error(r.erro);
-      }
+      // Etapa 354 — com ou sem internet (sem: fica no aparelho e sobe depois)
+      const valores = { titulo: titulo.trim() || (novo ? "Bloco" : "Sem título"), hora_inicio: inicio, hora_fim: fim, cor };
+      const donoId = lerSnapshotOffline()?.perfil.id || (await createClient().auth.getSession()).data.session?.user.id;
+      const r = novo
+        ? await gravar({ tabela: "blocos_tempo", op: "insert", valores: { ...valores, id: novoUuid(), dono_id: donoId, data: dataISO } })
+        : await gravar({ tabela: "blocos_tempo", op: "update", id: rascunho.id!, valores });
+      if (r.error) throw new Error(r.error.message);
       aoSalvar();
       aoFechar();
     } catch {
@@ -58,7 +64,7 @@ export function EditorBloco({
   async function excluir() {
     if (!rascunho.id) return;
     setSalvando(true);
-    await removerBloco(rascunho.id);
+    await gravar({ tabela: "blocos_tempo", op: "delete", id: rascunho.id });
     setSalvando(false);
     aoSalvar();
     aoFechar();

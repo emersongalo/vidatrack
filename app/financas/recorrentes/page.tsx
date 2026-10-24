@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormularioAcao } from "@/components/FormularioAcao";
 import { criarRecorrencia, alternarAtivaRecorrencia, removerRecorrencia } from "./actions";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
+import { pedidoAlternarRecorrencia, pedidoCriarRecorrencia, pedidoRemoverRecorrencia } from "@/lib/local/financasCadastros";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
 import { LinhaComDeslizar } from "@/components/LinhaComDeslizar";
@@ -43,7 +45,7 @@ function RecorrentesConteudo() {
 
   function alternarAtiva(id: string) {
     iniciarTransicao(async () => {
-      await alternarAtivaRecorrencia(id);
+      await chamarOuGuardar(() => alternarAtivaRecorrencia(id), pedidoAlternarRecorrencia(id)); // Etapa 352 — sem internet também
       recarregar();
     });
   }
@@ -67,7 +69,7 @@ function RecorrentesConteudo() {
           {recorrencias.map((r: any) => (
             <li key={r.id}>
               <LinhaComDeslizar
-                acao={removerRecorrencia.bind(null, r.id)}
+                acao={() => chamarOuGuardar(() => removerRecorrencia(r.id), pedidoRemoverRecorrencia(r.id)).then(() => {})}
                 textoConfirmacao={`Remover a recorrência "${r.descricao || mapaContas.get(r.conta_id)}"?`}
                 aoConcluir={recarregar}
               >
@@ -104,7 +106,7 @@ function RecorrentesConteudo() {
                 <button onClick={() => alternarAtiva(r.id)} className="text-ink-400 hover:text-ink-100 transition text-xs">
                   {r.ativo ? "Pausar" : "Ativar"}
                 </button>
-                <BotaoComConfirmacao acao={removerRecorrencia.bind(null, r.id)} textoBotao="Remover" aoConcluir={recarregar} />
+                <BotaoComConfirmacao acao={() => chamarOuGuardar(() => removerRecorrencia(r.id), pedidoRemoverRecorrencia(r.id)).then(() => {})} textoBotao="Remover" aoConcluir={recarregar} />
               </div>
               </div>
               </LinhaComDeslizar>
@@ -120,7 +122,7 @@ function RecorrentesConteudo() {
       ) : (
         <>
           <h2 className="text-lg font-semibold mb-3">Nova recorrência</h2>
-          <FormularioAcao acao={criarRecorrencia} aoSucesso={recarregar} mensagemSucesso="Recorrência criada!" className="space-y-3">
+          <FormularioAcao acao={criarRecorrencia} offline={pedidoCriarRecorrencia} aoSucesso={recarregar} mensagemSucesso="Recorrência criada!" className="space-y-3">
             <select
               name="tipo"
               value={tipoNova}

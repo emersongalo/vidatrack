@@ -17,13 +17,17 @@ export async function criarMeta(formData: FormData): Promise<{ erro?: string }> 
 
   if (!nome || !valorAlvo || valorAlvo <= 0) return { erro: "Dê um nome e um valor alvo válido pra meta" };
 
+  // Etapa 352 — id criado no aparelho (sem internet): reenviar não duplica
+  const idCliente = String(formData.get("idCliente") ?? "");
+  const id = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idCliente) ? idCliente : null;
   const { error } = await supabase.from("metas_financeiras").insert({
+    ...(id ? { id } : {}),
     dono_id: user.id,
     nome,
     valor_alvo: valorAlvo,
     data_alvo: dataAlvo,
   });
-  if (error) return { erro: error.message };
+  if (error && !(error.code === "23505" && id)) return { erro: error.message };
 
   revalidatePath("/financas/metas");
   return {};

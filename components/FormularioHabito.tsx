@@ -1,7 +1,7 @@
 "use client";
 
 import { EscolherCompartilhar } from "@/components/EscolherCompartilhar";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { hexDaCor } from "@/lib/agenda/estilo";
@@ -9,6 +9,10 @@ import { definirCorBarraStatus } from "@/lib/app/barraStatus";
 import { IconeHabito } from "@/components/IconeHabito";
 import { SeletorIcone } from "@/components/SeletorIcone";
 import { CORES_DISPONIVEIS } from "@/lib/agenda/estilo";
+import { useRouter } from "next/navigation";
+import { enviarSemInternet, novoUuid, type PedidoOffline } from "@/lib/local/acaoOffline";
+import { camposHabito } from "@/lib/habitos/camposHabito";
+import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 
 // Etapa 227 — cor clara pede texto escuro no topo colorido
 function ehCorClara(hex: string) {
@@ -40,7 +44,10 @@ export function FormularioHabito({
   topo,
   outrosHabitos = [],
   comCompartilhar = false,
+  offline,
 }: {
+  /** Etapa 350 — sem internet: cria/edita no aparelho e sobe depois */
+  offline?: { modo: "criar" } | { modo: "editar"; id: string };
   /** Etapa 303 — mostra "Compartilhar com…" (só ao criar) */
   comCompartilhar?: boolean;
   /** Etapa 249 — pra escolher "fazer logo depois de…" */
@@ -96,6 +103,49 @@ export function FormularioHabito({
   const selecionado = { backgroundColor: hex, borderColor: hex };
   const classeSel = ehCorClara(hex) ? "text-base-900 font-medium" : "text-white font-medium";
 
+  const router = useRouter();
+  const [erroOffline, setErroOffline] = useState<string | null>(null);
+  function aoEnviar(e: FormEvent<HTMLFormElement>) {
+    if (!offline) return;
+    enviarSemInternet(
+      e,
+      (fd): PedidoOffline | string => {
+        const idEditar = offline.modo === "editar" ? offline.id : undefined;
+        const campos = camposHabito(fd, idEditar);
+        if (!campos.nome) return "Dê um nome para o hábito";
+        if (idEditar) {
+          return {
+            acao: "atualizarHabito",
+            args: [idEditar, fd],
+            patches: [{ colecao: "habitos", op: "mesclar", id: idEditar, valores: campos }],
+            rotulo: `Editar "${campos.nome}"`,
+          };
+        }
+        if (String(fd.get("compartilharUsuario") ?? "") || String(fd.get("compartilharEmail") ?? "")) {
+          return "Sem internet: crie sem compartilhar e compartilhe depois, quando a conexão voltar.";
+        }
+        const id = novoUuid();
+        fd.set("idCliente", id);
+        const snap = lerSnapshotOffline();
+        return {
+          acao: "criarHabito",
+          args: [fd],
+          patches: [
+            {
+              colecao: "habitos",
+              op: "upsert",
+              id,
+              valores: { ...campos, dono_id: snap?.perfil.id, criado_em: new Date().toISOString(), ordem: (snap?.habitos.length ?? 0) + 1, pausas: [] },
+            },
+          ],
+          rotulo: `Novo hábito "${campos.nome}"`,
+        };
+      },
+      () => router.push(offline.modo === "editar" ? "/habitos/lista" : "/habitos"),
+      setErroOffline
+    );
+  }
+
   function alternarDia(dia: number) {
     setDiasSelecionados((atual) =>
       atual.includes(dia) ? atual.filter((d) => d !== dia) : [...atual, dia].sort()
@@ -103,7 +153,10 @@ export function FormularioHabito({
   }
 
   return (
-    <form action={action}>
+    <form action={action} onSubmit={aoEnviar}>
+      {erroOffline && (
+        <p className="m-4 text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">{erroOffline}</p>
+      )}
       {topo && (
         <div className={`px-6 pt-5 pb-12 md:rounded-b-3xl transition-colors duration-300 ${textoTopo}`} style={{ backgroundColor: hex }}>
           <div className="flex items-center gap-3">

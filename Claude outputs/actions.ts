@@ -1,0 +1,344 @@
+"use server";
+
+import { randomUUID } from "crypto";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { hojeISO } from "@/lib/habitos/streak";
+import { convidarAoCriar } from "@/lib/compartilhamento/actions";
+
+// Etapa 193 — lê os campos de repetição/prioridade do formulário e
+// devolve já no formato das colunas. Compartilhado por criar e editar
+// pra não ter duas regras diferentes de "o que salvar".
+const REPETICOES_VALIDAS = ["nenhuma", "diaria", "dias_semana", "mensal", "anual", "intervalo"];
+
+function camposRepeticao(formData: FormData) {
+  const repetirRaw = String(formData.get("repetir") ?? "nenhuma");
+  const repetir = REPETICOES_VALIDAS.includes(repetirRaw) ? repetirRaw : "nenhuma";
+  const diasSemana = formData.getAll("diasSemana").map(Number);
+  const dataRaw = String(formData.get("data") ?? "");
+  const limitar = (v: number, min: number, max: number) => (Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : null);
+  const diaMes = limitar(Number(formData.get("diaMes")), 1, 31);
+  const mes = limitar(Number(formData.get("mes")), 1, 12);
+  const intervaloDias = limitar(Number(formData.get("intervaloDias")), 1, 365);
+  const prioridade = limitar(Number(formData.get("prioridade") ?? 0), 0, 3) ?? 0;
+
+  return {
+    repetir,
+    dias_semana: repetir === "dias_semana" ? diasSemana : [],
+    // "data" = dia da tarefa única, ou o dia de início do "a cada N dias"
+    data: repetir === "nenhuma" || repetir === "intervalo" ? dataRaw || hojeISO() : null,
+    dia_mes: repetir === "mensal" || repetir === "anual" ? diaMes : null,
+    mes: repetir === "anual" ? mes : null,
+    intervalo_dias: repetir === "intervalo" ? intervaloDias : null,
+    prioridade,
+  };
+}
+
+// Etapa 194 — tarefa ligada a finanças. Ao concluir, o banco (trigger
+// lancar_transacao_da_tarefa) cria o lançamento sozinho; desmarcar remove.
+function camposFinanca(formData: FormData): { erro?: string; campos: Record<string, unknown> } {
+  const vazio = { financa_tipo: null, financa_valor: null, financa_conta_id: null, financa_categoria_id: null };
+  if (formData.get("financaVinculado") !== "on") return { campos: vazio };
+  const tipo = formData.get("financaTipo") === "receita" ? "receita" : "despesa";
+  const valor = Number(String(formData.get("financaValor") ?? "").replace(/\./g, "").replace(",", "."));
+  const contaId = String(formData.get("financaContaId") ?? "");
+  const categoriaId = String(formData.get("financaCategoriaId") ?? "");
+  if (!valor || valor <= 0) return { erro: "Informe o valor que será lançado ao concluir a tarefa", campos: vazio };
+  if (!contaId) return { erro: "Escolha a conta do lançamento", campos: vazio };
+  return {
+    campos: {
+      financa_tipo: tipo,
+      financa_valor: Math.round(valor * 100) / 100,
+      financa_conta_id: contaId,
+      financa_categoria_id: categoriaId || null,
+    },
+  };
+}
+
+/**
+ * Etapa 343 — o "salvar tarefa" em si, sem redirecionar: usado pelo
+ * formulário (com internet) e pela fila offline (quando a internet volta).
+ */
+async function inserirTarefa(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  formData: FormData
+): Promise<{ id?: string; erro?: string }> {
+  const { count } = await supabase
+    .from("tarefas")
+    .select("id", { count: "exact", head: true })
+    .eq("dono_id", userId);
+
+  const titulo = String(formData.get("titulo") ?? "").trim();
+  const icone = String(formData.get("icone") ?? "NotebookPen");
+  const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
+  const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
+  const subtarefasTexto = formData.getAll("subtarefaTexto").map((t) => String(t).trim()).filter(Boolean);
+  const observacoes = String(formData.get("observacoes") ?? "").trim();
+
+  if (!titulo) return { erro: "Dê um título para a tarefa" };
+  const financa = camposFinanca(formData);
+  if (financa.erro) return { erro: financa.erro };
+
+  const subtarefas = subtarefasTexto.map((texto) => ({
+    id: randomUUID(),
+    texto,
+    feita: false,
+  }));
+
+  const { data: criada, error } = await supabase.from("tarefas").insert({
+    dono_id: userId,
+    titulo,
+    icone,
+    categoria_id: categoriaIdRaw || null,
+    ...camposRepeticao(formData),
+    horario_lembrete: horarioLembreteRaw || null,
+    subtarefas,
+    observacoes: observacoes || null,
+    ordem: count ?? 0,
+    ...financa.campos,
+  }).select("id").single();
+
+  if (error) return { erro: error.message };
+  return { id: criada?.id as string | undefined };
+}
+
+export async function criarTarefa(formData: FormData) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const r = await inserirTarefa(supabase, user!.id, formData);
+  if (r.erro) {
+    redirect(`/tarefas/nova?erro=${encodeURIComponent(r.erro)}`);
+  }
+
+  // Etapa 303 — "Compartilhar com…" escolhido no formulário
+  if (r.id) {
+    const erroConvite = await convidarAoCriar("tarefa", r.id, formData);
+    if (erroConvite) {
+      revalidatePath("/tarefas");
+      redirect(`/tarefas/${r.id}?erro=${encodeURIComponent(`Tarefa criada, mas o convite não saiu: ${erroConvite}`)}`);
+    }
+  }
+
+  revalidatePath("/habitos");
+  revalidatePath("/tarefas");
+  redirect("/tarefas");
+}
+
+/** Etapa 343 — tarefa criada sem internet chega aqui quando a conexão volta. */
+export async function criarTarefaSilenciosa(entradas: [string, string][]): Promise<{ sucesso: boolean; erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { sucesso: false, erro: "Sessão expirada" };
+  const formData = new FormData();
+  for (const [k, v] of Array.isArray(entradas) ? entradas : []) {
+    if (typeof k === "string" && typeof v === "string" && k !== "compartilharCom" && k !== "compartilharEmail") formData.append(k, v);
+  }
+  const r = await inserirTarefa(supabase, user.id, formData);
+  if (r.erro) return { sucesso: false, erro: r.erro };
+  revalidatePath("/tarefas");
+  return { sucesso: true };
+}
+
+export async function atualizarTarefa(tarefaId: string, formData: FormData) {
+  const supabase = createClient();
+
+  const titulo = String(formData.get("titulo") ?? "").trim();
+  const icone = String(formData.get("icone") ?? "NotebookPen");
+  const categoriaIdRaw = String(formData.get("categoriaId") ?? "");
+  const horarioLembreteRaw = String(formData.get("horarioLembrete") ?? "");
+  const observacoes = String(formData.get("observacoes") ?? "").trim();
+
+  if (!titulo) {
+    redirect(`/tarefas/${tarefaId}/editar?erro=${encodeURIComponent("Dê um título para a tarefa")}`);
+  }
+  const financa = camposFinanca(formData);
+  if (financa.erro) redirect(`/tarefas/${tarefaId}/editar?erro=${encodeURIComponent(financa.erro)}`);
+
+  const { error } = await supabase
+    .from("tarefas")
+    .update({
+      titulo,
+      icone,
+      categoria_id: categoriaIdRaw || null,
+      ...camposRepeticao(formData),
+      horario_lembrete: horarioLembreteRaw || null,
+      observacoes: observacoes || null,
+      ...financa.campos,
+    })
+    .eq("id", tarefaId);
+
+  if (error) {
+    redirect(`/tarefas/${tarefaId}/editar?erro=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/habitos");
+  revalidatePath("/tarefas");
+  revalidatePath(`/tarefas/${tarefaId}`);
+  redirect(`/tarefas/${tarefaId}`);
+}
+
+export async function alternarConclusaoTarefaUnica(tarefaId: string) {
+  "use server";
+  const supabase = createClient();
+
+  const { data: tarefa } = await supabase
+    .from("tarefas")
+    .select("concluida")
+    .eq("id", tarefaId)
+    .maybeSingle();
+
+  await supabase
+    .from("tarefas")
+    .update({ concluida: !(tarefa?.concluida ?? false) })
+    .eq("id", tarefaId);
+
+  revalidatePath("/financas");
+  revalidatePath("/habitos");
+  revalidatePath("/tarefas");
+}
+
+/**
+ * Para tarefas que repetem (mesma lógica dos check-ins de hábito):
+ * marca/desmarca a conclusão do dia informado.
+ */
+export async function alternarConclusaoTarefa(tarefaId: string, dataISO?: string) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: tarefa } = await supabase
+    .from("tarefas")
+    .select("repetir")
+    .eq("id", tarefaId)
+    .maybeSingle();
+
+  if (!tarefa || tarefa.repetir === "nenhuma") {
+    return alternarConclusaoTarefaUnica(tarefaId);
+  }
+
+  const data = dataISO ?? hojeISO();
+
+  const { data: existente } = await supabase
+    .from("tarefa_conclusoes")
+    .select("id")
+    .eq("tarefa_id", tarefaId)
+    .eq("usuario_id", user!.id)
+    .eq("data", data)
+    .maybeSingle();
+
+  if (existente) {
+    await supabase.from("tarefa_conclusoes").delete().eq("id", existente.id);
+  } else {
+    await supabase.from("tarefa_conclusoes").insert({
+      tarefa_id: tarefaId,
+      usuario_id: user!.id,
+      data,
+    });
+  }
+
+  revalidatePath("/habitos");
+}
+
+export async function alternarSubtarefa(tarefaId: string, subtarefaId: string) {
+  "use server";
+  const supabase = createClient();
+
+  const { data: tarefa } = await supabase
+    .from("tarefas")
+    .select("subtarefas")
+    .eq("id", tarefaId)
+    .maybeSingle();
+
+  if (!tarefa) return;
+
+  const subtarefas = (tarefa.subtarefas as any[]).map((s) =>
+    s.id === subtarefaId ? { ...s, feita: !s.feita } : s
+  );
+
+  await supabase.from("tarefas").update({ subtarefas }).eq("id", tarefaId);
+
+  revalidatePath(`/tarefas/${tarefaId}`);
+  revalidatePath("/habitos");
+  revalidatePath("/tarefas");
+}
+
+export async function arquivarTarefa(tarefaId: string) {
+  "use server";
+  const supabase = createClient();
+  await supabase.from("tarefas").update({ arquivada: true }).eq("id", tarefaId);
+  revalidatePath("/habitos");
+  revalidatePath("/tarefas");
+  redirect("/tarefas");
+}
+
+export async function reordenarTarefas(idsEmOrdem: string[]) {
+  "use server";
+  const supabase = createClient();
+  await Promise.all(
+    idsEmOrdem.map((id, indice) => supabase.from("tarefas").update({ ordem: indice }).eq("id", id))
+  );
+  revalidatePath("/tarefas");
+  revalidatePath("/habitos");
+}
+
+export async function restaurarTarefa(tarefaId: string) {
+  "use server";
+  const supabase = createClient();
+  await supabase.from("tarefas").update({ arquivada: false }).eq("id", tarefaId);
+  revalidatePath("/tarefas");
+  revalidatePath("/habitos");
+  revalidatePath("/tarefas/lixeira");
+}
+
+export async function excluirTarefaDefinitivamente(tarefaId: string) {
+  "use server";
+  const supabase = createClient();
+  await supabase.from("compartilhamentos").delete().eq("tipo_item", "tarefa").eq("item_id", tarefaId);
+  await supabase.from("tarefas").delete().eq("id", tarefaId);
+  revalidatePath("/tarefas/lixeira");
+}
+
+/**
+ * Etapa 259 — adicionar tarefa rápida (só o título) direto da lista,
+ * já na categoria e no dia escolhidos. Devolve { erro } em vez de redirecionar.
+ */
+export async function criarTarefaRapida(dados: { titulo: string; categoriaId?: string | null; data?: string | null; prioridade?: number }): Promise<{ erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sua sessão expirou. Saia e entre de novo." };
+  const titulo = String(dados.titulo ?? "").trim().slice(0, 200);
+  if (!titulo) return { erro: "Escreva a tarefa" };
+  const data = /^\d{4}-\d{2}-\d{2}$/.test(String(dados.data ?? "")) ? String(dados.data) : hojeISO();
+  const categoriaId = dados.categoriaId && /^[0-9a-f-]{36}$/i.test(dados.categoriaId) ? dados.categoriaId : null;
+
+  const { count } = await supabase.from("tarefas").select("id", { count: "exact", head: true }).eq("dono_id", user.id);
+  const { error } = await supabase.from("tarefas").insert({
+    dono_id: user.id,
+    titulo,
+    icone: "NotebookPen",
+    categoria_id: categoriaId,
+    repetir: "nenhuma",
+    dias_semana: [],
+    data,
+    prioridade: Math.min(3, Math.max(0, Math.round(Number(dados.prioridade) || 0))),
+    subtarefas: [],
+    ordem: count ?? 0,
+  });
+  if (error) return { erro: error.message };
+  revalidatePath("/habitos");
+  revalidatePath("/tarefas");
+  return {};
+}

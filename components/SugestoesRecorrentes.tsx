@@ -6,6 +6,7 @@ import { assinaturasNaoCadastradas, inicioDaRecorrenciaSugerida, type Assinatura
 import { criarRecorrenciaSugerida } from "@/app/financas/recorrentes/actions";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
+import { criarRecorrenciaSugeridaLocal } from "@/lib/local/criarRapido";
 
 // Etapa 215 — cobranças que se repetem e ainda não estão em Recorrentes
 export function SugestoesRecorrentes({ snapshot, hojeISO }: { snapshot: SnapshotOffline; hojeISO: string }) {
@@ -24,14 +25,16 @@ export function SugestoesRecorrentes({ snapshot, hojeISO }: { snapshot: Snapshot
   function cadastrar(s: AssinaturaSugerida) {
     setErro(null);
     iniciar(async () => {
-      const r = await criarRecorrenciaSugerida({
+      const dadosRec = {
         contaId: s.contaId,
         categoriaId: s.categoriaId,
         valor: s.valorMedio,
         descricao: s.descricao,
         diaMes: s.diaMes,
         dataInicio: inicioDaRecorrenciaSugerida(s, hojeISO),
-      });
+      };
+      // Etapa 354 — sem internet: a conta fixa nasce no aparelho
+      const r = navigator.onLine === false ? await criarRecorrenciaSugeridaLocal(dadosRec, snapshot.perfil.id) : await criarRecorrenciaSugerida(dadosRec);
       if (r.erro) return setErro(r.erro);
       setFeitas((f) => [...f, s.chave]);
       atualizarSnapshotEmTodasAsTelas();

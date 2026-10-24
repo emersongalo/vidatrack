@@ -12,6 +12,7 @@ import { IconeHabito } from "@/components/IconeHabito";
 import { PRIORIDADES, descreverRepeticao } from "@/lib/agenda/recorrencia";
 import { rotuloData } from "@/lib/agenda/tarefasLista";
 import { alternarSubtarefa } from "@/app/habitos/tarefas/actions";
+import { chamarOuGuardar, pedidoSubtarefa } from "@/lib/local/acaoOffline";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { vibrar } from "@/lib/app/vibrar";
 
@@ -102,8 +103,9 @@ export function LinhaTarefa({
     const antes = subtarefas;
     setSubsLocal(antes.map((s) => (s.id === id ? { ...s, feita: !s.feita } : s)));
     try {
-      await alternarSubtarefa(tarefa.id, id);
-      void atualizarSnapshotEmTodasAsTelas();
+      // Etapa 350 — sem internet: marca no aparelho e sobe depois
+      const r = await chamarOuGuardar(() => alternarSubtarefa(tarefa.id, id), pedidoSubtarefa(tarefa.id, id));
+      if (r !== "fila") void atualizarSnapshotEmTodasAsTelas();
     } catch {
       setSubsLocal(antes);
     }

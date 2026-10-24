@@ -9,12 +9,11 @@ import { TiraDeDiasAgenda } from "@/components/TiraDeDiasAgenda";
 import { GradeDia } from "@/components/GradeDia";
 import { EditorBloco, type RascunhoBloco } from "@/components/EditorBloco";
 import { Plus } from "lucide-react";
+import { lerCacheLista, salvarCacheLista, sobreporEscritas } from "@/lib/local/cacheLista";
 
-// Etapa 128 — feature mais de planejamento do que de uso no meio do
-// dia sem sinal, então não entrou no retrato offline principal: busca
-// direto no navegador pro dia selecionado. Sem internet, simplesmente
-// abre a grade vazia (dá pra criar blocos assim que a conexão voltar)
-// em vez de travar a página inteira.
+// Etapa 128 — busca direto no navegador pro dia selecionado.
+// Etapa 354 — sem internet: mostra a última cópia do dia e dá pra criar,
+// mover, editar e apagar blocos (sobem quando a conexão volta).
 export default function PlanejadorPage() {
   return (
     <Suspense fallback={null}>
@@ -32,14 +31,36 @@ function PlanejadorConteudo() {
 
   // Etapa 245 — antes a lista só era buscada uma vez: criar/editar um bloco
   // salvava no banco mas não aparecia na tela (parecia que "não fazia nada").
+  // Etapa 354 — guarda a última cópia de cada dia no aparelho: sem internet
+  // mostra essa cópia + o que foi criado/mudado offline (ainda na fila)
   const recarregar = useCallback(() => {
+    const chave = "blocos-" + dataSelecionada;
+    const mostrar = (lista: any[]) =>
+      setBlocos(
+        sobreporEscritas(lista, "blocos_tempo", (v) => v.data === undefined || v.data === dataSelecionada).sort((a: any, b: any) =>
+          String(a.hora_inicio).localeCompare(String(b.hora_inicio))
+        )
+      );
+    mostrar(lerCacheLista<any[]>(chave) ?? []);
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
     createClient()
       .from("blocos_tempo")
-      .select("id, titulo, hora_inicio, hora_fim, cor")
+      .select("id, titulo, hora_inicio, hora_fim, cor, data")
       .eq("data", dataSelecionada)
       .order("hora_inicio")
-      .then(({ data }) => setBlocos(data ?? []));
+      .then(({ data, error }) => {
+        if (error) return;
+        salvarCacheLista(chave, data ?? []);
+        mostrar(data ?? []);
+      });
   }, [dataSelecionada]);
+
+  // a fila subiu (internet voltou): busca de novo
+  useEffect(() => {
+    const aoSincronizar = () => recarregar();
+    window.addEventListener("vidatrack:sincronizacao-concluida", aoSincronizar);
+    return () => window.removeEventListener("vidatrack:sincronizacao-concluida", aoSincronizar);
+  }, [recarregar]);
 
   useEffect(() => {
     recarregar();

@@ -16,8 +16,10 @@ import { IconeHabito } from "@/components/IconeHabito";
 import { CarregandoTela } from "@/components/Esqueleto";
 import { explodirEm, chuvaDeConfete, textoFlutuante } from "@/lib/app/festa";
 import { vibrar } from "@/lib/app/vibrar";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 type Decisao = "concluir" | "hoje" | "amanha" | "semana" | "apagar" | "pular";
+import { concluirTarefaComFila } from "@/lib/local/acaoOffline"; // Etapa 353
 
 /** Próxima segunda-feira (a partir de amanhã). */
 function proximaSegunda(hoje: string) {
@@ -78,16 +80,16 @@ export default function RevisaoSemanalPage() {
       if (d === "concluir") {
         explodirEm(refCartao.current, { cor: "#9C8FD9", emojis: ["✨"] });
         vibrar([15, 40, 25]);
-        await alternarConclusaoTarefa(t.id, hoje);
+        await concluirTarefaComFila(t.id, hoje, () => alternarConclusaoTarefa(t.id, hoje));
         setContagem((c) => ({ ...c, feitas: c.feitas + 1 }));
       } else if (d === "apagar") {
         // vai pra lixeira (arquivada) — dá pra restaurar em Tarefas → Lixeira
-        const { error } = await supabase.from("tarefas").update({ arquivada: true }).eq("id", t.id);
+        const { error } = await gravar({ tabela: "tarefas", op: "update", id: t.id, valores: { arquivada: true } });
         if (error) throw error;
         setContagem((c) => ({ ...c, apagadas: c.apagadas + 1 }));
       } else {
         const data = d === "hoje" ? hoje : d === "amanha" ? somarDias(hoje, 1) : proximaSegunda(hoje);
-        const { error } = await supabase.from("tarefas").update({ data }).eq("id", t.id);
+        const { error } = await gravar({ tabela: "tarefas", op: "update", id: t.id, valores: { data } });
         if (error) throw error;
         textoFlutuante(refCartao.current, d === "hoje" ? "Pra hoje ☀️" : d === "amanha" ? "Amanhã 🌤️" : "Próxima semana 📅", "#9C8FD9");
         vibrar(10);

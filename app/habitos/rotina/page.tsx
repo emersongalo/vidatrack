@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useSnapshotOffline, atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
 import { NOMES_ROTINA, itensDaRotina, rotinaDoMomento, type Rotina } from "@/lib/habitos/rotina";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 export default function RotinaPage() {
   return (
@@ -66,7 +67,7 @@ function RotinaConteudo() {
 
   async function definirRotina(id: string, valor: Rotina | null) {
     setErro(null);
-    const { error } = await createClient().from("habitos").update({ rotina: valor }).eq("id", id);
+    const { error } = await gravar({ tabela: "habitos", op: "update", id: id, valores: { rotina: valor } });
     if (error) setErro("Não consegui salvar. Verifique a internet.");
     else atualizarSnapshotEmTodasAsTelas();
   }

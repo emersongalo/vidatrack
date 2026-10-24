@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { sugerirLembretes } from "@/lib/habitos/lembreteInteligente";
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 // Etapa 215 — "você costuma fazer X às 21h, quer o lembrete às 20h45?"
 const CHAVE = "vidatrack-sugestoes-lembrete-dispensadas";
@@ -46,7 +47,7 @@ export function SugestoesLembrete({ snapshot, hojeISO }: { snapshot: SnapshotOff
 
   async function aplicar(habitoId: string, horario: string) {
     setErro(null);
-    const { error } = await createClient().from("habitos").update({ horario_lembrete: horario, horarios_lembrete: [horario] }).eq("id", habitoId);
+    const { error } = await gravar({ tabela: "habitos", op: "update", id: habitoId, valores: { horario_lembrete: horario, horarios_lembrete: [horario] } });
     if (error) return setErro("Não consegui mudar o lembrete. Verifique a internet.");
     setAplicadas((a) => [...a, habitoId]);
     atualizarSnapshotEmTodasAsTelas();

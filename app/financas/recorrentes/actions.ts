@@ -25,7 +25,11 @@ export async function criarRecorrencia(formData: FormData): Promise<{ erro?: str
   });
   if (!resultado.success) return { erro: primeiroErro(resultado) };
 
+  // Etapa 352 — id criado no aparelho (sem internet): reenviar não duplica
+  const idCliente = String(formData.get("idCliente") ?? "");
+  const id = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idCliente) ? idCliente : null;
   const { error } = await supabase.from("financa_recorrencias").insert({
+    ...(id ? { id } : {}),
     dono_id: user.id,
     conta_id: resultado.data.contaId,
     categoria_id: resultado.data.categoriaId,
@@ -35,7 +39,7 @@ export async function criarRecorrencia(formData: FormData): Promise<{ erro?: str
     dia_mes: resultado.data.diaMes,
     data_fim: resultado.data.dataFim,
   });
-  if (error) return { erro: error.message };
+  if (error && !(error.code === "23505" && id)) return { erro: error.message };
 
   revalidatePath("/financas");
   revalidatePath("/financas/recorrentes");
@@ -247,5 +251,52 @@ export async function atualizarRecorrencia(recorrenciaId: string, formData: Form
 
   revalidatePath("/financas");
   revalidatePath("/financas/recorrentes");
+  return {};
+}
+
+/**
+ * Etapa 355 — lançamento do mês de uma conta fixa que o APARELHO gerou sem
+ * internet (com o id dele). Antes de gravar, confere se esse mês já tem o
+ * lançamento dessa conta fixa (outro aparelho pode ter gerado antes):
+ * se já tem, não duplica.
+ */
+export async function gerarLancamentoRecorrenteOffline(recorrenciaId: string, transacaoId: string, data: string): Promise<{ erro?: string }> {
+  const RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!RE.test(recorrenciaId) || !RE.test(transacaoId) || !/^\d{4}-\d{2}-\d{2}$/.test(data)) return { erro: "Dados inválidos" };
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Sessão expirada");
+  const { data: r } = await supabase
+    .from("financa_recorrencias")
+    .select("id, conta_id, categoria_id, tipo, valor, descricao, ativo, data_fim, data_inicio")
+    .eq("id", recorrenciaId)
+    .maybeSingle();
+  if (!r || !r.ativo) return {}; // apagada ou pausada nesse meio tempo: nada a gerar
+  if ((r.data_fim && data > r.data_fim) || (r.data_inicio && data < r.data_inicio)) return {};
+  const mes = data.slice(0, 7);
+  const ultimo = String(new Date(Date.UTC(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)), 0)).getUTCDate()).padStart(2, "0");
+  const { data: ja } = await supabase
+    .from("financa_transacoes")
+    .select("id")
+    .eq("recorrencia_id", recorrenciaId)
+    .gte("data", `${mes}-01`)
+    .lte("data", `${mes}-${ultimo}`)
+    .limit(1);
+  if (ja?.length) return {}; // já gerado (por aqui ou por outro aparelho)
+  const { error } = await supabase.from("financa_transacoes").insert({
+    id: transacaoId,
+    dono_id: user.id,
+    conta_id: r.conta_id,
+    categoria_id: r.categoria_id,
+    tipo: r.tipo,
+    valor: r.valor,
+    descricao: r.descricao,
+    data,
+    recorrencia_id: r.id,
+  });
+  if (error && error.code !== "23505") return { erro: error.message };
+  revalidatePath("/financas");
   return {};
 }

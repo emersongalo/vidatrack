@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { criarHabitoRapido } from "@/app/habitos/actions";
 import { IconeHabito } from "@/components/IconeHabito";
+import { criarHabitoLocal, semInternet } from "@/lib/local/criarRapido";
 
 const SUGESTOES = [
   { nome: "Beber água", icone: "Droplet" },
@@ -23,7 +24,9 @@ export function SugestoesHabito({ aoCriar }: { aoCriar?: () => void }) {
           disabled={pendente}
           onClick={() =>
             iniciarTransicao(async () => {
-              await criarHabitoRapido(s.nome);
+              // Etapa 353 — sem internet: o hábito nasce no aparelho
+              if (semInternet()) await criarHabitoLocal({ nome: s.nome, icone: s.icone, cor: "habito" });
+              else await criarHabitoRapido(s.nome);
               aoCriar?.();
             })
           }

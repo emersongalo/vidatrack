@@ -33,9 +33,12 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(WidgetHojePlugin.class);
         // Etapa 223 — cor da barra de status (verde/vermelho no lançamento).
         registerPlugin(BarraStatusPlugin.class);
-        // Etapa 292 — tempo de tela (opcional).
-        registerPlugin(com.vidatrack.UsoTelaPlugin.class);
+        // Etapa 349 — dados em dia sem abrir o app.
+        registerPlugin(RetratoFundoPlugin.class);
         super.onCreate(savedInstanceState);
+
+        // Etapa 349 — o Android atualiza os dados sozinho a cada ~4 h.
+        RetratoFundo.agendar(this);
 
         // Etapa 215 — downloads (planilha CSV, backup) dentro do app. A
         // WebView sozinha ignora links de download; aqui eles vão pro

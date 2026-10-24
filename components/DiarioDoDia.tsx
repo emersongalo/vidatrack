@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { gravar } from "@/lib/local/gravar";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { HUMORES } from "@/lib/habitos/diario";
 import type { SnapshotOffline } from "@/lib/offline/snapshot";
@@ -29,25 +29,21 @@ export function DiarioDoDia({ snapshot, dataISO, hojeISO }: { snapshot: Snapshot
   if (dataISO > hojeISO) return null;
 
   async function salvar(novoHumor: number, novoTexto: string) {
-    if (!navigator.onLine) {
-      setEstado("erro");
-      setErro("Sem internet — o diário salva quando a conexão voltar. Tente de novo daqui a pouco.");
-      return;
-    }
     setEstado("salvando");
     setErro(null);
-    const { error } = await createClient()
-      .from("diario_dias")
-      .upsert(
-        {
-          dono_id: snapshot.perfil.id,
-          data: dataISO,
-          humor: novoHumor,
-          texto: novoTexto.trim() ? novoTexto.trim().slice(0, 1000) : null,
-          atualizado_em: new Date().toISOString(),
-        },
-        { onConflict: "dono_id,data" }
-      );
+    // Etapa 353 — sem internet: o diário fica no aparelho e sobe depois
+    const { error } = await gravar({
+      tabela: "diario_dias",
+      op: "upsert",
+      onConflict: "dono_id,data",
+      valores: {
+        dono_id: snapshot.perfil.id,
+        data: dataISO,
+        humor: novoHumor,
+        texto: novoTexto.trim() ? novoTexto.trim().slice(0, 1000) : null,
+        atualizado_em: new Date().toISOString(),
+      },
+    });
     if (error) {
       setEstado("erro");
       setErro("Não consegui salvar. Tente de novo.");

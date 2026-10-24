@@ -2,6 +2,8 @@
 
 import { removerTransacao } from "@/app/financas/actions";
 import { BotaoComConfirmacao } from "@/components/BotaoComConfirmacao";
+import { chamarOuGuardar } from "@/lib/local/acaoOffline";
+import { pedidoRemoverTransacao } from "@/lib/local/financasEspeciais";
 
 export function BotaoRemoverTransacao({
   transacaoId,
@@ -16,7 +18,8 @@ export function BotaoRemoverTransacao({
 }) {
   return (
     <BotaoComConfirmacao
-      acao={removerTransacao.bind(null, transacaoId)}
+      // Etapa 351 — sem internet: apaga no aparelho e sobe depois
+      acao={() => chamarOuGuardar(() => removerTransacao(transacaoId), pedidoRemoverTransacao(transacaoId)).then(() => {})}
       textoBotao="✕"
       classeBotao="text-ink-400 hover:text-red-400 transition text-sm px-1"
       aoConcluir={aoConcluir}

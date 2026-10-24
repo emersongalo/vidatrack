@@ -7,12 +7,59 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Evento, Resposta } from "@/lib/agenda/eventos";
 import { avisarConvidadosEvento, avisarRespostaEvento } from "@/lib/agenda/actions";
+import { adicionarNaFila, lerFila, salvarFilaCompleta, type AcaoPendente } from "@/lib/offline/fila";
+import { novoUuid, sincronizarAgora } from "@/lib/local/financas";
 
 export type Participante = { usuario_id: string; resposta: Resposta };
-export type EventoAgenda = Evento & { evento_participantes?: Participante[] };
+export type EventoAgenda = Evento & { evento_participantes?: Participante[]; /** Etapa 347 — ainda não chegou no banco */ pendente?: boolean };
 export type Pessoa = { usuarioId: string; nome: string };
 
 const CHAVE = "vt-agenda-cache";
+const SEM_REDE = "Sem internet: responder convites precisa de conexão.";
+const offline = () => typeof navigator !== "undefined" && navigator.onLine === false;
+
+/**
+ * Etapa 347 — "estilo Monee": o que foi feito no aparelho e ainda está na
+ * fila (criar / editar / apagar) é aplicado por cima do que veio do banco,
+ * então a agenda mostra na hora o jeito que vai ficar.
+ */
+export function comPendentes(lista: EventoAgenda[], eu: string | null, fila: AcaoPendente[] = lerFila()): EventoAgenda[] {
+  let out = [...lista];
+  for (const a of fila as any[]) {
+    if (a.tipo === "criar_evento") {
+      const id = String(a.id);
+      const ev = {
+        ...(a.dados as any),
+        id,
+        dono_id: eu ?? "eu",
+        evento_participantes: (a.convidados ?? []).map((u: string) => ({ usuario_id: u, resposta: "pendente" })),
+        pendente: true,
+      } as EventoAgenda;
+      out = out.some((e) => e.id === id) ? out.map((e) => (e.id === id ? { ...e, ...ev } : e)) : [...out, ev];
+    } else if (a.tipo === "editar_evento") {
+      out = out.map((e) =>
+        e.id === a.eventoId
+          ? {
+              ...e,
+              ...(a.dados as any),
+              evento_participantes: (a.convidados ?? []).map(
+                (u: string) => e.evento_participantes?.find((p) => p.usuario_id === u) ?? { usuario_id: u, resposta: "pendente" }
+              ),
+              pendente: true,
+            }
+          : e
+      );
+    } else if (a.tipo === "apagar_evento") {
+      out = a.soODia
+        ? out.map((e) => (e.id === a.eventoId ? { ...e, excecoes: Array.from(new Set([...(e.excecoes ?? []), a.soODia])), pendente: true } : e))
+        : out.filter((e) => e.id !== a.eventoId);
+    }
+  }
+  return out;
+}
+
+/** falha de rede (não adianta mostrar erro: vai pra fila e sobe depois) */
+const ehFalhaDeRede = (msg?: string) => !msg || /fetch|network|load failed|timeout|abort|offline|conex/i.test(msg);
 
 function lerCache(): EventoAgenda[] {
   try {
@@ -43,12 +90,15 @@ export function useAgenda() {
       .order("data", { ascending: true })
       .limit(2000);
     if (error) {
-      if (/eventos|relation|schema cache/i.test(error.message)) setSemTabela(true);
-      else setErro("Sem conexão — mostrando o que está salvo no aparelho.");
+      if (/relation .*eventos|schema cache/i.test(error.message)) setSemTabela(true);
+      else {
+        setErro("Sem conexão — mostrando o que está salvo no aparelho.");
+        setEventos(comPendentes(lerCache(), id));
+      }
     } else {
       setErro(null);
       setSemTabela(false);
-      setEventos((data ?? []) as EventoAgenda[]);
+      setEventos(comPendentes((data ?? []) as EventoAgenda[], id));
       try {
         localStorage.setItem(CHAVE, JSON.stringify(data ?? []));
       } catch {}
@@ -95,12 +145,20 @@ export function useAgenda() {
   }, []);
 
   useEffect(() => {
-    setEventos(lerCache());
+    setEventos(comPendentes(lerCache(), null));
     void buscar();
     void buscarPessoas();
     const aoVoltar = () => document.visibilityState === "visible" && buscar();
     document.addEventListener("visibilitychange", aoVoltar);
-    return () => document.removeEventListener("visibilitychange", aoVoltar);
+    // Etapa 343 — a fila offline subiu (internet voltou): busca de novo
+    const aoSincronizar = () => void buscar();
+    window.addEventListener("vidatrack:sincronizacao-concluida", aoSincronizar);
+    window.addEventListener("online", aoSincronizar);
+    return () => {
+      document.removeEventListener("visibilitychange", aoVoltar);
+      window.removeEventListener("vidatrack:sincronizacao-concluida", aoSincronizar);
+      window.removeEventListener("online", aoSincronizar);
+    };
   }, [buscar, buscarPessoas]);
 
   const nomeDe = useCallback((id: string) => (id === eu ? "Você" : nomes.current.get(id) ?? "Alguém"), [eu]);
@@ -112,15 +170,43 @@ export function useAgenda() {
       const { id, ...campos } = dados as any;
       delete campos.evento_participantes;
       delete campos.dono_id;
+      delete campos.convidados;
+      // Etapa 347 — "estilo Monee": guarda no aparelho e sobe pela fila
+      // (sem internet, ou quando a rede falha no meio)
+      const viaFila = () => {
+        const fila = lerFila();
+        if (id) {
+          const criar = fila.find((a) => a.tipo === "criar_evento" && a.id === id);
+          if (criar) {
+            // ainda nem subiu: só troca o que está na fila
+            salvarFilaCompleta(fila.map((a) => (a === criar ? ({ ...criar, dados: campos, convidados } as AcaoPendente) : a)));
+          } else {
+            salvarFilaCompleta(fila.filter((a) => !(a.tipo === "editar_evento" && a.eventoId === id)));
+            adicionarNaFila({ id: `editar-evento:${id}`, tipo: "editar_evento", eventoId: id, dados: campos, convidados });
+          }
+        } else {
+          adicionarNaFila({ id: novoUuid(), tipo: "criar_evento", dados: campos, convidados });
+        }
+        setEventos(comPendentes(lerCache(), eu));
+        sincronizarAgora();
+        return null;
+      };
+      const naFila = id && lerFila().some((a) => (a.tipo === "criar_evento" || a.tipo === "editar_evento") && ("eventoId" in a ? a.eventoId : a.id) === id);
+      if (offline() || naFila) return viaFila();
       let eventoId = id as string | undefined;
       const antes = eventoId ? eventos.find((e) => e.id === eventoId) : undefined;
-      if (eventoId) {
-        const { error } = await supabase.from("eventos").update({ ...campos, atualizado_em: new Date().toISOString() }).eq("id", eventoId);
-        if (error) return error.message;
-      } else {
-        const { data, error } = await supabase.from("eventos").insert(campos).select("id").single();
-        if (error) return error.message;
-        eventoId = data.id as string;
+      try {
+        if (eventoId) {
+          const { error } = await supabase.from("eventos").update({ ...campos, atualizado_em: new Date().toISOString() }).eq("id", eventoId);
+          if (error) return ehFalhaDeRede(error.message) ? viaFila() : error.message;
+        } else {
+          const novoId = novoUuid();
+          const { error } = await supabase.from("eventos").insert({ ...campos, id: novoId });
+          if (error) return ehFalhaDeRede(error.message) ? viaFila() : error.message;
+          eventoId = novoId;
+        }
+      } catch {
+        return viaFila();
       }
       // participantes: entra quem é novo, sai quem foi tirado
       const atuais = (antes?.evento_participantes ?? []).map((p) => p.usuario_id);
@@ -136,28 +222,60 @@ export function useAgenda() {
       await buscar();
       return null;
     },
-    [eventos, buscar]
+    [eventos, buscar, eu]
   );
 
   const apagar = useCallback(
     async (evento: EventoAgenda, soODia?: string): Promise<string | null> => {
+      const fila = lerFila();
+      const aindaNaoSubiu = fila.some((a) => a.tipo === "criar_evento" && a.id === evento.id);
+      // Etapa 347 — criado no aparelho e ainda não subiu: resolve tudo aqui
+      if (aindaNaoSubiu && !soODia) {
+        salvarFilaCompleta(fila.filter((a) => !((a.tipo === "criar_evento" && a.id === evento.id) || (a.tipo === "editar_evento" && a.eventoId === evento.id))));
+        setEventos(comPendentes(lerCache(), eu));
+        return null;
+      }
+      const viaFila = () => {
+        if (aindaNaoSubiu && soODia) {
+          // pula o dia direto no "criar" que está na fila
+          salvarFilaCompleta(
+            lerFila().map((a) =>
+              a.tipo === "criar_evento" && a.id === evento.id
+                ? ({ ...a, dados: { ...a.dados, excecoes: [...(((a.dados as any).excecoes as string[]) ?? []), soODia] } } as AcaoPendente)
+                : a
+            )
+          );
+        } else {
+          if (!soODia) salvarFilaCompleta(lerFila().filter((a) => !(a.tipo === "editar_evento" && a.eventoId === evento.id)));
+          adicionarNaFila({ id: `apagar-evento:${evento.id}:${soODia ?? "tudo"}`, tipo: "apagar_evento", eventoId: evento.id, soODia: soODia ?? null });
+        }
+        setEventos(comPendentes(lerCache(), eu));
+        sincronizarAgora();
+        return null;
+      };
+      if (offline() || aindaNaoSubiu) return viaFila();
       const supabase = createClient();
-      const { error } = soODia
-        ? await supabase
-            .from("eventos")
-            .update({ excecoes: [...(evento.excecoes ?? []), soODia] })
-            .eq("id", evento.id)
-        : await supabase.from("eventos").delete().eq("id", evento.id);
-      if (error) return error.message;
+      try {
+        const { error } = soODia
+          ? await supabase
+              .from("eventos")
+              .update({ excecoes: [...(evento.excecoes ?? []), soODia] })
+              .eq("id", evento.id)
+          : await supabase.from("eventos").delete().eq("id", evento.id);
+        if (error) return ehFalhaDeRede(error.message) ? viaFila() : error.message;
+      } catch {
+        return viaFila();
+      }
       await buscar();
       return null;
     },
-    [buscar]
+    [buscar, eu]
   );
 
   const responder = useCallback(
     async (eventoId: string, resposta: Resposta): Promise<string | null> => {
       if (!eu) return "Entre de novo na sua conta";
+      if (offline()) return SEM_REDE;
       const supabase = createClient();
       const { error } = await supabase
         .from("evento_participantes")

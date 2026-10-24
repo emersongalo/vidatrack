@@ -34,6 +34,7 @@ import {
   SequenciasInicio,
   TetoInicio,
 } from "@/components/inicio/Widgets";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 function lerLocal(): IdBloco[] | null {
   try {
@@ -67,7 +68,7 @@ export function BlocosInicio({ snapshot, hoje }: { snapshot: any; hoje: string }
     const { data: sessao } = await supabase.auth.getSession();
     const eu = sessao.session?.user.id;
     if (!eu) return;
-    const { error } = await supabase.from("perfis").update({ ordem_blocos_inicio: nova }).eq("id", eu);
+    const { error } = await gravar({ tabela: "perfis", op: "update", id: eu, valores: { ordem_blocos_inicio: nova } });
     if (error) setErro("Ficou salvo só neste aparelho (sem internet?)");
     else atualizarSnapshotEmTodasAsTelas();
   }

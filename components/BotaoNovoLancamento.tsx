@@ -4,9 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Plus, TrendingUp, TrendingDown, PiggyBank, X, Check, Zap, ArrowLeftRight, Camera } from "lucide-react";
 import { lerSnapshotOffline } from "@/lib/offline/snapshot";
-import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
-import { adicionarNaFila } from "@/lib/offline/fila";
-import { criarTransacaoSilenciosa } from "@/app/financas/actions";
+import { lancarLocal } from "@/lib/local/financas";
 import { formatarValorDigitado } from "@/components/CampoValorMonetario";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { classeFundoSuave, classeTextoCor } from "@/lib/agenda/estilo";
@@ -213,18 +211,9 @@ export function FolhaLancamento({ aoFechar }: { aoFechar: () => void }) {
 
     setSalvando(true);
     try {
-      if (!navigator.onLine) {
-        adicionarNaFila({ id: crypto.randomUUID?.() ?? String(Date.now()), tipo: "criar_transacao", dados });
-        setFeito(`R$ ${valor} guardado — lança quando voltar a internet`);
-      } else {
-        const r = await criarTransacaoSilenciosa(dados);
-        if (!r.sucesso) {
-          setErro(r.erro ?? "Não consegui lançar. Tente de novo.");
-          return;
-        }
-        setFeito(`R$ ${valor}${categoria ? ` em ${categoria.nome}` : ""} lançado!`);
-        atualizarSnapshotEmTodasAsTelas();
-      }
+      // Etapa 344 — salva no celular na hora; sobe pro banco sozinho
+      lancarLocal(dados);
+      setFeito(`R$ ${valor}${categoria ? ` em ${categoria.nome}` : ""} lançado!${navigator.onLine ? "" : " (sobe quando voltar a internet)"}`);
       setValor("");
       setDescricao("");
       setCategoriaId("");

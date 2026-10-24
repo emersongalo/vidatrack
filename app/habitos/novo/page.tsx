@@ -34,6 +34,7 @@ function NovoHabitoConteudo() {
       {/* Etapa 227 — topo na cor do hábito, igual ao lançamento de Finanças */}
       <FormularioHabito
         action={criarHabito}
+        offline={{ modo: "criar" }}
         categorias={(snapshot?.categoriasProdutividade ?? []) as any}
         outrosHabitos={((snapshot?.habitos ?? []) as any[]).filter((h) => !h.eh_negativo).map((h) => ({ id: h.id, nome: h.nome }))}
         textoBotao="Criar hábito"

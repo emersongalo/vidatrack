@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { enfileirarAcao, ehErroDeRede, type PedidoOffline } from "@/lib/local/acaoOffline";
 
 export type ResultadoAcao = { erro?: string } | void;
 
@@ -24,7 +25,13 @@ export function FormularioAcao({
   className,
   children,
   limparAoSalvar = true,
+  offline,
 }: {
+  /**
+   * Etapa 351 — sem internet: monta o pedido pra fila (e o que muda no
+   * aparelho). Devolver uma string = mensagem de erro de validação.
+   */
+  offline?: (formData: FormData) => PedidoOffline | string;
   acao: (formData: FormData) => Promise<ResultadoAcao>;
   aoSucesso?: () => void | Promise<void>;
   mensagemSucesso?: string;
@@ -41,7 +48,19 @@ export function FormularioAcao({
     setErro(null);
     setOk(false);
     setVersaoAntiga(false);
+    const guardarNoAparelho = async () => {
+      const pedido = offline!(formData);
+      if (typeof pedido === "string") {
+        setErro(pedido);
+        return;
+      }
+      enfileirarAcao(pedido);
+      setOk(true);
+      if (limparAoSalvar) formRef.current?.reset();
+      await aoSucesso?.();
+    };
     if (typeof navigator !== "undefined" && !navigator.onLine) {
+      if (offline) return guardarNoAparelho();
       setErro("Sem internet — essa ação precisa de conexão.");
       return;
     }
@@ -57,6 +76,8 @@ export function FormularioAcao({
       await aoSucesso?.();
     } catch (e: any) {
       const msg = String(e?.message ?? e ?? "");
+      // Etapa 351 — a rede caiu no meio: guarda no aparelho
+      if (offline && ehErroDeRede(e)) return guardarNoAparelho();
       registrarErro(msg || "falha na chamada");
       setVersaoAntiga(true);
       setErro("Não deu pra salvar. O app pode ter sido atualizado agora há pouco.");

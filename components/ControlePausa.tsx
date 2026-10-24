@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { adicionarPausa, encerrarPausas, pausaAtualOuFutura, pausasDe } from "@/lib/habitos/pausa";
 import { hojeISO } from "@/lib/habitos/streak";
+import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 // Etapa 218 — pausar um hábito (ou todos: modo férias) sem perder a sequência
 function somarDias(iso: string, n: number) {
@@ -16,7 +17,7 @@ const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
 async function salvarPausas(itens: { id: string; pausas: unknown }[]): Promise<string | null> {
   const supabase = createClient();
   for (const it of itens) {
-    const { error } = await supabase.from("habitos").update({ pausas: it.pausas }).eq("id", it.id);
+    const { error } = await gravar({ tabela: "habitos", op: "update", id: it.id, valores: { pausas: it.pausas } });
     if (error) return "Não consegui salvar. Verifique a internet.";
   }
   atualizarSnapshotEmTodasAsTelas();

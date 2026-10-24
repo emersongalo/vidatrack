@@ -13,6 +13,9 @@ import { CATEGORIAS_TELA, formatarMinutos, resumirDia, type CategoriaTela, type 
 import { gravarRegrasTela, lerRegrasTela, minutosDaRegra, nomeDaRegra, SUGESTOES_TELA, type RegraTela } from "@/lib/tela/habitoTela";
 import { conferirHabitoTela } from "@/components/SincronizadorTela";
 import { createClient } from "@/lib/supabase/client";
+import { gravar } from "@/lib/local/gravar";
+import { novoUuid } from "@/lib/local/acaoOffline";
+import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { hojeISO } from "@/lib/habitos/streak";
 import { useContagem } from "@/components/NumeroAnimado";
@@ -85,25 +88,27 @@ export default function TempoDeTelaPage() {
     setSalvando(true);
     setAviso(null);
     try {
-      const supabase = createClient();
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("sem sessão");
-      const { count } = await supabase.from("habitos").select("id", { count: "exact", head: true }).eq("dono_id", u.user.id);
-      const { data, error } = await supabase
-        .from("habitos")
-        .insert({
-          dono_id: u.user.id,
-          nome: nomeDaRegra(base),
-          cor: "nota",
-          icone: "📵",
-          frequencia: "diaria",
-          dias_semana: [],
-          meta_diaria: 1,
-          ordem: count ?? 0,
-        })
-        .select("id")
-        .single();
-      if (error || !data) throw error ?? new Error("não criou");
+      // Etapa 353 — o hábito nasce no aparelho (id definitivo): funciona sem internet
+      const snap = lerSnapshotOffline();
+      const donoId = snap?.perfil.id || (await createClient().auth.getSession()).data.session?.user.id;
+      if (!donoId) throw new Error("sem sessão");
+      const data = { id: novoUuid() };
+      const valores = {
+        id: data.id,
+        dono_id: donoId,
+        nome: nomeDaRegra(base),
+        cor: "nota",
+        icone: "📵",
+        frequencia: "diaria",
+        dias_semana: [],
+        meta_diaria: 1,
+        ordem: snap?.habitos.length ?? 0,
+      };
+      const { error } = await gravar(
+        { tabela: "habitos", op: "insert", valores },
+        { patches: [{ colecao: "habitos", op: "upsert", id: data.id, valores: { ...valores, criado_em: new Date().toISOString(), pausas: [] } }] }
+      );
+      if (error) throw error;
       const nova: RegraTela = { ...base, habitoId: data.id, desde: hoje, conferidos: [] };
       const lista = [...lerRegrasTela(), nova];
       gravarRegrasTela(lista);

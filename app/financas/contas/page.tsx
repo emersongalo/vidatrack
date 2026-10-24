@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Pencil, Share2, Archive, Trash2, Receipt } from "lucide-react";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { arquivarConta, excluirContaDefinitivamente } from "../actions";
+import { chamarOuGuardar, enfileirarAcao } from "@/lib/local/acaoOffline";
+import { pedidoArquivarConta, pedidoCriarConta, pedidoExcluirConta } from "@/lib/local/financasCadastros";
 import { createClient } from "@/lib/supabase/client";
 import { esquemaConta, primeiroErro } from "@/lib/validacao/financas";
 import { SeletorTipoConta } from "@/components/SeletorTipoConta";
@@ -25,11 +27,9 @@ const RÓTULOS_TIPO: Record<string, string> = {
   investimento: "Investimento",
 };
 
-// Etapa 127: a LISTA abre com o que estiver salvo localmente (então
-// dá pra pelo menos ver suas contas e saldos sem internet). Criar,
-// editar, arquivar ou excluir uma conta continua precisando de
-// conexão — são ações de gerenciamento, não algo que alguém
-// normalmente faz no meio do dia sem sinal. Os avatares de quem
+// Etapa 127: a LISTA abre com o que estiver salvo localmente.
+// Etapa 352: criar, editar, arquivar e excluir também funcionam sem
+// internet (ficam no aparelho e sobem quando a conexão volta). Os avatares de quem
 // compartilha uma conta também ficam de fora por enquanto (a foto
 // depende de um link assinado gerado no servidor).
 export default function ContasPage() {
@@ -58,7 +58,16 @@ export default function ContasPage() {
         });
       } catch {}
     };
-    if (!navigator.onLine) return falhar("Sem internet — criar conta precisa de conexão.");
+    // Etapa 352 — sem internet: a conta nasce no aparelho e sobe depois
+    if (!navigator.onLine) {
+      const nome = String(formData.get("nome") ?? "").trim();
+      const pedido = pedidoCriarConta(formData);
+      if (typeof pedido === "string") return falhar(pedido);
+      enfileirarAcao(pedido);
+      setCriada(nome);
+      formRef.current?.reset();
+      return;
+    }
 
     const resultado = esquemaConta.safeParse({
       nome: formData.get("nome"),
@@ -116,7 +125,7 @@ export default function ContasPage() {
           {contas.map((conta: any) => (
             <li key={conta.id}>
               <LinhaComDeslizar
-                acao={arquivarConta.bind(null, conta.id)}
+                acao={() => chamarOuGuardar(() => arquivarConta(conta.id), pedidoArquivarConta(conta.id, conta.nome)).then(() => {})}
                 textoConfirmacao={`Arquivar "${conta.nome}"? Ela some das listas, mas os dados continuam guardados — dá pra restaurar depois.`}
                 aoConcluir={recarregar}
                 icone={<Archive size={18} className="text-base-900" />}
@@ -174,7 +183,7 @@ export default function ContasPage() {
                         </ItemMenuAcoes>
                         <div className="my-1 border-t border-base-600" />
                         <BotaoComConfirmacao
-                          acao={arquivarConta.bind(null, conta.id)}
+                          acao={() => chamarOuGuardar(() => arquivarConta(conta.id), pedidoArquivarConta(conta.id, conta.nome)).then(() => {})}
                           textoBotao={
                             <span className="flex items-center gap-2.5">
                               <Archive size={15} strokeWidth={2} /> Arquivar
@@ -188,7 +197,9 @@ export default function ContasPage() {
                           }}
                         />
                         <BotaoComConfirmacao
-                          acao={excluirContaDefinitivamente.bind(null, conta.id)}
+                          acao={() =>
+                            chamarOuGuardar(() => excluirContaDefinitivamente(conta.id), pedidoExcluirConta(conta.id, conta.nome)).then(() => {})
+                          }
                           textoBotao={
                             <span className="flex items-center gap-2.5">
                               <Trash2 size={15} strokeWidth={2} /> Excluir de vez

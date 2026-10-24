@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { alternarSubtarefa } from "@/app/habitos/tarefas/actions";
+import { chamarOuGuardar, pedidoSubtarefa } from "@/lib/local/acaoOffline";
 
 export function CheckboxSubtarefa({
   tarefaId,
@@ -23,7 +24,11 @@ export function CheckboxSubtarefa({
 
   function alternar() {
     aoAlternarLocal?.();
-    iniciarTransicao(() => alternarSubtarefa(tarefaId, subtarefaId));
+    // Etapa 350 — sem internet: marca no aparelho e sobe depois
+    const pedido = pedidoSubtarefa(tarefaId, subtarefaId);
+    iniciarTransicao(async () => {
+      await chamarOuGuardar(() => alternarSubtarefa(tarefaId, subtarefaId), pedido);
+    });
   }
 
   return (

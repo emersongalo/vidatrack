@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowDown } from "lucide-react";
 import { criarTransferencia } from "../actions";
+import { pedidoTransferencia } from "@/lib/local/financasEspeciais";
 import { FormularioAcao } from "@/components/FormularioAcao";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { CampoValorMonetario } from "@/components/CampoValorMonetario";
@@ -63,6 +64,7 @@ function TransferirConteudo() {
       ) : (
         <FormularioAcao
           acao={criarTransferencia}
+          offline={pedidoTransferencia}
           aoSucesso={async () => {
             await atualizarSnapshotEmTodasAsTelas();
             router.push("/financas");
