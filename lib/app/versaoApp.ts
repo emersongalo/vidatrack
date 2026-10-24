@@ -1,5 +1,11 @@
 // Etapa 241 — aviso de "tem versão nova do app na Play Store".
 //
+// Etapa 356 — a partir do app 1.3.1 (versionCode 45) o aviso é AUTOMÁTICO:
+// o próprio Google Play diz se tem versão nova (components/AvisoAtualizacaoApp).
+// Este número só serve pra quem ainda está numa versão antiga (sem o
+// plugin). Opcional: atualizar as "novidades" abaixo junto com o código
+// da versão nova pra elas aparecerem no aviso.
+//
 // COMO USAR: depois que a versão nova do AAB estiver PUBLICADA na Play
 // Store (não antes — senão a pessoa vai pra loja e não acha atualização),
 // suba o número abaixo pro mesmo versionCode do android/app/build.gradle
