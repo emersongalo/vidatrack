@@ -21,6 +21,7 @@ import { receitaAguardando, despesaAguardando, INICIO_CONFIRMACAO } from "@/lib/
 // chamadas, mesmo que o horário real já tenha mudado.
 import { semanaisApertados, textoApertados } from "@/lib/habitos/semanal";
 import { relatorioDoMes, mesAnterior, NOMES_MES } from "@/lib/habitos/relatorioMes";
+import { lembretesNaJanela, textoLembrete } from "@/lib/agenda/eventos";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -139,6 +140,13 @@ export async function GET(request: Request) {
     );
   }
 
+  // --- Etapa 341: compromissos da Agenda (dono + convidados que não recusaram) ---
+  try {
+    enviados += await notificarEventosAgenda(supabase, hoje, horaAtual);
+  } catch {
+    /* tabela da agenda ainda não criada — segue o resto */
+  }
+
   // --- Contas a pagar (recorrências financeiras) vencendo hoje/amanhã ---
   // Roda só uma vez por dia (perto das 8h da manhã) — não faz sentido
   // mandar lembrete de conta a cada poucos minutos o dia inteiro.
@@ -249,6 +257,42 @@ export async function GET(request: Request) {
     { ok: true, enviados },
     { headers: { "Cache-Control": "no-store, max-age=0" } }
   );
+}
+
+/** Etapa 341 — lembretes dos compromissos da Agenda (1 aviso por pessoa, por ocorrência e antecedência) */
+async function notificarEventosAgenda(supabase: ReturnType<typeof criarClienteAdmin>, hoje: string, horaAtual: string): Promise<number> {
+  const { data: eventos, error } = await supabase
+    .from("eventos")
+    .select("id, dono_id, titulo, local, data, hora_inicio, hora_fim, repetir, repetir_ate, excecoes, lembretes, tipo, cor")
+    .neq("lembretes", "{}")
+    .lte("data", somarDias(hoje, 8))
+    .or(`repetir.neq.nenhuma,data.gte.${somarDias(hoje, -1)}`);
+  if (error || !eventos?.length) return 0;
+  const vencidos = lembretesNaJanela(eventos as any, hoje, horaAtual);
+  if (!vencidos.length) return 0;
+  const ids = [...new Set(vencidos.map((v) => v.evento.id))];
+  const { data: participantes } = await supabase.from("evento_participantes").select("evento_id, usuario_id, resposta").in("evento_id", ids);
+  let enviados = 0;
+  for (const v of vencidos) {
+    const quem = [
+      v.evento.dono_id,
+      ...(participantes ?? []).filter((p) => p.evento_id === v.evento.id && p.resposta !== "nao_vou").map((p) => p.usuario_id as string),
+    ];
+    for (const usuarioId of quem) {
+      enviados += await notificarUsuariosDoItem(
+        supabase,
+        "evento",
+        v.evento.id,
+        usuarioId,
+        textoLembrete(v.evento, v.dia, v.minutos, hoje),
+        `/tarefas/agenda?evento=${v.evento.id}`,
+        v.dia,
+        undefined,
+        String(v.minutos)
+      );
+    }
+  }
+  return enviados;
 }
 
 /** Etapa 328 — o item é dividido com alguém? (aí cada um é conferido separado) */

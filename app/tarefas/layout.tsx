@@ -4,6 +4,7 @@ import { SubmenuTarefas } from "@/components/SubmenuTarefas";
 import { BarraInferiorApp } from "@/components/BarraInferiorApp";
 import { TransicaoPagina } from "@/components/TransicaoPagina";
 import { LinkVoltar } from "@/components/LinkVoltar";
+import { AbasTarefasAgenda } from "@/components/AbasTarefasAgenda";
 
 // Etapa 264 — Tarefas virou uma área própria (antes ficava dentro de Hábitos).
 // As telas continuam as mesmas (moram em app/habitos/tarefas e são reaproveitadas aqui).
@@ -16,6 +17,8 @@ export default function TarefasLayout({ children }: { children: React.ReactNode 
       <div className="lg:hidden max-w-2xl mx-auto px-6 md:px-12 pt-4">
         <LinkVoltar href="/dashboard" texto="Painel" />
       </div>
+      {/* Etapa 341 — Tarefas | Agenda */}
+      <AbasTarefasAgenda />
       <TransicaoPagina>{children}</TransicaoPagina>
       <BarraInferiorApp />
     </div>

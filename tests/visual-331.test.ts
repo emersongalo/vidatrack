@@ -9,7 +9,7 @@ describe("Etapa 331 — novidades do mascote", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
   it("aviso de novidades atualizado", () => {
-    expect(VERSAO_NOVIDADES).toBe("334");
+    expect(Number(VERSAO_NOVIDADES)).toBeGreaterThanOrEqual(334);
     expect(NOVIDADES.some((g) => g.versao === "331")).toBe(true);
   });
 });

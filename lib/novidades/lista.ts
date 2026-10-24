@@ -1,13 +1,23 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "334";
+export const VERSAO_NOVIDADES = "341";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "341",
+    titulo: "Agenda chegou!",
+    itens: [
+      { emoji: "🗓️", titulo: "Agenda dentro de Tarefas", texto: "Compromissos com hora ou dia todo, local, cor e visão de dia (linha do tempo), semana e mês.", href: "/tarefas/agenda" },
+      { emoji: "✨", titulo: "Criar falando do seu jeito", texto: "Escreva \"jantar sexta 20h\", \"dentista amanhã 14:30\" ou \"aniversário da Su 12/03\" e a agenda entende sozinha.", href: "/tarefas/agenda" },
+      { emoji: "👫", titulo: "Agenda a dois", texto: "Chame quem você já divide algo no app: a pessoa recebe o convite e responde Vou, Talvez ou Não vou — e você fica sabendo.", href: "/tarefas/agenda" },
+      { emoji: "🔔", titulo: "Lembretes e repetição", texto: "Até 3 avisos por compromisso (na hora, 30 min, 1 dia antes...), repetir toda semana, mês ou ano, e contagem regressiva de aniversários.", href: "/tarefas/agenda" },
+    ],
+  },
   {
     versao: "334",
     titulo: "App mais suave",
