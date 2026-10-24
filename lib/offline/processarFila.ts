@@ -1,4 +1,4 @@
-import { lerFila, salvarFilaCompleta, type AcaoPendente } from "@/lib/offline/fila";
+import { lerFila, salvarFilaCompleta, registrarFalha, registrarRecusado, type AcaoPendente } from "@/lib/offline/fila";
 import { alternarCheckin, ajustarQuantidadeHabito, criarHabitoSilencioso } from "@/app/habitos/actions";
 import { alternarConclusaoTarefa, criarTarefaSilenciosa } from "@/app/habitos/tarefas/actions";
 import { criarEventoSilencioso, atualizarEventoSilencioso, apagarEventoSilencioso } from "@/lib/agenda/actions";
@@ -118,11 +118,14 @@ export async function processarFilaSincronizacao(): Promise<ResultadoSincronizac
         if (e instanceof ErroSync && e.definitivo) {
           // recusado de vez: tira da fila e avisa (a tela volta ao que está no banco)
           resolvidos.add(JSON.stringify(acao));
+          registrarRecusado(acao, e.message); // Etapa 358 — fica no histórico da tela
           try {
             window.dispatchEvent(new CustomEvent(EVENTO_SYNC_RECUSADO, { detail: e.message }));
           } catch {}
         } else {
           comErro = true;
+          // Etapa 358 — mostra o motivo na tela "Esperando sincronizar"
+          registrarFalha(acao, String((e as any)?.message ?? e ?? "Falha ao sincronizar"));
         }
       }
     }

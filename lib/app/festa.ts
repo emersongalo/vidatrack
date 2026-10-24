@@ -149,7 +149,12 @@ export function textoFlutuante(
 }
 
 export function chuvaDeConfete(opcoes: { duracao?: number; quantidade?: number; cores?: string[] } = {}) {
-  if (typeof window === "undefined" || movimentoReduzido()) return;
+  if (typeof window === "undefined") return;
+  // Etapa 363 — comemoração = bom momento pra pedir avaliação na Play Store
+  try {
+    window.dispatchEvent(new Event("vt-momento-feliz"));
+  } catch {}
+  if (movimentoReduzido()) return;
   try {
     const box = camada();
     const cores = opcoes.cores ?? CORES_PADRAO;

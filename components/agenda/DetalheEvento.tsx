@@ -8,6 +8,7 @@ import { corDoEvento, hhmm, rotuloDia, rotuloLembrete, type Ocorrencia, type Res
 import { separarEmoji } from "@/lib/agenda/visual";
 import type { EventoAgenda } from "@/lib/agenda/useAgenda";
 import { MapaLocal } from "@/components/agenda/MapaLocal";
+import { ehLembreteSair, minutosDoLembrete } from "@/lib/agenda/lembretesSair";
 
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const SEMANA = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
@@ -126,11 +127,30 @@ export function DetalheEvento({
             </div>
           )}
 
-          {(e.lembretes ?? []).length > 0 && (
+          {/* Etapa 361 — hora de sair */}
+          {ini && (e.lembretes ?? []).some(ehLembreteSair) && (
+            <div className="flex items-center gap-3 text-sm animate-entrar" style={{ animationDelay: "85ms" }}>
+              <span className="w-[17px] text-center shrink-0">🚗</span>
+              <span>
+                Sair às{" "}
+                <b>
+                  {(() => {
+                    const m = minutosDoLembrete((e.lembretes ?? []).find(ehLembreteSair)!);
+                    const [h, mm] = ini.split(":").map(Number);
+                    const t = Math.max(0, h * 60 + mm - m);
+                    return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+                  })()}
+                </b>{" "}
+                <span className="text-ink-400">(você recebe um aviso)</span>
+              </span>
+            </div>
+          )}
+
+          {(e.lembretes ?? []).filter((m) => !ehLembreteSair(m)).length > 0 && (
             <div className="flex items-start gap-3 text-sm animate-entrar" style={{ animationDelay: "100ms" }}>
               <Bell size={17} className="text-ink-400 mt-0.5 shrink-0" />
               <div className="flex flex-wrap gap-1">
-                {(e.lembretes ?? []).map((m) => (
+                {(e.lembretes ?? []).filter((m) => !ehLembreteSair(m)).map((m) => (
                   <span key={m} className="rounded-full bg-base-700 px-2 py-0.5 text-xs">
                     {rotuloLembrete(m, !ini)}
                   </span>

@@ -63,7 +63,8 @@ export function adicionarNaFila(acao: AcaoPendente) {
   // na fila (a mais recente), não 5.
   const idNovo = "id" in acao ? acao.id : null;
   const filaFiltrada = idNovo ? fila.filter((a) => !("id" in a) || a.id !== idNovo) : fila;
-  filaFiltrada.push(acao);
+  // Etapa 358 — quando foi feito (pra tela "Esperando sincronizar")
+  filaFiltrada.push({ criadoEm: Date.now(), ...acao } as unknown as AcaoPendente);
   localStorage.setItem(CHAVE_FILA, JSON.stringify(filaFiltrada));
   avisarMudanca();
 }
@@ -104,4 +105,66 @@ export function lerCacheHoje(chave: string): unknown | null {
   } catch {
     return null;
   }
+}
+
+// ---------- Etapa 358 — tela "Esperando sincronizar" ----------
+const CHAVE_FALHAS = "vidatrack-fila-falhas";
+const CHAVE_RECUSADOS = "vidatrack-fila-recusados";
+
+/** chave estável de uma ação da fila */
+export function chaveAcao(a: AcaoPendente): string {
+  return JSON.stringify(a);
+}
+
+function lerJson<T>(chave: string, padrao: T): T {
+  if (typeof window === "undefined") return padrao;
+  try {
+    return JSON.parse(localStorage.getItem(chave) ?? "null") ?? padrao;
+  } catch {
+    return padrao;
+  }
+}
+
+export type FalhaFila = { erro: string; em: number; tentativas: number };
+
+/** última falha de cada ação que ainda está na fila (vai tentar de novo) */
+export function lerFalhas(): Record<string, FalhaFila> {
+  return lerJson<Record<string, FalhaFila>>(CHAVE_FALHAS, {});
+}
+
+export function registrarFalha(a: AcaoPendente, erro: string) {
+  try {
+    const f = lerFalhas();
+    const k = chaveAcao(a);
+    f[k] = { erro: erro.slice(0, 300), em: Date.now(), tentativas: (f[k]?.tentativas ?? 0) + 1 };
+    // só guarda as que ainda estão na fila
+    const vivas = new Set(lerFila().map(chaveAcao));
+    for (const kk of Object.keys(f)) if (!vivas.has(kk)) delete f[kk];
+    localStorage.setItem(CHAVE_FALHAS, JSON.stringify(f));
+  } catch {}
+}
+
+export type Recusado = { acao: AcaoPendente; erro: string; em: number };
+
+/** o que o servidor recusou de vez (últimos 20) */
+export function lerRecusados(): Recusado[] {
+  return lerJson<Recusado[]>(CHAVE_RECUSADOS, []);
+}
+
+export function registrarRecusado(a: AcaoPendente, erro: string) {
+  try {
+    const lista = [{ acao: a, erro: erro.slice(0, 300), em: Date.now() }, ...lerRecusados()].slice(0, 20);
+    localStorage.setItem(CHAVE_RECUSADOS, JSON.stringify(lista));
+  } catch {}
+}
+
+export function limparRecusados() {
+  try {
+    localStorage.removeItem(CHAVE_RECUSADOS);
+  } catch {}
+}
+
+/** tira UMA ação da fila (a pessoa desistiu dela) */
+export function descartarDaFila(chave: string) {
+  salvarFilaCompleta(lerFila().filter((a) => chaveAcao(a) !== chave));
 }

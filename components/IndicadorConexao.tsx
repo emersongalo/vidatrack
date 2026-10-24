@@ -8,6 +8,7 @@ import { X } from "lucide-react";
 import { LogoAnimado } from "@/components/LogoAnimado";
 import { vibrar } from "@/lib/app/vibrar";
 import { lerFila, EVENTO_FILA_MUDOU } from "@/lib/offline/fila";
+import Link from "next/link";
 
 type Estado = "oculto" | "offline" | "voltou";
 
@@ -103,9 +104,9 @@ export function IndicadorConexao() {
             {off ? "Pode continuar usando: o que você marcar fica salvo e sincroniza quando voltar." : "Sincronizando o que você fez enquanto estava offline."}
           </p>
           {off && naFila > 0 && (
-            <p key={naFila} className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-financa bg-financa/10 rounded-full px-2.5 py-0.5 animate-pop">
-              📦 {naFila} {naFila === 1 ? "alteração guardada" : "alterações guardadas"} esperando internet
-            </p>
+            <Link href="/sincronizar" key={naFila} className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-financa bg-financa/10 rounded-full px-2.5 py-0.5 animate-pop">
+              📦 {naFila} {naFila === 1 ? "alteração guardada" : "alterações guardadas"} esperando internet ›
+            </Link>
           )}
         </div>
         {off && (

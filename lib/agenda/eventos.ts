@@ -3,6 +3,8 @@
 // num período, lembretes que vencem agora e o "criar rápido"
 // ("jantar sexta 20h").
 
+import { ehLembreteSair, minutosDoLembrete } from "@/lib/agenda/lembretesSair";
+
 export type Repetir = "nenhuma" | "diaria" | "semanal" | "quinzenal" | "mensal" | "anual";
 export type TipoEvento = "evento" | "aniversario" | "data_especial";
 export type Resposta = "pendente" | "vou" | "talvez" | "nao_vou";
@@ -130,13 +132,15 @@ export type LembreteVencido = { evento: Evento; dia: string; minutos: number };
 export function lembretesNaJanela(eventos: Evento[], hoje: string, horaAgora: string, janelaMin = 5): LembreteVencido[] {
   const agora = `${hoje} ${horaAgora}`;
   const inicio = menosMinutos(hoje, horaAgora, janelaMin);
-  const maxAntes = Math.max(0, ...eventos.flatMap((e) => e.lembretes ?? []));
+  const maxAntes = Math.max(0, ...eventos.flatMap((e) => (e.lembretes ?? []).map(minutosDoLembrete)));
   const ate = somarDiasISO(hoje, Math.ceil(maxAntes / 1440) + 1);
   const saida: LembreteVencido[] = [];
   for (const o of ocorrenciasEntre(eventos.filter((e) => (e.lembretes ?? []).length), somarDiasISO(hoje, -1), ate)) {
     const base = hhmm(o.evento.hora_inicio) ?? HORA_DIA_INTEIRO;
     for (const m of o.evento.lembretes ?? []) {
-      const quando = menosMinutos(o.dia, base, m);
+      // Etapa 361 — "hora de sair" usa o mesmo cálculo (minutos antes)
+      if (ehLembreteSair(m) && !o.evento.hora_inicio) continue;
+      const quando = menosMinutos(o.dia, base, minutosDoLembrete(m));
       if (quando >= inicio && quando <= agora) saida.push({ evento: o.evento, dia: o.dia, minutos: m });
     }
   }
@@ -173,6 +177,10 @@ export function rotuloDia(dia: string, hoje: string) {
 
 /** Texto da notificação: "📅 Jantar — hoje às 20:00 (em 1 h)" */
 export function textoLembrete(e: Evento, dia: string, minutos: number, hoje: string) {
+  // Etapa 361 — "hora de sair"
+  if (ehLembreteSair(minutos)) {
+    return `🚗 Hora de sair pra ${e.titulo} — começa às ${hhmm(e.hora_inicio)}${e.local ? ` · ${e.local}` : ""}. Toque pra ver a rota.`;
+  }
   const emoji = e.tipo === "aniversario" ? "🎂" : e.tipo === "data_especial" ? "⭐" : "📅";
   const hora = hhmm(e.hora_inicio);
   const quando = `${rotuloDia(dia, hoje)}${hora ? ` às ${hora}` : ""}`;

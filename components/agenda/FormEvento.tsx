@@ -14,6 +14,7 @@ import {
 } from "@/lib/agenda/eventos";
 import type { EventoAgenda, Pessoa } from "@/lib/agenda/useAgenda";
 import { EMOJIS_AGENDA, juntarEmoji, separarEmoji, sugerirEmoji } from "@/lib/agenda/visual";
+import { OPCOES_SAIR, ehLembreteSair, lembreteSair, minutosDoLembrete } from "@/lib/agenda/lembretesSair";
 import { MapaLocal } from "@/components/agenda/MapaLocal";
 
 const REPETIR: [Repetir, string][] = [
@@ -68,7 +69,12 @@ export function FormEvento({
   const [local, setLocal] = useState(inicial.local ?? "");
   const [descricao, setDescricao] = useState(inicial.descricao ?? "");
   const [cor, setCor] = useState(inicial.cor ?? (inicial.tipo === "aniversario" ? "rosa" : "nota"));
-  const [lembretes, setLembretes] = useState<number[]>(inicial.lembretes ?? lembretesPadrao(inicial.tipo ?? "evento", !!inicial.hora_inicio));
+  const [lembretes, setLembretes] = useState<number[]>((inicial.lembretes ?? lembretesPadrao(inicial.tipo ?? "evento", !!inicial.hora_inicio)).filter((m) => !ehLembreteSair(m)));
+  // Etapa 361 — "hora de sair" (minutos antes do início; null = desligado)
+  const [sair, setSair] = useState<number | null>(() => {
+    const v = (inicial.lembretes ?? []).find((m) => ehLembreteSair(m));
+    return v === undefined ? null : minutosDoLembrete(v);
+  });
   const [convidados, setConvidados] = useState<string[]>(inicial.convidados ?? []);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -112,7 +118,7 @@ export function FormEvento({
         local: local.trim() || null,
         descricao: descricao.trim() || null,
         cor,
-        lembretes: [...lembretes].sort((a, b) => b - a),
+        lembretes: [...[...lembretes].sort((a, b) => b - a), ...(sair !== null && !diaInteiro && local.trim() ? [lembreteSair(sair)] : [])],
       },
       convidados
     );
@@ -256,6 +262,44 @@ export function FormEvento({
             );
           })}
         </div>
+
+        {/* Etapa 361 — hora de sair (precisa de horário e local) */}
+        {!diaInteiro && (
+          <div className="mb-3">
+            <p className="flex items-center gap-1.5 text-sm text-ink-400 mb-1.5">🚗 Hora de sair {!local.trim() && <span className="text-[11px]">(coloque o local)</span>}</p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSair(null)}
+                className={`rounded-full px-3 py-1.5 text-xs border transition ${sair === null ? "bg-ink-100 text-base-900 border-ink-100 font-semibold" : "border-base-600 text-ink-400"}`}
+              >
+                Não avisar
+              </button>
+              {OPCOES_SAIR.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  disabled={!local.trim()}
+                  onClick={() => setSair(m)}
+                  className={`rounded-full px-3 py-1.5 text-xs border transition disabled:opacity-40 ${sair === m ? "bg-financa/20 border-financa/60 text-financa font-semibold" : "border-base-600 text-ink-400"}`}
+                >
+                  {m < 60 ? `${m} min` : m === 60 ? "1 h" : "1h30"} antes
+                </button>
+              ))}
+            </div>
+            {sair !== null && local.trim() && inicio && (
+              <p className="text-[11px] text-ink-400 mt-1">
+                Aviso pra sair às{" "}
+                {(() => {
+                  const [h, mm] = inicio.split(":").map(Number);
+                  const t = Math.max(0, h * 60 + mm - sair);
+                  return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+                })()}{" "}
+                com o botão de rota.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* com quem */}
         <p className="flex items-center gap-1.5 text-sm text-ink-400 mb-1.5">

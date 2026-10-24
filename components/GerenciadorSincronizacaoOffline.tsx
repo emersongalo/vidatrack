@@ -5,6 +5,7 @@ import { processarFilaSincronizacao, EVENTO_SYNC_RECUSADO } from "@/lib/offline/
 import { EVENTO_SINCRONIZAR_AGORA } from "@/lib/local/financas";
 import { lerFila, EVENTO_FILA_MUDOU } from "@/lib/offline/fila";
 import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
+import Link from "next/link";
 
 export const EVENTO_SINCRONIZACAO_CONCLUIDA = "vidatrack:sincronizacao-concluida";
 
@@ -100,7 +101,8 @@ export function GerenciadorSincronizacaoOffline() {
 
   return (
     <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] lg:bottom-4 left-4 right-4 z-40 flex justify-center pointer-events-none">
-      <div className="bg-base-800 border border-base-600 rounded-full px-4 py-2 text-xs shadow-lg flex items-center gap-2 animate-surgir">
+      {/* Etapa 358 — toca pra ver o que está esperando */}
+      <Link href="/sincronizar" className="pointer-events-auto bg-base-800 border border-base-600 rounded-full px-4 py-2 text-xs shadow-lg flex items-center gap-2 animate-surgir">
         {status === "sincronizando" && (
           <>
             <span className="w-1.5 h-1.5 rounded-full bg-financa animate-pulse" />
@@ -112,7 +114,7 @@ export function GerenciadorSincronizacaoOffline() {
         {status === "idle" && quantidadePendente > 0 && (
           <>📦 {quantidadePendente} {quantidadePendente === 1 ? "alteração esperando" : "alterações esperando"} pra sincronizar</>
         )}
-      </div>
+      </Link>
     </div>
   );
 }

@@ -105,6 +105,21 @@ export default function AjudaPage() {
           </button>
         </form>
       )}
+
+      {/* Etapa 363 — avaliar na Play Store */}
+      <a
+        href="https://play.google.com/store/apps/details?id=com.vidatrack.app&showAllReviews=true"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-8 flex items-center gap-3 rounded-2xl border border-financa/40 bg-financa/10 px-4 py-3.5"
+      >
+        <span className="text-2xl">⭐</span>
+        <span className="flex-1">
+          <span className="block text-sm font-semibold">Gostando do VidaTrack?</span>
+          <span className="block text-xs text-ink-400">Uma avaliação na Play Store ajuda muito o app a crescer 💛</span>
+        </span>
+        <span className="text-ink-400">›</span>
+      </a>
     </main>
   );
 }

@@ -1,13 +1,24 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "357";
+export const VERSAO_NOVIDADES = "363";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "363",
+    titulo: "Agenda no Google, hora de sair e mais",
+    itens: [
+      { emoji: "🔗", titulo: "Google Agenda", texto: "Veja seus compromissos no Google Agenda (e no calendário do celular) ou traga os de lá pra cá.", href: "/tarefas/agenda" },
+      { emoji: "📅", titulo: "Agenda na tela Hoje", texto: "Os compromissos do dia aparecem junto com seus hábitos — com o botão de rota.", href: "/habitos" },
+      { emoji: "🚗", titulo: "Hora de sair", texto: "Compromisso com local? Escolha quanto tempo antes quer ser avisado pra sair — o aviso já vem com a rota.", href: "/tarefas/agenda" },
+      { emoji: "💳", titulo: "Previsão da fatura", texto: "Veja quanto vão dar as próximas faturas do cartão: compras, parcelas que vão cair e contas fixas.", href: "/financas/cartoes" },
+      { emoji: "📦", titulo: "Esperando sincronizar", texto: "Toque no aviso de sincronização pra ver tudo que foi feito sem internet e ainda vai pro servidor.", href: "/sincronizar" },
+    ],
+  },
   {
     versao: "357",
     titulo: "Agenda de cara nova",

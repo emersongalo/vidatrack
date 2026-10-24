@@ -11,6 +11,7 @@
 // atualiza sozinho).
 import { useEffect, useState } from "react";
 import { LINK_PLAY_STORE, VERSAO_NA_LOJA, podeMostrar, situacaoDaVersao, type SituacaoVersao } from "@/lib/app/versaoApp";
+import { PedirAvaliacao } from "@/components/PedirAvaliacao";
 
 const CHAVE = "vidatrack-atualizacao-dispensada";
 // valores do Google Play (AppUpdateAvailability)
@@ -90,7 +91,8 @@ export function AvisoAtualizacaoApp() {
     };
   }, []);
 
-  if (situacao === "atualizado") return null;
+  // Etapa 363 — o pedido de avaliação mora junto (já está em todas as telas)
+  if (situacao === "atualizado") return <PedirAvaliacao />;
   const obrigatoria = situacao === "obrigatoria";
   // novidades escritas à mão só quando batem com a versão que está na loja
   const novidades = origem.tipo === "manual" || origem.codigo === VERSAO_NA_LOJA.codigo ? VERSAO_NA_LOJA.novidades : [];

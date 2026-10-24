@@ -190,3 +190,20 @@ export async function apagarEventoSilencioso(id: string, soODia: string | null):
   const { error } = await supabase.from("eventos").delete().eq("id", id);
   return error ? { sucesso: false, erro: error.message } : { sucesso: true };
 }
+
+/**
+ * Etapa 359 — link pessoal da agenda (.ics) pra assinar no Google Agenda.
+ * Quem tiver o link vê os compromissos — por isso ele só aparece pra
+ * própria pessoa, logada.
+ */
+export async function linkAgendaGoogle(): Promise<{ https?: string; webcal?: string; erro?: string }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Entre de novo na sua conta" };
+  const { gerarTokenIcs } = await import("@/lib/agenda/tokenIcs");
+  const caminho = `/api/agenda/ics/${gerarTokenIcs(user.id)}.ics`;
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.vidatrack.online").replace(/\/$/, "");
+  return { https: site + caminho, webcal: site.replace(/^https?:/, "webcal:") + caminho };
+}

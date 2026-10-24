@@ -27,6 +27,7 @@ export const TELAS_SECUNDARIAS = [
   "/retrospectiva/mes",
   "/ajuda",
   "/convites",
+  "/sincronizar",
   // Hábitos
   "/habitos/lista",
   "/habitos/novo",

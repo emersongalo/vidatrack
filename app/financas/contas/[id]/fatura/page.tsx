@@ -12,6 +12,7 @@ import { PagarFatura } from "@/components/PagarFatura";
 import { resumoFatura } from "@/lib/financas/previsao";
 import { CarregandoTela } from "@/components/Esqueleto";
 import { EstadoVazio } from "@/components/EstadoVazio";
+import { PrevisaoFatura } from "@/components/PrevisaoFatura";
 
 function formatarPeriodo(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
@@ -123,6 +124,9 @@ export default function FaturaCartaoPage() {
           Gastos no cartão não saem do seu saldo na hora — só quando você paga a fatura (sai da conta do banco).
         </p>
       </div>
+
+      {/* Etapa 362 — previsão das próximas faturas */}
+      <PrevisaoFatura conta={conta} transacoes={(snapshot?.financas.transacoes ?? []) as any[]} recorrencias={(snapshot?.financas.recorrencias ?? []) as any[]} hoje={hoje} />
 
       <h2 className="text-xl font-semibold mb-3">Lançamentos dessa fatura</h2>
       {transacoes.length === 0 ? (

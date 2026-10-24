@@ -26,6 +26,7 @@ import { EstadoVazio } from "@/components/EstadoVazio";
 import { CartaoTempoTela } from "@/components/CartaoTempoTela";
 import { PalcoMascote } from "@/components/mascote/PalcoMascote";
 import { BlocoJardim } from "@/components/mascote/BlocoJardim";
+import { AgendaDoDia } from "@/components/AgendaDoDia";
 import { MissoesDoDia } from "@/components/mascote/MissoesDoDia";
 import { BlocoDesafios } from "@/components/mascote/BlocoDesafios";
 import { infoDupla, type Parceiro } from "@/lib/habitos/dupla";
@@ -233,6 +234,8 @@ function HojeConteudo() {
     desafios: snapshot && dataSelecionada === hoje ? <BlocoDesafios snapshot={snapshot} hoje={hoje} /> : null,
     // Etapa 308 — o jardim (rega na hora em que marca o hábito)
     jardim: snapshot ? <BlocoJardim snapshot={snapshot} hoje={hoje} /> : null,
+    // Etapa 360 — compromissos da agenda no dia
+    agenda: <AgendaDoDia dia={dataSelecionada} hoje={hoje} />,
     resumo: snapshot ? (
       <HeroHoje
         feitos={feitos}

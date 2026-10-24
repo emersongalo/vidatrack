@@ -12,6 +12,7 @@ import { bancoPorId, siglaDoSelo } from "@/lib/financas/bancos";
 import { usoDoLimite } from "@/lib/financas/limite";
 import { resumoCartao, textoVencimento } from "@/lib/financas/cartaoResumo";
 import { calcularPeriodoFatura } from "@/lib/financas/fatura";
+import { PrevisaoFatura } from "@/components/PrevisaoFatura";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { parcelamentosAtivos } from "@/lib/financas/cartoesAba";
 import { ValorMonetario } from "@/components/ValorMonetario";
@@ -164,6 +165,13 @@ export default function CartoesPage() {
       <section className="mt-6" id="pagar">
         <PagarFatura cartao={{ id: atual.id, nome: atual.nome }} contas={contas} aPagar={resumoAtual.proxima?.valor ?? resumoAtual.devendo} vencimento={resumoAtual.proxima?.vencimento ?? null} />
       </section>
+
+      {/* Etapa 362 — previsão das próximas faturas do cartão escolhido */}
+      {atual.dia_fechamento && (
+        <div className="mt-6">
+          <PrevisaoFatura conta={atual} transacoes={transacoes} recorrencias={(snapshot?.financas.recorrencias ?? []) as any[]} hoje={hoje} quantas={4} />
+        </div>
+      )}
 
       {parcelas.length > 0 && (
         <section className="mt-6 bg-base-800 border border-base-600 rounded-3xl p-5">

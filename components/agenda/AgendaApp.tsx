@@ -24,6 +24,7 @@ import { FormEvento, type ValoresForm } from "@/components/agenda/FormEvento";
 import { vibrar } from "@/lib/app/vibrar";
 import { explodirEm } from "@/lib/app/festa";
 import { DetalheEvento } from "@/components/agenda/DetalheEvento";
+import { GoogleAgenda } from "@/components/agenda/GoogleAgenda";
 import { coresDasPessoas, separarEmoji, sugerirEmoji, juntarEmoji } from "@/lib/agenda/visual";
 
 type Visao = "dia" | "semana" | "mes";
@@ -67,6 +68,7 @@ export function AgendaApp() {
   const [aviso, setAviso] = useState<string | null>(null);
   // Etapa 357 — card completo (todo mundo vê; só o dono edita)
   const [detalhe, setDetalhe] = useState<Ocorrencia | null>(null);
+  const [google, setGoogle] = useState(false); // Etapa 359
   // Etapa 357 — pintar pela cor de quem é o dono (em vez da cor do compromisso)
   const [porPessoa, setPorPessoa] = useState<boolean>(() => {
     try {
@@ -465,6 +467,21 @@ export function AgendaApp() {
       )}
 
       {ag.carregando && !ag.eventos.length && <p className="text-sm text-ink-400 text-center mt-4">Carregando agenda...</p>}
+
+      {/* Etapa 359 — Google Agenda */}
+      <button
+        type="button"
+        onClick={() => setGoogle(true)}
+        className="mt-5 w-full flex items-center gap-2.5 rounded-xl border border-base-600 bg-base-800/60 px-3 py-2.5 text-left hover:border-ink-400/50"
+      >
+        <span className="text-lg">🔗</span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-medium">Google Agenda</span>
+          <span className="block text-[11px] text-ink-400">Ver seus compromissos lá ou trazer os de lá pra cá</span>
+        </span>
+        <ChevronRight size={16} className="text-ink-400" />
+      </button>
+      {google && <GoogleAgenda eventos={ag.eventos} aoSalvar={(v, c) => ag.salvar(v, c)} aoFechar={() => setGoogle(false)} />}
 
       {detalhe && (
         <DetalheEvento
