@@ -1,13 +1,23 @@
 // Etapa 220 — "O que há de novo": o que mudou nas últimas versões,
 // em linguagem simples. Pra anunciar uma novidade nova, acrescente um
 // grupo no topo e troque VERSAO_NOVIDADES.
-export const VERSAO_NOVIDADES = "355";
+export const VERSAO_NOVIDADES = "357";
 export const CHAVE_NOVIDADES = "vidatrack-novidades-vistas";
 
 export type Novidade = { emoji: string; titulo: string; texto: string; href?: string };
 export type GrupoNovidades = { versao: string; titulo: string; itens: Novidade[] };
 
 export const NOVIDADES: GrupoNovidades[] = [
+  {
+    versao: "357",
+    titulo: "Agenda de cara nova",
+    itens: [
+      { emoji: "🗺️", titulo: "Local no mapa", texto: "Coloque o endereço e veja o mapinha no compromisso, com botões de Rota, Google Maps e Waze.", href: "/tarefas/agenda" },
+      { emoji: "👀", titulo: "Convidado vê tudo", texto: "Quem foi convidado abre o card completo — horário, local, anotações e quem vai — só não consegue editar.", href: "/tarefas/agenda" },
+      { emoji: "🎨", titulo: "Cor de cada pessoa", texto: "Cada um tem sua cor na agenda; toque em \"Cor\" pra pintar os compromissos pela cor de quem criou.", href: "/tarefas/agenda" },
+      { emoji: "😀", titulo: "Emojis e animações", texto: "Escolha um emoji pro compromisso (ou deixe o app sugerir: \"dentista\" vira 🦷). Tela mais enxuta e com animações.", href: "/tarefas/agenda" },
+    ],
+  },
   {
     versao: "355",
     titulo: "Sem internet, sem limite",

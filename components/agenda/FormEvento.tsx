@@ -1,7 +1,7 @@
 "use client";
 
 // Etapa 341 — criar / editar compromisso (folha que sobe de baixo)
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Trash2, Users, Bell, Repeat, MapPin } from "lucide-react";
 import {
   CORES_EVENTO,
@@ -13,6 +13,8 @@ import {
   type TipoEvento,
 } from "@/lib/agenda/eventos";
 import type { EventoAgenda, Pessoa } from "@/lib/agenda/useAgenda";
+import { EMOJIS_AGENDA, juntarEmoji, separarEmoji, sugerirEmoji } from "@/lib/agenda/visual";
+import { MapaLocal } from "@/components/agenda/MapaLocal";
 
 const REPETIR: [Repetir, string][] = [
   ["nenhuma", "Não repete"],
@@ -49,7 +51,13 @@ export function FormEvento({
   aoFechar: () => void;
 }) {
   const editando = !!inicial.id;
-  const [titulo, setTitulo] = useState(inicial.titulo ?? "");
+  // Etapa 357 — emoji do compromisso (fica no começo do título)
+  const separado = separarEmoji(inicial.titulo);
+  const [titulo, setTitulo] = useState(separado.texto);
+  const [emoji, setEmoji] = useState<string | null>(separado.emoji);
+  const [emojiEscolhido, setEmojiEscolhido] = useState(!!separado.emoji || editando);
+  const [mostrarEmojis, setMostrarEmojis] = useState(false);
+  const [localMapa, setLocalMapa] = useState(inicial.local ?? "");
   const [tipo, setTipo] = useState<TipoEvento>(inicial.tipo ?? "evento");
   const [data, setData] = useState(inicial.data ?? new Date().toLocaleDateString("sv-SE"));
   const [diaInteiro, setDiaInteiro] = useState(!inicial.hora_inicio);
@@ -65,6 +73,16 @@ export function FormEvento({
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [confirmarApagar, setConfirmarApagar] = useState(false);
+
+  // sugere um emoji enquanto digita (até a pessoa escolher um)
+  useEffect(() => {
+    if (!emojiEscolhido) setEmoji(sugerirEmoji(titulo, tipo));
+  }, [titulo, tipo, emojiEscolhido]);
+  // o mapinha só atualiza quando a pessoa para de digitar
+  useEffect(() => {
+    const t = setTimeout(() => setLocalMapa(local), 900);
+    return () => clearTimeout(t);
+  }, [local]);
 
   function trocarTipo(t: TipoEvento) {
     setTipo(t);
@@ -84,7 +102,7 @@ export function FormEvento({
     const r = await aoSalvar(
       {
         id: inicial.id,
-        titulo: titulo.trim(),
+        titulo: juntarEmoji(emoji, titulo),
         tipo,
         data,
         hora_inicio: diaInteiro ? null : inicio,
@@ -139,14 +157,54 @@ export function FormEvento({
           ))}
         </div>
 
-        <input
-          autoFocus={!editando}
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-          placeholder={tipo === "aniversario" ? "Aniversário de quem?" : "Ex: Jantar com a família"}
-          maxLength={120}
-          className={`${campo} text-lg font-semibold mb-3`}
-        />
+        <div className="flex items-center gap-2 mb-2">
+          <button
+            type="button"
+            onClick={() => setMostrarEmojis((m) => !m)}
+            aria-label="Escolher emoji"
+            className={`w-12 h-12 shrink-0 rounded-xl border text-2xl flex items-center justify-center transition ${mostrarEmojis ? "border-nota bg-nota/15" : "border-base-600 bg-base-900"}`}
+          >
+            <span key={emoji ?? "nada"} className="animate-pop">{emoji ?? "😀"}</span>
+          </button>
+          <input
+            autoFocus={!editando}
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            placeholder={tipo === "aniversario" ? "Aniversário de quem?" : "Ex: Jantar com a família"}
+            maxLength={120}
+            className={`${campo} text-lg font-semibold`}
+          />
+        </div>
+        {mostrarEmojis && (
+          <div className="grid grid-cols-8 gap-1 mb-3 p-2 rounded-2xl border border-base-600 bg-base-900/60 animate-surgir">
+            <button
+              type="button"
+              onClick={() => {
+                setEmoji(null);
+                setEmojiEscolhido(true);
+                setMostrarEmojis(false);
+              }}
+              className="aspect-square rounded-lg text-[10px] text-ink-400 border border-dashed border-base-600"
+            >
+              sem
+            </button>
+            {EMOJIS_AGENDA.map((em) => (
+              <button
+                key={em}
+                type="button"
+                onClick={() => {
+                  setEmoji(em);
+                  setEmojiEscolhido(true);
+                  setMostrarEmojis(false);
+                }}
+                className={`aspect-square rounded-lg text-xl flex items-center justify-center hover:bg-base-700 ${emoji === em ? "bg-nota/25" : ""}`}
+              >
+                {em}
+              </button>
+            ))}
+          </div>
+        )}
+        {!mostrarEmojis && <div className="mb-1" />}
 
         {/* quando */}
         <div className="rounded-2xl border border-base-600 p-3 mb-3 space-y-3">
@@ -230,8 +288,14 @@ export function FormEvento({
         {/* detalhes */}
         <div className="flex items-center gap-2 mb-2">
           <MapPin size={16} className="text-ink-400 shrink-0" />
-          <input value={local} onChange={(e) => setLocal(e.target.value)} placeholder="Local (opcional)" maxLength={200} className={campo} />
+          <input value={local} onChange={(e) => setLocal(e.target.value)} placeholder="Local ou endereço (opcional)" maxLength={200} className={campo} />
         </div>
+        {/* Etapa 357 — prévia no mapa */}
+        {localMapa.trim().length >= 4 && (
+          <div className="mb-3 animate-surgir">
+            <MapaLocal local={localMapa} compacto />
+          </div>
+        )}
         <textarea
           value={descricao}
           onChange={(e) => setDescricao(e.target.value)}
