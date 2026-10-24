@@ -1,6 +1,6 @@
 // Etapa 241 — aviso de "tem versão nova do app na Play Store".
 //
-// Etapa 356 — a partir do app 1.3.1 (versionCode 45) o aviso é AUTOMÁTICO:
+// Etapa 356 — a partir do app 1.3.2 (versionCode 46) o aviso é AUTOMÁTICO:
 // o próprio Google Play diz se tem versão nova (components/AvisoAtualizacaoApp).
 // Este número só serve pra quem ainda está numa versão antiga (sem o
 // plugin). Opcional: atualizar as "novidades" abaixo junto com o código
