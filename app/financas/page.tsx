@@ -46,7 +46,6 @@ import {
 import { gravarOrdemBlocosFinancas, semInternet } from "@/lib/local/criarRapido";
 import { garantirRecorrentesNoAparelho } from "@/lib/local/recorrentesMes";
 import { recorrentesPrevistasAte } from "@/lib/financas/recorrentesPrevistas";
-import { ContasFixasPrevistas } from "@/components/ContasFixasPrevistas";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -225,7 +224,8 @@ export default function FinancasPage() {
   // Etapa 207 — antes cortava em 10 sem avisar; agora mostra 10 e um
   // botão "Ver todos" (o mês inteiro, inclusive os agendados).
   // Etapa 289 — os 10 primeiros na ordem do banco (hoje, ontem...); agendados vão à parte
-  const ordemBanco = ordenarComoBanco(transacoesReaisDoMes as any[], hojeISOBr);
+  // Etapa 366 — contas fixas previstas (mês futuro) entram na lista, no dia delas
+  const ordemBanco = ordenarComoBanco(transacoesDoMes as any[], hojeISOBr);
   const transacoesOrdenadas = [...ordemBanco.passados, ...ordemBanco.futuros];
   const ultimasTransacoes = mostrarTodosLancamentos
     ? transacoesOrdenadas
@@ -287,7 +287,7 @@ export default function FinancasPage() {
           Ver tudo ›
         </Link>
       </div>
-      {ultimasTransacoes.length === 0 && previstasDoMesSel.length > 0 ? null : ultimasTransacoes.length === 0 ? (
+      {ultimasTransacoes.length === 0 ? (
         <EstadoVazio compacto emoji="🧾" tom="financa" titulo="Nada lançado nesse mês" texto="Use o + ou o Lançar rápido pra registrar o primeiro gasto." />
       ) : (
         // Etapa 226 — mesma lista do Extrato (por dia, verde/vermelho)
@@ -304,11 +304,9 @@ export default function FinancasPage() {
           onClick={() => setMostrarTodosLancamentos(true)}
           className="w-full mt-2 text-sm text-financa border border-financa/30 rounded-2xl py-3.5 hover:bg-financa/10 transition"
         >
-          Ver todos os {transacoesReaisDoMes.length} lançamentos do mês
+          Ver todos os {transacoesDoMes.length} lançamentos do mês
         </button>
       )}
-      {/* Etapa 364 — contas fixas que o app lança quando o mês chegar */}
-      <ContasFixasPrevistas previstas={previstasDoMesSel} mapaContas={mapaContas as Map<string, any>} />
     </div>
   );
 

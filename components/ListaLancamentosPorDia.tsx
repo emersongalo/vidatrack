@@ -3,11 +3,15 @@
 // Etapa 226 — a lista de lançamentos do Extrato virou componente, pra
 // ficar igual em todo lugar (Extrato, Início de Finanças, fatura):
 // agrupada por dia, faixa verde/vermelha, seta no ícone e valor com +/−.
+// Etapa 366 — conta fixa de mês que ainda não chegou (prevista: true)
+// aparece igual aos outros lançamentos, com o símbolo de recorrente; não
+// dá pra editar/excluir/pagar porque ainda não existe no banco — tocar
+// abre a conta fixa.
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { comDesfazer } from "@/lib/app/desfazer";
 import { vibrar } from "@/lib/app/vibrar";
-import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowLeftRight, Pencil, Trash2, ChevronDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowLeftRight, Pencil, Trash2, ChevronDown, Repeat } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
 import { BotaoPaguei } from "@/components/BotaoPaguei";
 import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
@@ -108,6 +112,58 @@ export function ListaLancamentosPorDia({
                   const ehReceita = t.tipo === "receita";
                   const corValor = ehTransf ? "text-ink-400" : ehReceita ? "text-habito" : "text-red-400";
                   const agendado = t.data > hojeParaPendencia && !t.pago_em;
+                  if (t.prevista) {
+                    return (
+                      <li key={t.id}>
+                        <div className="relative flex items-center gap-3 bg-base-800 pl-4 pr-4 py-3.5">
+                          <span
+                            className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${ehReceita ? "bg-habito" : "bg-red-400"}`}
+                            aria-hidden
+                          />
+                          <Link href={`/financas/recorrentes/${t.recorrencia_id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                            <span className="relative shrink-0">
+                              <span
+                                className={`w-11 h-11 rounded-full flex items-center justify-center text-base ${classeFundoSuave(
+                                  catInfo?.cor ?? "financa"
+                                )}`}
+                              >
+                                {catInfo?.icone ? (
+                                  <IconeCategoria icone={catInfo.icone} />
+                                ) : ehReceita ? (
+                                  <TrendingUp size={18} strokeWidth={2} />
+                                ) : (
+                                  <TrendingDown size={18} strokeWidth={2} />
+                                )}
+                              </span>
+                              <span
+                                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-base-800 flex items-center justify-center text-base-900 bg-financa"
+                                aria-label="Repete todo mês"
+                                title="Repete todo mês"
+                              >
+                                <Repeat size={10} strokeWidth={3} />
+                              </span>
+                            </span>
+                            <span className="flex-1 min-w-0">
+                              <span className="block text-base font-medium truncate">{t.descricao || (ehReceita ? "Receita fixa" : "Conta fixa")}</span>
+                              <span className="block text-sm text-ink-400 truncate">
+                                {catInfo?.nome ?? "Sem categoria"} · {mapaContas.get(t.conta_id)}
+                              </span>
+                            </span>
+                            <span className={`font-mono text-base font-semibold shrink-0 ${corValor}`}>
+                              {ehReceita ? "+" : "−"}
+                              <ValorMonetario valor={t.valor} />
+                            </span>
+                          </Link>
+                        </div>
+                        <div className="relative flex flex-wrap items-center gap-2 bg-base-800 pl-[4.5rem] pr-4 pt-0.5 pb-3.5 -mt-2 text-sm">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-financa/15 text-financa font-medium">
+                            <Repeat size={13} strokeWidth={2.5} /> Repete todo mês
+                          </span>
+                          <span className="px-2.5 py-1 rounded-lg bg-base-700 text-ink-400">{ehReceita ? "A receber" : "A pagar"}</span>
+                        </div>
+                      </li>
+                    );
+                  }
                   return (
                     <li key={t.id} className={ehNovo(t) ? "entrar-topo" : undefined}>
                       <LinhaComDeslizar acao={() => excluir(t)} semConfirmar>

@@ -22,7 +22,6 @@ import { EstadoVazio } from "@/components/EstadoVazio";
 import { Esqueleto } from "@/components/Esqueleto";
 import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 import { recorrentesPrevistasAte } from "@/lib/financas/recorrentesPrevistas";
-import { ContasFixasPrevistas } from "@/components/ContasFixasPrevistas";
 
 const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "este_mes", rotulo: "Este mês" },
@@ -227,7 +226,10 @@ function ExtratoConteudo() {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro, etiquetaFiltro, termo, ignorarPeriodo]);
-  const listaComPrevistas = [...lista, ...previstas] as any[];
+  // Etapa 366 — previstas entram na lista junto, no dia delas
+  const listaComPrevistas = (
+    previstas.length ? [...lista, ...previstas].sort((a: any, b: any) => String(a.data).localeCompare(String(b.data))) : lista
+  ) as any[];
 
   const categoriaInfo = categoriaFiltro && categoriaFiltro !== "sem" ? (mapaCategorias.get(categoriaFiltro) as any) : null;
 
@@ -568,7 +570,7 @@ function ExtratoConteudo() {
         />
       ) : snapshot === undefined ? (
         <Esqueleto linhas={4} comTopo={false} />
-      ) : lista.length === 0 && previstas.length > 0 ? null : lista.length === 0 ? (
+      ) : listaComPrevistas.length === 0 ? (
         <EstadoVazio
           emoji="🧾"
           tom="financa"
@@ -578,15 +580,12 @@ function ExtratoConteudo() {
       ) : (
         // Etapa 225 — agrupado por dia, linhas maiores e receita/despesa bem marcadas
         <ListaLancamentosPorDia
-          lista={lista as any[]}
+          lista={listaComPrevistas}
           mapaCategorias={mapaCategorias as Map<string, any>}
           mapaContas={mapaContas as Map<string, any>}
           recarregar={recarregar}
           aoEscolherEtiqueta={setEtiquetaFiltro}
         />
-      )}
-      {visualizacao === "transacoes" && snapshot !== undefined && (
-        <ContasFixasPrevistas previstas={previstas} mapaContas={mapaContas as Map<string, any>} comData={mesDe(inicio) !== mesDe(fim)} />
       )}
       {(snapshot?.financas.transacoes.length ?? 0) >= 3000 && (
         <p className="text-xs text-ink-400 mt-4">Mostrando as 3.000 transações mais recentes guardadas offline.</p>
