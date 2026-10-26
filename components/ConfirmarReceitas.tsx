@@ -4,6 +4,8 @@
 // Etapa 268 — "Caiu o salário?": receitas programadas que chegaram o
 // dia esperam confirmação. "Caiu" entra no saldo na hora; "Adiar" muda
 // a data (amanhã, +2, +5 dias ou outra) e ela volta a perguntar no dia.
+// Etapa 364 — conta fixa adiada pra outro mês continua sendo "a conta
+// deste mês": guarda a data original (adiada_de) pra não gerar outra.
 import { avisarConfirmacaoMovimentacao } from "@/app/financas/avisos";
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -13,6 +15,7 @@ import { atualizarSnapshotEmTodasAsTelas } from "@/lib/offline/useSnapshot";
 import { aguardandoConfirmacao, somarDiasISO } from "@/lib/financas/confirmacao";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { vibrar } from "@/lib/app/vibrar";
+import { valoresAdiar } from "@/lib/financas/competencia";
 import { gravar } from "@/lib/local/gravar"; // Etapa 353 — sem internet: guarda e sobe depois
 
 function ddmm(iso: string) {
@@ -109,7 +112,7 @@ export function ConfirmarReceitas({ snapshot, noInicio = false }: { snapshot: an
                     <button
                       key={rotulo as string}
                       type="button"
-                      onClick={() => salvar(t.id, { data: somarDiasISO(hoje, n as number) }, "adiada")}
+                      onClick={() => salvar(t.id, valoresAdiar(t, somarDiasISO(hoje, n as number)), "adiada")}
                       className="text-sm px-3 py-1.5 rounded-full border border-base-600 hover:border-financa hover:text-financa transition"
                     >
                       {rotulo}
@@ -118,7 +121,7 @@ export function ConfirmarReceitas({ snapshot, noInicio = false }: { snapshot: an
                   <input
                     type="date"
                     min={somarDiasISO(hoje, 1)}
-                    onChange={(e) => e.target.value && salvar(t.id, { data: e.target.value }, "adiada")}
+                    onChange={(e) => e.target.value && salvar(t.id, valoresAdiar(t, e.target.value), "adiada")}
                     className="text-sm px-2 py-1 rounded-full border border-base-600 bg-base-800 text-ink-100"
                     aria-label="Outra data"
                   />

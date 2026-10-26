@@ -3,6 +3,7 @@
 // lançamento e faturas de cartão que vencem no mês). Função pura.
 import { calcularPeriodoFatura, calcularVencimentoFatura, periodoFaturaAdjacente } from "@/lib/financas/fatura";
 import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
+import { diasDasRecorrencias, mesCompetencia } from "@/lib/financas/competencia";
 
 export type ItemPrevisto = {
   data: string;
@@ -194,8 +195,14 @@ export function preverFimDoMes(entrada: {
   }
 
   // 2) Recorrentes que ainda não viraram lançamento neste mês
+  // Etapa 364 — conta deste mês adiada pro mês que vem continua sendo
+  // "a deste mês" (não conta de novo como se faltasse lançar)
+  const diasRec = diasDasRecorrencias(recorrencias as any[]);
+  const mesHoje = inicioMes.slice(0, 7);
   const recorrenciasComLancamento = new Set(
-    transacoes.filter((t) => t.recorrencia_id && t.data >= inicioMes && t.data <= fim).map((t) => t.recorrencia_id)
+    transacoes
+      .filter((t) => t.recorrencia_id && mesCompetencia(t as any, diasRec.get(t.recorrencia_id)) === mesHoje)
+      .map((t) => t.recorrencia_id)
   );
   const [ano, mes] = hojeISO.split("-").map(Number);
   const ultimoDia = Number(fim.slice(8));

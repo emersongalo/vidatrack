@@ -8,11 +8,16 @@ import { lerFila } from "@/lib/offline/fila";
 import { lerSnapshotOffline } from "@/lib/offline/snapshot";
 import { enfileirarAcao, novoUuid } from "@/lib/local/acaoOffline";
 import type { Patch } from "@/lib/offline/patches";
+import { diasDasRecorrencias, mesCompetencia } from "@/lib/financas/competencia";
 
 export function lancamentosRecorrentesQueFaltam(snap: any, hojeISO: string) {
   const mes = hojeISO.slice(0, 7);
+  // Etapa 364 — conta adiada pra outro mês continua sendo do mês dela
+  const dias = diasDasRecorrencias(snap?.financas?.recorrencias);
   const ja = new Set(
-    ((snap?.financas?.transacoes ?? []) as any[]).filter((t) => t.recorrencia_id && String(t.data).startsWith(mes)).map((t) => t.recorrencia_id)
+    ((snap?.financas?.transacoes ?? []) as any[])
+      .filter((t) => t.recorrencia_id && mesCompetencia(t, dias.get(t.recorrencia_id)) === mes)
+      .map((t) => t.recorrencia_id)
   );
   const faltam: { recorrencia: any; data: string }[] = [];
   for (const r of (snap?.financas?.recorrencias ?? []) as any[]) {

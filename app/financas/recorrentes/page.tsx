@@ -14,6 +14,7 @@ import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { SugestoesRecorrentes } from "@/components/SugestoesRecorrentes";
 import { hojeISO } from "@/lib/habitos/streak";
+import { diasDasRecorrencias, mesCompetencia } from "@/lib/financas/competencia"; // Etapa 364
 
 // Etapa 129
 export default function RecorrentesPage() {
@@ -39,8 +40,9 @@ function RecorrentesConteudo() {
   // Etapa 254 — lançamento deste mês de cada recorrência (pra mostrar ajuste/situação)
   const hoje = hojeISO();
   const desteMes = new Map<string, any>();
+  const diasRec = diasDasRecorrencias(recorrencias as any[]);
   for (const t of (snapshot?.financas.transacoes ?? []) as any[]) {
-    if (t.recorrencia_id && t.data.startsWith(hoje.slice(0, 7))) desteMes.set(t.recorrencia_id, t);
+    if (t.recorrencia_id && mesCompetencia(t, diasRec.get(t.recorrencia_id)) === hoje.slice(0, 7)) desteMes.set(t.recorrencia_id, t);
   }
 
   function alternarAtiva(id: string) {

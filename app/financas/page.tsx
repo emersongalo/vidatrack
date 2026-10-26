@@ -45,6 +45,7 @@ import {
 } from "@/lib/financas/blocos";
 import { gravarOrdemBlocosFinancas, semInternet } from "@/lib/local/criarRapido";
 import { garantirRecorrentesNoAparelho } from "@/lib/local/recorrentesMes";
+import { recorrentesPrevistasAte } from "@/lib/financas/recorrentesPrevistas";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -139,6 +140,13 @@ export default function FinancasPage() {
       .filter((t: any) => idsContasComuns.has(t.conta_id) && t.data > hojeISOBr && t.data <= limiteISO && !t.pago_em)
       .reduce((s: number, t: any) => s + (t.tipo === "receita" ? Number(t.valor) : -Number(t.valor)), 0);
   const ehMesFuturo = mesSelecionado > mesAtualISO;
+  // Etapa 364 — mês futuro: contas fixas que ainda não foram lançadas
+  // aparecem como previstas (só na tela) e entram no saldo previsto
+  const previstasAteMes = ehMesFuturo ? recorrentesPrevistasAte(recorrencias as any[], transacoes as any[], mesAtualISO, mesSelecionado) : [];
+  const previstasDoMesSel = previstasAteMes.filter((p) => p.data.startsWith(mesSelecionado));
+  const somaPrevistasAteMes = previstasAteMes
+    .filter((p) => idsContasComuns.has(p.conta_id))
+    .reduce((s, p) => s + (p.tipo === "receita" ? p.valor : -p.valor), 0);
 
   const saldoPrevistoBase = ehMesAtual
     ? calcularSaldoPrevisto(
@@ -165,12 +173,13 @@ export default function FinancasPage() {
     : saldoPrevistoBase !== null
       ? saldoPrevistoBase + futurosAte(ultimoDiaDoMes(mesAtualISO + "-01"))
       : ehMesFuturo
-        ? saldoTotal + futurosAte(ultimoDiaDoMes(mesSelecionado + "-01"))
+        ? saldoTotal + futurosAte(ultimoDiaDoMes(mesSelecionado + "-01")) + somaPrevistasAteMes
         : null;
 
   const inicioMesSelecionado = primeiroDiaDoMes(mesSelecionado + "-01");
   const fimMesSelecionado = ultimoDiaDoMes(mesSelecionado + "-01");
-  const transacoesDoMes = transacoes.filter((t: any) => t.data >= inicioMesSelecionado && t.data <= fimMesSelecionado);
+  const transacoesReaisDoMes = transacoes.filter((t: any) => t.data >= inicioMesSelecionado && t.data <= fimMesSelecionado);
+  const transacoesDoMes = [...transacoesReaisDoMes, ...previstasDoMesSel] as any[];
   // Etapa 211 — transferência entre contas não é receita nem gasto de verdade
   const movimentosDoMes = transacoesDoMes.filter((t: any) => !t.transferencia_grupo);
   // Etapa 269 — no topo, só o que já caiu/saiu (receita a confirmar e agendado
@@ -215,7 +224,7 @@ export default function FinancasPage() {
   // Etapa 207 — antes cortava em 10 sem avisar; agora mostra 10 e um
   // botão "Ver todos" (o mês inteiro, inclusive os agendados).
   // Etapa 289 — os 10 primeiros na ordem do banco (hoje, ontem...); agendados vão à parte
-  const ordemBanco = ordenarComoBanco(transacoesDoMes as any[], hojeISOBr);
+  const ordemBanco = ordenarComoBanco(transacoesReaisDoMes as any[], hojeISOBr);
   const transacoesOrdenadas = [...ordemBanco.passados, ...ordemBanco.futuros];
   const ultimasTransacoes = mostrarTodosLancamentos
     ? transacoesOrdenadas
@@ -277,7 +286,7 @@ export default function FinancasPage() {
           Ver tudo ›
         </Link>
       </div>
-      {ultimasTransacoes.length === 0 ? (
+      {ultimasTransacoes.length === 0 && previstasDoMesSel.length > 0 ? null : ultimasTransacoes.length === 0 ? (
         <EstadoVazio compacto emoji="🧾" tom="financa" titulo="Nada lançado nesse mês" texto="Use o + ou o Lançar rápido pra registrar o primeiro gasto." />
       ) : (
         // Etapa 226 — mesma lista do Extrato (por dia, verde/vermelho)
@@ -294,8 +303,31 @@ export default function FinancasPage() {
           onClick={() => setMostrarTodosLancamentos(true)}
           className="w-full mt-2 text-sm text-financa border border-financa/30 rounded-2xl py-3.5 hover:bg-financa/10 transition"
         >
-          Ver todos os {transacoesDoMes.length} lançamentos do mês
+          Ver todos os {transacoesReaisDoMes.length} lançamentos do mês
         </button>
+      )}
+      {previstasDoMesSel.length > 0 && (
+        // Etapa 364 — contas fixas que o app lança quando o mês chegar
+        <div className="mt-3 bg-base-800 border border-dashed border-financa/40 rounded-2xl p-3">
+          <p className="text-sm font-semibold text-financa">📅 Contas fixas previstas</p>
+          <p className="text-xs text-ink-400 mb-2">Entram nos lançamentos quando o mês chegar.</p>
+          <ul className="divide-y divide-base-600/60">
+            {previstasDoMesSel.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-2 py-2">
+                <div className="min-w-0">
+                  <p className="text-sm truncate">{p.descricao || (p.tipo === "receita" ? "Receita fixa" : "Conta fixa")}</p>
+                  <p className="text-xs text-ink-400">
+                    Dia {p.data.slice(8, 10)} · {(mapaContas.get(p.conta_id) as string) ?? ""}
+                  </p>
+                </div>
+                <span className={`font-mono text-sm shrink-0 ${p.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
+                  {p.tipo === "receita" ? "+" : "−"}
+                  {formatarMoeda(p.valor)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAtual } from "@/lib/supabase/auth";
 import { esquemaRecorrencia, primeiroErro } from "@/lib/validacao/financas";
 import { dataAtualNoFuso } from "@/lib/tempo/fuso";
+import { diasDasRecorrencias, mesCompetencia } from "@/lib/financas/competencia";
 
 export async function criarRecorrencia(formData: FormData): Promise<{ erro?: string }> {
   const supabase = createClient();
@@ -101,15 +102,23 @@ export async function garantirLancamentosRecorrentes() {
   const mm = String(mesAtual).padStart(2, "0");
   const primeiroDiaMes = `${anoAtual}-${mm}-01`;
   const ultimoDiaMes = `${anoAtual}-${mm}-${String(new Date(Date.UTC(anoAtual, mesAtual, 0)).getUTCDate()).padStart(2, "0")}`;
+  // Etapa 364 — até o fim do mês seguinte (conta deste mês adiada pra lá)
+  const ultimoDiaProximo = new Date(Date.UTC(anoAtual, mesAtual + 1, 0)).toISOString().slice(0, 10);
 
+  // Etapa 364 — vale o mês "de competência": a conta de outubro adiada
+  // pra novembro continua contando como a de outubro (e não como a de
+  // novembro), senão o app gerava outra igual no mesmo mês.
   const { data: jaGerados } = await supabase
     .from("financa_transacoes")
-    .select("recorrencia_id")
+    .select("recorrencia_id, data, adiada_de, criado_em")
     .not("recorrencia_id", "is", null)
-    .gte("data", primeiroDiaMes)
-    .lte("data", ultimoDiaMes);
+    .or(`and(data.gte.${primeiroDiaMes},data.lte.${ultimoDiaProximo}),and(adiada_de.gte.${primeiroDiaMes},adiada_de.lte.${ultimoDiaMes})`);
 
-  const idsJaGerados = new Set((jaGerados ?? []).map((t) => t.recorrencia_id));
+  const mesISO = `${anoAtual}-${mm}`;
+  const dias = diasDasRecorrencias(recorrencias as any[]);
+  const idsJaGerados = new Set(
+    (jaGerados ?? []).filter((t) => mesCompetencia(t, dias.get(t.recorrencia_id)) === mesISO).map((t) => t.recorrencia_id)
+  );
 
   const paraInserir = [];
   for (const r of recorrencias) {
@@ -270,21 +279,20 @@ export async function gerarLancamentoRecorrenteOffline(recorrenciaId: string, tr
   if (!user) throw new Error("Sessão expirada");
   const { data: r } = await supabase
     .from("financa_recorrencias")
-    .select("id, conta_id, categoria_id, tipo, valor, descricao, ativo, data_fim, data_inicio")
+    .select("id, conta_id, categoria_id, tipo, valor, descricao, ativo, data_fim, data_inicio, dia_mes")
     .eq("id", recorrenciaId)
     .maybeSingle();
   if (!r || !r.ativo) return {}; // apagada ou pausada nesse meio tempo: nada a gerar
   if ((r.data_fim && data > r.data_fim) || (r.data_inicio && data < r.data_inicio)) return {};
   const mes = data.slice(0, 7);
   const ultimo = String(new Date(Date.UTC(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)), 0)).getUTCDate()).padStart(2, "0");
+  const proximoFim = new Date(Date.UTC(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)) + 1, 0)).toISOString().slice(0, 10);
   const { data: ja } = await supabase
     .from("financa_transacoes")
-    .select("id")
+    .select("id, data, adiada_de, criado_em")
     .eq("recorrencia_id", recorrenciaId)
-    .gte("data", `${mes}-01`)
-    .lte("data", `${mes}-${ultimo}`)
-    .limit(1);
-  if (ja?.length) return {}; // já gerado (por aqui ou por outro aparelho)
+    .or(`and(data.gte.${mes}-01,data.lte.${proximoFim}),and(adiada_de.gte.${mes}-01,adiada_de.lte.${mes}-${ultimo})`);
+  if ((ja ?? []).some((t) => mesCompetencia(t, r.dia_mes) === mes)) return {}; // já gerado (por aqui ou por outro aparelho)
   const { error } = await supabase.from("financa_transacoes").insert({
     id: transacaoId,
     dono_id: user.id,
