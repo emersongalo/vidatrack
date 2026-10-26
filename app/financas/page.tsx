@@ -46,6 +46,7 @@ import {
 import { gravarOrdemBlocosFinancas, semInternet } from "@/lib/local/criarRapido";
 import { garantirRecorrentesNoAparelho } from "@/lib/local/recorrentesMes";
 import { recorrentesPrevistasAte } from "@/lib/financas/recorrentesPrevistas";
+import { ContasFixasPrevistas } from "@/components/ContasFixasPrevistas";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -306,29 +307,8 @@ export default function FinancasPage() {
           Ver todos os {transacoesReaisDoMes.length} lançamentos do mês
         </button>
       )}
-      {previstasDoMesSel.length > 0 && (
-        // Etapa 364 — contas fixas que o app lança quando o mês chegar
-        <div className="mt-3 bg-base-800 border border-dashed border-financa/40 rounded-2xl p-3">
-          <p className="text-sm font-semibold text-financa">📅 Contas fixas previstas</p>
-          <p className="text-xs text-ink-400 mb-2">Entram nos lançamentos quando o mês chegar.</p>
-          <ul className="divide-y divide-base-600/60">
-            {previstasDoMesSel.map((p) => (
-              <li key={p.id} className="flex items-center justify-between gap-2 py-2">
-                <div className="min-w-0">
-                  <p className="text-sm truncate">{p.descricao || (p.tipo === "receita" ? "Receita fixa" : "Conta fixa")}</p>
-                  <p className="text-xs text-ink-400">
-                    Dia {p.data.slice(8, 10)} · {(mapaContas.get(p.conta_id) as string) ?? ""}
-                  </p>
-                </div>
-                <span className={`font-mono text-sm shrink-0 ${p.tipo === "receita" ? "text-habito" : "text-red-400"}`}>
-                  {p.tipo === "receita" ? "+" : "−"}
-                  {formatarMoeda(p.valor)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* Etapa 364 — contas fixas que o app lança quando o mês chegar */}
+      <ContasFixasPrevistas previstas={previstasDoMesSel} mapaContas={mapaContas as Map<string, any>} />
     </div>
   );
 

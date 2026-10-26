@@ -21,6 +21,8 @@ import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { Esqueleto } from "@/components/Esqueleto";
 import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
+import { recorrentesPrevistasAte } from "@/lib/financas/recorrentesPrevistas";
+import { ContasFixasPrevistas } from "@/components/ContasFixasPrevistas";
 
 const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "este_mes", rotulo: "Este mês" },
@@ -213,6 +215,20 @@ function ExtratoConteudo() {
     return futuro ? [...filtrada].sort((a: any, b: any) => String(a.data).localeCompare(String(b.data))) : filtrada;
   }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro, etiquetaFiltro, termo, ignorarPeriodo]);
 
+  // Etapa 365 — meses que ainda não chegaram: as contas fixas (o que tem
+  // "Repetir todo mês") só viram lançamento quando o mês chega; aqui elas
+  // aparecem como previstas e entram nos totais do período.
+  const previstas = useMemo(() => {
+    if (ignorarPeriodo || !inicio || !fim) return [];
+    const mesHoje = mesDe(new Date().toLocaleDateString("sv-SE"));
+    if (mesDe(fim) <= mesHoje) return [];
+    return recorrentesPrevistasAte(snapshot?.financas.recorrencias ?? [], snapshot?.financas.transacoes ?? [], mesHoje, mesDe(fim)).filter(
+      (p) => p.data >= inicio && p.data <= fim && confere(p)
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshot, inicio, fim, tipo, categoriaFiltro, contaFiltro, etiquetaFiltro, termo, ignorarPeriodo]);
+  const listaComPrevistas = [...lista, ...previstas] as any[];
+
   const categoriaInfo = categoriaFiltro && categoriaFiltro !== "sem" ? (mapaCategorias.get(categoriaFiltro) as any) : null;
 
   // Etapa 211 — transferências aparecem na lista, mas não somam como receita/despesa
@@ -223,11 +239,11 @@ function ExtratoConteudo() {
   const periodoFuturo = !!inicio && inicio > hojeParaPendencia;
   const realizado = (t: any) =>
     periodoFuturo || ((t.data <= hojeParaPendencia || !!t.pago_em) && !aguardandoConfirmacao(t, hojeParaPendencia));
-  const totalReceitas = lista.filter((t: any) => t.tipo === "receita" && !t.transferencia_grupo && realizado(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
-  const totalDespesas = lista.filter((t: any) => t.tipo === "despesa" && !t.transferencia_grupo && realizado(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
+  const totalReceitas = listaComPrevistas.filter((t: any) => t.tipo === "receita" && !t.transferencia_grupo && realizado(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
+  const totalDespesas = listaComPrevistas.filter((t: any) => t.tipo === "despesa" && !t.transferencia_grupo && realizado(t)).reduce((a: number, t: any) => a + Number(t.valor), 0);
   const balanco = totalReceitas - totalDespesas;
   // Etapa 209 — quanto ainda falta pagar/receber no período (agendados não marcados)
-  const pendentes = lista.filter((t: any) => !t.transferencia_grupo && ((t.data > hojeParaPendencia && !t.pago_em) || aguardandoConfirmacao(t, hojeParaPendencia)));
+  const pendentes = listaComPrevistas.filter((t: any) => !t.transferencia_grupo && ((t.data > hojeParaPendencia && !t.pago_em) || aguardandoConfirmacao(t, hojeParaPendencia)));
   const aPagar = pendentes.filter((t: any) => t.tipo === "despesa").reduce((a: number, t: any) => a + Number(t.valor), 0);
   const aReceber = pendentes.filter((t: any) => t.tipo === "receita").reduce((a: number, t: any) => a + Number(t.valor), 0);
 
@@ -543,7 +559,7 @@ function ExtratoConteudo() {
 
       {visualizacao === "categorias" ? (
         <VisaoPorCategoria
-          lista={lista}
+          lista={listaComPrevistas}
           mapaCategorias={mapaCategorias}
           aoEscolher={(id) => {
             setCategoriaFiltro(id);
@@ -552,7 +568,7 @@ function ExtratoConteudo() {
         />
       ) : snapshot === undefined ? (
         <Esqueleto linhas={4} comTopo={false} />
-      ) : lista.length === 0 ? (
+      ) : lista.length === 0 && previstas.length > 0 ? null : lista.length === 0 ? (
         <EstadoVazio
           emoji="🧾"
           tom="financa"
@@ -568,6 +584,9 @@ function ExtratoConteudo() {
           recarregar={recarregar}
           aoEscolherEtiqueta={setEtiquetaFiltro}
         />
+      )}
+      {visualizacao === "transacoes" && snapshot !== undefined && (
+        <ContasFixasPrevistas previstas={previstas} mapaContas={mapaContas as Map<string, any>} comData={mesDe(inicio) !== mesDe(fim)} />
       )}
       {(snapshot?.financas.transacoes.length ?? 0) >= 3000 && (
         <p className="text-xs text-ink-400 mt-4">Mostrando as 3.000 transações mais recentes guardadas offline.</p>
