@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Pencil, Share2, Archive, Trash2, Receipt } from "lucide-react";
+import { Pencil, Share2, Archive, Trash2, Receipt, Lock, Users } from "lucide-react";
 import { BotaoSalvarFormulario } from "@/components/BotaoSalvarFormulario";
 import { arquivarConta, excluirContaDefinitivamente } from "../actions";
 import { chamarOuGuardar, enfileirarAcao } from "@/lib/local/acaoOffline";
@@ -19,6 +19,8 @@ import { ValorMonetario } from "@/components/ValorMonetario";
 import { BANCOS } from "@/lib/financas/bancos";
 import { useSnapshotOffline } from "@/lib/offline/useSnapshot";
 import { resumoCartao, textoVencimento } from "@/lib/financas/cartaoResumo";
+import { contaEhCompartilhada } from "@/lib/financas/escopo";
+import { vibrar } from "@/lib/app/vibrar";
 
 const RÓTULOS_TIPO: Record<string, string> = {
   carteira: "Carteira",
@@ -40,6 +42,35 @@ export default function ContasPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [criada, setCriada] = useState<string | null>(null);
+  // Etapa 367 — conta compartilhada x particular
+  const meuId = snapshot?.perfil?.id;
+  const temParceiro = contas.some((c: any) => contaEhCompartilhada(c, meuId));
+  const [compartilharNova, setCompartilharNova] = useState(true);
+  const [mudando, setMudando] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ texto: string; erro?: boolean; link?: string } | null>(null);
+
+  async function definirCompartilhada(conta: any, compartilhar: boolean) {
+    setAviso(null);
+    if (!navigator.onLine) return setAviso({ texto: "Precisa de internet pra mudar quem vê a conta.", erro: true });
+    setMudando(conta.id);
+    try {
+      const { data, error } = await createClient().rpc("definir_conta_compartilhada", { p_conta: conta.id, p_compartilhar: compartilhar });
+      if (error) throw error;
+      if (compartilhar && !Number(data)) {
+        setAviso({
+          texto: "Você ainda não divide as finanças com ninguém. Convide a pessoa por aqui:",
+          link: `/financas/contas/${conta.id}/compartilhar`,
+        });
+      } else {
+        vibrar(12);
+        setAviso({ texto: compartilhar ? `"${conta.nome}" agora é compartilhada 👥` : `"${conta.nome}" agora é particular 🔒 — só você vê.` });
+      }
+      await recarregar();
+    } catch (e: any) {
+      setAviso({ texto: "Não consegui mudar: " + String(e?.message ?? e ?? "erro"), erro: true });
+    }
+    setMudando(null);
+  }
 
   // Etapa 199b — cria a conta DIRETO pelo Supabase do aparelho (as
   // regras de segurança do banco garantem que só dá pra criar conta
@@ -86,7 +117,7 @@ export default function ContasPage() {
       } = await supabase.auth.getUser();
       if (!user) return falhar("Sua sessão expirou. Saia e entre de novo.");
 
-      const { error } = await supabase.from("financa_contas").insert({
+      const { data: nova, error } = await supabase.from("financa_contas").insert({
         dono_id: user.id,
         nome: resultado.data.nome,
         tipo: resultado.data.tipo,
@@ -96,8 +127,12 @@ export default function ContasPage() {
         dia_vencimento: resultado.data.diaVencimento,
         // Etapa 230 — limite do cartão
         limite: resultado.data.tipo === "cartao" ? lerLimite(formData.get("limite")) : null,
-      });
+      }).select("id").single();
       if (error) return falhar(error.message);
+      // Etapa 367 — já nasce compartilhada (se a pessoa divide as finanças com alguém)
+      if (temParceiro && compartilharNova && nova?.id) {
+        await supabase.rpc("definir_conta_compartilhada", { p_conta: nova.id, p_compartilhar: true });
+      }
 
       setCriada(resultado.data.nome);
       formRef.current?.reset();
@@ -120,6 +155,20 @@ export default function ContasPage() {
         </Link>
       </div>
 
+      {aviso && (
+        <p
+          className={`mb-3 text-sm rounded-lg px-3 py-2 border ${
+            aviso.erro ? "text-red-400 bg-red-400/10 border-red-400/30" : "text-ink-100 bg-financa/10 border-financa/30"
+          }`}
+        >
+          {aviso.texto}
+          {aviso.link && (
+            <Link href={aviso.link} className="block text-financa font-medium mt-1">
+              Compartilhar a conta ›
+            </Link>
+          )}
+        </p>
+      )}
       {contas.length > 0 && (
         <ul className="space-y-2 mb-8 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {contas.map((conta: any) => (
@@ -137,7 +186,16 @@ export default function ContasPage() {
                   <SeloBanco bancoId={conta.banco} nome={conta.nome} tipo={conta.tipo} />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{conta.nome}</p>
-                    <p className="text-xs text-ink-400">{RÓTULOS_TIPO[conta.tipo]}</p>
+                    <p className="text-xs text-ink-400">
+                      {RÓTULOS_TIPO[conta.tipo]}
+                      {/* Etapa 367 — de quem é */}
+                      {(temParceiro || conta.compartilhada) &&
+                        (contaEhCompartilhada(conta, meuId) ? (
+                          <span className="text-financa"> · 👥 Compartilhada</span>
+                        ) : (
+                          <span className="text-ink-400"> · 🔒 Particular</span>
+                        ))}
+                    </p>
                     {conta.tipo === "cartao" && (!conta.dia_fechamento || !conta.dia_vencimento) && (
                       <Link href={`/financas/contas/${conta.id}/editar`} className="block text-xs text-financa mt-0.5">
                         Defina fechamento e vencimento pra ver a fatura e receber o aviso de pagar ›
@@ -178,8 +236,32 @@ export default function ContasPage() {
                         <ItemMenuAcoes href={`/financas/contas/${conta.id}/editar`}>
                           <Pencil size={15} strokeWidth={2} /> Editar
                         </ItemMenuAcoes>
+                        {/* Etapa 367 — só quem é dono da conta escolhe se é compartilhada ou particular */}
+                        {temParceiro && (!meuId || conta.dono_id === meuId) && (
+                          <button
+                            type="button"
+                            disabled={mudando === conta.id}
+                            onClick={() => {
+                              fecharMenu();
+                              const comp = contaEhCompartilhada(conta, meuId);
+                              if (comp && !confirm(`Tornar "${conta.nome}" particular? A outra pessoa deixa de ver essa conta, o saldo e os lançamentos dela.`)) return;
+                              definirCompartilhada(conta, !comp);
+                            }}
+                            className="flex items-center gap-2.5 w-full px-3.5 py-2 text-sm text-left text-ink-100 hover:bg-base-700 transition disabled:opacity-50"
+                          >
+                            {contaEhCompartilhada(conta, meuId) ? (
+                              <>
+                                <Lock size={15} strokeWidth={2} /> Tornar particular
+                              </>
+                            ) : (
+                              <>
+                                <Users size={15} strokeWidth={2} /> Tornar compartilhada
+                              </>
+                            )}
+                          </button>
+                        )}
                         <ItemMenuAcoes href={`/financas/contas/${conta.id}/compartilhar`}>
-                          <Share2 size={15} strokeWidth={2} /> Compartilhar
+                          <Share2 size={15} strokeWidth={2} /> {temParceiro ? "Quem tem acesso" : "Compartilhar"}
                         </ItemMenuAcoes>
                         <div className="my-1 border-t border-base-600" />
                         <BotaoComConfirmacao
@@ -262,6 +344,24 @@ export default function ContasPage() {
           placeholder="Saldo inicial (opcional, ex: 150,00)"
           className="w-full bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 text-ink-100 focus:border-ink-100 outline-none transition font-mono"
         />
+        {/* Etapa 367 — quem divide as finanças escolhe se a conta nova é compartilhada */}
+        {temParceiro && (
+          <label className="flex items-center justify-between gap-3 bg-base-800 border border-base-600 rounded-2xl px-4 py-3.5 cursor-pointer">
+            <span className="min-w-0">
+              <span className="block text-sm text-ink-100">{compartilharNova ? "👥 Conta compartilhada" : "🔒 Conta particular"}</span>
+              <span className="block text-xs text-ink-400">
+                {compartilharNova ? "Os dois veem e lançam nela." : "Só você vê — o saldo e os lançamentos ficam de fora pra outra pessoa."}
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={compartilharNova}
+              onChange={(e) => setCompartilharNova(e.target.checked)}
+              className="w-5 h-5 accent-financa shrink-0"
+              aria-label="Tornar compartilhada"
+            />
+          </label>
+        )}
         <BotaoSalvarFormulario textoEnviando="Criando...">Criar conta</BotaoSalvarFormulario>
       </form>
     </main>

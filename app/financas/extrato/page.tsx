@@ -22,6 +22,8 @@ import { EstadoVazio } from "@/components/EstadoVazio";
 import { Esqueleto } from "@/components/Esqueleto";
 import { aguardandoConfirmacao } from "@/lib/financas/confirmacao";
 import { recorrentesPrevistasAte } from "@/lib/financas/recorrentesPrevistas";
+import { filtrarPorEscopo, useEscopoFinancas } from "@/lib/financas/escopo";
+import { SeletorEscopoFinancas } from "@/components/SeletorEscopoFinancas";
 
 const PRESETS: { valor: PresetPeriodo; rotulo: string }[] = [
   { valor: "este_mes", rotulo: "Este mês" },
@@ -116,7 +118,10 @@ export default function ExtratoPage() {
 }
 
 function ExtratoConteudo() {
-  const { snapshot, recarregar } = useSnapshotOffline();
+  const { snapshot: snapshotTodo, recarregar } = useSnapshotOffline();
+  // Etapa 367 — Tudo / Compartilhada / Meu (o mesmo da tela de Finanças)
+  const [escopo, setEscopo] = useEscopoFinancas();
+  const snapshot = useMemo(() => filtrarPorEscopo(snapshotTodo, escopo), [snapshotTodo, escopo]);
   const params = useSearchParams();
   const tipoUrl = params.get("tipo");
   const [tipo, setTipo] = useState<"todos" | "receita" | "despesa">(
@@ -493,6 +498,16 @@ function ExtratoConteudo() {
           </button>
         ))}
       </div>
+      <SeletorEscopoFinancas
+        contas={(snapshotTodo?.financas.contas ?? []) as any[]}
+        meuId={snapshotTodo?.perfil?.id}
+        escopo={escopo}
+        aoMudar={(e) => {
+          setEscopo(e);
+          setContaFiltro(null);
+        }}
+        className="mb-2"
+      />
       {contas.length > 1 && (
         <div className="relative mb-2">
           <select

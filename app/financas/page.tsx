@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { PieChart, TrendingUp, TrendingDown, Bot, Settings2, Check, Pin, ChevronUp, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { IconeCategoria } from "@/components/IconeCategoria";
@@ -46,6 +46,8 @@ import {
 import { gravarOrdemBlocosFinancas, semInternet } from "@/lib/local/criarRapido";
 import { garantirRecorrentesNoAparelho } from "@/lib/local/recorrentesMes";
 import { recorrentesPrevistasAte } from "@/lib/financas/recorrentesPrevistas";
+import { filtrarPorEscopo, useEscopoFinancas } from "@/lib/financas/escopo";
+import { SeletorEscopoFinancas } from "@/components/SeletorEscopoFinancas";
 
 // Etapa 127: versão local-first da tela de Início. Escopo reduzido de
 // propósito em relação à versão anterior — o calendário de gastos, a
@@ -54,7 +56,10 @@ import { recorrentesPrevistasAte } from "@/lib/financas/recorrentesPrevistas";
 // por enquanto. O que continua: saldo, previsão, contas, orçamento,
 // gráfico de despesas e lançamentos do mês — o essencial da tela.
 export default function FinancasPage() {
-  const { snapshot, recarregar } = useSnapshotOffline();
+  const { snapshot: snapshotTodo, recarregar } = useSnapshotOffline();
+  // Etapa 367 — Tudo / Compartilhada / Meu: a tela inteira segue as contas escolhidas
+  const [escopo, setEscopo] = useEscopoFinancas();
+  const snapshot = useMemo(() => filtrarPorEscopo(snapshotTodo, escopo), [snapshotTodo, escopo]);
   const hoje = new Date();
   const mesAtualISO = hoje.toLocaleDateString("sv-SE").slice(0, 7);
   const [mesSelecionado, setMesSelecionado] = useState(mesAtualISO);
@@ -379,6 +384,13 @@ export default function FinancasPage() {
         <LinkVoltar href="/dashboard" texto="Painel" />
       </div>
       <h1 className="text-3xl font-display font-bold mt-2 mb-6">Finanças</h1>
+      <SeletorEscopoFinancas
+        contas={(snapshotTodo?.financas.contas ?? []) as any[]}
+        meuId={snapshotTodo?.perfil?.id}
+        escopo={escopo}
+        aoMudar={setEscopo}
+        className="mb-5"
+      />
 
       {snapshot === undefined ? (
         <Esqueleto linhas={3} />

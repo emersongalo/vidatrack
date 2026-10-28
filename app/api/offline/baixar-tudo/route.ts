@@ -28,6 +28,7 @@ export async function GET() {
     { data: desafios },
     { data: recorrencias },
     { data: perfil },
+    { data: contasCompartilhadas },
   ] = await Promise.all([
     supabase
       .from("habitos")
@@ -48,6 +49,8 @@ export async function GET() {
       .eq("arquivado", false),
     supabase.from("financa_recorrencias").select("id, tipo, valor, dia_mes, data_fim, data_inicio, ativo, descricao, conta_id, categoria_id"),
     supabase.from("perfis").select("nome, foto_url, ordem_blocos_financas, teto_mensal, ordem_blocos_habitos, ordem_blocos_inicio, mascote").eq("id", user.id).maybeSingle(),
+    // Etapa 367 — quais contas têm mais alguém (compartilhadas) x particulares
+    supabase.from("compartilhamentos").select("item_id").eq("tipo_item", "financa"),
   ]);
 
   const idsDesafios = (desafios ?? []).map((d) => d.id);
@@ -170,7 +173,13 @@ export async function GET() {
   const hojeBrasil = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
   const contasComSaldo = calcularSaldoPorConta(contas ?? [], todasTransacoes, hojeBrasil);
   const mapaSaldos = new Map(contasComSaldo.map((c) => [c.id, c.saldo]));
-  const contasComSaldoCerto = (contas ?? []).map((c) => ({ ...c, saldo: mapaSaldos.get(c.id) ?? Number(c.saldo_inicial) }));
+  const idsCompartilhadas = new Set((contasCompartilhadas ?? []).map((c: any) => c.item_id));
+  const contasComSaldoCerto = (contas ?? []).map((c) => ({
+    ...c,
+    saldo: mapaSaldos.get(c.id) ?? Number(c.saldo_inicial),
+    // Etapa 367 — conta de outra pessoa ou minha com alguém = compartilhada
+    compartilhada: c.dono_id !== user.id || idsCompartilhadas.has(c.id),
+  }));
 
   const hojeISO = new Date().toLocaleDateString("sv-SE");
   const totalEmDesafios = (desafios ?? []).reduce((soma, d) => soma + Number(d.valor_guardado), 0);
