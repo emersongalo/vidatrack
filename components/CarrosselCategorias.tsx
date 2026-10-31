@@ -3,13 +3,13 @@
 // Etapa 237 — "Saiu" e "Entrou" lado a lado: arraste pro lado (ou toque
 // na aba) pra trocar entre as despesas e as receitas por categoria.
 import { useRef, useState } from "react";
-import { GraficoDespesasCategoriaLazy as Grafico } from "@/components/GraficoDespesasCategoriaLazy";
+// Etapa 368 — a rosca nova (com ícones e animação) no lugar do gráfico antigo
+import { RoscaCategorias, PALETA_RECEITAS } from "@/components/RoscaCategorias";
 import { formatarMoeda } from "@/lib/financas/formatacao";
 import { useValoresOcultos } from "@/lib/preferencias/useValoresOcultos";
 
 type Dado = { nome: string; valor: number; href?: string };
 
-const PALETA_RECEITAS = ["#4FBF8A", "#6BA3C7", "#8BD17C", "#3E9C9A", "#A3C76B", "#5C8FD9", "#7FD1B9"];
 
 export function CarrosselCategorias({
   despesas,
@@ -64,14 +64,14 @@ export function CarrosselCategorias({
       >
         <div className="w-full shrink-0 snap-start">
           {despesas.length ? (
-            <Grafico dados={despesas} mapaCategoriaInfo={mapaCategoriaInfo} semCaixa />
+            <RoscaCategorias dados={despesas} mapaCategoriaInfo={mapaCategoriaInfo} rotuloTotal="Saiu" />
           ) : (
             <p className="text-base text-ink-400 py-10 text-center">Nenhuma despesa com categoria neste mês.</p>
           )}
         </div>
         <div className="w-full shrink-0 snap-start">
           {receitas.length ? (
-            <Grafico dados={receitas} mapaCategoriaInfo={mapaCategoriaInfo} paleta={PALETA_RECEITAS} semCaixa />
+            <RoscaCategorias dados={receitas} mapaCategoriaInfo={mapaCategoriaInfo} paleta={PALETA_RECEITAS} rotuloTotal="Entrou" />
           ) : (
             <p className="text-base text-ink-400 py-10 text-center">Nenhuma receita neste mês ainda.</p>
           )}

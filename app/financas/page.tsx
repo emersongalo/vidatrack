@@ -11,7 +11,7 @@ import { garantirLancamentosRecorrentes } from "./recorrentes/actions";
 import { BarraOrcamento } from "@/components/BarraOrcamento";
 import { BotaoRemoverTransacao } from "@/components/BotaoRemoverTransacao";
 import { CarrosselCategorias } from "@/components/CarrosselCategorias";
-import { MapaCalorGastos } from "@/components/MapaCalorGastos";
+import { CalendarioFinancas } from "@/components/CalendarioFinancas";
 import { LinkVoltar } from "@/components/LinkVoltar";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { Esqueleto, EsqueletoFinancas } from "@/components/Esqueleto";
@@ -237,13 +237,6 @@ export default function FinancasPage() {
     : [...ordemBanco.passados.slice(0, 10), ...ordemBanco.futuros];
   const lancamentosEscondidos = transacoesOrdenadas.length - ultimasTransacoes.length;
 
-  const gastoPorDiaMapaInicio = new Map<number, number>();
-  for (const t of movimentosDoMes) {
-    if (t.tipo !== "despesa") continue;
-    const dia = Number(t.data.slice(8, 10));
-    gastoPorDiaMapaInicio.set(dia, (gastoPorDiaMapaInicio.get(dia) ?? 0) + Number(t.valor));
-  }
-
   const layoutSalvo = lerLayoutBlocos(snapshot?.financas.ordemBlocosFinancas);
   const layout = editandoLayout && layoutEditado ? layoutEditado : layoutSalvo;
 
@@ -270,17 +263,15 @@ export default function FinancasPage() {
         <h2 className="text-xl font-semibold mb-3">Por categoria</h2>
         <CarrosselCategorias despesas={dadosGrafico} receitas={dadosReceitas} mapaCategoriaInfo={mapaCategoriaInfo} />
 
-        {/* Etapa 176 — mapa de calor logo abaixo do gráfico de
-           categorias, a pedido: mesma ideia da Análise, só que aqui
-           na Início pra não precisar navegar pra ver. */}
-        <h2 className="text-xl font-semibold mb-3 mt-6">Gasto por dia</h2>
-        <div className="bg-base-800 border border-base-600 rounded-xl2 shadow-lg shadow-black/20 p-4">
-          <MapaCalorGastos
-            anoMesISO={mesSelecionado}
-            gastoPorDia={gastoPorDiaMapaInicio}
-            hrefDoDia={(dia) => `/financas/extrato?tipo=despesa&dia=${dia}`}
-          />
-        </div>
+        {/* Etapa 368 — o mês num calendário (entrou x saiu, a pagar, toque no dia) */}
+        <h2 className="text-xl font-semibold mb-3 mt-6">Calendário do mês</h2>
+        <CalendarioFinancas
+          anoMesISO={mesSelecionado}
+          lancamentos={transacoesDoMes as any[]}
+          saldoPrevisto={saldoPrevisto}
+          hojeISO={hojeISOBr}
+          mapaContas={mapaContas as Map<string, any>}
+        />
       </div>
     ) : null;
 
